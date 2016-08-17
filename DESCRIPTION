@@ -1,0 +1,9 @@
+Package: morpheusR
+Title: R-package for using in morpheus.js through opencpu
+Version: 0.0.0.9000
+Authors@R: person("Daria", "Zenkova", email = "daria.zenkova.cs@gmail.com", role = c("aut", "cre"))
+Description: This project is supposed to have several tools for plots and serious genome analysis with help of R/Bioconductor
+Depends: R (>= 3.3.1)
+License: GNU General Public License(GPL)
+Encoding: UTF-8
+LazyData: true
