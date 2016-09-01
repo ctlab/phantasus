@@ -26,6 +26,7 @@ pcaPlot <- function(es, columns, c1, c2, size="", colour="") {
     aes <- aes(x=eval(parse(text=xs[c1])),
                y=eval(parse(text=xs[c2])), colour=c)
   } else if (size != "" && colour == "") {
+    class(pData[[size]]) <- "numeric"
     s <- pData[[size]];
     aes <- aes(x=eval(parse(text=xs[c1])),
         y=eval(parse(text=xs[c2])), size=s)

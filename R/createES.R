@@ -1,7 +1,7 @@
 createES <- function(data, pData, labelDescription, colNames, rowNames) {
   exprs <- data
   colnames(exprs) <- colNames
-  truePData <- t(pData)
+  truePData <- pData
   pd <- data.frame(truePData, row.names = colNames)
   names(pd) <- labelDescription
   require(Biobase)
