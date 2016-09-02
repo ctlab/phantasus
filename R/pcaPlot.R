@@ -8,33 +8,40 @@
 pcaPlot <- function(es, columns, c1, c2, size="", colour="") {
   stopifnot(require(ggplot2))
   stopifnot(require(Biobase))
+  if (is.na(size)) {
+    size = ""
+  }
+  if (is.na(colour)) {
+    colour = ""
+  }
   data <- t(exprs(es)[columns,])
   pca <- prcomp(~., data.frame(data))
-
   explained <- (pca$sdev)^2 / sum(pca$sdev^2)
+  print(size)
+  print(colour)
 
   xs <- sprintf("PC%s", seq_along(explained))
   xlabs <- sprintf("%s (%.1f%%)", xs, explained * 100)
 
   pData <- pData(es)[!(rownames(pData(es)) %in% setdiff(rownames(pData(es)), rownames(pca$x))),]
   pp <- ggplot(data=cbind(as.data.frame(pca$x), pData))
-  if (size == "" && colour == "") {
-    aes <- aes(x=eval(parse(text=xs[c1])),
-               y=eval(parse(text=xs[c2])))
-  } else if (size == "" && colour != "") {
-    c <- pData[[colour]];
-    aes <- aes(x=eval(parse(text=xs[c1])),
-               y=eval(parse(text=xs[c2])), colour=c)
-  } else if (size != "" && colour == "") {
-    class(pData[[size]]) <- "numeric"
-    s <- pData[[size]];
-    aes <- aes(x=eval(parse(text=xs[c1])),
-        y=eval(parse(text=xs[c2])), size=s)
+  if (size != "" && colour != "") {
+    
+    pData[[size]] <- as.numeric(pData[[size]])
+    
+    aes <- aes_string(x=xs[c1],
+                      y=xs[c2], colour=colour, size=size)
+    
+  } else if (colour != "") {
+    aes <- aes_string(x=xs[c1],
+               y=xs[c2], colour=colour)
+  } else if (size != "") {
+    pData[[size]] <- as.numeric(pData[[size]])
+    aes <- aes_string(x=xs[c1],
+        y=xs[c2], size=size)
   } else {
-    s <- pData[[size]]
-    c <- pData[[colour]]
-    aes <- aes(x=eval(parse(text=xs[c1])),
-               y=eval(parse(text=xs[c2])), colour=c,size=s)
+    aes <- aes_string(x=xs[c1],
+                      y=xs[c2])
   }
   
   
