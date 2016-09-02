@@ -5,29 +5,43 @@
 #' @examples
 #' pcaPlot(es.norm, 1, 2) + aes(color=time)
 #' @export
-pcaPlot <- function(es, columns, c1, c2, size="", colour="") {
+pcaPlot <- function(es, columns=c(), rows=c(), c1, c2, size="", colour="") {
+  с1 <- as.numeric(c1)
+  c2 <- as.numeric(c2)
   stopifnot(require(ggplot2))
   stopifnot(require(Biobase))
+  
   if (is.na(size)) {
     size = ""
   }
   if (is.na(colour)) {
     colour = ""
   }
-  data <- t(exprs(es)[columns,])
-  pca <- prcomp(~., data.frame(data))
+  if (is.null(rows)) {
+    rows <- 1:nrow(exprs(es))
+  }
+  if (is.null(columns)) {
+    columns <- 1:ncol(exprs(es))
+  }
+  
+  rows <- as.numeric(rows)
+  columns <- as.numeric(columns)
+  
+  data <- t(exprs(es)[rows,columns])
+  pca <- prcomp(data)
   explained <- (pca$sdev)^2 / sum(pca$sdev^2)
-  print(size)
-  print(colour)
 
   xs <- sprintf("PC%s", seq_along(explained))
   xlabs <- sprintf("%s (%.1f%%)", xs, explained * 100)
 
   pData <- pData(es)[!(rownames(pData(es)) %in% setdiff(rownames(pData(es)), rownames(pca$x))),]
+  
+  if (size != "") {
+    pData[[size]] <- as.numeric(pData[[size]])
+  }
+  
   pp <- ggplot(data=cbind(as.data.frame(pca$x), pData))
   if (size != "" && colour != "") {
-    
-    pData[[size]] <- as.numeric(pData[[size]])
     
     aes <- aes_string(x=xs[c1],
                       y=xs[c2], colour=colour, size=size)
@@ -36,14 +50,12 @@ pcaPlot <- function(es, columns, c1, c2, size="", colour="") {
     aes <- aes_string(x=xs[c1],
                y=xs[c2], colour=colour)
   } else if (size != "") {
-    pData[[size]] <- as.numeric(pData[[size]])
     aes <- aes_string(x=xs[c1],
         y=xs[c2], size=size)
   } else {
     aes <- aes_string(x=xs[c1],
                       y=xs[c2])
   }
-  
   
   pp +
     geom_point(aes) +
