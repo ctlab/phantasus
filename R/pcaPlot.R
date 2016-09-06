@@ -6,17 +6,11 @@
 #' pcaPlot(es.norm, 1, 2) + aes(color=time)
 #' @export
 pcaPlot <- function(es, columns=c(), rows=c(), c1, c2, size="", colour="") {
-  с1 <- as.numeric(c1)
-  c2 <- as.numeric(c2)
+  n1 <- as.numeric(c1)
+  n2 <- as.numeric(c2)
   stopifnot(require(ggplot2))
   stopifnot(require(Biobase))
   
-  if (is.na(size)) {
-    size = ""
-  }
-  if (is.na(colour)) {
-    colour = ""
-  }
   if (is.null(rows)) {
     rows <- 1:nrow(exprs(es))
   }
@@ -43,21 +37,21 @@ pcaPlot <- function(es, columns=c(), rows=c(), c1, c2, size="", colour="") {
   pp <- ggplot(data=cbind(as.data.frame(pca$x), pData))
   if (size != "" && colour != "") {
     
-    aes <- aes_string(x=xs[c1],
-                      y=xs[c2], colour=colour, size=size)
+    aes <- aes_string(x=xs[n1],
+                      y=xs[n2], colour=colour, size=size)
     
   } else if (colour != "") {
-    aes <- aes_string(x=xs[c1],
-               y=xs[c2], colour=colour)
+    aes <- aes_string(x=xs[n1],
+               y=xs[n2], colour=colour)
   } else if (size != "") {
-    aes <- aes_string(x=xs[c1],
-        y=xs[c2], size=size)
+    aes <- aes_string(x=xs[n1],
+        y=xs[n2], size=size)
   } else {
-    aes <- aes_string(x=xs[c1],
-                      y=xs[c2])
+    aes <- aes_string(x=xs[n1],
+                      y=xs[n2])
   }
   
   pp +
     geom_point(aes) +
-    xlab(xlabs[c1]) + ylab(xlabs[c2])
+    xlab(xlabs[n1]) + ylab(xlabs[n2])
 }
