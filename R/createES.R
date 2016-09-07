@@ -1,5 +1,5 @@
 createES <- function(data, pData, labelDescription, colNames, rowNames) {
-  exprs <- data
+  exprs <- t(data)
   colnames(exprs) <- colNames
   truePData <- pData
   pd <- data.frame(truePData, row.names = colNames)
