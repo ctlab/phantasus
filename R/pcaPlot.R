@@ -71,5 +71,5 @@ pcaPlot <- function(es, columns=c(), rows=c(), c1, c2, size="", colour="", label
   
   
   print(capture.output(str(g)))
-  return(f)
+  return(basename(f))
 }
