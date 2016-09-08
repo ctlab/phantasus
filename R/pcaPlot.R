@@ -65,11 +65,11 @@ pcaPlot <- function(es, columns=c(), rows=c(), c1, c2, size="", colour="", label
     g <- g + geom_text_repel(aes_string(label=label))
     
   }
-  f <- tempfile(pattern="plot",tmpdir="~/morpheus.js/tmp",fileext=".svg")
+  f <- tempfile(pattern="plot",tmpdir=getwd(),fileext=".svg")
   ggsave(f, g)
   
   
   
   print(capture.output(str(g)))
-  return(basename(f))
+  return(f)
 }
