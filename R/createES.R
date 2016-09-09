@@ -1,4 +1,5 @@
 createES <- function(data, pData, labelDescription, colNames, rowNames) {
+  stopifnot(require(Biobase))
   exprs <- t(data)
   colnames(exprs) <- colNames
   truePData <- pData
