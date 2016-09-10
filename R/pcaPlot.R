@@ -11,7 +11,7 @@ pcaPlot <- function(es, columns=c(), rows=c(), c1, c2, size="", colour="", label
   stopifnot(require(ggplot2))
   stopifnot(require(ggrepel))
   stopifnot(require(Biobase))
-  
+  stopifnot(require(svglite))
   if (is.null(rows)) {
     rows <- 1:nrow(exprs(es))
   }
