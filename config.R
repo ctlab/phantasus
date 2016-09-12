@@ -1,6 +1,0 @@
-source("https://bioconductor.org/biocLite.R")
-biocLite("Biobase")
-biocLite("ggplot2")
-biocLite("ggrepel")
-library(devtools)
-install_github("baba-beda/morpheusR")

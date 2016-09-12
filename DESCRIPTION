@@ -1,11 +1,15 @@
 Package: morpheusR
-Title: R-package for using in morpheus.js through opencpu
+Title: Extra functions for Morpheus
 Version: 0.0.0.9000
 Authors@R: person("Daria", "Zenkova", email = "daria.zenkova.cs@gmail.com", role = c("aut", "cre"))
-Description: This project is supposed to have several tools for plots and
-    serious genome analysis with help of R/Bioconductor
+Description: This package contains several functions which are used in our version of Web-application Morpheus through OpenCPU
 Depends:
     R (>= 3.3.1)
+Imports:
+    Biobase,
+    ggplot2,
+    ggrepel,
+    svglite
 License: GNU General Public License(GPL)
 Encoding: UTF-8
 LazyData: true
