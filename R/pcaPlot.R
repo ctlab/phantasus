@@ -61,7 +61,7 @@ pcaPlot <- function(es, columns=c(), rows=c(), c1, c2, size="", colour="", label
   }
   if (label != "") {
     message("i'm here 2s")
-    g <- g + geom_text_repel(aes_string(label=label), size=2)
+    g <- g + geom_text_repel(aes_string(label=label), size=3)
 
   }
   f <- tempfile(pattern="plot",tmpdir=getwd(),fileext=".svg")
