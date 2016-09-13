@@ -6,7 +6,6 @@ Description: This package contains several functions which are used in our versi
 Depends:
     R (>= 3.3.1)
 Imports:
-    Biobase,
     ggplot2,
     ggrepel,
     svglite
