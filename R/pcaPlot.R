@@ -18,29 +18,29 @@ pcaPlot <- function(es, columns=c(), rows=c(), c1, c2, size="", colour="", label
   if (is.null(columns)) {
     columns <- 1:ncol(exprs(es))
   }
-  
+
   rows <- as.numeric(rows)
   columns <- as.numeric(columns)
-  
+
   data <- t(exprs(es)[rows,columns])
   pca <- prcomp(data)
   explained <- (pca$sdev)^2 / sum(pca$sdev^2)
-  
+
   xs <- sprintf("PC%s", seq_along(explained))
   xlabs <- sprintf("%s (%.1f%%)", xs, explained * 100)
-  
+
   pData <- pData(es)[!(rownames(pData(es)) %in% setdiff(rownames(pData(es)), rownames(pca$x))),]
-  
+
   if (size != "") {
     pData[[size]] <- as.numeric(pData[[size]])
   }
-  
+
   pp <- ggplot(data=cbind(as.data.frame(pca$x), pData, sampleNames(es)))
   if (size != "" && colour != "") {
-    
+
     aes <- aes_string(x=xs[n1],
                       y=xs[n2], colour=colour, size=size)
-    
+
   } else if (colour != "") {
     aes <- aes_string(x=xs[n1],
                       y=xs[n2], colour=colour)
@@ -51,24 +51,24 @@ pcaPlot <- function(es, columns=c(), rows=c(), c1, c2, size="", colour="", label
     aes <- aes_string(x=xs[n1],
                       y=xs[n2])
   }
-  
-  g <- pp + aes + 
-    geom_point() + 
+
+  g <- pp + aes +
+    geom_point() +
     xlab(xlabs[n1]) + ylab(xlabs[n2])
-  
+
   if (label == "id") {
     label <- "sampleNames(es)"
   }
-  if (label != "") {    
+  if (label != "") {
     message("i'm here 2s")
-    g <- g + geom_text_repel(aes_string(label=label))
-    
+    g <- g + geom_text_repel(aes_string(label=label), size=5)
+
   }
   f <- tempfile(pattern="plot",tmpdir=getwd(),fileext=".svg")
   ggsave(f, g)
-  
-  
-  
+
+
+
   print(capture.output(str(g)))
   return(f)
 }
