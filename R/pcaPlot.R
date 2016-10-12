@@ -74,7 +74,7 @@ pcaPlot <- function(es, columns=c(), rows=c(), c1, c2, size="", colour="", label
     geom_point(aes) +
     xlab(xlabs[n1]) + ylab(xlabs[n2])
 
-  pg <- ggplotly(g)
+  #pg <- ggplotly(g)
   if (label != "") {
     message("i'm here 2s")
 
