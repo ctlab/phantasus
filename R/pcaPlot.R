@@ -36,6 +36,11 @@ pcaPlot <- function(es, columns=c(), rows=c(), c1, c2, size="", colour="", label
     pData[[size]] <- as.numeric(pData[[size]])
   }
 
+
+  if (label == "id" || label == "") {
+    label <- "sampleNames(es)"
+  }
+
   pp <- ggplot(data=cbind(as.data.frame(pca$x), pData, sampleNames(es)))
   if (size != "" && colour != "") {
 
@@ -53,28 +58,34 @@ pcaPlot <- function(es, columns=c(), rows=c(), c1, c2, size="", colour="", label
                       y=xs[n2])
   }
 
-  g <- pp +
+
+  gg <- plot_ly(data = cbind(as.data.frame(pca$x), pData, sampleNames(es)),
+                type = "scatter",
+                mode = "markers",
+                x = ~eval(parse(text=xs[n1])),
+                y = ~eval(parse(text=xs[n2])),
+                marker = list(
+                  color = if (colour != "") ~eval(parse(text=colour)) else 'rgba(0, 0, 0, .9)',
+                  size = if (size != "") ~eval(parse(text=size)) else 10),
+                text = ~eval(parse(text=label))) %>%
+        layout(xaxis = list(title = xlabs[n1], zeroline = F), yaxis = list(title = xlabs[n2], zeroline = F))
+
+  g <- pp + aes +
     geom_point(aes) +
     xlab(xlabs[n1]) + ylab(xlabs[n2])
-
-  if (label == "id") {
-    label <- "sampleNames(es)"
-  }
 
   pg <- ggplotly(g)
   if (label != "") {
     message("i'm here 2s")
 
     g <- g + aes + geom_text_repel(aes_string(label=label), size=3)
-
-
   }
   f <- tempfile(pattern="plot",tmpdir=getwd(),fileext=".svg")
   ggsave(f, g)
 
-  Sys.setenv("plotly_username"="Daria_Zenkova")
-  Sys.setenv("plotly_api_key"="ck0fr195k7")
+  Sys.setenv("plotly_username"="dzenkova")
+  Sys.setenv("plotly_api_key"="bvf56ldv3c")
 
-  print(capture.output(str(g)))
-  return(plotly_POST(pg)$url)
+  #print(capture.output(str(g)))
+  return(plotly_POST(gg)$url)
 }
