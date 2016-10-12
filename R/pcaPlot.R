@@ -64,8 +64,8 @@ pcaPlot <- function(es, columns=c(), rows=c(), c1, c2, size="", colour="", label
                 mode = "markers",
                 x = ~eval(parse(text=xs[n1])),
                 y = ~eval(parse(text=xs[n2])),
+                color = if (colour != "") ~eval(parse(text=colour)) else 'rgba(0, 0, 0, .9)',
                 marker = list(
-                  color = if (colour != "") ~eval(parse(text=colour)) else 'rgba(0, 0, 0, .9)',
                   size = if (size != "") ~eval(parse(text=size)) else 10),
                 text = ~eval(parse(text=label))) %>%
         layout(xaxis = list(title = xlabs[n1], zeroline = F), yaxis = list(title = xlabs[n2], zeroline = F))
