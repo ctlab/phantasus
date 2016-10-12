@@ -8,7 +8,8 @@ Depends:
 Imports:
     ggplot2,
     ggrepel,
-    svglite
+    svglite,
+    plotly
 License: GNU General Public License(GPL)
 Encoding: UTF-8
 LazyData: true

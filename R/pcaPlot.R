@@ -12,6 +12,7 @@ pcaPlot <- function(es, columns=c(), rows=c(), c1, c2, size="", colour="", label
   stopifnot(require(ggrepel))
   stopifnot(require(Biobase))
   stopifnot(require(svglite))
+  stopifnot(require(plotly))
   if (is.null(rows)) {
     rows <- 1:nrow(exprs(es))
   }
@@ -52,23 +53,28 @@ pcaPlot <- function(es, columns=c(), rows=c(), c1, c2, size="", colour="", label
                       y=xs[n2])
   }
 
-  g <- pp + aes +
-    geom_point() +
+  g <- pp +
+    geom_point(aes) +
     xlab(xlabs[n1]) + ylab(xlabs[n2])
 
   if (label == "id") {
     label <- "sampleNames(es)"
   }
+
+  pg <- ggplotly(g)
   if (label != "") {
     message("i'm here 2s")
-    g <- g + geom_text_repel(aes_string(label=label), size=3)
+
+    g <- g + aes + geom_text_repel(aes_string(label=label), size=3)
+
 
   }
   f <- tempfile(pattern="plot",tmpdir=getwd(),fileext=".svg")
   ggsave(f, g)
 
-
+  Sys.setenv("plotly_username"="Daria_Zenkova")
+  Sys.setenv("plotly_api_key"="ck0fr195k7")
 
   print(capture.output(str(g)))
-  return(f)
+  return(plotly_POST(pg)$url)
 }
