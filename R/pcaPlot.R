@@ -13,6 +13,7 @@ pcaPlot <- function(es, columns=c(), rows=c(), c1, c2, size="", colour="", label
   stopifnot(require(Biobase))
   stopifnot(require(svglite))
   stopifnot(require(plotly))
+  stopifnot(require(htmltools))
   if (is.null(rows)) {
     rows <- 1:nrow(exprs(es))
   }
@@ -41,22 +42,22 @@ pcaPlot <- function(es, columns=c(), rows=c(), c1, c2, size="", colour="", label
     label <- "sampleNames(es)"
   }
 
-  pp <- ggplot(data=cbind(as.data.frame(pca$x), pData, sampleNames(es)))
-  if (size != "" && colour != "") {
-
-    aes <- aes_string(x=xs[n1],
-                      y=xs[n2], colour=colour, size=size)
-
-  } else if (colour != "") {
-    aes <- aes_string(x=xs[n1],
-                      y=xs[n2], colour=colour)
-  } else if (size != "") {
-    aes <- aes_string(x=xs[n1],
-                      y=xs[n2], size=size)
-  } else {
-    aes <- aes_string(x=xs[n1],
-                      y=xs[n2])
-  }
+#   pp <- ggplot(data=cbind(as.data.frame(pca$x), pData, sampleNames(es)))
+#   if (size != "" && colour != "") {
+#
+#     aes <- aes_string(x=xs[n1],
+#                       y=xs[n2], colour=colour, size=size)
+#
+#   } else if (colour != "") {
+#     aes <- aes_string(x=xs[n1],
+#                       y=xs[n2], colour=colour)
+#   } else if (size != "") {
+#     aes <- aes_string(x=xs[n1],
+#                       y=xs[n2], size=size)
+#   } else {
+#     aes <- aes_string(x=xs[n1],
+#                       y=xs[n2])
+#   }
 
 
   gg <- plot_ly(data = cbind(as.data.frame(pca$x), pData, sampleNames(es)),
@@ -70,22 +71,20 @@ pcaPlot <- function(es, columns=c(), rows=c(), c1, c2, size="", colour="", label
                 text = ~eval(parse(text=label))) %>%
         layout(xaxis = list(title = xlabs[n1], zeroline = F), yaxis = list(title = xlabs[n2], zeroline = F))
 
-  g <- pp + aes +
-    geom_point(aes) +
-    xlab(xlabs[n1]) + ylab(xlabs[n2])
-
-  #pg <- ggplotly(g)
-  if (label != "") {
-    message("i'm here 2s")
-
-    g <- g + aes + geom_text_repel(aes_string(label=label), size=3)
-  }
-  f <- tempfile(pattern="plot",tmpdir=getwd(),fileext=".svg")
-  ggsave(f, g)
-
-  Sys.setenv("plotly_username"="dzenkova")
-  Sys.setenv("plotly_api_key"="bvf56ldv3c")
+#   g <- pp + aes +
+#     geom_point(aes) +
+#     xlab(xlabs[n1]) + ylab(xlabs[n2])
+#
+#   #pg <- ggplotly(g)
+#   if (label != "") {
+#     message("i'm here 2s")
+#
+#     g <- g + aes + geom_text_repel(aes_string(label=label), size=3)
+#   }
+  #f <- tempfile(pattern="plot",tmpdir=getwd(),fileext=".svg")
+  #ggsave(f, g)
 
   #print(capture.output(str(g)))
-  return(plotly_POST(gg)$url)
+  return(tagList(gg))
 }
+
