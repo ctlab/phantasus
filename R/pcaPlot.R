@@ -39,7 +39,7 @@ pcaPlot <- function(es, columns=c(), rows=c(), c1, c2, size="", colour="", label
 
 
   if (label == "id" || label == "") {
-    label <- "sampleNames(es)"
+    label <- "names"
   }
 
 #   pp <- ggplot(data=cbind(as.data.frame(pca$x), pData, sampleNames(es)))
@@ -59,8 +59,9 @@ pcaPlot <- function(es, columns=c(), rows=c(), c1, c2, size="", colour="", label
 #                       y=xs[n2])
 #   }
 
-
-  gg <- plot_ly(data = cbind(as.data.frame(pca$x), pData, sampleNames(es)),
+  pcadf <- as.data.frame(pca$x)
+  names <- rownames(pcadf)
+  gg <- plot_ly(data = cbind(pcadf, pData, names),
                 type = "scatter",
                 mode = "markers",
                 x = ~eval(parse(text=xs[n1])),
