@@ -5,7 +5,7 @@
 #' @examples
 #' pcaPlot(es.norm, 1, 2) + aes(color=time)
 #' @export
-pcaPlot <- function(es, columns=c(), rows=c(), c1, c2, size="", colour="", label="") {
+pcaPlot <- function(es, columns=c(), rows=c(), c1, c2, size="", colour="", label="", replace.na.with = "mean") {
   n1 <- as.numeric(c1)
   n2 <- as.numeric(c2)
   stopifnot(require(ggplot2))
@@ -25,6 +25,9 @@ pcaPlot <- function(es, columns=c(), rows=c(), c1, c2, size="", colour="", label
   columns <- as.numeric(columns)
 
   data <- t(exprs(es)[rows,columns])
+  for(i in 1:nrow(data)) {
+    data[i,] <- replace(data[i,], is.na(data[i,]), do.call(replace.na.with, list(x = as.matrix(data[i,]), na.rm = TRUE)))
+  }
   pca <- prcomp(data)
   explained <- (pca$sdev)^2 / sum(pca$sdev^2)
 
