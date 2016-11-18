@@ -2,4 +2,4 @@
 
 export(pcaPlot)
 export(createES)
-export(kmeans)
+export(kmeansP)
