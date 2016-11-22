@@ -1,11 +1,13 @@
-kmeans <- function(df, cols = с(), rows = с(), k, max.iterations = 10000) {
+kmeans <- function(es, cols = c(), rows = c(), k, max.iterations = 10000) {
+  stopifnot(require(Biobase))
+  used.df <- data.frame(exprs(es))
   if (!is.null(cols)) {
-    df <- df[,cols]
+    used.df <- used.df[,cols]
   }
   if (!is.null(rows)) {
-    df <- df[rows,]
+    used.df <- used.df[rows,]
   }
-  used.df <- normalizeDF(df)
+  used.df <- normalizeDF(used.df)
   used.df[["label"]] <- NA
   centroids <- used.df[sample(1:nrow(used.df), size = k),]
   centroids[["label"]] <- 1:k
@@ -17,7 +19,9 @@ kmeans <- function(df, cols = с(), rows = с(), k, max.iterations = 10000) {
     used.df <- labelDF(used.df[,1:(ncol(used.df) - 1)], centroids)
     centroids <- updateCentroids(used.df, k)
   }
-  return(used.df[["label"]])
+  res <- matrix(NA, nrow(exprs(es)), 1)
+  res[rows] <- used.df[["label"]]
+  return(res)
 }
 
 normalizeDF <- function(df) {
