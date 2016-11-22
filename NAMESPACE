@@ -3,9 +3,4 @@
 export(pcaPlot)
 export(createES)
 export(kmeans)
-export(distance)
-export(normalizeDF)
-export(updateCentroids)
-export(enough)
-export(chooseClosestCentroid)
-export(labelDF)
+
