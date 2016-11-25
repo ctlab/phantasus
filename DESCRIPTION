@@ -10,7 +10,8 @@ Imports:
     ggplot2,
     ggrepel,
     svglite,
-    plotly
+    plotly,
+    data.table
 License: GNU General Public License(GPL)
 Encoding: UTF-8
 LazyData: true

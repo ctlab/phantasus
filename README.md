@@ -1,1 +1,1 @@
-This project is supposed to have several tools for plots and serious genome analysis with help of R/Bioconductor
+This project contains several tools for gene expression analysis with help of R/Bioconductor
