@@ -89,6 +89,6 @@ pcaPlot <- function(es, columns=c(), rows=c(), c1, c2, size="", colour="", label
   #ggsave(f, g)
 
   #print(capture.output(str(g)))
-  return(taglist(gg))
+  return(tagList(gg))
 }
 
