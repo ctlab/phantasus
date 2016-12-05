@@ -11,7 +11,8 @@ Imports:
     ggrepel,
     svglite,
     plotly,
-    data.table
+    data.table,
+    protolite
 License: GNU General Public License(GPL)
 Encoding: UTF-8
 LazyData: true

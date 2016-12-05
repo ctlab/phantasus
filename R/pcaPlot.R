@@ -34,7 +34,7 @@ pcaPlot <- function(es, columns=c(), rows=c(), c1, c2, size="", colour="", label
   xs <- sprintf("PC%s", seq_along(explained))
   xlabs <- sprintf("%s (%.1f%%)", xs, explained * 100)
 
-  pData <- pData(es)[!(rownames(pData(es)) %in% setdiff(rownames(pData(es)), rownames(pca$x))),]
+  pData <- pData(es)[!(rownames(pData(es)) %in% setdiff(rownames(pData(es)), rownames(pca$x))),, drop=F]
 
   if (size != "") {
     pData[[size]] <- as.numeric(pData[[size]])
@@ -89,6 +89,6 @@ pcaPlot <- function(es, columns=c(), rows=c(), c1, c2, size="", colour="", label
   #ggsave(f, g)
 
   #print(capture.output(str(g)))
-  return(tagList(gg))
+  return((gg))
 }
 
