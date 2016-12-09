@@ -23,11 +23,12 @@ pcaPlot <- function(es, columns=c(), rows=c(), c1, c2, size="", colour="", label
 
   rows <- as.numeric(rows)
   columns <- as.numeric(columns)
-
-  data <- t(exprs(es)[rows,columns])
+  data <- exprs(es)[rows, columns]
   for(i in 1:nrow(data)) {
     data[i,] <- replace(data[i,], is.na(data[i,]), do.call(replacena, list(x = as.matrix(data[i,]), na.rm = TRUE)))
   }
+  data <- t(data)
+
   pca <- prcomp(data)
   explained <- (pca$sdev)^2 / sum(pca$sdev^2)
 
