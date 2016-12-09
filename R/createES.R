@@ -8,5 +8,6 @@ createES <- function(data, pData, labelDescription, colNames, rowNames) {
   phenoData <- AnnotatedDataFrame(pd)
   featureData <- AnnotatedDataFrame(data.frame(rowNames))
   es <- ExpressionSet(assayData = exprs, phenoData=phenoData, featureData = featureData)
+  assign("es", es, envir = parent.frame())
   return(es)
 }

@@ -1,15 +1,18 @@
-kmeans <- function(es, cols = c(), rows = c(), k) {
+kmeans <- function(es, cols = c(), rows = c(), k, replacena = "mean") {
   stopifnot(require(Biobase))
   stopifnot(require(jsonlite))
-  used.df <- data.frame(exprs(es))
+  data <- data.frame(exprs(es))
   if (!is.null(cols)) {
-    used.df <- used.df[,(cols + 1)]
+    data <- data[,(cols + 1)]
   }
   if (!is.null(rows)) {
-    used.df <- used.df[(rows + 1),]
+    data <- data[(rows + 1),]
   }
-  used.df <- t(scale(t(used.df)))
-  km <- stats::kmeans(used.df, k)
+  for(i in 1:nrow(data)) {
+    data[i,] <- replace(data[i,], is.na(data[i,]), do.call(replacena, list(x = as.matrix(data[i,]), na.rm = TRUE)))
+  }
+  data <- t(scale(t(data)))
+  km <- stats::kmeans(data, k)
   res <- data.frame(row.names = row.names(exprs(es)))
   res[["cluster"]] <- NA
   res[names(km$cluster), "cluster"] <- as.vector(km$cluster)
