@@ -29,6 +29,9 @@ pcaPlot <- function(es, columns=c(), rows=c(), c1, c2, size="", colour="", label
   if (nrow(ind) > 0) {
     data[ind] <- apply(data, 1, replacena, na.rm = T)[ind[,1]]
   }
+  ind1 <- which(!is.nan(as.matrix(data)), arr.ind = T)
+  left.rows <- unique(ind1[,"row"])
+  data <- data[left.rows,]
   data <- t(data)
 
   pca <- prcomp(data)
