@@ -12,6 +12,9 @@ kmeans <- function(es, cols = c(), rows = c(), k, replacena = "mean") {
   if (nrow(ind) > 0) {
     data[ind] <- apply(data, 1, replacena, na.rm = T)[ind[,1]]
   }
+  ind1 <- which(!is.nan(as.matrix(data)), arr.ind = T)
+  left.rows <- unique(ind1[,"row"])
+  data <- data[left.rows,]
   data <- t(scale(t(data)))
   km <- stats::kmeans(data, k)
   res <- data.frame(row.names = row.names(exprs(es)))
