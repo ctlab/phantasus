@@ -5,25 +5,24 @@
 #' @examples
 #' pcaPlot(es.norm, 1, 2) + aes(color=time)
 #' @export
-pcaPlot <- function(es, columns=c(), rows=c(), c1, c2, size="", colour="", label="", replacena = "mean") {
-  n1 <- as.numeric(c1)
-  n2 <- as.numeric(c2)
+pcaPlot <- function(es, columns=c(), rows=c(), replacena = "mean") {
   stopifnot(require(ggplot2))
   stopifnot(require(ggrepel))
   stopifnot(require(Biobase))
   stopifnot(require(svglite))
   stopifnot(require(plotly))
   stopifnot(require(htmltools))
+  stopifnot(require(jsonlite))
   if (is.null(rows)) {
-    rows <- 1:nrow(exprs(es))
+    rows <- 0:(nrow(exprs(es)) - 1)
   }
   if (is.null(columns)) {
-    columns <- 1:ncol(exprs(es))
+    columns <- 0:(ncol(exprs(es)) - 1)
   }
 
   rows <- as.numeric(rows)
   columns <- as.numeric(columns)
-  data <- exprs(es)[rows, columns]
+  data <- exprs(es)[rows + 1, columns + 1]
 
   ind <- which(is.na(data), arr.ind = T)
   if (nrow(ind) > 0) {
@@ -39,47 +38,47 @@ pcaPlot <- function(es, columns=c(), rows=c(), c1, c2, size="", colour="", label
 
   xs <- sprintf("PC%s", seq_along(explained))
   xlabs <- sprintf("%s (%.1f%%)", xs, explained * 100)
-
-  pData <- pData(es)[!(rownames(pData(es)) %in% setdiff(rownames(pData(es)), rownames(pca$x))),, drop=F]
-
-  if (size != "") {
-    pData[[size]] <- as.numeric(pData[[size]])
-  }
-
-
-  if (label == "id" || label == "") {
-    label <- "names"
-  }
-
-#   pp <- ggplot(data=cbind(as.data.frame(pca$x), pData, sampleNames(es)))
-#   if (size != "" && colour != "") {
 #
-#     aes <- aes_string(x=xs[n1],
-#                       y=xs[n2], colour=colour, size=size)
+#   pData <- pData(es)[!(rownames(pData(es)) %in% setdiff(rownames(pData(es)), rownames(pca$x))),, drop=F]
 #
-#   } else if (colour != "") {
-#     aes <- aes_string(x=xs[n1],
-#                       y=xs[n2], colour=colour)
-#   } else if (size != "") {
-#     aes <- aes_string(x=xs[n1],
-#                       y=xs[n2], size=size)
-#   } else {
-#     aes <- aes_string(x=xs[n1],
-#                       y=xs[n2])
+#   if (size != "") {
+#     pData[[size]] <- as.numeric(pData[[size]])
 #   }
-
-  pcadf <- as.data.frame(pca$x)
-  names <- rownames(pcadf)
-  gg <- plot_ly(data = cbind(pcadf, pData, names),
-                type = "scatter",
-                mode = "markers",
-                x = ~eval(parse(text=xs[n1])),
-                y = ~eval(parse(text=xs[n2])),
-                color = if (colour != "") ~eval(parse(text=colour)) else 'rgba(0, 0, 0, .9)',
-                marker = list(
-                  size = if (size != "") ~eval(parse(text=size)) else 10),
-                text = ~eval(parse(text=label))) %>%
-        layout(xaxis = list(title = xlabs[n1], zeroline = F), yaxis = list(title = xlabs[n2], zeroline = F))
+#
+#
+#   if (label == "id" || label == "") {
+#     label <- "names"
+#   }
+#
+# #   pp <- ggplot(data=cbind(as.data.frame(pca$x), pData, sampleNames(es)))
+# #   if (size != "" && colour != "") {
+# #
+# #     aes <- aes_string(x=xs[n1],
+# #                       y=xs[n2], colour=colour, size=size)
+# #
+# #   } else if (colour != "") {
+# #     aes <- aes_string(x=xs[n1],
+# #                       y=xs[n2], colour=colour)
+# #   } else if (size != "") {
+# #     aes <- aes_string(x=xs[n1],
+# #                       y=xs[n2], size=size)
+# #   } else {
+# #     aes <- aes_string(x=xs[n1],
+# #                       y=xs[n2])
+# #   }
+#
+#   pcadf <- as.data.frame(pca$x)
+#   names <- rownames(pcadf)
+#   gg <- plot_ly(data = cbind(pcadf, pData, names),
+#                 type = "scatter",
+#                 mode = "markers",
+#                 x = ~eval(parse(text=xs[n1])),
+#                 y = ~eval(parse(text=xs[n2])),
+#                 color = if (colour != "") ~eval(parse(text=colour)) else 'rgba(0, 0, 0, .9)',
+#                 marker = list(
+#                   size = if (size != "") ~eval(parse(text=size)) else 10),
+#                 text = ~eval(parse(text=label))) %>%
+#         layout(xaxis = list(title = xlabs[n1], zeroline = F), yaxis = list(title = xlabs[n2], zeroline = F))
 
 #   g <- pp + aes +
 #     geom_point(aes) +
@@ -95,6 +94,7 @@ pcaPlot <- function(es, columns=c(), rows=c(), c1, c2, size="", colour="", label
   #ggsave(f, g)
 
   #print(capture.output(str(g)))
-  return(tagList(gg))
+  pca.res <- as.matrix(pca$x); colnames(pca.res) <- NULL; row.names(pca.res) <- NULL
+  return(jsonlite::toJSON(list(pca = t(pca.res), xlabs=xlabs)))
 }
 
