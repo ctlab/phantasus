@@ -26,7 +26,7 @@ loadGSE <- function(name, type) {
     columnsMeta <- as.matrix(columnsMeta[,!(colnames(columnsMeta) %in% c('sample'))]); pData <- AnnotatedDataFrame(data.frame(columnsMeta, check.names = F))
     dm <- as.matrix(data); exprs <- dm; row.names(exprs) <- rownames; colnames(dm) <- NULL
     colMetaNames <- colnames(columnsMeta); colnames(columnsMeta) <- NULL
-    res <- list(data = dm, pdata = columnsMeta, participants = participants, symbol = symbol, rownames = rownames, colMetaNames = colMetaNames, aux = "a.a")
+    res <- list(data = dm, pdata = columnsMeta, participants = participants, symbol = symbol, rownames = rownames, colMetaNames = colMetaNames)
   }
   fData <- data.frame(matrix(res$symbol, nrow(res$data), 1)); colnames(fData) <- "symbol"
   fData <- AnnotatedDataFrame(fData); featureNames(fData) <- res$rownames
