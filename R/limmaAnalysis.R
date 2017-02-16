@@ -1,7 +1,6 @@
 limmaAnalysis <- function(es, field, classA, classB) {
   stopifnot(require(Biobase))
   stopifnot(require(limma))
-  stopifnot(require(org.Mm.eg.db))
   stopifnot(require(protolite))
   fvarLabels(es) <- gsub(pattern = "rowNames", replacement = "symbol", x = fvarLabels(es))
   es.design <- model.matrix(~0 + pData(es)[[field]], data = pData(es))
