@@ -4,18 +4,21 @@ loadGSE <- function(name, type) {
   #stopifnot(require(org.Mm.eg.db))
   #stopifnot(require(limma))
   #stopifnot(require(data.table))
+
+  options("GEOquery.inmemory.gpl" = TRUE);
+
   if (type == 'GSE') {
-    es.loaded <- getGEO(name, AnnotGPL = T)[[1]]
+    es.loaded <- getGEO(name, AnnotGPL = T, destdir = "~/dir")[[1]]
     data <- as.matrix(exprs(es.loaded)); exprs <- data; colnames(data) <- NULL; row.names(data) <- NULL
     pd <- as.matrix(pData(es.loaded)); pData <- phenoData(es.loaded); colnames(pd) <- NULL; row.names(pd) <- NULL
     participants <- row.names(pData(es.loaded))
     rownames <- featureNames(es.loaded)
     fdata <- as.matrix(fData(es.loaded)[,grepl("symbol", varLabels(featureData(es.loaded)), ignore.case = T)]); colnames(fdata) <- NULL; row.names(fdata) <- NULL
     varlabels <- if (ncol(fdata) > 0) "symbol" else NULL
-    res <- list(data = data, pdata = pd, participants = participants, symbol = fdata[,1], rownames = rownames, colMetaNames = colnames(pData(es.loaded)))
+    res <- list(data = data, pdata = pd, participants = participants, symbol = fdata[,if (is.null(varlabels)) 0 else 1], rownames = rownames, colMetaNames = colnames(pData(es.loaded)))
   }
   else {
-    l <- getGEO(name)
+    l <- getGEO(name, destdir = "/var/morpheus/cache")
     table <- slot(l, 'dataTable')
     data <- Table(table)
     rownames <- as.vector(data[["ID_REF"]])
