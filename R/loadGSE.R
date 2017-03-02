@@ -5,8 +5,6 @@ loadGSE <- function(name, type) {
   #stopifnot(require(limma))
   #stopifnot(require(data.table))
 
-  options("GEOquery.inmemory.gpl" = TRUE);
-
   if (type == 'GSE') {
     es.loaded <- getGEO(name, AnnotGPL = T, destdir = "/var/morpheus/cache")[[1]]
     data <- as.matrix(exprs(es.loaded)); exprs <- data; colnames(data) <- NULL; row.names(data) <- NULL
@@ -15,7 +13,7 @@ loadGSE <- function(name, type) {
     rownames <- featureNames(es.loaded)
     fdata <- as.matrix(fData(es.loaded)[,grepl("symbol", varLabels(featureData(es.loaded)), ignore.case = T)]); colnames(fdata) <- NULL; row.names(fdata) <- NULL
     varlabels <- if (ncol(fdata) > 0) "symbol" else NULL
-    res <- list(data = data, pdata = pd, participants = participants, symbol = fdata[,if (is.null(varlabels)) 0 else 1], rownames = rownames, colMetaNames = colnames(pData(es.loaded)))
+    res <- list(data = data, pdata = pd, participants = participants, symbol = if(is.null(varlabels)) NULL else fdata[,1], rownames = rownames, colMetaNames = colnames(pData(es.loaded)))
   }
   else {
     l <- getGEO(name, destdir = "/var/morpheus/cache")
