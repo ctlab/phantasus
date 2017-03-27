@@ -1,16 +1,29 @@
-limmaAnalysis <- function(es, fieldName, fieldValues) {
+limmaAnalysis <- function(es, rows = c(), columns = c(), fieldName = "Comparison", fieldValues) {
   stopifnot(require(Biobase))
   stopifnot(require(limma))
   stopifnot(require(protolite))
+  if (length(rows) > 0) {
+    rows <- rows + 1
+  } else {
+    rows <- 1:nrow(exprs(es))
+  }
+  if (length(columns) > 0) {
+    columns <- columns + 1
+  } else {
+    columns <- 1:ncol(exprs(es))
+  }
   fieldValues <- replace(fieldValues, fieldValues == "", NA)
 
-  new.pdata <- pData(es)
+  new.pdata <- pData(es)[columns,]
   new.pdata[[fieldName]] <- as.factor(fieldValues)
   new.pdata <- new.pdata[!is.na(new.pdata[[fieldName]]),]
   new.sampleNames <- row.names(new.pdata)
-  new.exprs <- exprs(es)[,new.sampleNames]
+  new.exprs <- exprs(es)[rows,new.sampleNames]
 
-  es.copy <- ExpressionSet(new.exprs, AnnotatedDataFrame(new.pdata), featureData = featureData(es))
+  new.fdata <- data.frame(row.names = row.names(new.exprs))
+  new.fdata[["symbol"]] <- fData(es)[row.names(new.exprs),]
+
+  es.copy <- ExpressionSet(new.exprs, AnnotatedDataFrame(new.pdata), featureData = AnnotatedDataFrame(data = new.fdata, varMetadata = varMetadata(featureData(es))))
 
   fvarLabels(es.copy) <- gsub(pattern = "rowNames", replacement = "symbol", x = fvarLabels(es.copy))
   es.design <- model.matrix(~0 + pData(es.copy)[[fieldName]], data = pData(es.copy))
@@ -34,3 +47,4 @@ limmaAnalysis <- function(es, fieldName, fieldValues) {
   writeBin(protolite::serialize_pb(as.list(de)), f)
   f
 }
+
