@@ -7,7 +7,6 @@ loadGSE <- function(name, type) {
 
   if (type == 'GSE') {
     es.loaded <- getGEO(name, AnnotGPL = T, destdir = "/var/morpheus/cache")[[1]]
-    #es.loaded <- getGEO(name, AnnotGPL = T)[[1]]
     data <- as.matrix(exprs(es.loaded)); exprs <- data; colnames(data) <- NULL; row.names(data) <- NULL
     pd <- as.matrix(pData(es.loaded)); pData <- phenoData(es.loaded); colnames(pd) <- NULL; row.names(pd) <- NULL
     participants <- row.names(pData(es.loaded))
@@ -18,7 +17,6 @@ loadGSE <- function(name, type) {
   }
   else {
     l <- getGEO(name, destdir = "/var/morpheus/cache")
-    #l <- getGEO(name)
     table <- slot(l, 'dataTable')
     data <- Table(table)
     rownames <- as.vector(data[["ID_REF"]])
