@@ -1,28 +1,23 @@
-#' Makes nice PCA plot for expression data
+#' @name pcaPlot
+#' @title PCA Plot
+#' @description Function for creating json with full description of the pcaPlot for plotly.js
 #' @param es an ExpressionSet object, should be normalized
-#' @param c1 a number of the first component to plot (numeric)
-#' @param c2 a number of the second component to plot (numeric)
-#' @examples
-#' pcaPlot(es.norm, 1, 2) + aes(color=time)
+#' @param columns list of specified columns' indices (optional)
+#' @param rows list of specified rows' indices (optional)
+#' @param replacena method for replacing NA values (mean by default)
+#' @return json with full description of the plot for plotly.js
 #' @export
-pcaPlot <- function(es, columns=c(), rows=c(), replacena = "mean") {
-  stopifnot(require(ggplot2))
-  stopifnot(require(ggrepel))
-  stopifnot(require(Biobase))
-  stopifnot(require(svglite))
-  stopifnot(require(plotly))
-  stopifnot(require(htmltools))
-  stopifnot(require(jsonlite))
-  if (is.null(rows)) {
-    rows <- 0:(nrow(exprs(es)) - 1)
-  }
-  if (is.null(columns)) {
-    columns <- 0:(ncol(exprs(es)) - 1)
-  }
-
-  rows <- as.numeric(rows)
-  columns <- as.numeric(columns)
-  data <- exprs(es)[rows + 1, columns + 1]
+#' @import ggplot2
+#' @import ggrepel
+#' @import Biobase
+#' @import svglite
+#' @import plotly
+#' @import htmltools
+#' @import jsonlite
+pcaPlot <- function(es, rows=c(), columns = c(), replacena = "mean") {
+  rows <- getIndicesVector(rows, nrow(exprs(es)))
+  columns <- getIndicesVector(columns, ncol(exprs(es)))
+  data <- data.frame(exprs(es))[rows, columns]
 
   ind <- which(is.na(data), arr.ind = T)
   if (nrow(ind) > 0) {
@@ -38,62 +33,7 @@ pcaPlot <- function(es, columns=c(), rows=c(), replacena = "mean") {
 
   xs <- sprintf("PC%s", seq_along(explained))
   xlabs <- sprintf("%s (%.1f%%)", xs, explained * 100)
-#
-#   pData <- pData(es)[!(rownames(pData(es)) %in% setdiff(rownames(pData(es)), rownames(pca$x))),, drop=F]
-#
-#   if (size != "") {
-#     pData[[size]] <- as.numeric(pData[[size]])
-#   }
-#
-#
-#   if (label == "id" || label == "") {
-#     label <- "names"
-#   }
-#
-# #   pp <- ggplot(data=cbind(as.data.frame(pca$x), pData, sampleNames(es)))
-# #   if (size != "" && colour != "") {
-# #
-# #     aes <- aes_string(x=xs[n1],
-# #                       y=xs[n2], colour=colour, size=size)
-# #
-# #   } else if (colour != "") {
-# #     aes <- aes_string(x=xs[n1],
-# #                       y=xs[n2], colour=colour)
-# #   } else if (size != "") {
-# #     aes <- aes_string(x=xs[n1],
-# #                       y=xs[n2], size=size)
-# #   } else {
-# #     aes <- aes_string(x=xs[n1],
-# #                       y=xs[n2])
-# #   }
-#
-#   pcadf <- as.data.frame(pca$x)
-#   names <- rownames(pcadf)
-#   gg <- plot_ly(data = cbind(pcadf, pData, names),
-#                 type = "scatter",
-#                 mode = "markers",
-#                 x = ~eval(parse(text=xs[n1])),
-#                 y = ~eval(parse(text=xs[n2])),
-#                 color = if (colour != "") ~eval(parse(text=colour)) else 'rgba(0, 0, 0, .9)',
-#                 marker = list(
-#                   size = if (size != "") ~eval(parse(text=size)) else 10),
-#                 text = ~eval(parse(text=label))) %>%
-#         layout(xaxis = list(title = xlabs[n1], zeroline = F), yaxis = list(title = xlabs[n2], zeroline = F))
 
-#   g <- pp + aes +
-#     geom_point(aes) +
-#     xlab(xlabs[n1]) + ylab(xlabs[n2])
-#
-#   #pg <- ggplotly(g)
-#   if (label != "") {
-#     message("i'm here 2s")
-#
-#     g <- g + aes + geom_text_repel(aes_string(label=label), size=3)
-#   }
-  #f <- tempfile(pattern="plot",tmpdir=getwd(),fileext=".svg")
-  #ggsave(f, g)
-
-  #print(capture.output(str(g)))
   pca.res <- as.matrix(pca$x); colnames(pca.res) <- NULL; row.names(pca.res) <- NULL
   return(jsonlite::toJSON(list(pca = t(pca.res), xlabs=xlabs)))
 }
