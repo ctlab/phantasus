@@ -1,4 +1,3 @@
-
 #' @name kmeans
 #' @title KMeans
 #' @description Function for performing k-means clusterisation on ExpressionSet.
