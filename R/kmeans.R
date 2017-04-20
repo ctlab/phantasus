@@ -1,25 +1,23 @@
-kmeans <- function(es, cols = c(), rows = c(), k, replacena = "mean") {
-  stopifnot(require(Biobase))
-  stopifnot(require(jsonlite))
-  data <- data.frame(exprs(es))
-  if (!is.null(cols)) {
-    data <- data[,(cols + 1)]
-  }
-  if (!is.null(rows)) {
-    data <- data[(rows + 1),]
-  }
-  replacenas <- function() {
-    ind <- which(is.na(data), arr.ind = T)
-    if (nrow(ind) > 0) {
-      data[ind] <- apply(data, 1, replacena, na.rm = T)[ind[,1]]
-    }
-    ind1 <- which(!is.nan(as.matrix(data)), arr.ind = T)
-    left.rows <- unique(ind1[,"row"])
-    data <- data[left.rows,]
-    data
-  }
 
-  data <- replacenas()
+#' @name kmeans
+#' @title KMeans
+#' @description Function for performing k-means clusterisation on ExpressionSet.
+#' @param es an ExpressionSet object
+#' @param columns list of specified columns' indices (optional)
+#' @param rows list of specified rows' indices (optional)
+#' @param k expected number of clusters
+#' @param replacena method for replacing NA values (mean by default)
+#' @return json, containing array of corresponding clusters
+#' @export
+#' @import Biobase
+#' @import jsonlite
+kmeans <- function(es, columns = c(), rows = c(), k, replacena = "mean") {
+  assertthat::assert_that(k > 0)
+
+  rows <- getIndicesVector(rows, nrow(exprs(es)))
+  columns <- getIndicesVector(columns, ncol(exprs(es)))
+  data <- replacenas(data.frame(exprs(es))[rows, columns], replacena)
+
   data <- t(scale(t(data)))
   while (sum(is.na(data)) > 0) {
     data <- replacenas()
@@ -30,6 +28,6 @@ kmeans <- function(es, cols = c(), rows = c(), k, replacena = "mean") {
   res <- data.frame(row.names = row.names(exprs(es)))
   res[["cluster"]] <- NA
   res[names(km$cluster), "cluster"] <- as.vector(km$cluster)
-  return(toJSON(as.vector(res[["cluster"]])))
+  return(toJSON(as.vector(km$cluster)))
 }
 

@@ -2,22 +2,22 @@
 % Please edit documentation in R/pcaPlot.R
 \name{pcaPlot}
 \alias{pcaPlot}
-\title{Makes nice PCA plot for expression data}
+\title{PCA Plot}
 \usage{
-pcaPlot(es, columns = c(), rows = c(), c1, c2, size = "", colour = "",
-  label = "", replacena = "mean")
+pcaPlot(es, rows = c(), columns = c(), replacena = "mean")
 }
 \arguments{
 \item{es}{an ExpressionSet object, should be normalized}
 
-\item{c1}{a number of the first component to plot (numeric)}
+\item{rows}{list of specified rows' indices (optional)}
 
-\item{c2}{a number of the second component to plot (numeric)}
+\item{columns}{list of specified columns' indices (optional)}
+
+\item{replacena}{method for replacing NA values (mean by default)}
+}
+\value{
+json with full description of the plot for plotly.js
 }
 \description{
-Makes nice PCA plot for expression data
+Function for creating json with full description of the pcaPlot for plotly.js
 }
-\examples{
-pcaPlot(es.norm, 1, 2) + aes(color=time)
-}
-

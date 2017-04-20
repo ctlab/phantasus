@@ -1,5 +1,15 @@
+#' @name createES
+#' @title Create ExpressionSet
+#' @description Function for creating ExpressionSet from parameters and exporting it to global environment
+#' @param data gene expression matrix
+#' @param pData matrix with phenotypical data
+#' @param labelDescription names of phenoData
+#' @param colNames sample ids
+#' @param rowNames gene ids
+#' @param symbol gene symbol
+#' @export
+#' @import Biobase
 createES <- function(data, pData, labelDescription, colNames, rowNames, symbol) {
-  stopifnot(require(Biobase))
   exprs <- t(data)
   colnames(exprs) <- colNames
   truePData <- pData
@@ -16,5 +26,5 @@ createES <- function(data, pData, labelDescription, colNames, rowNames, symbol) 
   featureNames(featureData) <- rowNames
   es <- ExpressionSet(assayData = exprs, phenoData=phenoData, featureData = featureData)
   assign("es", es, envir = parent.frame())
-  return(es)
+  es
 }
