@@ -8,7 +8,8 @@
 #' @import Biobase
 #' @import GEOquery
 loadGEO <- function(name, type = NA) {
-  assign("es", getES(name, type), envir = parent.frame())
+  es <- getES(name, type)
+  assign("es", es, envir = parent.frame())
   data <- as.matrix(exprs(es)); colnames(data) <- NULL; row.names(data) <- NULL
 
   pdata <- as.matrix(pData(es)); colnames(pdata) <- NULL; row.names(pdata) <- NULL
