@@ -8,7 +8,7 @@
 #' @import Biobase
 #' @import GEOquery
 loadGEO <- function(name, type = NA) {
-  assign("es", getES(name, type, destdir = "/var/morpheus/cache"), envir = parent.frame())
+  assign("es", getES(name, type), envir = parent.frame())
   data <- as.matrix(exprs(es)); colnames(data) <- NULL; row.names(data) <- NULL
 
   pdata <- as.matrix(pData(es)); colnames(pdata) <- NULL; row.names(pdata) <- NULL
@@ -20,7 +20,10 @@ loadGEO <- function(name, type = NA) {
   colnames(fdata) <- NULL
   row.names(fdata) <- NULL
 
-  res <- list(data = data, pdata = pdata, participants = participants, symbol = fdata, rownames = rownames, colMetaNames = varLabels(phenoData(es)), rowMetaNames = varLabels(featureData(es)))
+  res <- list(data = data, pdata = pdata,
+              fdata = fdata, rownames = rownames,
+              colMetaNames = varLabels(phenoData(es)),
+              rowMetaNames = varLabels(featureData(es)))
 
   f <- tempfile(pattern = "gse", tmpdir = getwd(), fileext = ".bin")
   writeBin(protolite::serialize_pb(res), f)
