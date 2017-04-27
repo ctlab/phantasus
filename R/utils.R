@@ -15,3 +15,4 @@ replacenas <- function(data, replacena) {
   data <- data[left.rows,]
   data
 }
+
