@@ -58,11 +58,31 @@ getGDS <- function(name, destdir = tempdir()) {
 
 getGSE <- function(name, destdir = tempdir()) {
   es <- getGEO(name, AnnotGPL = T, destdir = destdir)[[1]]
-  featureData(es) <- featureData(es)[,grepl("symbol", varLabels(featureData(es)), ignore.case = T)]
+  featureData(es) <- featureData(es)[,grepl("symbol", fvarLabels(es), ignore.case = T)]
 
-  phenoData(es) <- phenoData(es)[,grepl("characteristics", varLabels(phenoData(es)), ignore.case = T)
-                                  | (varLabels(phenoData(es)) %in% c("title", "id", "geo_accession"))]
+  phenoData(es) <- phenoData(es)[,grepl("characteristics", varLabels(es), ignore.case = T)
+                                  | (varLabels(es) %in% c("title", "id", "geo_accession"))]
 
+  chr <- varLabels(es)[grepl("characteristics", varLabels(es), ignore.case = T)]
+
+  take <- function(x, n) {
+    sapply(x, function(x) { x[[n]] })
+  }
+  rename <- function(prevName, x) {
+    splitted <- strsplit(x, ": ")
+    splittedFirst <- unique(take(splitted, 1))
+    if (length(splittedFirst) == 1) {
+       res = list(name = splittedFirst[1], x = take(splitted, 2))
+    }
+    else {
+       res = list(name = prevName, x = x)
+    }
+    res
+  }
+
+  renamed <- lapply(chr, function(x) { rename(x, as.vector(pData(es)[,x])) })
+  phenoData(es) <- phenoData(es)[, !(varLabels(es) %in% chr)]
+  pData(es)[,take(renamed,1)] <- take(renamed,2)
   es
 }
 
