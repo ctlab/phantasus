@@ -8,7 +8,7 @@
 #' @import Biobase
 #' @import GEOquery
 loadGEO <- function(name, type = NA) {
-  es <- getES(name, type)
+  es <- getES(name, type, destdir = "/var/morpheus/cache")
   assign("es", es, envir = parent.frame())
   data <- as.matrix(exprs(es)); colnames(data) <- NULL; row.names(data) <- NULL
 
