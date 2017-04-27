@@ -44,13 +44,13 @@ getGDS <- function(name, destdir = tempdir()) {
   row.names(exprs) <- rownames
 
   row.names(columnsMeta) <- sampleNames
-  columnsMeta <- columnsMeta[,!(colnames(columnsMeta) %in% c('sample'))] 
+  # columnsMeta <- columnsMeta[,!(colnames(columnsMeta) %in% c('sample'))] 
   pData <- AnnotatedDataFrame(data.frame(columnsMeta, check.names = F))
 
   fData <- data.frame(matrix(symbol, nrow(exprs), 1));
   colnames(fData) <- "symbol"
   fData <- AnnotatedDataFrame(fData)
-  featureNames(fData) <- res$rownames
+  featureNames(fData) <- rownames
 
   ExpressionSet(assayData = exprs, phenoData = pData, featureData = fData)
 }
