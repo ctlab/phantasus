@@ -3,15 +3,13 @@
 #' @description Function for creating ExpressionSet from parameters and exporting it to global environment
 #' @param data gene expression matrix
 #' @param pData matrix with phenotypical data
-#' @param labelDescription names of phenoData
-#' @param colNames sample ids
-#' @param rowNames gene ids
-#' @param symbol gene symbol
+#' @param varLabels names of phenoData columns
+#' @param fData matrix with feature data
+#' @param fvarLabels names of featureData columns
 #' @export
 #' @import Biobase
 createES <- function(data, pData, varLabels, fData, fvarLabels) {
   exprs <- t(data)
-  colnames(exprs) <- colNames
   truePData <- pData
   phenoData <- AnnotatedDataFrame(data.frame(pData))
   varLabels(phenoData) <- varLabels
