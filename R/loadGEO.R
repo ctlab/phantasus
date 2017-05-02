@@ -70,6 +70,10 @@ getGSE <- function(name, destdir = tempdir()) {
   }
   rename <- function(prevName, x) {
     splitted <- strsplit(x, ": ")
+    sumlength <- sum(sapply(as.vector(splitted), length))
+    if (sumlength != 2 * length(x)) {
+       return(list(name = prevName, x = x))
+    }
     splittedFirst <- unique(take(splitted, 1))
     if (length(splittedFirst) == 1) {
        res = list(name = splittedFirst[1], x = take(splitted, 2))
