@@ -4,21 +4,20 @@
 \alias{createES}
 \title{Create ExpressionSet}
 \usage{
-createES(data, pData, labelDescription, colNames, rowNames, symbol)
+createES(data, pData, varLabels, fData, fvarLabels)
 }
 \arguments{
 \item{data}{gene expression matrix}
 
 \item{pData}{matrix with phenotypical data}
 
-\item{labelDescription}{names of phenoData}
+\item{varLabels}{names of phenoData columns}
 
-\item{colNames}{sample ids}
+\item{fData}{matrix with feature data}
 
-\item{rowNames}{gene ids}
-
-\item{symbol}{gene symbol}
+\item{fvarLabels}{names of featureData columns}
 }
 \description{
 Function for creating ExpressionSet from parameters and exporting it to global environment
 }
+
