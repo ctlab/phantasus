@@ -30,9 +30,9 @@ RUN apt-get -y update && apt-get -y install \
     protobuf-compiler \
     r-cran-xml
 RUN R -e 'source("https://bioconductor.org/biocLite.R"); install.packages("XML", repo = "http://cran.gis-lab.info"); biocLite("Biobase"); biocLite("limma"); biocLite("org.Mm.eg.db")'
-RUN R -e 'install.packages("devtools", repo = "http://cran.gis-lab.info"); library(devtools); install_github("hadley/scales"); install_github("baba-beda/morpheusR", ref="release"); install_github("assaron/GEOquery")'
+RUN R -e 'install.packages("devtools", repo = "http://cran.gis-lab.info"); library(devtools); install_github("hadley/scales"); install_github("assaron/GEOquery"); install_github("ctlab/phantasus")'
 RUN cd /var/www/html && \
-    git clone -b release https://github.com/baba-beda/morpheus.js.git morpheus && \
+    git clone -b release https://github.com/ctlab/phantasus.js.git phantasus && \
     cd
     
 
@@ -47,8 +47,8 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en  
 ENV LC_ALL en_US.UTF-8     
 
-RUN mkdir -p /var/morpheus/cache
-VOLUME ["/var/morpheus/cache"]
+RUN mkdir -p /var/phantasus/cache
+VOLUME ["/var/phantasus/cache"]
 
 CMD service apache2 start && \
     R -e 'opencpu::opencpu$start(8001)' && \
