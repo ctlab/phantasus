@@ -1,9 +1,10 @@
-Package: morpheusR
-Title: Extra functions for Morpheus
+Package: phantasus
+Title: R-package for phantasus application
 Version: 0.0.0.9000
-Authors@R: person("Daria", "Zenkova", email = "daria.zenkova.cs@gmail.com", role = c("aut", "cre"))
-Description: This package contains several functions which are used in our
-    version of Web-application Morpheus through OpenCPU
+Authors@R: c(person("Daria", "Zenkova", email = "daria.zenkova.cs@gmail.com", role = c("aut", "cre")),
+             person("Alexey", "Sergushichev", email = "alsergbox@gmail.com", role = "aut"))
+Description: This package contains several R functions which are used in our
+    version of Web-application Phantasus through OpenCPU
 Depends:
     R (>= 3.3.1)
 Imports:
@@ -12,7 +13,7 @@ Imports:
     svglite,
     data.table,
     protolite
-License: GNU General Public License(GPL)
+License: MIT License (MIT)
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 5.0.1
