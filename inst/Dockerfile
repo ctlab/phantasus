@@ -10,7 +10,8 @@ RUN apt-get -y update && \
         libssl-dev \
         libssh2-1-dev \
         libcurl4-openssl-dev \
-        apache2 && \
+        apache2 \
+        locales && \
     apt-add-repository -y ppa:opencpu/opencpu-1.6 && \
     apt-get update && \
     apt-get install -y \
@@ -32,7 +33,7 @@ RUN apt-get -y update && apt-get -y install \
 RUN R -e 'source("https://bioconductor.org/biocLite.R"); install.packages("XML", repo = "http://cran.gis-lab.info"); biocLite("Biobase"); biocLite("limma"); biocLite("org.Mm.eg.db")'
 RUN R -e 'install.packages("devtools", repo = "http://cran.gis-lab.info"); library(devtools); install_github("hadley/scales"); install_github("assaron/GEOquery"); install_github("ctlab/phantasus")'
 RUN cd /var/www/html && \
-    git clone -b release https://github.com/ctlab/phantasus.js.git phantasus && \
+    git clone  https://github.com/ctlab/phantasus.js.git phantasus && \
     cd
     
 
