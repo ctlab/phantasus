@@ -10,6 +10,7 @@
 #' @export
 #' @import Biobase
 #' @import jsonlite
+#' @import assertthat
 kmeans <- function(es, columns = c(), rows = c(), k, replacena = "mean") {
   assertthat::assert_that(k > 0)
 
