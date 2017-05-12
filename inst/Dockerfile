@@ -37,6 +37,7 @@ RUN R -e 'source("https://bioconductor.org/biocLite.R"); install.packages("XML",
 RUN R -e 'install.packages("devtools", repo = "http://cran.gis-lab.info"); library(devtools); install_github("hadley/scales"); install_github("assaron/GEOquery"); install("/root/phantasus")'
 
 RUN cp -r /root/phantasus/inst/www/phantasus.js /var/www/html/
+RUN mv /var/www/html/phantasus.js /var/www/html/phantasus
 
 RUN a2enmod proxy_http
 
