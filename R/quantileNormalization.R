@@ -1,7 +1,4 @@
 quantileNormalization <- function(es, cols = c(), rows = c()) {
-  stopifnot(require(limma))
-  stopifnot(require(Biobase))
-  stopifnot(require(jsonlite))
   exprs <- exprs(es)
   if (is.null(cols)) {
     cols <- 0:(ncol(exprs) - 1)

@@ -26,10 +26,10 @@ limmaAnalysis <- function(es, rows = c(), columns = c(), fieldValues) {
 
   es.copy <- es[rows, new.sampleNames]
   pData(es.copy) <- new.pdata
+  fData(es.copy) <- data.frame(row.names=rownames(es.copy))
 
-  fvarLabels(es.copy) <- gsub(pattern = "rowNames", replacement = "symbol", x = fvarLabels(es.copy))
-  es.design <- model.matrix(~0 + pData(es.copy)[[fieldName]], data = pData(es.copy))
-  colnames(es.design) <- gsub(pattern = "pData.es.copy...fieldName..",
+  es.design <- model.matrix(~0 + Comparison, data = pData(es.copy))
+  colnames(es.design) <- gsub(pattern = fieldName,
                               replacement = '',
                               x = make.names(colnames(es.design)))
 
