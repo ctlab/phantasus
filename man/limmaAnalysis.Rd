@@ -21,3 +21,4 @@ file with serialized information on differential expression matrix
 \description{
 Function for performing differential expression analysis. Returns serialized de-matrix.
 }
+

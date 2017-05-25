@@ -4,7 +4,7 @@
 \alias{loadGEO}
 \title{Load GEO Dataset}
 \usage{
-loadGEO(name, type)
+loadGEO(name, type = NA)
 }
 \arguments{
 \item{name}{string, containing GEO identifier of the dataset}
@@ -17,3 +17,4 @@ file with serialized information on ExpressionSet
 \description{
 Function for loading dataset from GEO, creating ExpressionSet from it and exporting it to global environment
 }
+
