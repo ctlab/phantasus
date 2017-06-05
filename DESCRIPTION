@@ -2,6 +2,7 @@ Package: phantasus
 Title: R-package for phantasus application
 Version: 0.0.0.9000
 Authors@R: c(person("Daria", "Zenkova", email = "daria.zenkova.cs@gmail.com", role = c("aut", "cre")),
+             person("Joshua", "Gould", email = "jgould@broadinstitute.org", role = "aut"),
              person("Alexey", "Sergushichev", email = "alsergbox@gmail.com", role = "aut"))
 Description: This package contains several R functions which are used in our
     version of Web-application Phantasus through OpenCPU
