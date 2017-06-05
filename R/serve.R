@@ -8,7 +8,7 @@
 #' @import Rook
 #' @export
 #' @examples
-#' servePhantasus("0.0.0.0", 8000, cacheDir="./cache")
+#' servePhantasus("0.0.0.0", 8000, cacheDir=file.path(getwd(), "cache"))
 servePhantasus <- function(host, port,
                           staticRoot=system.file("www/phantasus.js", package="phantasus"),
                           cacheDir=tempdir()) {
