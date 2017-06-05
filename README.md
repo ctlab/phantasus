@@ -22,3 +22,11 @@ example(servePhantasus)
 ```
 
 Open `http://localhost:8000` in your browser.
+
+## System dependencies
+
+There are several system packages that have to be installed on the system. The names of these packages will be displayed during installation. On Ubuntu can install them beforehand and alltogether using command:
+
+```{bash}
+sudo apt-get install libapparmor-dev libprotobuf-dev protobuf-compiler libcurl4-openssl-dev
+```
