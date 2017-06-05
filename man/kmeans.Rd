@@ -23,4 +23,3 @@ json, containing array of corresponding clusters
 \description{
 Function for performing k-means clusterisation on ExpressionSet.
 }
-

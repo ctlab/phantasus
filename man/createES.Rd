@@ -20,4 +20,3 @@ createES(data, pData, varLabels, fData, fvarLabels)
 \description{
 Function for creating ExpressionSet from parameters and exporting it to global environment
 }
-

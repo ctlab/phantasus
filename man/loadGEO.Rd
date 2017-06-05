@@ -17,4 +17,3 @@ file with serialized information on ExpressionSet
 \description{
 Function for loading dataset from GEO, creating ExpressionSet from it and exporting it to global environment
 }
-
