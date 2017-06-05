@@ -21,4 +21,3 @@ json with full description of the plot for plotly.js
 \description{
 Function for creating json with full description of the pcaPlot for plotly.js
 }
-

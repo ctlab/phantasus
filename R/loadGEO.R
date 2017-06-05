@@ -8,7 +8,13 @@
 #' @import Biobase
 #' @import GEOquery
 loadGEO <- function(name, type = NA) {
-  es <- getES(name, type, destdir = "/var/phantasus/cache")
+  cacheDir <- getOption("phantasusCacheDir")
+  if (is.null(cacheDir)) {
+    cacheDir <- tempdir()
+  } else if (!dir.exists(cacheDir)) {
+    dir.create(cacheDir)
+  }
+  es <- getES(name, type, destdir = cacheDir)
   assign("es", es, envir = parent.frame())
   data <- as.matrix(exprs(es)); colnames(data) <- NULL; row.names(data) <- NULL
 
