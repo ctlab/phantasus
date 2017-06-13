@@ -51,7 +51,7 @@ getGDS <- function(name, destdir = tempdir()) {
   row.names(exprs) <- rownames
 
   row.names(columnsMeta) <- sampleNames
-  # columnsMeta <- columnsMeta[,!(colnames(columnsMeta) %in% c('sample'))] 
+  # columnsMeta <- columnsMeta[,!(colnames(columnsMeta) %in% c('sample'))]
   pData <- AnnotatedDataFrame(data.frame(columnsMeta, check.names = F))
 
   fData <- data.frame(matrix(symbol, nrow(exprs), 1));
@@ -76,13 +76,15 @@ getGSE <- function(name, destdir = tempdir()) {
   }
   rename <- function(prevName, x) {
     splitted <- strsplit(x, ": ")
-    sumlength <- sum(sapply(as.vector(splitted), length))
-    if (sumlength != 2 * length(x)) {
+    lengths <- sapply(splitted, length)
+    if (any(lengths != 2 & lengths != 0)) {
        return(list(name = prevName, x = x))
     }
-    splittedFirst <- unique(take(splitted, 1))
+    splittedFirst <- unique(take(splitted[lengths > 0], 1))
     if (length(splittedFirst) == 1) {
-       res = list(name = splittedFirst[1], x = take(splitted, 2))
+       res = list(name = splittedFirst[1], x = ifelse(lengths == 2,
+                                                      take(splitted[lengths == 2], 2),
+                                                      NA))
     }
     else {
        res = list(name = prevName, x = x)
