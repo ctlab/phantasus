@@ -53,5 +53,4 @@ RUN mkdir -p /var/phantasus/cache
 VOLUME ["/var/phantasus/cache"]
 
 CMD service apache2 start && \
-    R -e 'opencpu::opencpu$start(8001)' && \
-    tail -F /var/log/opencpu/apache_access.log
+    R -e 'library(phantasus); servePhantasus("0.0.0.0", 8001, cacheDir="/var/phantasus/cache")'
