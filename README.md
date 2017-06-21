@@ -30,3 +30,32 @@ There are several system packages that have to be installed on the system. The n
 ```{bash}
 sudo apt-get install libapparmor-dev libprotobuf-dev protobuf-compiler libcurl4-openssl-dev
 ```
+
+## Installation example (CentOS 7)
+
+Update packages and install `R` and dependencies:
+```
+yum update
+yum install openssl-devel protobuf-compiler R R-Rcpp R-Rcpp-devel libcurl-devel libxml2-devel protobuf-devel git screen
+```
+
+Install `devtools` and `bioclite`:
+```
+R -e 'install.packages("devtools")'
+R -e 'source("https://bioconductor.org/biocLite.R"); biocLite()'
+R -e 'devtools::install_github("assaron/GEOquery")'
+```
+
+Install `phantasus`:
+```
+git clone --recursive https://github.com/ctlab/phantasus
+R -e 'devtools::install("phantasus")'
+```
+
+Run `phantasus` at 80 port in screen:
+```
+screen -S phantasus-server
+R -e 'library(phantasus); servePhantasus("0.0.0.0", 80, cacheDir="/var/phantasus/cache")'
+```
+
+Check `http://0.0.0.0`
