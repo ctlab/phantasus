@@ -40,7 +40,7 @@ loadGEO <- function(name, type = NA) {
 
   files <- list()
   for(i in 1:length(ess)) {
-    assign(paste("es_", i), ess[[i]], envir = parent.frame())
+    assign(paste("es_", i, sep = ""), ess[[i]], envir = parent.frame())
     files[[i]] <- writeToFile(ess[[i]])
   }
   jsonlite::toJSON(files)
