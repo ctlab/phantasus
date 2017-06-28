@@ -16,7 +16,7 @@ loadGEO <- function(name, type = NA) {
   }
   ess <- getES(name, type, destdir = cacheDir)
 
-  writeToFile <- function(es) {
+  writeToList <- function(es) {
     data <- as.matrix(exprs(es)); colnames(data) <- NULL; row.names(data) <- NULL
 
     pdata <- as.matrix(pData(es)); colnames(pdata) <- NULL; row.names(pdata) <- NULL
@@ -32,18 +32,19 @@ loadGEO <- function(name, type = NA) {
                 fdata = fdata, rownames = rownames,
                 colMetaNames = varLabels(phenoData(es)),
                 rowMetaNames = varLabels(featureData(es)))
-
-    f <- tempfile(pattern = "gse", tmpdir = getwd(), fileext = ".bin")
-    writeBin(protolite::serialize_pb(res), f)
-    f
+    res
   }
+
 
   files <- list()
   for(i in 1:length(ess)) {
     assign(paste("es_", i, sep = ""), ess[[i]], envir = parent.frame())
-    files[[i]] <- writeToFile(ess[[i]])
+    seriesName <- paste(name, "_", annotation(ess[[i]]), sep = "")
+    files[[seriesName]] <- writeToList(ess[[i]])
   }
-  jsonlite::toJSON(files)
+  f <- tempfile(pattern = "gse", tmpdir = getwd(), fileext = ".bin")
+  writeBin(protolite::serialize_pb(files), f)
+  jsonlite::toJSON(f);
 }
 
 getGDS <- function(name, destdir = tempdir()) {
