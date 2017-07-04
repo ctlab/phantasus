@@ -14,27 +14,38 @@ loadGEO <- function(name, type = NA) {
   } else if (!dir.exists(cacheDir)) {
     dir.create(cacheDir)
   }
-  es <- getES(name, type, destdir = cacheDir)
-  assign("es", es, envir = parent.frame())
-  data <- as.matrix(exprs(es)); colnames(data) <- NULL; row.names(data) <- NULL
 
-  pdata <- as.matrix(pData(es)); colnames(pdata) <- NULL; row.names(pdata) <- NULL
+  ess <- getES(name, type, destdir = cacheDir)
 
-  participants <- colnames(es)
-  rownames <- rownames(es)
+  writeToList <- function(es) {
+    data <- as.matrix(exprs(es)); colnames(data) <- NULL; row.names(data) <- NULL
 
-  fdata <- as.matrix(fData(es))
-  colnames(fdata) <- NULL
-  row.names(fdata) <- NULL
+    pdata <- as.matrix(pData(es)); colnames(pdata) <- NULL; row.names(pdata) <- NULL
 
-  res <- list(data = data, pdata = pdata,
-              fdata = fdata, rownames = rownames,
-              colMetaNames = varLabels(phenoData(es)),
-              rowMetaNames = varLabels(featureData(es)))
+    participants <- colnames(es)
+    rownames <- rownames(es)
 
+    fdata <- as.matrix(fData(es))
+    colnames(fdata) <- NULL
+    row.names(fdata) <- NULL
+
+    res <- list(data = data, pdata = pdata,
+                fdata = fdata, rownames = rownames,
+                colMetaNames = varLabels(phenoData(es)),
+                rowMetaNames = varLabels(featureData(es)))
+    res
+  }
+
+
+  files <- list()
+  for(i in 1:length(ess)) {
+    assign(paste("es_", i, sep = ""), ess[[i]], envir = parent.frame())
+    seriesName <- paste(name, "-", annotation(ess[[i]]), sep = "")
+    files[[seriesName]] <- writeToList(ess[[i]])
+  }
   f <- tempfile(pattern = "gse", tmpdir = getwd(), fileext = ".bin")
-  writeBin(protolite::serialize_pb(res), f)
-  f
+  writeBin(protolite::serialize_pb(files), f)
+  jsonlite::toJSON(f);
 }
 
 getGDS <- function(name, destdir = tempdir()) {
@@ -59,21 +70,41 @@ getGDS <- function(name, destdir = tempdir()) {
   fData <- AnnotatedDataFrame(fData)
   featureNames(fData) <- rownames
 
-  ExpressionSet(assayData = exprs, phenoData = pData, featureData = fData)
+  list(ExpressionSet(assayData = exprs, phenoData = pData, featureData = fData))
 }
 
 getGSE <- function(name, destdir = tempdir()) {
-  es <- getGEO(name, AnnotGPL = T, destdir = destdir)[[1]]
-  featureData(es) <- featureData(es)[,grepl("symbol", fvarLabels(es), ignore.case = T)]
+  GEO <- unlist(strsplit(name, '-'))[1]
 
-  phenoData(es) <- phenoData(es)[,grepl("characteristics", varLabels(es), ignore.case = T)
-                                  | (varLabels(es) %in% c("title", "id", "geo_accession"))]
+  stub = gsub("\\d{1,3}$", "nnn", GEO, perl = TRUE)
+  filename <- sprintf("%s_series_matrix.txt.gz", name)
+  gdsurl <- "https://ftp.ncbi.nlm.nih.gov/geo/series/%s/%s/matrix/%s"
 
-  chr <- varLabels(es)[grepl("characteristics", varLabels(es), ignore.case = T)]
+  destfile <- paste(destdir, .Platform$file.sep, filename, sep='')
+
+  infile <- TRUE
+  if (!file.exists(destfile)) {
+    tryCatch({
+        download.file(sprintf(gdsurl, stub, GEO, filename), destfile = destfile)
+      }, error = function(e) {
+        file.remove(destfile)
+      }, warning = function(w) {
+        file.remove(destfile)
+      }, finally = {
+        infile <- file.exists(destfile)
+      })
+  }
+
+  if (infile) {
+    ess <- c(getGEO(filename = destfile, destdir = destdir))
+  } else {
+    ess <- getGEO(GEO = name, destdir = destdir)
+  }
 
   take <- function(x, n) {
     sapply(x, function(x) { x[[n]] })
   }
+
   rename <- function(prevName, x) {
     splitted <- strsplit(x, ": ")
     lengths <- sapply(splitted, length)
@@ -82,26 +113,40 @@ getGSE <- function(name, destdir = tempdir()) {
     }
     splittedFirst <- unique(take(splitted[lengths > 0], 1))
     if (length(splittedFirst) == 1) {
+      
        res = list(name = splittedFirst[1], x = ifelse(lengths == 2,
                                                       take(splitted[lengths == 2], 2),
                                                       NA))
+
     }
     else {
-       res = list(name = prevName, x = x)
+      res = list(name = prevName, x = x)
     }
     res
   }
 
-  renamed <- lapply(chr, function(x) { rename(x, as.vector(pData(es)[,x])) })
-  phenoData(es) <- phenoData(es)[, !(varLabels(es) %in% chr)]
-  pData(es)[,take(renamed,1)] <- take(renamed,2)
-  es
+  processInputES <- function(es) {
+    featureData(es) <- featureData(es)[,grepl("symbol", fvarLabels(es), ignore.case = T)]
+
+    phenoData(es) <- phenoData(es)[,grepl("characteristics", varLabels(es), ignore.case = T)
+                                   | (varLabels(es) %in% c("title", "id", "geo_accession"))]
+
+    chr <- varLabels(es)[grepl("characteristics", varLabels(es), ignore.case = T)]
+
+    renamed <- lapply(chr, function(x) { rename(x, as.vector(pData(es)[,x])) })
+    phenoData(es) <- phenoData(es)[, !(varLabels(es) %in% chr)]
+    pData(es)[,take(renamed,1)] <- take(renamed,2)
+
+    es
+  }
+
+  lapply(ess, processInputES)
 }
 
 
 getES <- function(name, type = NA, destdir = tempdir()) {
   if (is.na(type)) {
-     type = substr(name, 1, 3)
+    type = substr(name, 1, 3)
   }
 
   if (type == 'GSE') {
@@ -115,3 +160,17 @@ getES <- function(name, type = NA, destdir = tempdir()) {
   }
   es
 }
+
+#' @name checkGPLs
+#' @export
+checkGPLs <- function(name) {
+  stub = gsub("\\d{1,3}$", "nnn", name, perl = TRUE)
+  gdsurl <- "https://ftp.ncbi.nlm.nih.gov/geo/series/%s/%s/matrix/"
+  file.names = GEOquery:::getDirListing(sprintf(gdsurl, stub, name))
+
+  file.names <- file.names[grepl(pattern = paste("^", name, sep = ''), x = file.names)]
+
+  file.names <- unlist(lapply(file.names, function(x) { paste(substr(x, 1, regexpr('_', x) - 1), sep='') }))
+  jsonlite::toJSON(file.names)
+}
+
