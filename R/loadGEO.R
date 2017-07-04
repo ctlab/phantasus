@@ -14,6 +14,7 @@ loadGEO <- function(name, type = NA) {
   } else if (!dir.exists(cacheDir)) {
     dir.create(cacheDir)
   }
+
   ess <- getES(name, type, destdir = cacheDir)
 
   writeToList <- function(es) {

@@ -8,8 +8,6 @@
 #' @return json with full description of the plot for plotly.js
 #' @export
 #' @import ggplot2
-#' @import Biobase
-#' @import svglite
 #' @import htmltools
 #' @import jsonlite
 pcaPlot <- function(es, rows=c(), columns = c(), replacena = "mean") {
