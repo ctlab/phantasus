@@ -113,7 +113,7 @@ getGSE <- function(name, destdir = tempdir()) {
     }
     splittedFirst <- unique(take(splitted[lengths > 0], 1))
     if (length(splittedFirst) == 1) {
-      
+
        res = list(name = splittedFirst[1], x = ifelse(lengths == 2,
                                                       take(splitted[lengths == 2], 2),
                                                       NA))
@@ -139,7 +139,6 @@ getGSE <- function(name, destdir = tempdir()) {
 
     es
   }
-
   lapply(ess, processInputES)
 }
 
@@ -148,17 +147,30 @@ getES <- function(name, type = NA, destdir = tempdir()) {
   if (is.na(type)) {
     type = substr(name, 1, 3)
   }
-
-  if (type == 'GSE') {
-    es <- getGSE(name, destdir)
-  }
-  else if (type == "GDS") {
-    es <- getGDS(name, destdir)
+  possibly.cached <- file.path(destdir, paste(name, '.rda', sep=''))
+  if (file.exists(possibly.cached)) {
+    load(possibly.cached)
   }
   else {
-    stop("Incorrect name or type of the dataset")
+    if (type == 'GSE') {
+      res <- getGSE(name, destdir)
+    }
+    else if (type == "GDS") {
+      res <- getGDS(name, destdir)
+    }
+    else {
+      stop("Incorrect name or type of the dataset")
+    }
+    if (length(res) > 1) {
+      for (i in 1:length(res)) {
+        ess <- c(res[[i]])
+        save(ess, file = file.path(destdir, paste(name, '-', annotation(res[[i]]), '.rda', sep = '')))
+      }
+    }
+    ess <- res
+    save(ess, file = file.path(destdir, paste(name, '.rda', sep = '')))
   }
-  es
+  ess
 }
 
 #' @name checkGPLs
