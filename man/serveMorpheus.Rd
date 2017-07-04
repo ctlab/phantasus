@@ -16,4 +16,3 @@ serveMorpheus(host, port, morpheusRoot)
 \description{
 Starts http server handling morpheus static files and opencpu
 }
-

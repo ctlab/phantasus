@@ -39,7 +39,7 @@ loadGEO <- function(name, type = NA) {
   files <- list()
   for(i in 1:length(ess)) {
     assign(paste("es_", i, sep = ""), ess[[i]], envir = parent.frame())
-    seriesName <- paste(name, "_", annotation(ess[[i]]), sep = "")
+    seriesName <- paste(name, "-", annotation(ess[[i]]), sep = "")
     files[[seriesName]] <- writeToList(ess[[i]])
   }
   f <- tempfile(pattern = "gse", tmpdir = getwd(), fileext = ".bin")
@@ -73,7 +73,32 @@ getGDS <- function(name, destdir = tempdir()) {
 }
 
 getGSE <- function(name, destdir = tempdir()) {
-  ess <- getGEO(name, AnnotGPL = T, destdir = destdir)
+  GEO <- unlist(strsplit(name, '-'))[1]
+
+  stub = gsub("\\d{1,3}$", "nnn", GEO, perl = TRUE)
+  filename <- sprintf("%s_series_matrix.txt.gz", name)
+  gdsurl <- "https://ftp.ncbi.nlm.nih.gov/geo/series/%s/%s/matrix/%s"
+
+  destfile <- paste(destdir, .Platform$file.sep, filename, sep='')
+
+  infile <- TRUE
+  if (!file.exists(destfile)) {
+    tryCatch({
+        download.file(sprintf(gdsurl, stub, GEO, filename), destfile = destfile)
+      }, error = function(e) {
+        file.remove(destfile)
+      }, warning = function(w) {
+        file.remove(destfile)
+      }, finally = {
+        infile <- file.exists(destfile)
+      })
+  }
+
+  if (infile) {
+    ess <- c(getGEO(filename = destfile, destdir = destdir))
+  } else {
+    ess <- getGEO(GEO = name, destdir = destdir)
+  }
 
   take <- function(x, n) {
     sapply(x, function(x) { x[[n]] })
@@ -129,5 +154,18 @@ getES <- function(name, type = NA, destdir = tempdir()) {
     stop("Incorrect name or type of the dataset")
   }
   es
+}
+
+#' @name checkGPLs
+#' @export
+checkGPLs <- function(name) {
+  stub = gsub("\\d{1,3}$", "nnn", name, perl = TRUE)
+  gdsurl <- "https://ftp.ncbi.nlm.nih.gov/geo/series/%s/%s/matrix/"
+  file.names = GEOquery:::getDirListing(sprintf(gdsurl, stub, name))
+
+  file.names <- file.names[grepl(pattern = paste("^", name, sep = ''), x = file.names)]
+
+  file.names <- unlist(lapply(file.names, function(x) { paste(substr(x, 1, regexpr('_', x) - 1), sep='') }))
+  jsonlite::toJSON(file.names)
 }
 
