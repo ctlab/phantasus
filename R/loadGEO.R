@@ -40,7 +40,7 @@ loadGEO <- function(name, type = NA) {
   files <- list()
   for(i in 1:length(ess)) {
     assign(paste("es_", i, sep = ""), ess[[i]], envir = parent.frame())
-    seriesName <- paste(name, "-", annotation(ess[[i]]), sep = "")
+    seriesName <- if (!grepl(pattern = '-', name)) paste(name, "-", annotation(ess[[i]]), sep = "") else name
     files[[seriesName]] <- writeToList(ess[[i]])
   }
   f <- tempfile(pattern = "gse", tmpdir = getwd(), fileext = ".bin")
