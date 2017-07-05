@@ -11,6 +11,7 @@ RUN apt-get -y update && \
         libssh2-1-dev \
         libcurl4-openssl-dev \
         apache2 \
+        libapparmor-dev \
         locales && \
     apt-add-repository -y ppa:opencpu/opencpu-1.6 && \
     apt-get update && \
