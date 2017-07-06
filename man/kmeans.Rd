@@ -2,24 +2,26 @@
 % Please edit documentation in R/kmeans.R
 \name{kmeans}
 \alias{kmeans}
-\title{KMeans}
+\title{K-means clusterisation.}
 \usage{
 kmeans(es, columns = c(), rows = c(), k, replacena = "mean")
 }
 \arguments{
-\item{es}{an ExpressionSet object}
+\item{es}{ExpressionSet object.}
 
-\item{columns}{list of specified columns' indices (optional)}
+\item{columns}{List of specified columns' indices (optional).}
 
-\item{rows}{list of specified rows' indices (optional)}
+\item{rows}{List of specified rows' indices (optional).}
 
-\item{k}{expected number of clusters}
+\item{k}{Expected number of clusters.}
 
-\item{replacena}{method for replacing NA values (mean by default)}
+\item{replacena}{Method for replacing NA values
+in series matrix (mean by default)}
 }
 \value{
-json, containing array of corresponding clusters
+Vector of corresponding clusters, serialized to JSON.
 }
 \description{
-Function for performing k-means clusterisation on ExpressionSet.
+\code{kmeans} returns a vector of corresponding clusters for
+  each gene from a given ExpressionSet.
 }
