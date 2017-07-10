@@ -20,5 +20,5 @@ servePhantasus(host, port, staticRoot = system.file("www/phantasus.js",
 Starts http server handling morpheus static files and opencpu
 }
 \examples{
-servePhantasus("0.0.0.0", 8000, cacheDir=file.path(getwd(), "cache"))
+servePhantasus('0.0.0.0', 8000, cacheDir=file.path(getwd(), 'cache'))
 }

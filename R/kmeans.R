@@ -1,33 +1,39 @@
-#' @name kmeans
-#' @title KMeans
-#' @description Function for performing k-means clusterisation on ExpressionSet.
-#' @param es an ExpressionSet object
-#' @param columns list of specified columns' indices (optional)
-#' @param rows list of specified rows' indices (optional)
-#' @param k expected number of clusters
-#' @param replacena method for replacing NA values (mean by default)
-#' @return json, containing array of corresponding clusters
+#' K-means clusterisation.
+#'
+#' \code{kmeans} returns a vector of corresponding clusters for
+#'   each gene from a given ExpressionSet.
+#'
+#' @param es ExpressionSet object.
+#'
+#' @param columns List of specified columns' indices (optional).
+#'
+#' @param rows List of specified rows' indices (optional).
+#'
+#' @param k Expected number of clusters.
+#'
+#' @param replacena Method for replacing NA values
+#'   in series matrix (mean by default)
+#'
+#' @return Vector of corresponding clusters, serialized to JSON.
+#'
 #' @export
 #' @import Biobase
-#' @import jsonlite
-#' @import assertthat
 kmeans <- function(es, columns = c(), rows = c(), k, replacena = "mean") {
-  assertthat::assert_that(k > 0)
+    assertthat::assert_that(k > 0)
 
-  rows <- getIndicesVector(rows, nrow(exprs(es)))
-  columns <- getIndicesVector(columns, ncol(exprs(es)))
-  data <- replacenas(data.frame(exprs(es))[rows, columns], replacena)
+    rows <- getIndicesVector(rows, nrow(exprs(es)))
+    columns <- getIndicesVector(columns, ncol(exprs(es)))
+    data <- replacenas(data.frame(exprs(es))[rows, columns], replacena)
 
-  data <- t(scale(t(data)))
-  while (sum(is.na(data)) > 0) {
-    data <- replacenas()
     data <- t(scale(t(data)))
-  }
+    while (sum(is.na(data)) > 0) {
+        data <- replacenas()
+        data <- t(scale(t(data)))
+    }
 
-  km <- stats::kmeans(data, k)
-  res <- data.frame(row.names = row.names(exprs(es)))
-  res[["cluster"]] <- NA
-  res[names(km$cluster), "cluster"] <- as.vector(km$cluster)
-  return(toJSON(as.vector(km$cluster)))
+    km <- stats::kmeans(data, k)
+    res <- data.frame(row.names = row.names(exprs(es)))
+    res[["cluster"]] <- NA
+    res[names(km$cluster), "cluster"] <- as.vector(km$cluster)
+    return(jsonlite::toJSON(as.vector(km$cluster)))
 }
-

@@ -1,11 +1,15 @@
 Package: phantasus
-Title: R-package for phantasus application
+Title: Extended project Morpheus with Bioconductor methods
 Version: 0.0.0.9000
 Authors@R: c(person("Daria", "Zenkova", email = "daria.zenkova.cs@gmail.com", role = c("aut", "cre")),
              person("Joshua", "Gould", email = "jgould@broadinstitute.org", role = "aut"),
              person("Alexey", "Sergushichev", email = "alsergbox@gmail.com", role = "aut"))
 Description: This package contains several R functions which are used in our
     version of Web-application Phantasus through OpenCPU
+URL: 
+    https://artyomovlab.wustl.edu/phantasus,
+    https://genome.ifmo.ru/phantasus
+BugReports: https://github.com/ctlab/phantasus/issues
 Depends:
     R (>= 3.3.1)
 biocViews: GeneExpression

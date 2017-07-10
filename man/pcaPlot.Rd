@@ -2,7 +2,7 @@
 % Please edit documentation in R/pcaPlot.R
 \name{pcaPlot}
 \alias{pcaPlot}
-\title{PCA Plot}
+\title{Principal Component Analysis.}
 \usage{
 pcaPlot(es, rows = c(), columns = c(), replacena = "mean")
 }
@@ -19,5 +19,6 @@ pcaPlot(es, rows = c(), columns = c(), replacena = "mean")
 json with full description of the plot for plotly.js
 }
 \description{
-Function for creating json with full description of the pcaPlot for plotly.js
+Function for creating json with full description
+  of the pcaPlot for plotly.js.
 }
