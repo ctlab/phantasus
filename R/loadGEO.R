@@ -121,7 +121,7 @@ getGSE <- function(name, destdir = tempdir()) {
     }
 
     if (infile) {
-        ess <- c(getGEO(filename = destfile, destdir = destdir, AnnotGPL=TRUE))
+        ess <- list(getGEO(filename = destfile, destdir = destdir, AnnotGPL=TRUE))
     } else {
         ess <- getGEO(GEO = name, destdir = destdir, AnnotGPL = TRUE)
     }
