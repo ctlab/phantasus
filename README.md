@@ -1,3 +1,7 @@
+[![Travis-CI Build Status](https://travis-ci.org/ctlab/phantasus.svg?branch=master)](https://travis-ci.org/ctlab/phantasus)
+[![codecov](https://codecov.io/gh/ctlab/phantasus/branch/master/graph/badge.svg)](https://codecov.io/gh/ctlab/phantasus)
+
+
 This project contains several tools for gene expression analysis with help of R/Bioconductor`
 
 ## Installation

@@ -31,7 +31,7 @@ kmeans <- function(es, columns = c(), rows = c(), k, replacena = "mean") {
         data <- t(scale(t(data)))
     }
 
-    km <- stats::kmeans(data, k)
+    km <- stats::kmeans(data, k, iter.max = 100L)
     res <- data.frame(row.names = row.names(exprs(es)))
     res[["cluster"]] <- NA
     res[names(km$cluster), "cluster"] <- as.vector(km$cluster)

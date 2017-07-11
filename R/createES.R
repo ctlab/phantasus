@@ -9,7 +9,7 @@
 #' @export
 #' @import Biobase
 createES <- function(data, pData, varLabels, fData, fvarLabels) {
-    exprs <- t(data)
+    exprs <- data
 
     phenoData <- AnnotatedDataFrame(data.frame(pData))
     varLabels(phenoData) <- varLabels
