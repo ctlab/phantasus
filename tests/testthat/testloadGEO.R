@@ -1,4 +1,4 @@
-context("Load GEO")
+context("Load GEO and its utils")
 
 test_that("loadGEO finishes with result", {
   expect_is(loadGEO("GSE27112"), "json")
@@ -7,3 +7,9 @@ test_that("loadGEO finishes with result", {
   expect_is(loadGEO("GDS4885"), "json")
 })
 
+test_that("checkGPLs counts gpls correctly", {
+  expect_equal(length(jsonlite::fromJSON(checkGPLs("GSE14308"))), 1)
+  expect_equal(length(jsonlite::fromJSON(checkGPLs("GSE27112"))), 2)
+  expect_equal(length(jsonlite::fromJSON(checkGPLs("GSE10000"))), 2)
+  expect_equal(length(jsonlite::fromJSON(checkGPLs("GDS4885"))), 1)
+})

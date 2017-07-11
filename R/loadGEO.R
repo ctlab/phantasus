@@ -216,6 +216,9 @@ getES <- function(name, type = NA, destdir = tempdir()) {
 #'
 #' @export
 checkGPLs <- function(name) {
+    if (substr(name, 1, 3) == "GDS") {
+      return(jsonlite::toJSON(name))
+    }
     stub <- gsub("\\d{1,3}$", "nnn", name, perl = TRUE)
     gdsurl <- "https://ftp.ncbi.nlm.nih.gov/geo/series/%s/%s/matrix/"
     file.names <- GEOquery:::getDirListing(sprintf(gdsurl, stub, name))
