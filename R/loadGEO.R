@@ -15,9 +15,9 @@
 #'   list mapping name with GPL to ExpressionSet.
 #'
 #' @examples
-#' loadGEO('GSE27112')
-#' loadGEO('GSE27112-GPL1665')
-#' loadGEO('GDS4922')
+#' loadGEO("GSE27112")
+#' loadGEO("GSE27112-GPL1665")
+#' loadGEO("GDS4922")
 #'
 #' @export
 #' @import Biobase

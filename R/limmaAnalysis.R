@@ -50,5 +50,5 @@ limmaAnalysis <- function(es, rows = c(), columns = c(), fieldValues) {
     de <- de[row.names(fData(es.copy)), ]
     f <- tempfile(pattern = "de", tmpdir = getwd(), fileext = ".bin")
     writeBin(protolite::serialize_pb(as.list(de)), f)
-    f
+    jsonlite::toJSON(f)
 }
