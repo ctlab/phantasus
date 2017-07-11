@@ -11,7 +11,9 @@ addons:
     packages:
       - libprotobuf-dev
       - libapparmor-dev
-      
+      - protobuf-compiler
+      - libcurl4-openssl-dev
+
 r_packages:
   - covr
   - data.table
