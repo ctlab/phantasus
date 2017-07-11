@@ -16,7 +16,7 @@
 #'
 #' @examples
 #' loadGEO("GSE27112")
-#' loadGEO("GSE27112-GPL1665")
+#' loadGEO("GSE27112-GPL6885")
 #' loadGEO("GDS4922")
 #'
 #' @export
