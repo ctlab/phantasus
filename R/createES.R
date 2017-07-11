@@ -9,15 +9,13 @@
 #' @export
 #' @import Biobase
 createES <- function(data, pData, varLabels, fData, fvarLabels) {
-    exprs <- data
-
     phenoData <- AnnotatedDataFrame(data.frame(pData))
     varLabels(phenoData) <- varLabels
 
     featureData <- AnnotatedDataFrame(data.frame(fData))
     varLabels(featureData) <- fvarLabels
 
-    es <- ExpressionSet(assayData = exprs,
+    es <- ExpressionSet(assayData = data,
                         phenoData = phenoData,
                         featureData = featureData)
     assign("es", es, envir = parent.frame())
