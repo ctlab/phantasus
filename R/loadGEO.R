@@ -220,24 +220,26 @@ checkGPLs <- function(name) {
     assertthat::assert_that((type == "GDS" || type == "GSE")
                             && nchar(name) >= 4)
 
-    if (substr(name, 1, 3) == "GDS") {
-      return(jsonlite::toJSON(name))
-    }
     stub <- gsub("\\d{1,3}$", "nnn", name, perl = TRUE)
-    gdsurl <- "https://ftp.ncbi.nlm.nih.gov/geo/series/%s/%s/matrix/"
+    gdsurl <- "https://ftp.ncbi.nlm.nih.gov/geo/%s/%s/%s/"
 
-    url <- sprintf(gdsurl, stub, name)
+    url <- sprintf(gdsurl, if (type == "GDS") "datasets" else "series", stub, name)
+
     if (httr::status_code(httr::GET(url)) == 404) {
       return(jsonlite::toJSON(list()))
     } else {
-      file.names <- GEOquery:::getDirListing(url)
+      if (type == "GDS") {
+        return(jsonlite::toJSON(name))
+      } else {
+        file.names <- GEOquery:::getDirListing(paste0(url, "matrix/"))
 
-      file.names <- file.names[grepl(pattern = paste0("^", name), x = file.names)]
+        file.names <- file.names[grepl(pattern = paste0("^", name), x = file.names)]
 
-      file.names <- unlist(lapply(file.names, function(x) {
-          paste0(substr(x, 1, regexpr("_", x) - 1))
-      }))
-      return(jsonlite::toJSON(file.names))
+        file.names <- unlist(lapply(file.names, function(x) {
+            paste0(substr(x, 1, regexpr("_", x) - 1))
+        }))
+        return(jsonlite::toJSON(file.names))
+      }
     }
 }
 
