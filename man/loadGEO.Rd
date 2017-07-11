@@ -24,8 +24,8 @@ File with ProtoBuf-serialized ExpressionSet-s that were downloaded by this ident
   parsed from data downloaded from GEO by identifier.
 }
 \examples{
-loadGEO('GSE27112')
-loadGEO('GSE27112-GPL1665')
-loadGEO('GDS4922')
+loadGEO("GSE27112")
+loadGEO("GSE27112-GPL1665")
+loadGEO("GDS4922")
 
 }

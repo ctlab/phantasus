@@ -216,18 +216,28 @@ getES <- function(name, type = NA, destdir = tempdir()) {
 #'
 #' @export
 checkGPLs <- function(name) {
+    type <- substr(name, 1, 3)
+    assertthat::assert_that((type == "GDS" || type == "GSE")
+                            && nchar(name) >= 4)
+
     if (substr(name, 1, 3) == "GDS") {
       return(jsonlite::toJSON(name))
     }
     stub <- gsub("\\d{1,3}$", "nnn", name, perl = TRUE)
     gdsurl <- "https://ftp.ncbi.nlm.nih.gov/geo/series/%s/%s/matrix/"
-    file.names <- GEOquery:::getDirListing(sprintf(gdsurl, stub, name))
 
-    file.names <- file.names[grepl(pattern = paste0("^", name), x = file.names)]
+    url <- sprintf(gdsurl, stub, name)
+    if (httr::status_code(httr::GET(url)) == 404) {
+      return(jsonlite::toJSON(list()))
+    } else {
+      file.names <- GEOquery:::getDirListing(url)
 
-    file.names <- unlist(lapply(file.names, function(x) {
-        paste0(substr(x, 1, regexpr("_", x) - 1))
-    }))
-    jsonlite::toJSON(file.names)
+      file.names <- file.names[grepl(pattern = paste0("^", name), x = file.names)]
+
+      file.names <- unlist(lapply(file.names, function(x) {
+          paste0(substr(x, 1, regexpr("_", x) - 1))
+      }))
+      return(jsonlite::toJSON(file.names))
+    }
 }
 
