@@ -226,7 +226,7 @@ checkGPLs <- function(name) {
     url <- sprintf(gdsurl, if (type == "GDS") "datasets" else "series", stub, name)
 
     if (httr::status_code(httr::GET(url)) == 404) {
-      return(jsonlite::toJSON(list()))
+      return(jsonlite::toJSON(c()))
     } else {
       if (type == "GDS") {
         return(jsonlite::toJSON(name))
