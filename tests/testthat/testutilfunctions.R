@@ -1,5 +1,4 @@
 context("Util functions")
-library(rUtils)
 
 test_that("prepareData replaces all NAs and filters fully NA rows", {
   data <- prepareData(read.gct("testdata/centers.gct"))

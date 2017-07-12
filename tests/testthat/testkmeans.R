@@ -1,5 +1,4 @@
 context("Kmeans")
-library(rUtils)
 library(jsonlite)
 
 test_that("kmeans finishes with result", {
