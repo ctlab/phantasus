@@ -68,7 +68,7 @@ loadGEO <- function(name, type = NA) {
 }
 
 getGDS <- function(name, destdir = tempdir()) {
-    l <- getGEO(name, destdir = destdir)
+    l <- suppressWarnings(getGEO(name, destdir = destdir))
 
     # extracting all useful information on dataset
     table <- slot(l, "dataTable")
@@ -121,9 +121,9 @@ getGSE <- function(name, destdir = tempdir()) {
     }
 
     if (infile) {
-        ess <- list(getGEO(filename = destfile, destdir = destdir, AnnotGPL=TRUE))
+        ess <- list(suppressWarnings(getGEO(filename = destfile, destdir = destdir, AnnotGPL=TRUE)))
     } else {
-        ess <- getGEO(GEO = name, destdir = destdir, AnnotGPL = TRUE)
+        ess <- suppressWarnings(getGEO(GEO = name, destdir = destdir, AnnotGPL = TRUE))
     }
 
     take <- function(x, n) {
