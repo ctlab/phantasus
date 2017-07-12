@@ -4,8 +4,10 @@ Version: 0.0.0.9000
 Authors@R: c(person("Daria", "Zenkova", email = "daria.zenkova.cs@gmail.com", role = c("aut", "cre")),
              person("Joshua", "Gould", email = "jgould@broadinstitute.org", role = "aut"),
              person("Alexey", "Sergushichev", email = "alsergbox@gmail.com", role = "aut"))
-Description: This package contains several R functions which are used in our
-    version of Web-application Phantasus through OpenCPU
+Description: This is an extended version of the project Morpheus. 
+    We are integrating widely used gene epression analysis methods from Bioconductor.
+    You can use it in multiple ways, either locally, using servePhantasus-function from this package,
+    or on web-sites, that are presented in URL section.
 URL:
     https://artyomovlab.wustl.edu/phantasus,
     https://genome.ifmo.ru/phantasus
@@ -15,8 +17,6 @@ Depends:
 biocViews: GeneExpression
 Imports:
     ggplot2,
-    ggrepel,
-    data.table,
     protolite,
     Biobase,
     GEOquery,
@@ -27,7 +27,8 @@ Imports:
     limma,
     opencpu,
     assertthat,
-    methods
+    methods,
+    httr
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
