@@ -39,7 +39,7 @@ limmaAnalysis <- function(es, rows = c(), columns = c(), fieldValues) {
     pData(es.copy) <- new.pdata
     fData(es.copy) <- data.frame(row.names = rownames(es.copy))
 
-    es.design <- model.matrix(~0 + Comparison, data = pData(es.copy))
+    es.design <- stats::model.matrix(~0 + Comparison, data = pData(es.copy))
     colnames(es.design) <- gsub(pattern = fieldName, replacement = "",
                                 x = make.names(colnames(es.design)))
 

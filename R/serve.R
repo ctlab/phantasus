@@ -8,13 +8,15 @@
 #' @import Rook
 #' @export
 #' @examples
+#' \dontrun{
 #' servePhantasus('0.0.0.0', 8000, cacheDir=file.path(getwd(), 'cache'))
-servePhantasus <- function(host, port, staticRoot = system.file("www/phantasus.js", package = "phantasus"), 
+#' }
+servePhantasus <- function(host, port, staticRoot = system.file("www/phantasus.js", package = "phantasus"),
     cacheDir = tempdir()) {
     options(phantasusCacheDir = cacheDir)
-    app <- Rook::URLMap$new(`/ocpu` = opencpu:::rookhandler("/ocpu"), `/?` = Rook::Static$new(urls = c("/"), 
+    app <- Rook::URLMap$new(`/ocpu` = opencpu:::rookhandler("/ocpu"), `/?` = Rook::Static$new(urls = c("/"),
         root = staticRoot))
-    
+
     httpuv::runServer(host, port, app = app)
-    
+
 }

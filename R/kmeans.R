@@ -21,15 +21,7 @@
 kmeans <- function(es, columns = c(), rows = c(), k, replacena = "mean") {
     assertthat::assert_that(k > 0)
 
-    rows <- getIndicesVector(rows, nrow(exprs(es)))
-    columns <- getIndicesVector(columns, ncol(exprs(es)))
-    data <- replacenas(data.frame(exprs(es))[rows, columns], replacena)
-
-    data <- t(scale(t(data)))
-    while (sum(is.na(data)) > 0) {
-        data <- replacenas()
-        data <- t(scale(t(data)))
-    }
+    data <- prepareData(es, columns, rows, replacena)
 
     km <- stats::kmeans(data, k, iter.max = 100L)
     res <- data.frame(row.names = row.names(exprs(es)))

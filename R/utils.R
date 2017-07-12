@@ -5,6 +5,21 @@ getIndicesVector <- function(current, neededLength) {
     current + 1
 }
 
+prepareData <- function(es, columns = c(), rows = c(), replacena = "mean") {
+  rows <- getIndicesVector(rows, nrow(exprs(es)))
+  columns <- getIndicesVector(columns, ncol(exprs(es)))
+  data <- replacenas(data.frame(exprs(es))[rows, columns], replacena)
+
+  data <- t(scale(t(data)))
+  while (sum(is.na(data)) > 0) {
+    rows <- filternaRows(data, rows)
+    data <- data[rows,]
+    data <- replacenas(data, replacena)
+    data <- t(scale(t(data)))
+  }
+  data
+}
+
 replacenas <- function(data, replacena) {
     ind <- which(is.na(data), arr.ind = T)
     if (nrow(ind) > 0) {
@@ -16,3 +31,8 @@ replacenas <- function(data, replacena) {
     data
 }
 
+filternaRows <- function(data, currentRows) {
+  sums <- rowSums(data)
+  rows <- currentRows[!(currentRows %in% which(is.na(sums)))]
+  rows
+}

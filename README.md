@@ -22,7 +22,7 @@ In R:
 
 ```{r}
 library(phantasus)
-example(servePhantasus)
+servePhantasus('0.0.0.0', 8000, cacheDir=file.path(getwd(), 'cache'))
 ```
 
 Open `http://localhost:8000` in your browser.

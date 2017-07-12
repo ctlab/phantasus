@@ -1,5 +1,5 @@
 language: r
-r: 
+r:
 #  - bioc-devel
   - bioc-release
 # warnings_are_errors: true
@@ -35,7 +35,8 @@ bioc_packages:
 before_install:
   - R -e 'install.packages("devtools")'
   - R -e 'source("https://bioconductor.org/biocLite.R"); biocLite()'
-  - R -e 'devtools::install_github("assaron/GEOquery")' 
+  - R -e 'devtools::install_github("assaron/GEOquery")'
+  - R -e 'devtools::install_github("assaron/r-utils")'
   - if [[ "$TRAVIS_R_VERSION_STRING" = 'bioc-devel' ]]; then mkdir ~/.R && echo -e 'CXX1X=g++ -std=c++0x -g -O2 -fPIC\nCXX11=g++ -std=c++0x -g -O2 -fPIC' > ~/.R/Makevars; fi
 
 

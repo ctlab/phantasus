@@ -71,7 +71,7 @@ getGDS <- function(name, destdir = tempdir()) {
     l <- suppressWarnings(getGEO(name, destdir = destdir))
 
     # extracting all useful information on dataset
-    table <- slot(l, "dataTable")
+    table <- methods::slot(l, "dataTable")
 
     # extracting table ID_REF | IDENTIFIER/SAMPLE | SAMPLE1 | ...
     data <- Table(table)
@@ -109,7 +109,7 @@ getGSE <- function(name, destdir = tempdir()) {
     infile <- TRUE
     if (!file.exists(destfile)) {
         tryCatch({
-            download.file(sprintf(gdsurl, stub, GEO, filename),
+            utils::download.file(sprintf(gdsurl, stub, GEO, filename),
                           destfile = destfile)
         }, error = function(e) {
             file.remove(destfile)

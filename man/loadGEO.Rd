@@ -23,9 +23,3 @@ File with ProtoBuf-serialized ExpressionSet-s that were downloaded by this ident
 \code{loadGEO} returns the file with serialized ExpressionSet using ProtoBuf,
   parsed from data downloaded from GEO by identifier.
 }
-\examples{
-loadGEO("GSE27112")
-loadGEO("GSE27112-GPL6885")
-loadGEO("GDS4922")
-
-}
