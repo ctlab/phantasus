@@ -7,6 +7,8 @@ npm install
 R -e "phantasus::servePhantasus('0.0.0.0', 8000, cacheDir = file.path(getwd(), 'jasmine', 'cache'))" &
 PH_PID=$!
 
+sleep 1000
+
 karma start my.conf.js --single-run
 RETVAL=$?
 
@@ -14,6 +16,7 @@ cd
 
 function finish {
     kill $PH_PID
+    echo "Killed OpenCPU-server"
 }
 trap finish EXIT
 

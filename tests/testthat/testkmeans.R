@@ -6,7 +6,7 @@ test_that("kmeans finishes with result", {
   expect_is(kmeans(es, k = 10), "json")
 })
 
-test_that("kmeans works with datasets with lots of NAs, so there is need to filter rows", {
+test_that("kmeans works with datasets with lots of NAs", {
   es <- read.gct("testdata/centers.gct")
   expect_length(fromJSON(kmeans(es, k = 2)), 5)
 })

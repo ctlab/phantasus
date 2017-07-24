@@ -85,7 +85,7 @@ getGDS <- function(name, destdir = tempdir()) {
     row.names(exprs) <- rownames
 
     row.names(columnsMeta) <- sampleNames
-    pData <- AnnotatedDataFrame(data.frame(columnsMeta, check.names = F))
+    pData <- AnnotatedDataFrame(data.frame(columnsMeta, check.names = FALSE))
 
     fData <- data.frame(matrix(symbol, nrow(exprs), 1))
     colnames(fData) <- "symbol"
@@ -111,19 +111,26 @@ getGSE <- function(name, destdir = tempdir()) {
         tryCatch({
             utils::download.file(sprintf(gdsurl, stub, GEO, filename),
                           destfile = destfile)
-        }, error = function(e) {
+        },
+        error = function(e) {
             file.remove(destfile)
-        }, warning = function(w) {
+        },
+        warning = function(w) {
             file.remove(destfile)
-        }, finally = {
+        },
+        finally = {
             infile <- file.exists(destfile)
         })
     }
 
     if (infile) {
-        ess <- list(suppressWarnings(getGEO(filename = destfile, destdir = destdir, AnnotGPL=TRUE)))
+        ess <- list(suppressWarnings(getGEO(filename = destfile,
+                                            destdir = destdir,
+                                            AnnotGPL = TRUE)))
     } else {
-        ess <- suppressWarnings(getGEO(GEO = name, destdir = destdir, AnnotGPL = TRUE))
+        ess <- suppressWarnings(getGEO(GEO = name,
+                                       destdir = destdir,
+                                       AnnotGPL = TRUE))
     }
 
     take <- function(x, n) {
@@ -153,12 +160,21 @@ getGSE <- function(name, destdir = tempdir()) {
     }
 
     processInputES <- function(es) {
-        featureData(es) <- featureData(es)[, grepl("symbol", fvarLabels(es), ignore.case = T)]
+        featureData(es) <- featureData(es)[, grepl("symbol",
+                                                   fvarLabels(es),
+                                                   ignore.case = TRUE)]
 
-        phenoData(es) <- phenoData(es)[, grepl("characteristics", varLabels(es), ignore.case = T) |
-            (varLabels(es) %in% c("title", "id", "geo_accession"))]
+        phenoData(es) <- phenoData(es)[,
+                                       grepl("characteristics",
+                                             varLabels(es),
+                                             ignore.case = TRUE) |
+                                        (varLabels(es) %in% c("title",
+                                                              "id",
+                                                              "geo_accession"))]
 
-        chr <- varLabels(es)[grepl("characteristics", varLabels(es), ignore.case = T)]
+        chr <- varLabels(es)[grepl("characteristics",
+                                   varLabels(es),
+                                   ignore.case = TRUE)]
 
         renamed <- lapply(chr, function(x) {
             rename(x, as.vector(pData(es)[, x]))
@@ -186,7 +202,7 @@ getGSE <- function(name, destdir = tempdir()) {
 #' @export
 getES <- function(name, type = NA, destdir = tempdir()) {
     if (is.na(type)) {
-        type = substr(name, 1, 3)
+        type <- substr(name, 1, 3)
     }
     possibly.cached <- file.path(destdir, paste0(name, ".rda"))
     if (file.exists(possibly.cached)) {
@@ -202,7 +218,11 @@ getES <- function(name, type = NA, destdir = tempdir()) {
         if (length(res) > 1) {
             for (i in 1:length(res)) {
                 ess <- c(res[[i]])
-                save(ess, file = file.path(destdir, paste0(name, "-", annotation(res[[i]]), ".rda")))
+                save(ess, file = file.path(destdir,
+                                           paste0(name,
+                                                  "-",
+                                                  annotation(res[[i]]),
+                                                  ".rda")))
             }
         }
         ess <- res
@@ -229,13 +249,14 @@ getES <- function(name, type = NA, destdir = tempdir()) {
 #' @export
 checkGPLs <- function(name) {
     type <- substr(name, 1, 3)
-    assertthat::assert_that((type == "GDS" || type == "GSE")
+    assertthat::assert_that( (type == "GDS" || type == "GSE")
                             && nchar(name) >= 4)
 
     stub <- gsub("\\d{1,3}$", "nnn", name, perl = TRUE)
     gdsurl <- "https://ftp.ncbi.nlm.nih.gov/geo/%s/%s/%s/"
 
-    url <- sprintf(gdsurl, if (type == "GDS") "datasets" else "series", stub, name)
+    url <- sprintf(gdsurl,
+                   if (type == "GDS") "datasets" else "series", stub, name)
 
     if (httr::status_code(httr::GET(url)) == 404) {
       return(jsonlite::toJSON(c()))
@@ -245,7 +266,8 @@ checkGPLs <- function(name) {
       } else {
         file.names <- GEOquery:::getDirListing(paste0(url, "matrix/"))
 
-        file.names <- file.names[grepl(pattern = paste0("^", name), x = file.names)]
+        file.names <- file.names[grepl(pattern = paste0("^", name),
+                                       x = file.names)]
 
         file.names <- unlist(lapply(file.names, function(x) {
             paste0(substr(x, 1, regexpr("_", x) - 1))
@@ -254,4 +276,3 @@ checkGPLs <- function(name) {
       }
     }
 }
-

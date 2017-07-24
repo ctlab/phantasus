@@ -11,6 +11,7 @@ quantileNormalization <- function(es, cols = c(), rows = c()) {
                                                             method = "quantile")
     assign("es", es, envir = parent.frame())
     f <- tempfile(pattern = "qn", tmpdir = getwd(), fileext = ".bin")
-    writeBin(protolite::serialize_pb(list(data = exprs(es)[rows + 1, cols + 1])), f)
+    toSerialize <- list(data = exprs(es)[rows + 1, cols + 1])
+    writeBin(protolite::serialize_pb(toSerialize), f)
     f
 }
