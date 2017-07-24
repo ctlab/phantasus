@@ -1,4 +1,6 @@
 #!/bin/bash
+R -e "devtools::install('.')"
+
 cd inst/www/phantasus.js/
 npm install
 
