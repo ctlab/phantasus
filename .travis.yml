@@ -13,6 +13,7 @@ addons:
       - libapparmor-dev
       - protobuf-compiler
       - libcurl4-openssl-dev
+      - google-chrome-stable
 
 r_packages:
   - covr
