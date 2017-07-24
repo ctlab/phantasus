@@ -171,7 +171,9 @@ getGSE <- function(name, destdir = tempdir()) {
     lapply(ess, processInputES)
 }
 
-
+#' Load ExpressionSet by GEO identifier
+#'
+#' @export
 getES <- function(name, type = NA, destdir = tempdir()) {
     if (is.na(type)) {
         type = substr(name, 1, 3)

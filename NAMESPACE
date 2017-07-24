@@ -2,6 +2,7 @@
 
 export(checkGPLs)
 export(createES)
+export(getES)
 export(kmeans)
 export(limmaAnalysis)
 export(loadGEO)
