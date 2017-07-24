@@ -21,7 +21,7 @@ prepareData <- function(es, columns = c(), rows = c(), replacena = "mean") {
 }
 
 replacenas <- function(data, replacena) {
-    ind <- which(is.na(data), arr.ind = T)
+    ind <- which(is.na(data), arr.ind = TRUE)
     if (nrow(ind) > 0) {
         data[ind] <- apply(data, 1, replacena, na.rm = TRUE)[ind[, 1]]
     }
