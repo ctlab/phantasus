@@ -13,7 +13,6 @@ addons:
       - libapparmor-dev
       - protobuf-compiler
       - libcurl4-openssl-dev
-      - nodejs
       - npm
 
 r_packages:
@@ -45,11 +44,7 @@ after_script:
   - ls -lah
   - FILE=$(ls -1t *.tar.gz | head -n 1)
   - Rscript -e "library(BiocCheck); BiocCheck(\"${FILE}\")"
-  - cd inst/www/phantasus.js
-  - R -e "phantasus::servePhantasus('0.0.0.0', 8000, cacheDir=file.path(getwd(), 'cache'))" &
-  - npm install
-  - karma start my.conf.js --single-run
-  - cd
+  - bash inst/test_js.sh
 
 after_success:
   - Rscript -e 'covr::codecov()'
