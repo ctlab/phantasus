@@ -13,7 +13,6 @@ addons:
       - libapparmor-dev
       - protobuf-compiler
       - libcurl4-openssl-dev
-      - nvm
 
 r_packages:
   - covr
@@ -38,12 +37,6 @@ before_install:
   - R -e 'source("https://bioconductor.org/biocLite.R"); biocLite()'
   - R -e 'devtools::install_github("assaron/GEOquery")'
   - if [[ "$TRAVIS_R_VERSION_STRING" = 'bioc-devel' ]]; then mkdir ~/.R && echo -e 'CXX1X=g++ -std=c++0x -g -O2 -fPIC\nCXX11=g++ -std=c++0x -g -O2 -fPIC' > ~/.R/Makevars; fi
-
-install:
-  - . $HOME/.nvm/nvm.sh
-  - nvm install stable
-  - nvm use stable
-  - npm install
 
 after_script:
   - ls -lah
