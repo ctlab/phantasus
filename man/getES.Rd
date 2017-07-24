@@ -6,6 +6,16 @@
 \usage{
 getES(name, type = NA, destdir = tempdir())
 }
+\arguments{
+\item{name}{String, containing GEO identifier of the dataset.
+It should start with 'GSE' or 'GDS' and can include exact GPL to annotate dataset,
+separated with dash ('-') from the identifier.}
+
+\item{type}{Type of the dataset: 'GSE' or 'GDS'. If not specified, the function
+will take first three letters of \code{name} variable as type.}
+
+\item{destdir}{Directory for caching loaded Series and GPL files from GEO database.}
+}
 \description{
-Load ExpressionSet by GEO identifier
+\code{getES} return the ExpressionSet object(s) corresponding to GEO identifier.
 }

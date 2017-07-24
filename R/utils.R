@@ -86,7 +86,7 @@ read.gct <- function(gct, ...) {
 
 read.tsv <- function(file, header=T, sep="\t", quote="", comment.char="", check.names=FALSE, ...) {
   args <- list(...)
-  res <- read.table(file, header=header, sep=sep, quote=quote,
+  res <- utils::read.table(file, header=header, sep=sep, quote=quote,
                     comment.char=comment.char, check.names=check.names,
                     stringsAsFactors=FALSE,
                     ...)
@@ -101,5 +101,5 @@ makeAnnotated <- function(data) {
   meta <- data.frame(labelDescription = colnames(data))
   rownames(meta) <- colnames(data)
 
-  new("AnnotatedDataFrame", data=data, varMeta=meta)
+  methods::new("AnnotatedDataFrame", data=data, varMeta=meta)
 }
