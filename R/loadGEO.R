@@ -209,9 +209,11 @@ getGSE <- function(name, destdir = tempdir()) {
 #'   in \code{name} variable GEO identifier.
 #'
 #' @examples
+#' \dontrun{
 #' getES('GSE14308', type = 'GSE', destdir = file.path(getwd(), 'cache'))
 #' getES('GSE27112')
 #' getES('GDS4922')
+#' }
 #'
 #' @export
 getES <- function(name, type = NA, destdir = tempdir()) {
