@@ -1,17 +1,17 @@
 ---
-  title: "Using phantasus application"
-  author: "Daria Zenkova"
-  date: "2017-07-25"
-  output: rmarkdown::html_vignette
-  vignette: >
-    %\VignetteIndexEntry{Using phantasus application}
-    %\VignetteEngine{knitr::rmarkdown}
-    %\VignetteEncoding{UTF-8}
+title: "Using phantasus application"
+author: "Daria Zenkova"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Using phantasus application}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 This is an extended version of the project Morpheus. We are integrating widely used gene epression analysis methods from Bioconductor. You can use it in multiple ways, either locally, using servePhantasus-function from this package, this way would be described in this tutorial, either on [web-site](https://artyomovlab.wustl.edu/phantasus).
 
-## Loading additional libraries
+## Loading required libraries
 
 That package needs GEOquery as a dependency. Although, we recommend to install this package from it's forked version due to its better cache support:
 ```{r,eval=FALSE}
@@ -159,7 +159,7 @@ Now you can sort by t-statistic and see genes with the highest difference betwee
 knitr::include_graphics("images/limma_results.png")
 ```
 
+## Feedback
 
-
-
-
+You can see known issues and place yours here:
+(https://github.com/ctlab/phantasus/issues)
