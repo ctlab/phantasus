@@ -1,5 +1,5 @@
 FROM ubuntu
-    
+
 RUN apt-get -y update && \
     apt-get -y dist-upgrade && \
     apt-get -y install \
@@ -35,9 +35,9 @@ RUN apt-get -y update && apt-get -y install \
 RUN git clone --recursive https://github.com/ctlab/phantasus /root/phantasus
 
 RUN R -e 'source("https://bioconductor.org/biocLite.R")'
-RUN R -e 'install.packages("devtools", repo = "http://cran.gis-lab.info"); library(devtools); install_github("hadley/scales"); install_github("assaron/GEOquery"); install("/root/phantasus")'
+RUN R -e 'install.packages("devtools", repo = "http://cran.gis-lab.info"); library(devtools); install_github("hadley/scales"); install_github("assaron/GEOquery"); install("/root/phantasus", build_vignettes=T)'
 
-RUN cp -r /root/phantasus/inst/www/phantasus.js /var/www/html/phantasus    
+RUN cp -r /root/phantasus/inst/www/phantasus.js /var/www/html/phantasus
 
 RUN a2enmod proxy_http
 
@@ -45,10 +45,10 @@ EXPOSE 80
 EXPOSE 443
 EXPOSE 8004
 
-RUN locale-gen en_US.UTF-8  
-ENV LANG en_US.UTF-8  
-ENV LANGUAGE en_US:en  
-ENV LC_ALL en_US.UTF-8     
+RUN locale-gen en_US.UTF-8
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US:en
+ENV LC_ALL en_US.UTF-8
 
 RUN mkdir -p /var/phantasus/cache
 VOLUME ["/var/phantasus/cache"]

@@ -5,11 +5,11 @@ date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Using phantasus application}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{knitr::knitr}
   %\VignetteEncoding{UTF-8}
 ---
 
-This is an extended version of the project Morpheus. We are integrating widely used gene epression analysis methods from Bioconductor. You can use it in multiple ways, either locally, using servePhantasus-function from this package, this way would be described in this tutorial, either on [web-site](https://artyomovlab.wustl.edu/phantasus).
+This is an extended version of the project Morpheus. We are integrating widely used gene epression analysis methods from Bioconductor. You can use it in multiple ways, either locally, using `servePhantasus`-function from this package, this way would be described in this tutorial, either on [web-site](https://artyomovlab.wustl.edu/phantasus).
 
 ## Loading required libraries
 

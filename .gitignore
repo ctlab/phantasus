@@ -6,3 +6,4 @@
 cache/
 *.bin
 *.xcf
+inst/doc
