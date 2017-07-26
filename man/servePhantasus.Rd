@@ -2,22 +2,27 @@
 % Please edit documentation in R/serve.R
 \name{servePhantasus}
 \alias{servePhantasus}
-\title{Starts http server handling morpheus static files and opencpu}
+\title{Serve phantasus.}
 \usage{
 servePhantasus(host, port, staticRoot = system.file("www/phantasus.js",
   package = "phantasus"), cacheDir = tempdir())
 }
 \arguments{
-\item{host}{host to listen}
+\item{host}{Host to listen.}
 
-\item{port}{port to listen}
+\item{port}{Port to listen.}
 
-\item{staticRoot}{path to static files with phantasus.js (on local file system)}
+\item{staticRoot}{Path to static files with phantasus.js
+(on local file system).}
 
-\item{cacheDir}{full path to cache directory}
+\item{cacheDir}{Full path to cache directory.}
+}
+\value{
+Running instance of phantasus application.
 }
 \description{
-Starts http server handling morpheus static files and opencpu
+\code{servePhantasus} starts http server handling phantasus static files
+  and opencpu server.
 }
 \examples{
 \dontrun{

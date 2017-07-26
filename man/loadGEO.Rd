@@ -8,14 +8,16 @@ loadGEO(name, type = NA)
 }
 \arguments{
 \item{name}{String, containing GEO identifier of the dataset.
-It should start with 'GSE' or 'GDS' and can include exact GPL to annotate dataset,
-separated with dash ('-') from the identifier.}
+It should start with 'GSE' or 'GDS' and can include exact GPL
+to annotate dataset, separated with dash ('-') from the identifier.}
 
-\item{type}{Type of the dataset: 'GSE' or 'GDS'. If not specified, the function
-will take first three letters of \code{name} variable as type.}
+\item{type}{Type of the dataset: 'GSE' or 'GDS'. If not specified,
+the function will take first three letters
+of \code{name} variable as type.}
 }
 \value{
-File with ProtoBuf-serialized ExpressionSet-s that were downloaded by this identifier.
+File with ProtoBuf-serialized ExpressionSet-s
+  that were downloaded by this identifier.
   For GSE-datasets there can be multiple annotations, so in file will be a
   list mapping name with GPL to ExpressionSet.
 }

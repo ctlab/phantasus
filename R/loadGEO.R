@@ -4,13 +4,15 @@
 #'   parsed from data downloaded from GEO by identifier.
 #'
 #' @param name String, containing GEO identifier of the dataset.
-#'   It should start with 'GSE' or 'GDS' and can include exact GPL to annotate dataset,
-#'   separated with dash ('-') from the identifier.
+#'   It should start with 'GSE' or 'GDS' and can include exact GPL
+#'   to annotate dataset, separated with dash ('-') from the identifier.
 #'
-#' @param type Type of the dataset: 'GSE' or 'GDS'. If not specified, the function
-#'   will take first three letters of \code{name} variable as type.
+#' @param type Type of the dataset: 'GSE' or 'GDS'. If not specified,
+#'   the function will take first three letters
+#'   of \code{name} variable as type.
 #'
-#' @return File with ProtoBuf-serialized ExpressionSet-s that were downloaded by this identifier.
+#' @return File with ProtoBuf-serialized ExpressionSet-s
+#'   that were downloaded by this identifier.
 #'   For GSE-datasets there can be multiple annotations, so in file will be a
 #'   list mapping name with GPL to ExpressionSet.
 #'
@@ -93,8 +95,8 @@ getGDS <- function(name, destdir = tempdir()) {
     featureNames(fData) <- rownames
 
     list(ExpressionSet(assayData = exprs,
-                       phenoData = pData,
-                       featureData = fData))
+                        phenoData = pData,
+                        featureData = fData))
 }
 
 getGSE <- function(name, destdir = tempdir()) {
@@ -110,7 +112,7 @@ getGSE <- function(name, destdir = tempdir()) {
     if (!file.exists(destfile)) {
         tryCatch({
             utils::download.file(sprintf(gdsurl, stub, GEO, filename),
-                          destfile = destfile)
+                                 destfile = destfile)
         },
         error = function(e) {
             file.remove(destfile)
@@ -125,12 +127,12 @@ getGSE <- function(name, destdir = tempdir()) {
 
     if (infile) {
         ess <- list(suppressWarnings(getGEO(filename = destfile,
-                                            destdir = destdir,
-                                            AnnotGPL = TRUE)))
+                                              destdir = destdir,
+                                              AnnotGPL = TRUE)))
     } else {
         ess <- suppressWarnings(getGEO(GEO = name,
-                                       destdir = destdir,
-                                       AnnotGPL = TRUE))
+                                        destdir = destdir,
+                                        AnnotGPL = TRUE))
     }
 
     take <- function(x, n) {
@@ -189,16 +191,28 @@ getGSE <- function(name, destdir = tempdir()) {
 
 #' Load ExpressionSet by GEO identifier
 #'
-#'\code{getES} return the ExpressionSet object(s) corresponding to GEO identifier.
+#'\code{getES} return the ExpressionSet object(s) corresponding
+#'  to GEO identifier.
 #'
 #' @param name String, containing GEO identifier of the dataset.
-#'   It should start with 'GSE' or 'GDS' and can include exact GPL to annotate dataset,
-#'   separated with dash ('-') from the identifier.
+#'   It should start with 'GSE' or 'GDS' and can include exact GPL
+#'   to annotate dataset, separated with dash ('-') from the identifier.
 #'
-#' @param type Type of the dataset: 'GSE' or 'GDS'. If not specified, the function
-#'   will take first three letters of \code{name} variable as type.
+#' @param type Type of the dataset: 'GSE' or 'GDS'. If not specified,
+#'   the function will take first three letters
+#'   of \code{name} variable as type.
 #'
-#' @param destdir Directory for caching loaded Series and GPL files from GEO database.
+#' @param destdir Directory for caching loaded Series and GPL
+#'   files from GEO database.
+#'
+#' @return List of ExpressionSet objects, that were available by given
+#'   in \code{name} variable GEO identifier.
+#'
+#' @examples
+#' getES('GSE14308', type = 'GSE', destdir = file.path(getwd(), 'cache'))
+#' getES('GSE27112')
+#' getES('GDS4922')
+#'
 #' @export
 getES <- function(name, type = NA, destdir = tempdir()) {
     if (is.na(type)) {

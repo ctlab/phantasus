@@ -44,6 +44,8 @@ limmaAnalysis <- function(es, rows = c(), columns = c(), fieldValues) {
                                 x = make.names(colnames(es.design)))
 
     fit <- lmFit(es.copy, es.design)
+
+    A <- NULL; B <- NULL
     fit2 <- contrasts.fit(fit, makeContrasts(B - A, levels = es.design))
     fit2 <- eBayes(fit2)
     de <- topTable(fit2, adjust.method = "BH", number = Inf)
