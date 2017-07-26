@@ -115,12 +115,51 @@ You can customize color, size and label of points on the chart by values in anno
 knitr::include_graphics("images/pcaplot_tool_finished.png")
 ```
 
+#### K-means clustering
 
-#### Kmeans clustering
+Use Tools/k-means to cluster genes into predefined number of clusters.
+
+```{r, out.width = "500px", echo = FALSE}
+knitr::include_graphics("images/kmeans_tool.png")
+```
+
+Then you can sort by annotation "clusters" and view the whole dataset by using View/Fit to window. Here you can also see outlier samples.
+
+```{r, out.width = "600px", echo = FALSE}
+knitr::include_graphics("images/kmeans_result.png")
+```
 
 #### Hierarchical clustering
 
+Use Tool/Hierarchical clustering to cluster samples. 
+
+```{r, out.width = "500px", echo = FALSE}
+knitr::include_graphics("images/hierarchical_tool.png")
+```
+
+#### Filtering outliers
+
+Now, when outliers are confirmed, you can choose good samples and extract them into another heatmap (Ctrl+X).
+
+```{r, out.width = "600px", echo = FALSE}
+knitr::include_graphics("images/good_samples.png")
+```
+
 #### Differential expression
+
+Use Tools/Limma to compare samples. Choose "treatment" as a field, "Untreated" and "LPS" as classes.
+
+```{r, out.width = "500px", echo = FALSE}
+knitr::include_graphics("images/limma_tool.png")
+```
+
+Now you can sort by t-statistic and see genes with the highest difference between classes.
+
+```{r, out.width = "600px", echo = FALSE}
+knitr::include_graphics("images/limma_results.png")
+```
+
+
 
 
 
