@@ -109,7 +109,14 @@ Use Tools/PCA Plot to analyse the data with Principal Component Analysis method.
 knitr::include_graphics("images/pcaplot_tool_clean.png")
 ```
 
-#### Kmeans clusterization
+You can customize color, size and label of points on the chart by values in annotation. By analysing the plot you may find some outliers that need to be analysed further to see if they can be eliminated.
+
+```{r, out.width = "550px", echo = FALSE}
+knitr::include_graphics("images/pcaplot_tool_finished.png")
+```
+
+
+#### Kmeans clustering
 
 #### Hierarchical clustering
 

@@ -7,5 +7,5 @@ test_that("pcaPlot finishes with result", {
 
 test_that("pcaPlot results in columnsXcolumns matrix", {
   load(file = "testdata/GSE27112-GPL6103.rda")
-  expect_is(nrow(jsonlite::fromJSON(pcaPlot(es))$pca), length(sampleNames(es)))
+  expect_equal(nrow(jsonlite::fromJSON(pcaPlot(es))$pca), length(sampleNames(es)))
 })
