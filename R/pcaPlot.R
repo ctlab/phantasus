@@ -19,7 +19,7 @@
 #' @import jsonlite
 pcaPlot <- function(es, columns = c(), rows = c(), replacena = "mean") {
 
-    data <- prepareData(es, columns, rows, replacena)
+    data <- t(prepareData(es, columns, rows, replacena))
 
     pca <- stats::prcomp(data)
     explained <- (pca$sdev) ^ 2 / sum(pca$sdev ^ 2)
