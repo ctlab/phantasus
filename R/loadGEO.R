@@ -162,9 +162,26 @@ getGSE <- function(name, destdir = tempdir()) {
     }
 
     processInputES <- function(es) {
-        featureData(es) <- featureData(es)[, grepl("symbol",
-                                                   fvarLabels(es),
-                                                   ignore.case = TRUE)]
+        fvarsToKeep <- c()
+        if ("Gene symbol" %in% fvarLabels(es)) {
+            fvarsToKeep <- c(fvarsToKeep, "Gene symbol")
+        } else {
+            fvarsToKeep <- c(fvarsToKeep, grep("symbol",
+                                               fvarLabels(es), 
+                                               ignore.case = T, 
+                                               value=T))
+        }
+        
+        if ("Gene ID" %in% fvarLabels(es)) {
+            fvarsToKeep <- c(fvarsToKeep, "Gene ID")
+        } else  {
+            fvarsToKeep <- c(fvarsToKeep, grep("entrez",
+                                               fvarLabels(es), 
+                                               ignore.case = T, 
+                                               value=T))    
+        }
+        
+        featureData(es) <- featureData(es)[, fvarsToKeep]
 
         phenoData(es) <- phenoData(es)[,
                                        grepl("characteristics",
