@@ -1,0 +1,71 @@
+---
+title: "Developing new tools"
+author: "Daria Zenkova"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Introduction to project architecture
+
+Project architecture includes two main components:
+
+- R-package that contains implementations of used tools and methods;
+- JavaScript code with client-side of the project.
+
+Those two components are connected through OpenCPU as a bridge, and inside the JavaScript implementation the RPC-call to server is used.
+
+Consequently, in order to add new tool one needs:
+
+- To implement an exported function in R;
+- To describe graphical side of the tool in JavaScript;
+- To process returned value inside RPC-call callback. 
+
+All of these steps will be described in details in this vignette.
+
+## R-side implementation
+
+Each analysis method in this package takes three compulsory arguments:
+
+- `es` -- ExpressionSet object;
+- `rows` -- same thing with rows;
+- `columns` -- specified indices of columns that are taken into consideration.
+
+Also, some methods require to replace NA values in series matrix in order to be used, so usually also `replacena` argument is needed.
+
+Other arguments depend on the method's specifics. 
+
+Before calculating the method, the considered data from the whole series matrix needs to be extracted.
+For that reason, the package has non-exported method `prepareData`, that takes as arguments `es`, `columns`, `rows, `replacena`.
+
+After the method is used, the result can be sent back in two ways:
+
+- As a JSON object (use `jsonlite::toJSON` for that), if the result is adequately small;
+- As a file with ProtoBuf-serialized object (`protolite::serialize_pb`), if it is large.
+
+The approximate code structure is demonstrated here:
+```{r, eval = FALSE}
+# instead of ellipsis would be specific arguments
+method <- function(es,  rows = c(), columns = c(), replacea = "mean", ...) {
+  # Here may be some assertions 
+  
+  # Data preparation
+  data <- prepareData(es, rows, columns, replacena)
+  
+  # Using method
+  res <- ...
+  
+  # Sending back the result as JSON:
+  return(jsonlite::toJSON(res))
+  
+  # Or as ProtoBuf
+  f <- tempfile(pattern = "pat", tmpdir = getwd(), fileext = ".bin")
+  writeBin(protolite::serialize_pb(res), f)
+  jsonlite::toJSON(f)
+}
+```
+
+
