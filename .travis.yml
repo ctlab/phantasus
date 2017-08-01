@@ -46,7 +46,7 @@ after_script:
   - FILE=$(ls -1t *.tar.gz | head -n 1)
   - Rscript -e "library(BiocCheck); BiocCheck(\"${FILE}\")"
   - bash inst/test_js.sh
-  - if [ "$TRAVIS_BRANCH" == "master"]; then
+  - if [ "$TRAVIS_BRANCH" == "master" ]; then
     docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
     docker push dzenkova/phantasus;
     fi
