@@ -6,6 +6,9 @@ r:
 sudo: false
 cache: packages
 
+services:
+  - docker
+
 addons:
   apt:
     packages:
@@ -43,6 +46,7 @@ after_script:
   - FILE=$(ls -1t *.tar.gz | head -n 1)
   - Rscript -e "library(BiocCheck); BiocCheck(\"${FILE}\")"
   - bash inst/test_js.sh
+  - docker build -t ctlab/phantasus
 
 after_success:
   - Rscript -e 'covr::codecov()'
