@@ -56,21 +56,21 @@ The approximate code structure is demonstrated here:
 ```{r, eval = FALSE}
 # instead of ellipsis would be specific arguments
 method <- function(es,  rows = c(), columns = c(), replacea = "mean", ...) {
-  # Here may be some assertions 
-  
-  # Data preparation
-  data <- prepareData(es, rows, columns, replacena)
-  
-  # Using method
-  res <- ...
-  
-  # Sending back the result as JSON:
-  return(jsonlite::toJSON(res))
-  
-  # Or as ProtoBuf
-  f <- tempfile(pattern = "pat", tmpdir = getwd(), fileext = ".bin")
-  writeBin(protolite::serialize_pb(res), f)
-  jsonlite::toJSON(f)
+    # Here may be some assertions 
+
+    # Data preparation
+    data <- prepareData(es, rows, columns, replacena)
+
+    # Using method
+    res <- ...
+
+    # Sending back the result as JSON:
+    return(jsonlite::toJSON(res))
+
+    # Or as ProtoBuf
+    f <- tempfile(pattern = "pat", tmpdir = getwd(), fileext = ".bin")
+    writeBin(protolite::serialize_pb(res), f)
+    jsonlite::toJSON(f)
 }
 ```
 
@@ -87,11 +87,11 @@ The structure of the tool description:
     - `name` -- field's name;
     - `value` -- default value;
     - `type` -- field's type (most used types are: select, checkbox-list, 
-      bootstrap-list, text);
+        bootstrap-list, text);
     - `multiple` -- if multiple values may be chosen 
-      (relevant for checkbox-list);
+        (relevant for checkbox-list);
     - 'options' -- an array of values to choose from 
-      (relevant for lists and select);
+        (relevant for lists and select);
 - `init` -- initialization of tool's input fields;
 - `execute` -- main method of the tool, which includes:
     1) processing of the input (`options.input.fieldName`);

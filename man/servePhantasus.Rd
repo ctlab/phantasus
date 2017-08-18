@@ -22,7 +22,7 @@ Running instance of phantasus application.
 }
 \description{
 \code{servePhantasus} starts http server handling phantasus static files
-  and opencpu server.
+    and opencpu server.
 }
 \examples{
 \dontrun{
