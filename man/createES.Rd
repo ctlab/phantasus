@@ -24,3 +24,12 @@ produced ExpressionSet object
 \code{createES} function produces an ExpressionSet object from given data,
   and exports it to global scope.
 }
+\examples{
+data <- matrix(1:15, 5, 3)
+pData <- c("A", "B", "C")
+varLabels <- "cat"
+fData <- c("p", "r", "s", "t", "u")
+fvarLabels <- "id"
+createES(data, pData, varLabels, fData, fvarLabels)
+
+}

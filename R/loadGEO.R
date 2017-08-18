@@ -114,7 +114,7 @@ getGSE <- function(name, destdir = tempdir()) {
     if (!file.exists(destfile)) {
         tryCatch({
             utils::download.file(sprintf(gdsurl, stub, GEO, filename),
-                                 destfile = destfile)
+                                    destfile = destfile)
         },
         error = function(e) {
             file.remove(destfile)
@@ -129,8 +129,8 @@ getGSE <- function(name, destdir = tempdir()) {
 
     if (infile) {
         ess <- list(suppressWarnings(getGEO(filename = destfile,
-                                              destdir = destdir,
-                                              AnnotGPL = TRUE)))
+                                                destdir = destdir,
+                                                AnnotGPL = TRUE)))
     } else {
         ess <- suppressWarnings(getGEO(GEO = name,
                                         destdir = destdir,
@@ -154,8 +154,8 @@ getGSE <- function(name, destdir = tempdir()) {
 
             res <- list(name = splittedFirst[1],
                         x = ifelse(lengths == 2,
-                                   take(splitted[lengths == 2], 2),
-                                   NA))
+                                    take(splitted[lengths == 2], 2),
+                                    NA))
 
         } else {
             res <- list(name = prevName, x = x)
@@ -169,33 +169,34 @@ getGSE <- function(name, destdir = tempdir()) {
             fvarsToKeep <- c(fvarsToKeep, "Gene symbol")
         } else {
             fvarsToKeep <- c(fvarsToKeep, grep("symbol",
-                                               fvarLabels(es),
-                                               ignore.case = TRUE,
-                                               value=TRUE))
+                                                fvarLabels(es),
+                                                ignore.case = TRUE,
+                                                value = TRUE))
         }
 
         if ("Gene ID" %in% fvarLabels(es)) {
             fvarsToKeep <- c(fvarsToKeep, "Gene ID")
         } else  {
             fvarsToKeep <- c(fvarsToKeep, grep("entrez",
-                                               fvarLabels(es),
-                                               ignore.case = TRUE,
-                                               value=TRUE))
+                                                fvarLabels(es),
+                                                ignore.case = TRUE,
+                                                value = TRUE))
         }
 
         featureData(es) <- featureData(es)[, fvarsToKeep]
 
         phenoData(es) <- phenoData(es)[,
-                                       grepl("characteristics",
-                                             varLabels(es),
-                                             ignore.case = TRUE) |
+                                        grepl("characteristics",
+                                                varLabels(es),
+                                                ignore.case = TRUE) |
                                         (varLabels(es) %in% c("title",
-                                                              "id",
-                                                              "geo_accession"))]
+                                                                "id",
+                                                                "geo_accession"
+                                                              ))]
 
         chr <- varLabels(es)[grepl("characteristics",
-                                   varLabels(es),
-                                   ignore.case = TRUE)]
+                                    varLabels(es),
+                                    ignore.case = TRUE)]
 
         renamed <- lapply(chr, function(x) {
             rename(x, as.vector(pData(es)[, x]))
@@ -231,8 +232,8 @@ getGSE <- function(name, destdir = tempdir()) {
 #' \dontrun{
 #' getES('GSE14308', type = 'GSE', destdir = file.path(getwd(), 'cache'))
 #' getES('GSE27112')
-#' getES('GDS4922')
 #' }
+#' getES('GDS4922')
 #'
 #' @export
 getES <- function(name, type = NA, destdir = tempdir()) {
@@ -254,10 +255,10 @@ getES <- function(name, type = NA, destdir = tempdir()) {
             for (i in 1:length(res)) {
                 ess <- c(res[[i]])
                 save(ess, file = file.path(destdir,
-                                           paste0(name,
-                                                  "-",
-                                                  annotation(res[[i]]),
-                                                  ".rda")))
+                                            paste0(name,
+                                                    "-",
+                                                    annotation(res[[i]]),
+                                                    ".rda")))
             }
         }
         ess <- res
@@ -291,7 +292,7 @@ checkGPLs <- function(name) {
     gdsurl <- "https://ftp.ncbi.nlm.nih.gov/geo/%s/%s/%s/"
 
     url <- sprintf(gdsurl,
-                   if (type == "GDS") "datasets" else "series", stub, name)
+                    if (type == "GDS") "datasets" else "series", stub, name)
 
     if (httr::status_code(httr::GET(url)) == 404) {
       return(jsonlite::toJSON(c()))

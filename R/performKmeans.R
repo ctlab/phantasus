@@ -23,7 +23,8 @@
 #' data(es)
 #' performKmeans(es, k = 2)
 #'
-performKmeans <- function(es, columns = c(), rows = c(), k, replacena = "mean") {
+performKmeans <- function(es, columns = c(), rows = c(), k,
+                          replacena = "mean") {
     assertthat::assert_that(k > 0)
 
     data <- prepareData(es, columns, rows, replacena)
