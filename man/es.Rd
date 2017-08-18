@@ -10,7 +10,7 @@ data(es)
 }
 \description{
 Small slice from GSE27112-GPL6103 for
-  runnable examples.
+    runnable examples.
 }
 \examples{
 data(es)

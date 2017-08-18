@@ -1,19 +1,19 @@
 #' Differential Expression analysis.
 #'
 #' \code{limmaAnalysis} performs differential expression analysis
-#'   from limma package and returns a ProtoBuf-serialized resulting
-#'   de-matrix.
+#'     from limma package and returns a ProtoBuf-serialized resulting
+#'     de-matrix.
 #'
 #' @param es ExpressionSet object. It should be normalized for
-#'   more accurate analysis.
+#'     more accurate analysis.
 #'
 #' @param columns Vector of specified columns' indices (optional).
 #'
 #' @param rows Vector of specified rows' indices (optional).
 #'
 #' @param fieldValues Vector of comparison values, mapping
-#'   categories' names to columns/samples
-#'   (must be equal length with columns' vector if specified).
+#'     categories' names to columns/samples
+#'     (must be equal length with columns' vector if specified).
 #'
 #' @return Name of the file containing serialized de-matrix.
 #'

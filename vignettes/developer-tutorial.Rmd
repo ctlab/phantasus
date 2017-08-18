@@ -4,9 +4,9 @@ author: "Daria Zenkova"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Developing new tools}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+    %\VignetteIndexEntry{Developing new tools}
+    %\VignetteEngine{knitr::rmarkdown}
+    %\VignetteEncoding{UTF-8}
 ---
 
 ## Introduction to project architecture
@@ -16,7 +16,8 @@ Project architecture includes two main components:
 - R-package that contains implementations of used tools and methods;
 - JavaScript code with client-side of the project.
 
-Those two components are connected through OpenCPU as a bridge, and inside the JavaScript implementation the RPC-call to server is used.
+Those two components are connected through OpenCPU as a bridge, and inside 
+the JavaScript implementation the RPC-call to server is used.
 
 Consequently, in order to add new tool one needs:
 
@@ -34,17 +35,22 @@ Each analysis method in this package takes three compulsory arguments:
 - `rows` -- same thing with rows;
 - `columns` -- specified indices of columns that are taken into consideration.
 
-Also, some methods require to replace NA values in series matrix in order to be used, so usually also `replacena` argument is needed.
+Also, some methods require to replace NA values in series matrix in order 
+to be used, so usually also `replacena` argument is needed.
 
 Other arguments depend on the method's specifics. 
 
-Before calculating the method, the considered data from the whole series matrix needs to be extracted.
-For that reason, the package has non-exported method `prepareData`, that takes as arguments `es`, `columns`, `rows, `replacena`.
+Before calculating the method, the considered data from the whole series matrix 
+needs to be extracted.
+For that reason, the package has non-exported method `prepareData`, 
+that takes as arguments `es`, `columns`, `rows, `replacena`.
 
 After the method is used, the result can be sent back in two ways:
 
-- As a JSON object (use `jsonlite::toJSON` for that), if the result is adequately small;
-- As a file with ProtoBuf-serialized object (`protolite::serialize_pb`), if it is large.
+- As a JSON object (use `jsonlite::toJSON` for that),
+    if the result is adequately small;
+- As a file with ProtoBuf-serialized object (`protolite::serialize_pb`), 
+    if it is large.
 
 The approximate code structure is demonstrated here:
 ```{r, eval = FALSE}
@@ -75,17 +81,22 @@ Remember, that your tool must be exported, fully documented and tested.
 The structure of the tool description:
 
 - `toString` -- method that returns tool's name;
-- `gui` -- field's description, represented as an array of JSON-objects, which have following values:
+- `gui` -- field's description, represented as an array of JSON-objects, 
+    which have following values:
 
     - `name` -- field's name;
     - `value` -- default value;
-    - `type` -- field's type (most used types are: select, checkbox-list, bootstrap-list, text);
-    - `multiple` -- if multiple values may be chosen (relevant for checkbox-list);
-    - 'options' -- an array of values to choose from (relevent for lists and select);
+    - `type` -- field's type (most used types are: select, checkbox-list, 
+      bootstrap-list, text);
+    - `multiple` -- if multiple values may be chosen 
+      (relevant for checkbox-list);
+    - 'options' -- an array of values to choose from 
+      (relevant for lists and select);
 - `init` -- initialization of tool's input fields;
 - `execute` -- main method of the tool, which includes:
     1) processing of the input (`options.input.fieldName`);
-    2) processing of additional arguments, if they need to be derived from the dataset and input;
+    2) processing of additional arguments, if they need to be derived 
+        from the dataset and input;
     3) RPC-call to OpenCPU-server
     4) Processing the result.
 
@@ -150,18 +161,21 @@ phantasus.NewTool.prototype = {
           // Result getting depends on its type
 
           // JSON:
-          var result = JSON.parse(success); // after that you can proceed with result
+          var result = JSON.parse(success); 
+          // after that you can proceed with result
           
           // ProtoBuf:
           var r = new FileReader();
-          var filePath = phantasus.Util.getFilePath(session, JSON.parse(success)[0]);
+          var filePath = phantasus.Util.getFilePath(session, 
+                                                    JSON.parse(success)[0]);
 
           r.onload = function (e) {
             var contents = e.target.result;
             var ProtoBuf = dcodeIO.ProtoBuf;
             
             // message.proto is file with specified protocol
-            ProtoBuf.protoFromFile("./message.proto", function (error, success) {
+            ProtoBuf.protoFromFile("./message.proto", 
+                                   function (error, success) {
               if (error) {
                 throw new Error(error);
               }

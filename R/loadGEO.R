@@ -1,25 +1,25 @@
 #' Load GEO Dataset.
 #'
-#' \code{loadGEO} returns the file with serialized ExpressionSet using ProtoBuf,
-#'   parsed from data downloaded from GEO by identifier.
+#' \code{loadGEO} returns the file with serialized ExpressionSet using
+#'     ProtoBuf, parsed from data downloaded from GEO by identifier.
 #'
 #' @param name String, containing GEO identifier of the dataset.
-#'   It should start with 'GSE' or 'GDS' and can include exact GPL
-#'   to annotate dataset, separated with dash ('-') from the identifier.
+#'     It should start with 'GSE' or 'GDS' and can include exact GPL
+#'     to annotate dataset, separated with dash ('-') from the identifier.
 #'
 #' @param type Type of the dataset: 'GSE' or 'GDS'. If not specified,
-#'   the function will take first three letters
-#'   of \code{name} variable as type.
+#'     the function will take first three letters
+#'     of \code{name} variable as type.
 #'
 #' @return File with ProtoBuf-serialized ExpressionSet-s
-#'   that were downloaded by this identifier.
-#'   For GSE-datasets there can be multiple annotations, so in file will be a
-#'   list mapping name with GPL to ExpressionSet.
+#'     that were downloaded by this identifier.
+#'     For GSE-datasets there can be multiple annotations, so in file will be a
+#'     list mapping name with GPL to ExpressionSet.
 #'
 #' @examples
 #' \dontrun{
-#'   loadGEO("GSE27112")
-#'   loadGEO("GDS4922")
+#'     loadGEO("GSE27112")
+#'     loadGEO("GDS4922")
 #' }
 #' loadGEO("GSE27112-GPL6885")
 #'
@@ -192,7 +192,7 @@ getGSE <- function(name, destdir = tempdir()) {
                                         (varLabels(es) %in% c("title",
                                                                 "id",
                                                                 "geo_accession"
-                                                              ))]
+                                                                ))]
 
         chr <- varLabels(es)[grepl("characteristics",
                                     varLabels(es),
@@ -212,26 +212,26 @@ getGSE <- function(name, destdir = tempdir()) {
 #' Load ExpressionSet by GEO identifier
 #'
 #'\code{getES} return the ExpressionSet object(s) corresponding
-#'  to GEO identifier.
+#'     to GEO identifier.
 #'
 #' @param name String, containing GEO identifier of the dataset.
-#'   It should start with 'GSE' or 'GDS' and can include exact GPL
-#'   to annotate dataset, separated with dash ('-') from the identifier.
+#'     It should start with 'GSE' or 'GDS' and can include exact GPL
+#'     to annotate dataset, separated with dash ('-') from the identifier.
 #'
 #' @param type Type of the dataset: 'GSE' or 'GDS'. If not specified,
-#'   the function will take first three letters
-#'   of \code{name} variable as type.
+#'     the function will take first three letters
+#'     of \code{name} variable as type.
 #'
 #' @param destdir Directory for caching loaded Series and GPL
-#'   files from GEO database.
+#'     files from GEO database.
 #'
 #' @return List of ExpressionSet objects, that were available by given
-#'   in \code{name} variable GEO identifier.
+#'     in \code{name} variable GEO identifier.
 #'
 #' @examples
 #' \dontrun{
-#' getES('GSE14308', type = 'GSE', destdir = file.path(getwd(), 'cache'))
-#' getES('GSE27112')
+#'     getES('GSE14308', type = 'GSE', destdir = file.path(getwd(), 'cache'))
+#'     getES('GSE27112')
 #' }
 #' getES('GDS4922')
 #'
@@ -270,13 +270,13 @@ getES <- function(name, type = NA, destdir = tempdir()) {
 #' Check possible annotations for GEO Dataset.
 #'
 #' \code{checkGPLs} returns GPL-names for
-#'   the specified GEO identifier.
+#'     the specified GEO identifier.
 #'
 #' @param name String, containing GEO identifier of the dataset.
 #'
 #' @return Vector of filenames serialized in JSON format.
-#'   If there is only one GPL for that dataset, the function will
-#'   return \code{name}.
+#'     If there is only one GPL for that dataset, the function will
+#'     return \code{name}.
 #'
 #' @examples
 #' checkGPLs('GSE27112')
@@ -295,20 +295,20 @@ checkGPLs <- function(name) {
                     if (type == "GDS") "datasets" else "series", stub, name)
 
     if (httr::status_code(httr::GET(url)) == 404) {
-      return(jsonlite::toJSON(c()))
+        return(jsonlite::toJSON(c()))
     } else {
-      if (type == "GDS") {
-        return(jsonlite::toJSON(name))
-      } else {
-        file.names <- GEOquery:::getDirListing(paste0(url, "matrix/"))
+        if (type == "GDS") {
+            return(jsonlite::toJSON(name))
+        } else {
+            file.names <- GEOquery:::getDirListing(paste0(url, "matrix/"))
 
-        file.names <- file.names[grepl(pattern = paste0("^", name),
-                                       x = file.names)]
+            file.names <- file.names[grepl(pattern = paste0("^", name),
+                                        x = file.names)]
 
-        file.names <- unlist(lapply(file.names, function(x) {
-            paste0(substr(x, 1, regexpr("_", x) - 1))
-        }))
+            file.names <- unlist(lapply(file.names, function(x) {
+                paste0(substr(x, 1, regexpr("_", x) - 1))
+            }))
         return(jsonlite::toJSON(file.names))
-      }
+        }
     }
 }

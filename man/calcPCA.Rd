@@ -20,7 +20,7 @@ json with full description of the plot for plotly.js
 }
 \description{
 \code{calcPCA} calculates PCA-matrix for the given ExpressionSet
-  and returns this matrix encoded to JSON.
+    and returns this matrix encoded to JSON.
 }
 \examples{
 data(es)

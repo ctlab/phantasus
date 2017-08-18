@@ -1,7 +1,7 @@
 #' Example dataset
 #'
 #' Small slice from GSE27112-GPL6103 for
-#'   runnable examples.
+#'     runnable examples.
 #'
 #' @docType data
 #'

@@ -23,7 +23,7 @@ Vector of corresponding clusters, serialized to JSON.
 }
 \description{
 \code{performKmeans} returns a vector of corresponding clusters for
-  each gene from a given ExpressionSet.
+    each gene from a given ExpressionSet.
 }
 \examples{
 data(es)

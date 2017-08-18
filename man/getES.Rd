@@ -20,16 +20,16 @@ files from GEO database.}
 }
 \value{
 List of ExpressionSet objects, that were available by given
-  in \code{name} variable GEO identifier.
+    in \code{name} variable GEO identifier.
 }
 \description{
 \code{getES} return the ExpressionSet object(s) corresponding
- to GEO identifier.
+    to GEO identifier.
 }
 \examples{
 \dontrun{
-getES('GSE14308', type = 'GSE', destdir = file.path(getwd(), 'cache'))
-getES('GSE27112')
+    getES('GSE14308', type = 'GSE', destdir = file.path(getwd(), 'cache'))
+    getES('GSE27112')
 }
 getES('GDS4922')
 

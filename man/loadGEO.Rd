@@ -17,18 +17,18 @@ of \code{name} variable as type.}
 }
 \value{
 File with ProtoBuf-serialized ExpressionSet-s
-  that were downloaded by this identifier.
-  For GSE-datasets there can be multiple annotations, so in file will be a
-  list mapping name with GPL to ExpressionSet.
+    that were downloaded by this identifier.
+    For GSE-datasets there can be multiple annotations, so in file will be a
+    list mapping name with GPL to ExpressionSet.
 }
 \description{
-\code{loadGEO} returns the file with serialized ExpressionSet using ProtoBuf,
-  parsed from data downloaded from GEO by identifier.
+\code{loadGEO} returns the file with serialized ExpressionSet using
+    ProtoBuf, parsed from data downloaded from GEO by identifier.
 }
 \examples{
 \dontrun{
-  loadGEO("GSE27112")
-  loadGEO("GDS4922")
+    loadGEO("GSE27112")
+    loadGEO("GDS4922")
 }
 loadGEO("GSE27112-GPL6885")
 

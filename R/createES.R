@@ -1,7 +1,7 @@
 #' Create ExpressionSet.
 #'
 #' \code{createES} function produces an ExpressionSet object from given data,
-#'   and exports it to global scope.
+#'     and exports it to global scope.
 #'
 #' @param data Gene expression matrix.
 #'

@@ -1,7 +1,7 @@
 #' Principal Component Analysis.
 #'
 #' \code{calcPCA} calculates PCA-matrix for the given ExpressionSet
-#'   and returns this matrix encoded to JSON.
+#'     and returns this matrix encoded to JSON.
 #'
 #' @param es an ExpressionSet object, should be normalized
 #'

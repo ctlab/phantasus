@@ -22,7 +22,7 @@ produced ExpressionSet object
 }
 \description{
 \code{createES} function produces an ExpressionSet object from given data,
-  and exports it to global scope.
+    and exports it to global scope.
 }
 \examples{
 data <- matrix(1:15, 5, 3)

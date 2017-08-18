@@ -1,14 +1,14 @@
 #' Serve phantasus.
 #'
 #' \code{servePhantasus} starts http server handling phantasus static files
-#'   and opencpu server.
+#'     and opencpu server.
 #'
 #' @param host Host to listen.
 #'
 #' @param port Port to listen.
 #'
 #' @param staticRoot Path to static files with phantasus.js
-#'   (on local file system).
+#'     (on local file system).
 #'
 #' @param cacheDir Full path to cache directory.
 #'
@@ -24,7 +24,7 @@
 #' servePhantasus('0.0.0.0', 8000, cacheDir=file.path(getwd(), 'cache'))
 #' }
 servePhantasus <- function(host, port,
-                           staticRoot = system.file("www/phantasus.js",
+                            staticRoot = system.file("www/phantasus.js",
                                                     package = "phantasus"),
     cacheDir = tempdir()) {
     options(phantasusCacheDir = cacheDir)

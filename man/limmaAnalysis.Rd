@@ -23,8 +23,8 @@ Name of the file containing serialized de-matrix.
 }
 \description{
 \code{limmaAnalysis} performs differential expression analysis
-  from limma package and returns a ProtoBuf-serialized resulting
-  de-matrix.
+    from limma package and returns a ProtoBuf-serialized resulting
+    de-matrix.
 }
 \examples{
 data(es)

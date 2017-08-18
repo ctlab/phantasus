@@ -11,12 +11,12 @@ checkGPLs(name)
 }
 \value{
 Vector of filenames serialized in JSON format.
-  If there is only one GPL for that dataset, the function will
-  return \code{name}.
+    If there is only one GPL for that dataset, the function will
+    return \code{name}.
 }
 \description{
 \code{checkGPLs} returns GPL-names for
-  the specified GEO identifier.
+    the specified GEO identifier.
 }
 \examples{
 checkGPLs('GSE27112')

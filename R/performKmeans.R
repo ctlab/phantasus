@@ -1,7 +1,7 @@
 #' K-means clusterisation.
 #'
 #' \code{performKmeans} returns a vector of corresponding clusters for
-#'   each gene from a given ExpressionSet.
+#'     each gene from a given ExpressionSet.
 #'
 #' @param es ExpressionSet object.
 #'
@@ -12,7 +12,7 @@
 #' @param k Expected number of clusters.
 #'
 #' @param replacena Method for replacing NA values
-#'   in series matrix (mean by default)
+#'     in series matrix (mean by default)
 #'
 #' @return Vector of corresponding clusters, serialized to JSON.
 #'
@@ -24,7 +24,7 @@
 #' performKmeans(es, k = 2)
 #'
 performKmeans <- function(es, columns = c(), rows = c(), k,
-                          replacena = "mean") {
+                            replacena = "mean") {
     assertthat::assert_that(k > 0)
 
     data <- prepareData(es, columns, rows, replacena)
