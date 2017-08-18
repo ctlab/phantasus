@@ -47,6 +47,9 @@ filternaRows <- function(data, currentRows) {
 #'
 #' @return ExpressionSet object
 #' @export
+#'
+#' @examples
+#' read.gct(system.file("extdata", "centers.gct", package = "phantasus"))
 read.gct <- function(gct, ...) {
   meta <- readLines(gct, n = 3)
   version <- meta[1]

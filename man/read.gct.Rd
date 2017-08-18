@@ -17,3 +17,6 @@ ExpressionSet object
 \description{
 Only versions 1.2 and 1.3 are supported.
 }
+\examples{
+read.gct(system.file("extdata", "centers.gct", package = "phantasus"))
+}

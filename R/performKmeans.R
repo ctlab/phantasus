@@ -1,6 +1,6 @@
 #' K-means clusterisation.
 #'
-#' \code{kmeans} returns a vector of corresponding clusters for
+#' \code{performKmeans} returns a vector of corresponding clusters for
 #'   each gene from a given ExpressionSet.
 #'
 #' @param es ExpressionSet object.
@@ -18,7 +18,12 @@
 #'
 #' @export
 #' @import Biobase
-kmeans <- function(es, columns = c(), rows = c(), k, replacena = "mean") {
+#'
+#' @examples
+#' data(es)
+#' performKmeans(es, k = 2)
+#'
+performKmeans <- function(es, columns = c(), rows = c(), k, replacena = "mean") {
     assertthat::assert_that(k > 0)
 
     data <- prepareData(es, columns, rows, replacena)

@@ -26,3 +26,7 @@ Name of the file containing serialized de-matrix.
   from limma package and returns a ProtoBuf-serialized resulting
   de-matrix.
 }
+\examples{
+data(es)
+limmaAnalysis(es, fieldValues = c("A", "A", "A", "B", "B"))
+}

@@ -26,8 +26,10 @@ File with ProtoBuf-serialized ExpressionSet-s
   parsed from data downloaded from GEO by identifier.
 }
 \examples{
-loadGEO("GSE27112")
+\dontrun{
+  loadGEO("GSE27112")
+  loadGEO("GDS4922")
+}
 loadGEO("GSE27112-GPL6885")
-loadGEO("GDS4922")
 
 }

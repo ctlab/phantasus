@@ -18,9 +18,9 @@ test_that("checkGPLs counts gpls correctly", {
   expect_length(fromJSON(checkGPLs("GSE201")), 0)
 })
 
-test_that("GEO datasets without 'Gene Symbol' annotation are loaded with empty featureData", {
-  loadGEO("GSE76319")
-  expect_equal(ncol(fData(es_1)), 0)
-  loadGEO("GSE73385")
-  expect_equal(ncol(fData(es_1)), 0)
-})
+# test_that("GEO datasets without 'Gene Symbol' annotation are loaded with empty featureData", {
+#   loadGEO("GSE76319")
+#   expect_equal(ncol(fData(es_1)), 0)
+#   loadGEO("GSE73385")
+#   expect_equal(ncol(fData(es_1)), 0)
+# })

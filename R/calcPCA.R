@@ -1,7 +1,7 @@
 #' Principal Component Analysis.
 #'
-#' Function for creating json with full description
-#'   of the pcaPlot for plotly.js.
+#' \code{calcPCA} calculates PCA-matrix for the given ExpressionSet
+#'   and returns this matrix encoded to JSON.
 #'
 #' @param es an ExpressionSet object, should be normalized
 #'
@@ -17,7 +17,11 @@
 #' @import ggplot2
 #' @import htmltools
 #' @import jsonlite
-pcaPlot <- function(es, columns = c(), rows = c(), replacena = "mean") {
+#'
+#' @examples
+#' data(es)
+#' calcPCA(es)
+calcPCA <- function(es, columns = c(), rows = c(), replacena = "mean") {
 
     data <- t(prepareData(es, columns, rows, replacena))
 

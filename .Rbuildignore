@@ -11,6 +11,8 @@
 ^inst/www/phantasus.js/js/parser.js$
 ^inst/www/phantasus.js/js/plotly-latest.min.js$
 ^inst/www/phantasus.js/js/protobuf.js$
+^inst/www/phantasus.js/js/phantasus-external.js$
+^inst/www/phantasus.js/js/phantasus-external.min.js$
 ^inst/www/phantasus.js/js/StackBlur.js$
 ^inst/www/phantasus.js/src/.*$
 ^inst/www/phantasus.js/cache/.*$
@@ -26,6 +28,9 @@
 ^inst/www/phantasus.js/LICENSE$
 ^inst/www/phantasus.js/README.md$
 ^inst/tutorials/.*$
+
+^inst/Dockerfile.*$
+^inst/test_js.sh$
 
 ^cache/*$
 ^build/*$

@@ -17,9 +17,11 @@
 #'   list mapping name with GPL to ExpressionSet.
 #'
 #' @examples
-#' loadGEO("GSE27112")
+#' \dontrun{
+#'   loadGEO("GSE27112")
+#'   loadGEO("GDS4922")
+#' }
 #' loadGEO("GSE27112-GPL6885")
-#' loadGEO("GDS4922")
 #'
 #' @export
 #' @import Biobase
@@ -167,20 +169,20 @@ getGSE <- function(name, destdir = tempdir()) {
             fvarsToKeep <- c(fvarsToKeep, "Gene symbol")
         } else {
             fvarsToKeep <- c(fvarsToKeep, grep("symbol",
-                                               fvarLabels(es), 
-                                               ignore.case = T, 
-                                               value=T))
+                                               fvarLabels(es),
+                                               ignore.case = TRUE,
+                                               value=TRUE))
         }
-        
+
         if ("Gene ID" %in% fvarLabels(es)) {
             fvarsToKeep <- c(fvarsToKeep, "Gene ID")
         } else  {
             fvarsToKeep <- c(fvarsToKeep, grep("entrez",
-                                               fvarLabels(es), 
-                                               ignore.case = T, 
-                                               value=T))    
+                                               fvarLabels(es),
+                                               ignore.case = TRUE,
+                                               value=TRUE))
         }
-        
+
         featureData(es) <- featureData(es)[, fvarsToKeep]
 
         phenoData(es) <- phenoData(es)[,
