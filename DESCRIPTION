@@ -23,7 +23,3 @@ Suggests: testthat, knitr, rmarkdown
 VignetteBuilder: knitr
 NeedsCompilation: no
 Packaged: 2017-08-18 09:23:29 UTC; dzenkova
-Author: Daria Zenkova [aut, cre],
-  Joshua Gould [aut],
-  Alexey Sergushichev [aut]
-Maintainer: Daria Zenkova <daria.zenkova.cs@gmail.com>
