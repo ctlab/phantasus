@@ -3,3 +3,7 @@
 .RData
 .Rproj
 .idea/
+cache/
+*.bin
+*.xcf
+inst/doc

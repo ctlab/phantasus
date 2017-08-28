@@ -1,0 +1,57 @@
+language: r
+r:
+#  - bioc-devel
+  - bioc-release
+# warnings_are_errors: true
+sudo: false
+cache: packages
+
+services:
+  - docker
+
+addons:
+  apt:
+    packages:
+      - libprotobuf-dev
+      - libapparmor-dev
+      - protobuf-compiler
+      - libcurl4-openssl-dev
+
+r_packages:
+  - covr
+  - data.table
+  - ggplot2
+  - testthat
+  - knitr
+  - rmarkdown
+
+os:
+  - linux
+#  - osx
+
+bioc_required: true
+bioc_packages:
+  - BiocCheck
+
+# Set CXX1X for R-devel, as R-devel does not detect CXX1X support for gcc 4.6.3,
+# see https://github.com/travis-ci/travis-ci/issues/6587
+before_install:
+  - R -e 'install.packages("devtools")'
+  - R -e 'source("https://bioconductor.org/biocLite.R"); biocLite()'
+  - R -e 'devtools::install_github("assaron/GEOquery")'
+  - if [[ "$TRAVIS_R_VERSION_STRING" = 'bioc-devel' ]]; then mkdir ~/.R && echo -e 'CXX1X=g++ -std=c++0x -g -O2 -fPIC\nCXX11=g++ -std=c++0x -g -O2 -fPIC' > ~/.R/Makevars; fi
+
+after_script:
+  - ls -lah
+  - FILE=$(ls -1t *.tar.gz | head -n 1)
+  - Rscript -e "library(BiocCheck); BiocCheck(\"${FILE}\")"
+  - bash inst/test_js.sh
+  - if [ "$TRAVIS_BRANCH" == "master" ]; then
+    docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
+    docker build -t dzenkova/phantasus inst/ ;
+    docker push dzenkova/phantasus;
+    fi
+
+after_success:
+  - Rscript -e 'covr::codecov()'
+

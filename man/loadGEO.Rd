@@ -2,19 +2,34 @@
 % Please edit documentation in R/loadGEO.R
 \name{loadGEO}
 \alias{loadGEO}
-\title{Load GEO Dataset}
+\title{Load GEO Dataset.}
 \usage{
 loadGEO(name, type = NA)
 }
 \arguments{
-\item{name}{string, containing GEO identifier of the dataset}
+\item{name}{String, containing GEO identifier of the dataset.
+It should start with 'GSE' or 'GDS' and can include exact GPL
+to annotate dataset, separated with dash ('-') from the identifier.}
 
-\item{type}{"GSE" or "GDS"}
+\item{type}{Type of the dataset: 'GSE' or 'GDS'. If not specified,
+the function will take first three letters
+of \code{name} variable as type.}
 }
 \value{
-file with serialized information on ExpressionSet
+File with ProtoBuf-serialized ExpressionSet-s
+    that were downloaded by this identifier.
+    For GSE-datasets there can be multiple annotations, so in file will be a
+    list mapping name with GPL to ExpressionSet.
 }
 \description{
-Function for loading dataset from GEO, creating ExpressionSet from it and exporting it to global environment
+\code{loadGEO} returns the file with serialized ExpressionSet using
+    ProtoBuf, parsed from data downloaded from GEO by identifier.
 }
+\examples{
+\dontrun{
+    loadGEO("GSE27112")
+    loadGEO("GDS4922")
+}
+loadGEO("GSE27112-GPL6885")
 
+}

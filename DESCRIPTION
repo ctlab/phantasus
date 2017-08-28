@@ -1,28 +1,29 @@
 Package: phantasus
-Title: R-package for phantasus application
-Version: 0.0.0.9000
+Title: Extended project Morpheus with Bioconductor methods
+Version: 0.99.0
 Authors@R: c(person("Daria", "Zenkova", email = "daria.zenkova.cs@gmail.com", role = c("aut", "cre")),
+             person("Joshua", "Gould", email = "jgould@broadinstitute.org", role = "aut"),
              person("Alexey", "Sergushichev", email = "alsergbox@gmail.com", role = "aut"))
-Description: This package contains several R functions which are used in our
-    version of Web-application Phantasus through OpenCPU
-Depends:
-    R (>= 3.3.1)
-Imports:
-    ggplot2,
-    ggrepel,
-    svglite,
-    data.table,
-    protolite,
-    Biobase,
-    GEOquery,
-    Rook,
-    htmltools,
-    httpuv,
-    jsonlite,
-    limma,
-    opencpu,
-    assertthat
-License: MIT License (MIT)
+Description: This is an extended version of the project Morpheus. 
+    We are integrating widely used gene epression analysis methods from Bioconductor.
+    You can use it in multiple ways, either locally, using servePhantasus-function from this package,
+    or on web-sites, that are presented in URL section.
+URL: https://artyomovlab.wustl.edu/phantasus,
+        https://genome.ifmo.ru/phantasus
+BugReports: https://github.com/ctlab/phantasus/issues
+Depends: R (>= 3.4)
+biocViews: GeneExpression
+Imports: ggplot2, protolite, Biobase, GEOquery, Rook, htmltools,
+        httpuv, jsonlite, limma, opencpu, assertthat, methods, httr
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1
+Suggests: testthat, knitr, rmarkdown
+VignetteBuilder: knitr
+NeedsCompilation: no
+Packaged: 2017-08-18 09:23:29 UTC; dzenkova
+Author: Daria Zenkova [aut, cre],
+  Joshua Gould [aut],
+  Alexey Sergushichev [aut]
+Maintainer: Daria Zenkova <daria.zenkova.cs@gmail.com>

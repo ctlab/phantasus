@@ -2,23 +2,31 @@
 % Please edit documentation in R/limmaAnalysis.R
 \name{limmaAnalysis}
 \alias{limmaAnalysis}
-\title{Differential Expression analysis}
+\title{Differential Expression analysis.}
 \usage{
 limmaAnalysis(es, rows = c(), columns = c(), fieldValues)
 }
 \arguments{
-\item{es}{an ExpressionSet object, should be normalized}
+\item{es}{ExpressionSet object. It should be normalized for
+more accurate analysis.}
 
-\item{rows}{vector of specified rows' indices (optional)}
+\item{rows}{Vector of specified rows' indices (optional).}
 
-\item{columns}{vector of specified columns' indices (optional)}
+\item{columns}{Vector of specified columns' indices (optional).}
 
-\item{fieldValues}{vector of comparison values, matching categories' names with columns (must be equal length with columns' vector if specified)}
+\item{fieldValues}{Vector of comparison values, mapping
+categories' names to columns/samples
+(must be equal length with columns' vector if specified).}
 }
 \value{
-file with serialized information on differential expression matrix
+Name of the file containing serialized de-matrix.
 }
 \description{
-Function for performing differential expression analysis. Returns serialized de-matrix.
+\code{limmaAnalysis} performs differential expression analysis
+    from limma package and returns a ProtoBuf-serialized resulting
+    de-matrix.
 }
-
+\examples{
+data(es)
+limmaAnalysis(es, fieldValues = c("A", "A", "A", "B", "B"))
+}

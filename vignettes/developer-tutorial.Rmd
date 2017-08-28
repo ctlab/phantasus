@@ -1,0 +1,206 @@
+---
+title: "Developing new tools"
+author: "Daria Zenkova"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+    %\VignetteIndexEntry{Developing new tools}
+    %\VignetteEngine{knitr::rmarkdown}
+    %\VignetteEncoding{UTF-8}
+---
+
+## Introduction to project architecture
+
+Project architecture includes two main components:
+
+- R-package that contains implementations of used tools and methods;
+- JavaScript code with client-side of the project.
+
+Those two components are connected through OpenCPU as a bridge, and inside 
+the JavaScript implementation the RPC-call to server is used.
+
+Consequently, in order to add new tool one needs:
+
+- To implement an exported function in R;
+- To describe graphical side of the tool in JavaScript;
+- To process returned value inside RPC-call callback. 
+
+All of these steps will be described in details in this vignette.
+
+## R-side implementation
+
+Each analysis method in this package takes three compulsory arguments:
+
+- `es` -- ExpressionSet object;
+- `rows` -- same thing with rows;
+- `columns` -- specified indices of columns that are taken into consideration.
+
+Also, some methods require to replace NA values in series matrix in order 
+to be used, so usually also `replacena` argument is needed.
+
+Other arguments depend on the method's specifics. 
+
+Before calculating the method, the considered data from the whole series matrix 
+needs to be extracted.
+For that reason, the package has non-exported method `prepareData`, 
+that takes as arguments `es`, `columns`, `rows, `replacena`.
+
+After the method is used, the result can be sent back in two ways:
+
+- As a JSON object (use `jsonlite::toJSON` for that),
+    if the result is adequately small;
+- As a file with ProtoBuf-serialized object (`protolite::serialize_pb`), 
+    if it is large.
+
+The approximate code structure is demonstrated here:
+```{r, eval = FALSE}
+# instead of ellipsis would be specific arguments
+method <- function(es,  rows = c(), columns = c(), replacea = "mean", ...) {
+    # Here may be some assertions 
+
+    # Data preparation
+    data <- prepareData(es, rows, columns, replacena)
+
+    # Using method
+    res <- ...
+
+    # Sending back the result as JSON:
+    return(jsonlite::toJSON(res))
+
+    # Or as ProtoBuf
+    f <- tempfile(pattern = "pat", tmpdir = getwd(), fileext = ".bin")
+    writeBin(protolite::serialize_pb(res), f)
+    jsonlite::toJSON(f)
+}
+```
+
+Remember, that your tool must be exported, fully documented and tested.
+
+## JavaScript-side implementation
+
+The structure of the tool description:
+
+- `toString` -- method that returns tool's name;
+- `gui` -- field's description, represented as an array of JSON-objects, 
+    which have following values:
+
+    - `name` -- field's name;
+    - `value` -- default value;
+    - `type` -- field's type (most used types are: select, checkbox-list, 
+        bootstrap-list, text);
+    - `multiple` -- if multiple values may be chosen 
+        (relevant for checkbox-list);
+    - 'options' -- an array of values to choose from 
+        (relevant for lists and select);
+- `init` -- initialization of tool's input fields;
+- `execute` -- main method of the tool, which includes:
+    1) processing of the input (`options.input.fieldName`);
+    2) processing of additional arguments, if they need to be derived 
+        from the dataset and input;
+    3) RPC-call to OpenCPU-server
+    4) Processing the result.
+
+Here is the approximate JavaScript description of the tool:
+```{javascript, eval = FALSE}
+phantasus.NewTool = function () {
+};
+phantasus.NewTool.prototype = {
+  // Tool name:
+  toString: function () {
+    return 'new';
+  },
+  
+  // Initialization of tool's input fields
+  init: function (project, form) {
+    // Here is your initialization code
+  },
+  
+  // Description of tool' GUI
+  gui: function (project) {
+    return [{
+      name : 'fieldName',
+      type : 'type',
+      options : [],
+      value : 'default_value'
+    }];
+  },
+  
+  // Main function of the Tool
+  execute: function (options) {
+    var project = options.project;
+    
+    // Getting the input
+    var field = options.input.fieldName;
+
+    // Reading actual dataset
+    var dataset = project.getSortedFilteredDataset();
+  
+    // Each dataset has es session as a field
+    var es = dataset.getESSession();
+
+    // Get indices of selected rows and columns if they are selected
+    var trueIndices = phantasus.Util.getTrueIndices(dataset);
+
+    // Further calculation may proceed only when esSession is ready
+    es.then(function (essession) {
+      // Function arguments, there also should be method-specific arguments
+      var args = {
+        es: essession
+      };
+      if (trueIndices.rows.length > 0) {
+        args.rows = trueIndices.rows;
+      }
+      if (trueIndices.columns.length > 0) {
+        args.columns = trueIndices.columns;
+      }
+      
+      // RPC-call to OpenCPU-server
+      var req = ocpu.call("methodName", args, function (session) {
+        session.getObject(function (success) {
+          // success -- returned result, needs to be processed
+          // Result getting depends on its type
+
+          // JSON:
+          var result = JSON.parse(success); 
+          // after that you can proceed with result
+          
+          // ProtoBuf:
+          var r = new FileReader();
+          var filePath = phantasus.Util.getFilePath(session, 
+                                                    JSON.parse(success)[0]);
+
+          r.onload = function (e) {
+            var contents = e.target.result;
+            var ProtoBuf = dcodeIO.ProtoBuf;
+            
+            // message.proto is file with specified protocol
+            ProtoBuf.protoFromFile("./message.proto", 
+                                   function (error, success) {
+              if (error) {
+                throw new Error(error);
+              }
+              var builder = success,
+                rexp = builder.build("rexp"),
+                REXP = rexp.REXP,
+                rclass = REXP.RClass;
+              var res = REXP.decode(contents);
+              var data = phantasus.Util.getRexpData(res, rclass);
+              var names = phantasus.Util.getFieldNames(res, rclass);
+              
+              // here you can proceed with result
+            })
+          };
+          phantasus.BlobFromPath.getFileObject(filePath, function (file) {
+            r.readAsArrayBuffer(file);
+          });
+        })
+      }, false, '::' + dataset.getESVariable());
+      
+      req.fail(function () {
+        // failed request procession
+        throw new Error("Method call failed" + req.responseText);
+      });
+    });
+  }
+};
+```

@@ -2,22 +2,34 @@
 % Please edit documentation in R/createES.R
 \name{createES}
 \alias{createES}
-\title{Create ExpressionSet}
+\title{Create ExpressionSet.}
 \usage{
 createES(data, pData, varLabels, fData, fvarLabels)
 }
 \arguments{
-\item{data}{gene expression matrix}
+\item{data}{Gene expression matrix.}
 
-\item{pData}{matrix with phenotypical data}
+\item{pData}{Matrix with phenotypical data.}
 
-\item{varLabels}{names of phenoData columns}
+\item{varLabels}{Names of phenoData columns.}
 
-\item{fData}{matrix with feature data}
+\item{fData}{Matrix with feature data.}
 
-\item{fvarLabels}{names of featureData columns}
+\item{fvarLabels}{Names of featureData columns.}
+}
+\value{
+produced ExpressionSet object
 }
 \description{
-Function for creating ExpressionSet from parameters and exporting it to global environment
+\code{createES} function produces an ExpressionSet object from given data,
+    and exports it to global scope.
 }
+\examples{
+data <- matrix(1:15, 5, 3)
+pData <- c("A", "B", "C")
+varLabels <- "cat"
+fData <- c("p", "r", "s", "t", "u")
+fvarLabels <- "id"
+createES(data, pData, varLabels, fData, fvarLabels)
 
+}
