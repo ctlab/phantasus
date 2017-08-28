@@ -11,6 +11,7 @@ RUN apt-get -y update && \
         libssh2-1-dev \
         libcurl4-openssl-dev \
         apache2 \
+        libapparmor-dev \
         locales && \
     apt-add-repository -y ppa:opencpu/opencpu-1.6 && \
     apt-get update && \
@@ -42,7 +43,6 @@ RUN a2enmod proxy_http
 
 EXPOSE 80
 EXPOSE 443
-EXPOSE 8004
 
 RUN locale-gen en_US.UTF-8  
 ENV LANG en_US.UTF-8  
@@ -53,5 +53,4 @@ RUN mkdir -p /var/phantasus/cache
 VOLUME ["/var/phantasus/cache"]
 
 CMD service apache2 start && \
-    R -e 'opencpu::opencpu$start(8001)' && \
-    tail -F /var/log/opencpu/apache_access.log
+    R -e 'library(phantasus); servePhantasus("0.0.0.0", 8001, cacheDir="/var/phantasus/cache")'
