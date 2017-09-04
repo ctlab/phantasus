@@ -3,7 +3,7 @@ library(jsonlite)
 library(Biobase)
 
 test_that("loadGEO finishes with result", {
-  options(phantasusMirrorPath = "https://genome.ifmo.ru/files")
+  options(phantasusMirrorPath = "https://genome.ifmo.ru/files/software/phantasus")
 
   expect_is(loadGEO("GSE27112"), "json")
   expect_is(loadGEO("GSE27112-GPL6885"), "json")
@@ -14,7 +14,7 @@ test_that("loadGEO finishes with result", {
 })
 
 test_that("checkGPLs counts gpls correctly", {
-  options(phantasusMirrorPath = "https://genome.ifmo.ru/files")
+  options(phantasusMirrorPath = "https://genome.ifmo.ru/files/software/phantasus")
 
   expect_equal(fromJSON(checkGPLs("GSE14308")), c("GSE14308"))
   expect_equal(fromJSON(checkGPLs("GDS4885")), c("GDS4885"))
