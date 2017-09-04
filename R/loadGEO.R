@@ -231,6 +231,8 @@ getGSE <- function(name, destdir = tempdir(), mirrorPath = "https://ftp.ncbi.nlm
 #' @param destdir Directory for caching loaded Series and GPL
 #'     files from GEO database.
 #'
+#' @param mirrorPath URL string which specifies the source of matrices.
+#'
 #' @return List of ExpressionSet objects, that were available by given
 #'     in \code{name} variable GEO identifier.
 #'

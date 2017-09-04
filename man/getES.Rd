@@ -4,7 +4,8 @@
 \alias{getES}
 \title{Load ExpressionSet by GEO identifier}
 \usage{
-getES(name, type = NA, destdir = tempdir())
+getES(name, type = NA, destdir = tempdir(),
+  mirrorPath = "https://ftp.ncbi.nlm.nih.gov")
 }
 \arguments{
 \item{name}{String, containing GEO identifier of the dataset.
@@ -17,6 +18,8 @@ of \code{name} variable as type.}
 
 \item{destdir}{Directory for caching loaded Series and GPL
 files from GEO database.}
+
+\item{mirrorPath}{URL string which specifies the source of matrices.}
 }
 \value{
 List of ExpressionSet objects, that were available by given
