@@ -1,1 +1,0 @@
-ocpu.seturl('http://localhost:8000/ocpu/library/phantasus/R');
