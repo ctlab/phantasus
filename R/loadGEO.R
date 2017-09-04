@@ -28,13 +28,19 @@
 #' @import GEOquery
 loadGEO <- function(name, type = NA) {
     cacheDir <- getOption("phantasusCacheDir")
+
+    mirrorPath <- getOption('phantasusMirrorPath')
+    if (is.null(mirrorPath)) {
+      mirrorPath <- "https://ftp.ncbi.nlm.nih.gov"
+    }
+
     if (is.null(cacheDir)) {
         cacheDir <- tempdir()
     } else if (!dir.exists(cacheDir)) {
         dir.create(cacheDir)
     }
 
-    ess <- getES(name, type, destdir = cacheDir)
+    ess <- getES(name, type, destdir = cacheDir, mirrorPath = mirrorPath)
 
     writeToList <- function(es) {
         data <- as.matrix(exprs(es))
@@ -101,19 +107,19 @@ getGDS <- function(name, destdir = tempdir()) {
                         featureData = fData))
 }
 
-getGSE <- function(name, destdir = tempdir()) {
+getGSE <- function(name, destdir = tempdir(), mirrorPath = "https://ftp.ncbi.nlm.nih.gov") {
     GEO <- unlist(strsplit(name, "-"))[1]
 
     stub <- gsub("\\d{1,3}$", "nnn", GEO, perl = TRUE)
     filename <- sprintf("%s_series_matrix.txt.gz", name)
-    gdsurl <- "https://ftp.ncbi.nlm.nih.gov/geo/series/%s/%s/matrix/%s"
+    gdsurl <- "%s/geo/series/%s/%s/matrix/%s"
 
     destfile <- file.path(destdir, filename)
 
     infile <- TRUE
     if (!file.exists(destfile)) {
         tryCatch({
-            utils::download.file(sprintf(gdsurl, stub, GEO, filename),
+            utils::download.file(sprintf(gdsurl, mirrorPath, stub, GEO, filename),
                                     destfile = destfile)
         },
         error = function(e) {
@@ -236,7 +242,7 @@ getGSE <- function(name, destdir = tempdir()) {
 #' getES('GDS4922')
 #'
 #' @export
-getES <- function(name, type = NA, destdir = tempdir()) {
+getES <- function(name, type = NA, destdir = tempdir(), mirrorPath = "https://ftp.ncbi.nlm.nih.gov") {
     if (is.na(type)) {
         type <- substr(name, 1, 3)
     }
@@ -245,7 +251,7 @@ getES <- function(name, type = NA, destdir = tempdir()) {
         load(possibly.cached)
     } else {
         if (type == "GSE") {
-            res <- getGSE(name, destdir)
+            res <- getGSE(name, destdir, mirrorPath)
         } else if (type == "GDS") {
             res <- getGDS(name, destdir)
         } else {
@@ -284,17 +290,22 @@ getES <- function(name, type = NA, destdir = tempdir()) {
 #'
 #' @export
 checkGPLs <- function(name) {
+    mirrorPath <- getOption('phantasusMirrorPath')
+    if (is.null(mirrorPath)) {
+      mirrorPath <- "https://ftp.ncbi.nlm.nih.gov"
+    }
     type <- substr(name, 1, 3)
     assertthat::assert_that( (type == "GDS" || type == "GSE")
                             && nchar(name) >= 4)
 
     stub <- gsub("\\d{1,3}$", "nnn", name, perl = TRUE)
-    gdsurl <- "https://ftp.ncbi.nlm.nih.gov/geo/%s/%s/%s/"
+    gdsurl <- "%s/geo/%s/%s/%s/"
 
-    url <- sprintf(gdsurl,
-                    if (type == "GDS") "datasets" else "series", stub, name)
+    url <- sprintf(gdsurl, mirrorPath,
+                   if (type == "GDS") "datasets" else "series", stub, name)
 
     if (httr::status_code(httr::GET(url)) == 404) {
+        warning("No such dataset")
         return(jsonlite::toJSON(c()))
     } else {
         if (type == "GDS") {
