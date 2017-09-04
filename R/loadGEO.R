@@ -78,7 +78,38 @@ loadGEO <- function(name, type = NA) {
 }
 
 getGDS <- function(name, destdir = tempdir()) {
-    l <- suppressWarnings(getGEO(name, destdir = destdir))
+    stub <- gsub("\\d{1,3}$", "nnn", GEO, perl = TRUE)
+    filename <- sprintf("%s.soft.gz", name)
+    gdsurl <- "%s/geo/datasets/%s/%s/soft/%s"
+
+    destfile <- file.path(destdir, filename)
+
+    infile <- TRUE
+    if (!file.exists(destfile)) {
+        tryCatch({
+            utils::download.file(sprintf(gdsurl, mirrorPath, stub, GEO, filename),
+                            destfile = destfile)
+        },
+        error = function(e) {
+            file.remove(destfile)
+        },
+        warning = function(w) {
+            file.remove(destfile)
+        },
+        finally = {
+            infile <- file.exists(destfile)
+        })
+    }
+
+    if (infile) {
+        l <- suppressWarnings(getGEO(filename = destfile,
+                                        destdir = destdir,
+                                        AnnotGPL = TRUE))
+    } else {
+        l <- suppressWarnings(getGEO(GEO = name,
+                                    destdir = destdir,
+                                    AnnotGPL = TRUE))
+    }
 
     # extracting all useful information on dataset
     table <- methods::slot(l, "dataTable")
