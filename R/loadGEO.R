@@ -77,8 +77,8 @@ loadGEO <- function(name, type = NA) {
     jsonlite::toJSON(f)
 }
 
-getGDS <- function(name, destdir = tempdir()) {
-    stub <- gsub("\\d{1,3}$", "nnn", GEO, perl = TRUE)
+getGDS <- function(name, destdir = tempdir(), mirrorPath = "https://ftp.ncbi.nlm.nih.gov") {
+    stub <- gsub("\\d{1,3}$", "nnn", name, perl = TRUE)
     filename <- sprintf("%s.soft.gz", name)
     gdsurl <- "%s/geo/datasets/%s/%s/soft/%s"
 
@@ -87,7 +87,7 @@ getGDS <- function(name, destdir = tempdir()) {
     infile <- TRUE
     if (!file.exists(destfile)) {
         tryCatch({
-            utils::download.file(sprintf(gdsurl, mirrorPath, stub, GEO, filename),
+            utils::download.file(sprintf(gdsurl, mirrorPath, stub, name, filename),
                             destfile = destfile)
         },
         error = function(e) {
@@ -169,9 +169,15 @@ getGSE <- function(name, destdir = tempdir(), mirrorPath = "https://ftp.ncbi.nlm
                                                 destdir = destdir,
                                                 AnnotGPL = TRUE)))
     } else {
-        ess <- suppressWarnings(getGEO(GEO = name,
-                                        destdir = destdir,
-                                        AnnotGPL = TRUE))
+        gpls <- fromJSON(checkGPLs(name))
+        if (length(gpls) == 0) {
+            warning("No such dataset")
+        }
+
+        ess <- c()
+        for (i in 1:length(gpls)) {
+          ess <- c(ess, getGSE(gpls[i], mirrorPath = mirrorPath))
+        }
     }
 
     take <- function(x, n) {
@@ -286,7 +292,7 @@ getES <- function(name, type = NA, destdir = tempdir(), mirrorPath = "https://ft
         if (type == "GSE") {
             res <- getGSE(name, destdir, mirrorPath)
         } else if (type == "GDS") {
-            res <- getGDS(name, destdir)
+            res <- getGDS(name, destdir, mirrorPath)
         } else {
             stop("Incorrect name or type of the dataset")
         }
