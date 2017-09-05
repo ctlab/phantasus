@@ -85,7 +85,7 @@ getGDS <- function(name, destdir = tempdir(),
 
     destfile <- file.path(destdir, filename)
 
-    infile <- file.exists(destfile)
+    infile <- FALSE
     if (!file.exists(destfile)) {
         tryCatch({
             utils::download.file(sprintf(gdsurl, mirrorPath,
@@ -169,14 +169,25 @@ getGSE <- function(name, destdir = tempdir(),
                                                 destdir = destdir,
                                                 AnnotGPL = TRUE)))
     } else {
-        gpls <- fromJSON(checkGPLs(name))
+        tryCatch({
+            httr::GET(sprintf("%s/geo/series/%s/%s", mirrorPath, stub, GEO))
+            gpls <- fromJSON(checkGPLs(name))
+        },
+        error = function(e) {
+            message(paste("Problems resolving host,",
+                    "looking for corresponding files in cache"))
+            files <- list.files(path = destdir)
+            corresponding <- files[grep(x = files,
+                                        pattern = paste0(GEO, "[-_].*gz$"))]
+            gpls <- take(sapply(corresponding, FUN = function(x) { strsplit(x, "_") }), 1)
+        })
         if (length(gpls) == 0) {
             warning("No such dataset")
         }
 
         ess <- c()
         for (i in 1:length(gpls)) {
-          ess <- c(ess, getGSE(gpls[i], mirrorPath = mirrorPath))
+          ess <- c(ess, getGSE(gpls[[i]], destdir = destdir, mirrorPath = mirrorPath))
         }
     }
 
@@ -334,6 +345,7 @@ checkGPLs <- function(name) {
     if (is.null(mirrorPath)) {
       mirrorPath <- "https://ftp.ncbi.nlm.nih.gov"
     }
+
     type <- substr(name, 1, 3)
     assertthat::assert_that( (type == "GDS" || type == "GSE")
                             && nchar(name) >= 4)
