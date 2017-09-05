@@ -77,27 +77,27 @@ loadGEO <- function(name, type = NA) {
     jsonlite::toJSON(f)
 }
 
-getGDS <- function(name, destdir = tempdir(), mirrorPath = "https://ftp.ncbi.nlm.nih.gov") {
+getGDS <- function(name, destdir = tempdir(),
+                   mirrorPath = "https://ftp.ncbi.nlm.nih.gov") {
     stub <- gsub("\\d{1,3}$", "nnn", name, perl = TRUE)
     filename <- sprintf("%s.soft.gz", name)
     gdsurl <- "%s/geo/datasets/%s/%s/soft/%s"
 
     destfile <- file.path(destdir, filename)
 
-    infile <- TRUE
+    infile <- file.exists(destfile)
     if (!file.exists(destfile)) {
         tryCatch({
-            utils::download.file(sprintf(gdsurl, mirrorPath, stub, name, filename),
+            utils::download.file(sprintf(gdsurl, mirrorPath,
+                                         stub, name, filename),
                             destfile = destfile)
+            infile <- TRUE
         },
         error = function(e) {
             file.remove(destfile)
         },
         warning = function(w) {
             file.remove(destfile)
-        },
-        finally = {
-            infile <- file.exists(destfile)
         })
     }
 
@@ -138,7 +138,8 @@ getGDS <- function(name, destdir = tempdir(), mirrorPath = "https://ftp.ncbi.nlm
                         featureData = fData))
 }
 
-getGSE <- function(name, destdir = tempdir(), mirrorPath = "https://ftp.ncbi.nlm.nih.gov") {
+getGSE <- function(name, destdir = tempdir(),
+                   mirrorPath = "https://ftp.ncbi.nlm.nih.gov") {
     GEO <- unlist(strsplit(name, "-"))[1]
 
     stub <- gsub("\\d{1,3}$", "nnn", GEO, perl = TRUE)
@@ -147,20 +148,19 @@ getGSE <- function(name, destdir = tempdir(), mirrorPath = "https://ftp.ncbi.nlm
 
     destfile <- file.path(destdir, filename)
 
-    infile <- TRUE
+    infile <- file.exists(destfile)
     if (!file.exists(destfile)) {
         tryCatch({
-            utils::download.file(sprintf(gdsurl, mirrorPath, stub, GEO, filename),
+            utils::download.file(sprintf(gdsurl, mirrorPath,
+                                         stub, GEO, filename),
                                     destfile = destfile)
+            infile <- TRUE
         },
         error = function(e) {
             file.remove(destfile)
         },
         warning = function(w) {
             file.remove(destfile)
-        },
-        finally = {
-            infile <- file.exists(destfile)
         })
     }
 
@@ -281,7 +281,8 @@ getGSE <- function(name, destdir = tempdir(), mirrorPath = "https://ftp.ncbi.nlm
 #' getES('GDS4922')
 #'
 #' @export
-getES <- function(name, type = NA, destdir = tempdir(), mirrorPath = "https://ftp.ncbi.nlm.nih.gov") {
+getES <- function(name, type = NA, destdir = tempdir(),
+                  mirrorPath = "https://ftp.ncbi.nlm.nih.gov") {
     if (is.na(type)) {
         type <- substr(name, 1, 3)
     }
