@@ -29,15 +29,15 @@
 loadGEO <- function(name, type = NA) {
     cacheDir <- getOption("phantasusCacheDir")
 
-    mirrorPath <- getOption('phantasusMirrorPath')
-    if (is.null(mirrorPath)) {
-      mirrorPath <- "https://ftp.ncbi.nlm.nih.gov"
-    }
-
     if (is.null(cacheDir)) {
         cacheDir <- tempdir()
     } else if (!dir.exists(cacheDir)) {
         dir.create(cacheDir)
+    }
+
+    mirrorPath <- getOption('phantasusMirrorPath')
+    if (is.null(mirrorPath)) {
+      mirrorPath <- "https://ftp.ncbi.nlm.nih.gov"
     }
 
     ess <- getES(name, type, destdir = cacheDir, mirrorPath = mirrorPath)
@@ -99,6 +99,8 @@ getGDS <- function(name, destdir = tempdir(),
         warning = function(w) {
             file.remove(destfile)
         })
+    } else {
+        message(paste("Loading from locally found file", destfile))
     }
 
     if (infile) {
@@ -162,6 +164,8 @@ getGSE <- function(name, destdir = tempdir(),
         warning = function(w) {
             file.remove(destfile)
         })
+    } else {
+        message(paste("Loading from locally found file", destfile))
     }
 
     if (infile) {
@@ -169,22 +173,7 @@ getGSE <- function(name, destdir = tempdir(),
                                                 destdir = destdir,
                                                 AnnotGPL = TRUE)))
     } else {
-        tryCatch({
-            httr::GET(sprintf("%s/geo/series/%s/%s", mirrorPath, stub, GEO))
-            gpls <- fromJSON(checkGPLs(name))
-        },
-        error = function(e) {
-            message(paste("Problems resolving host,",
-                    "looking for corresponding files in cache"))
-            files <- list.files(path = destdir)
-            corresponding <- files[grep(x = files,
-                                        pattern = paste0(GEO, "[-_].*gz$"))]
-            gpls <- take(sapply(corresponding, FUN = function(x) { strsplit(x, "_") }), 1)
-        })
-        if (length(gpls) == 0) {
-            warning("No such dataset")
-        }
-
+        gpls <- fromJSON(checkGPLs(name))
         ess <- c()
         for (i in 1:length(gpls)) {
           ess <- c(ess, getGSE(gpls[[i]], destdir = destdir, mirrorPath = mirrorPath))
@@ -300,6 +289,7 @@ getES <- function(name, type = NA, destdir = tempdir(),
     possibly.cached <- file.path(destdir, paste0(name, ".rda"))
     if (file.exists(possibly.cached)) {
         load(possibly.cached)
+        message(paste("Loaded from locally cached parsed file", possibly.cached))
     } else {
         if (type == "GSE") {
             res <- getGSE(name, destdir, mirrorPath)
@@ -346,6 +336,14 @@ checkGPLs <- function(name) {
       mirrorPath <- "https://ftp.ncbi.nlm.nih.gov"
     }
 
+    cacheDir <- getOption("phantasusCacheDir")
+
+    if (is.null(cacheDir)) {
+      cacheDir <- tempdir()
+    } else if (!dir.exists(cacheDir)) {
+      dir.create(cacheDir)
+    }
+
     type <- substr(name, 1, 3)
     assertthat::assert_that( (type == "GDS" || type == "GSE")
                             && nchar(name) >= 4)
@@ -356,22 +354,41 @@ checkGPLs <- function(name) {
     url <- sprintf(gdsurl, mirrorPath,
                    if (type == "GDS") "datasets" else "series", stub, name)
 
-    if (httr::status_code(httr::GET(url)) == 404) {
-        warning("No such dataset")
-        return(jsonlite::toJSON(c()))
-    } else {
-        if (type == "GDS") {
-            return(jsonlite::toJSON(name))
+    tryCatch({
+        httr::GET(url)
+        if (httr::status_code(httr::GET(url)) == 404) {
+            warning("No such dataset")
+            return(jsonlite::toJSON(c()))
         } else {
-            file.names <- GEOquery:::getDirListing(paste0(url, "matrix/"))
+            if (type == "GDS") {
+                return(jsonlite::toJSON(name))
+            } else {
+                file.names <- GEOquery:::getDirListing(paste0(url, "matrix/"))
 
-            file.names <- file.names[grepl(pattern = paste0("^", name),
-                                        x = file.names)]
+                file.names <- file.names[grepl(pattern = paste0("^", name),
+                                            x = file.names)]
 
-            file.names <- unlist(lapply(file.names, function(x) {
-                paste0(substr(x, 1, regexpr("_", x) - 1))
-            }))
-        return(jsonlite::toJSON(file.names))
+                file.names <- unlist(lapply(file.names, function(x) {
+                    paste0(substr(x, 1, regexpr("_", x) - 1))
+                }))
+                gpls <- file.names
+            }
         }
-    }
+    },
+    error = function(e) {
+        message(paste("Problems establishing connection.",
+                        "Trying to find corresponding files in cache."))
+
+        files <- list.files(path = cacheDir)
+        corresponding <- files[grep(x = files,
+                                    pattern = paste0(GEO, "[-_].*gz$"))]
+        gpls <- take(sapply(corresponding,
+                            FUN = function(x) { strsplit(x, "_") }), 1)
+        if (length(gpls) == 0) {
+            warning("No corresponding files were found")
+        }
+    })
+
+    return(jsonlite::toJSON(gpls))
+
 }
