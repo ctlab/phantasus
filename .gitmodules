@@ -1,6 +1,3 @@
-[submodule "inst/www/phantasus.js"]
-	path = inst/www/phantasus.js
-	url = https://github.com/ctlab/phantasus.js
 [submodule "inst-raw/phantasus.js"]
 	path = inst-raw/phantasus.js
 	url = git://github.com/ctlab/phantasus.js.git
