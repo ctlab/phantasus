@@ -8,11 +8,19 @@ getIndicesVector <- function(current, neededLength) {
 prepareData <- function(es, columns = c(), rows = c(), replacena = "mean") {
     rows <- getIndicesVector(rows, nrow(exprs(es)))
     columns <- getIndicesVector(columns, ncol(exprs(es)))
-    data <- replacenas(data.frame(exprs(es))[rows, columns], replacena)
+
+    data <- replacenas(data.frame(exprs(es[rows, columns])), replacena)
+
+    rows <- getIndicesVector(c(), nrow(data))
 
     data <- t(scale(t(data)))
     while (sum(is.na(data)) > 0) {
+        message("need to filter rows")
         rows <- filternaRows(data, rows)
+
+        message(length(rows))
+        message(rows[length(rows)])
+
         data <- data[rows, ]
         data <- replacenas(data, replacena)
         data <- t(scale(t(data)))

@@ -1,6 +1,7 @@
 ^.*/.Rproj$
 ^\.Rproj\.user$
 
+^tests/testthat/cache$
 ^inst/www/phantasus.js/.git$
 ^inst/www/phantasus.js/.idea$
 ^inst/www/phantasus.js/jasmine$
