@@ -123,3 +123,9 @@ makeAnnotated <- function(data) {
 
     methods::new("AnnotatedDataFrame", data = data, varMeta = meta)
 }
+
+take <- function(x, n) {
+  sapply(x, function(x) {
+    x[[n]]
+  })
+}

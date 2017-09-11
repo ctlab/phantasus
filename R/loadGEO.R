@@ -180,12 +180,6 @@ getGSE <- function(name, destdir = tempdir(),
         }
     }
 
-    take <- function(x, n) {
-        sapply(x, function(x) {
-            x[[n]]
-        })
-    }
-
     rename <- function(prevName, x) {
         splitted <- strsplit(x, ": ")
         lengths <- sapply(splitted, length)
@@ -380,8 +374,9 @@ checkGPLs <- function(name) {
                         "Trying to find corresponding files in cache."))
 
         files <- list.files(path = cacheDir)
+
         corresponding <- files[grep(x = files,
-                                    pattern = paste0(GEO, "[-_].*gz$"))]
+                                    pattern = paste0(name, "[-_].*gz$"))]
         gpls <- take(sapply(corresponding,
                             FUN = function(x) { strsplit(x, "_") }), 1)
         if (length(gpls) == 0) {
