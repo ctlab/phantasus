@@ -51,6 +51,7 @@
       var pair = keyValuePairs[i].split('=');
       params[pair[0]] = decodeURIComponent(pair[1]);
     }
+    console.log(params);
     if (params.json) {
       var options = JSON.parse(decodeURIComponent(params.json));
       landingPage.open(options);
@@ -63,6 +64,17 @@
         // console.log('Unable to get config file');
         landingPage.show();
       });
+    } else if (params.geo) {
+      var options = {
+        dataset : {
+          file : params.geo.toUpperCase(),
+          options : {
+            interactive : true,
+            isGEO : true
+          }
+        }
+      };
+      landingPage.open(options);
     } else {
       landingPage.show();
     }
