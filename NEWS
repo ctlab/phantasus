@@ -1,0 +1,2 @@
+CHANGES IN VERSION 0.99.12
+* Added possibility to load GEO-dataset by specifying its id in link parameters
