@@ -41,7 +41,9 @@ There are two ways to upload a dataset into application:
     - computer;
     - URL;
     - Dropbox;
-- By GEO identifier.
+- By GEO identifier
+    - with "Open file" interface;
+    - with adding parameter "geo" to the link (e.g. http://localhost:8000/?geo=GSE27112).
 
 ## Workflow example with GSE53986
 
