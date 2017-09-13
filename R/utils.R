@@ -129,3 +129,25 @@ take <- function(x, n) {
     x[[n]]
   })
 }
+
+writeToList <- function(es) {
+  data <- as.matrix(exprs(es))
+  colnames(data) <- NULL
+  row.names(data) <- NULL
+
+  pdata <- as.matrix(pData(es))
+  colnames(pdata) <- NULL
+  row.names(pdata) <- NULL
+
+  rownames <- rownames(es)
+
+  fdata <- as.matrix(fData(es))
+  colnames(fdata) <- NULL
+  row.names(fdata) <- NULL
+
+  res <- list(data = data, pdata = pdata, fdata = fdata,
+              rownames = rownames,
+              colMetaNames = varLabels(phenoData(es)),
+              rowMetaNames = varLabels(featureData(es)))
+  res
+}

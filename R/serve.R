@@ -12,6 +12,8 @@
 #'
 #' @param cacheDir Full path to cache directory.
 #'
+#' @param preloadedDir Full path to directory with preloaded files.
+#'
 #' @return Running instance of phantasus application.
 #'
 #' @import opencpu
@@ -26,8 +28,9 @@
 servePhantasus <- function(host, port,
                             staticRoot = system.file("www/phantasus.js",
                                                     package = "phantasus"),
-                                                    cacheDir = tempdir()) {
-    options(phantasusCacheDir = cacheDir)
+                                                    cacheDir = tempdir(),
+                                                    preloadedDir = NULL) {
+    options(phantasusCacheDir = cacheDir, phantasusPreloadedDir = preloadedDir)
     app <- Rook::URLMap$new(`/ocpu` = opencpu:::rookhandler("/ocpu"),
                             `/?` = Rook::Static$new(urls = c("/"),
                             root = staticRoot))

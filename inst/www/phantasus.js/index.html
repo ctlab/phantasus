@@ -75,6 +75,30 @@
         }
       };
       landingPage.open(options);
+    } else if (params.preloaded) {
+      var req = ocpu.call('preloadedDirExists', {}, function (session) {
+        session.getObject(function(success) {
+          console.log(success);
+          if (JSON.parse(success)[0]) {
+            var options = {
+              dataset : {
+                file : params.preloaded,
+                options : {
+                  interactive : true,
+                  preloaded : true
+                }
+              }
+            };
+            landingPage.open(options);
+          } else {
+            throw new Error("There are no preloaded datasets on this server");
+          }
+        });
+      });
+      req.fail(function () {
+        throw new Error(req.responseText);
+      })
+
     } else {
       landingPage.show();
     }
