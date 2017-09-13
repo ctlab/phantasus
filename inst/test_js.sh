@@ -5,7 +5,7 @@ cd inst/www/phantasus.js/
 npm install karma --save-dev
 npm install
 
-R -e "phantasus::servePhantasus('0.0.0.0', 8000, cacheDir = file.path(getwd(), 'jasmine', 'cache'))" &
+R -e "phantasus::servePhantasus('0.0.0.0', 8000, cacheDir = file.path(getwd(), 'jasmine', 'cache'), preloadedDir = file.path(getwd(), 'jasmine', 'cache'))" &
 PH_PID=$!
 
 sleep 2

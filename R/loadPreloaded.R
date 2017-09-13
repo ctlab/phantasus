@@ -17,16 +17,30 @@ loadPreloaded <- function(name) {
   if (is.null(preloadedDir)) {
     stop("Specify the directory with presaved files")
   } else if (!dir.exists(preloadedDir)) {
-    stop("There is no such directory")
+    stop("No such directory")
   }
 
   fileToLoad <- file.path(preloadedDir, paste0(name, '.rda'))
 
   if (file.exists(fileToLoad)) {
-    load(fileToLoad) # must return the object ess
+    x <- load(fileToLoad) # must return the object ess
+    ess <- get(x)
+
+    wrongFormat <- paste("Wrong format.",
+                         "File must contain either ExpressionSet or list of ExpressionSets")
+
+    if (class(ess) == "ExpressionSet") {
+      ess <- list(ess)
+    } else if (class(ess) != "list") {
+      stop(wrongFormat)
+    }
+
 
     files <- list()
     for (i in 1:length(ess)) {
+      if (class(ess[[i]]) != "ExpressionSet") {
+        stop(wrongFormat)
+      }
       assign(paste0("es_", i), ess[[i]], envir = parent.frame())
       seriesName <- paste0(name, '_', i)
       files[[seriesName]] <- writeToList(ess[[i]])
@@ -35,7 +49,7 @@ loadPreloaded <- function(name) {
     writeBin(protolite::serialize_pb(files), f)
     jsonlite::toJSON(f)
   } else {
-    stop("There is no such file")
+    stop("No such file")
   }
 }
 
