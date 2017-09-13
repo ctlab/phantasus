@@ -31,9 +31,9 @@
 ^inst/www/phantasus.js/README.md$
 ^inst/tutorials$
 
+^inst/docker$
 ^inst-raw$
 
-^inst/Dockerfile.*$
 ^inst/test_js.sh$
 ^inst/update_static.sh$
 
