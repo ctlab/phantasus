@@ -52,5 +52,8 @@ ENV LC_ALL en_US.UTF-8
 RUN mkdir -p /var/phantasus/cache
 VOLUME ["/var/phantasus/cache"]
 
+RUN mkdir -p /var/phantasus/preloaded
+VOLUME ["/var/phantasus/preloaded"]
+
 CMD service apache2 start && \
-    R -e 'library(phantasus); servePhantasus("0.0.0.0", 8001, cacheDir="/var/phantasus/cache")'
+    R -e 'library(phantasus); servePhantasus("0.0.0.0", 8001, cacheDir="/var/phantasus/cache", preloadedDir="/var/phantasus/preloaded")'

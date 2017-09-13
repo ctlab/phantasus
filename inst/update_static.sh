@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd ../inst-raw
+cd inst-raw
 
 cp phantasus.js/index.html phantasus.js/about.html ../inst/www/phantasus.js/
 cp phantasus.js/js/phantasus-latest.min.js phantasus.js/js/phantasus-external-latest.min.js ../inst/www/phantasus.js/js/
