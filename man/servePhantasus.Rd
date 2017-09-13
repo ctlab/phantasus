@@ -5,7 +5,7 @@
 \title{Serve phantasus.}
 \usage{
 servePhantasus(host, port, staticRoot = system.file("www/phantasus.js",
-  package = "phantasus"), cacheDir = tempdir())
+  package = "phantasus"), cacheDir = tempdir(), preloadedDir = NULL)
 }
 \arguments{
 \item{host}{Host to listen.}
@@ -16,6 +16,8 @@ servePhantasus(host, port, staticRoot = system.file("www/phantasus.js",
 (on local file system).}
 
 \item{cacheDir}{Full path to cache directory.}
+
+\item{preloadedDir}{Full path to directory with preloaded files.}
 }
 \value{
 Running instance of phantasus application.
