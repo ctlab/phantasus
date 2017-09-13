@@ -51,6 +51,11 @@ after_script:
     docker build -t dzenkova/phantasus inst/ ;
     docker push dzenkova/phantasus;
     fi
+  - if [ "$TRAVIS_BRANCE" == "develop" ]; then
+    docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
+    docker build -t dzenkova/phantasus:develop inst/ ;
+    docker push dzenkova/phantasus:develop;
+    fi
 
 after_success:
   - Rscript -e 'covr::codecov()'

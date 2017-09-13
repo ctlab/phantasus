@@ -43,7 +43,6 @@ RUN a2enmod proxy_http
 
 EXPOSE 80
 EXPOSE 443
-EXPOSE 8004
 
 RUN locale-gen en_US.UTF-8
 ENV LANG en_US.UTF-8
