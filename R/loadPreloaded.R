@@ -53,6 +53,9 @@ loadPreloaded <- function(name, exactName = NULL) {
       seriesNames <- paste0(name, "_", 1:length(ess))
     }
 
+    if (!is.null(exactName) && exactName == name) {
+      exactName <- NULL
+    }
     if (!is.null(exactName) && !(exactName %in% seriesNames)) {
       stop("There is not such object in this file")
     }
