@@ -271,7 +271,7 @@ getES <- function(name, type = NA, destdir = tempdir(),
         }
         if (length(res) > 1) {
             for (i in 1:length(res)) {
-                ess <- res[[i]]
+                ess <- list(res[[i]])
                 save(ess, file = file.path(destdir,
                                             paste0(name,
                                                     "-",
