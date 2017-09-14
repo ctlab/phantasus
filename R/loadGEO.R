@@ -151,9 +151,9 @@ getGSE <- function(name, destdir = tempdir(),
                                                 AnnotGPL = TRUE)))
     } else {
         gpls <- fromJSON(checkGPLs(name))
-        ess <- c()
+        ess <- list()
         for (i in 1:length(gpls)) {
-          ess <- c(ess, getGSE(gpls[[i]], destdir = destdir, mirrorPath = mirrorPath))
+          ess[[gpls[[i]]]] <- getGSE(gpls[[i]], destdir = destdir, mirrorPath = mirrorPath)[[1]]
         }
     }
 
@@ -271,7 +271,7 @@ getES <- function(name, type = NA, destdir = tempdir(),
         }
         if (length(res) > 1) {
             for (i in 1:length(res)) {
-                ess <- c(res[[i]])
+                ess <- res[[i]]
                 save(ess, file = file.path(destdir,
                                             paste0(name,
                                                     "-",
@@ -325,6 +325,8 @@ checkGPLs <- function(name) {
     url <- sprintf(gdsurl, mirrorPath,
                    if (type == "GDS") "datasets" else "series", stub, name)
 
+    gpls <- c()
+
     tryCatch({
         httr::GET(url)
         if (httr::status_code(httr::GET(url)) == 404) {
@@ -332,7 +334,7 @@ checkGPLs <- function(name) {
             return(jsonlite::toJSON(c()))
         } else {
             if (type == "GDS") {
-                return(jsonlite::toJSON(name))
+                gpls <- c(name)
             } else {
                 file.names <- GEOquery:::getDirListing(paste0(url, "matrix/"))
 

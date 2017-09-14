@@ -2,6 +2,7 @@
 
 export(calcPCA)
 export(checkGPLs)
+export(checkPreloadedNames)
 export(createES)
 export(getES)
 export(limmaAnalysis)
