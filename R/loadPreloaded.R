@@ -119,7 +119,11 @@ checkPreloadedNames <- function(name) {
           answer <- names(loaded)
         }
         else {
-          answer <- paste0(name, "_", 1:length(loaded))
+          if (length(loaded) > 1) {
+            answer <- paste0(name, "_", 1:length(loaded))
+          } else {
+            answer <- c(name)
+          }
         }
       } else {
         wrongFormat <- paste("Wrong format.",
