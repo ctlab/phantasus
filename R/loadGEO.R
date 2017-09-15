@@ -117,6 +117,7 @@ getGDS <- function(name, destdir = tempdir(),
                         featureData = fData))
 }
 
+#' @import rhdf5
 getGSE <- function(name, destdir = tempdir(),
                    mirrorPath = "https://ftp.ncbi.nlm.nih.gov") {
     GEO <- unlist(strsplit(name, "-"))[1]
@@ -154,6 +155,46 @@ getGSE <- function(name, destdir = tempdir(),
         ess <- list()
         for (i in 1:length(gpls)) {
           ess[[gpls[[i]]]] <- getGSE(gpls[[i]], destdir = destdir, mirrorPath = mirrorPath)[[1]]
+        }
+    }
+
+
+    archs4_gpls <- rbind(
+        data.frame(gpl=c("GPL13112", "GPL17021", "GPL15103"),
+                   file="mouse_matrix.h5"),
+        data.frame(gpl=c("GPL11154", "GPL16791", "GPL10999", "GPL9115", "GPL18460"),
+                   file="human_matrix.h5"))
+
+    for (i in seq_along(ess)) {
+        es <- ess[[i]]
+        if (es@annotation %in% archs4_gpls$gpl) {
+            destfile <- file.path(destdir, archs4_gpls$file[match(es@annotation, archs4_gpls$gpl)])
+            if (!file.exists(destfile)) {
+                warning(paste0(
+                    "Found GPL supported by ARCHS4 but not corresponding file available at ",
+                    destfile))
+                next
+            }
+
+            samples <- h5read(destfile, "meta/Sample_geo_accession")
+            genes <- as.character(h5read(destfile, "meta/genes"))
+
+            expression <- h5read(destfile,
+                                 "data/expression",
+                                 index=list(seq_along(genes),
+                                            match(es$geo_accession,
+                                                  samples)))
+            rownames(expression) <- genes
+            colnames(expression) <- colnames(es)
+            H5close()
+
+            es2 <- ExpressionSet(assayData = expression,
+                                 phenoData = phenoData(es),
+                                 annotation = annotation(es))
+            fData(es2) <- cbind(fData(es2), "Gene symbol"=rownames(es2))
+            H5close()
+            ess[[i]] <- es2
+
         }
     }
 
