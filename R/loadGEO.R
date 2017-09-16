@@ -179,20 +179,21 @@ getGSE <- function(name, destdir = tempdir(),
             samples <- h5read(destfile, "meta/Sample_geo_accession")
             genes <- as.character(h5read(destfile, "meta/genes"))
 
+            sampleIndexes <- match(es$geo_accession,
+                                   samples)
+
             expression <- h5read(destfile,
                                  "data/expression",
                                  index=list(seq_along(genes),
-                                            match(es$geo_accession,
-                                                  samples)))
+                                            na.omit(sampleIndexes)))
             rownames(expression) <- genes
-            colnames(expression) <- colnames(es)
+            colnames(expression) <- colnames(es)[!is.na(sampleIndexes)]
             H5close()
 
             es2 <- ExpressionSet(assayData = expression,
-                                 phenoData = phenoData(es),
+                                 phenoData = phenoData(es[, !is.na(sampleIndexes)]),
                                  annotation = annotation(es))
             fData(es2) <- cbind(fData(es2), "Gene symbol"=rownames(es2))
-            H5close()
             ess[[i]] <- es2
 
         }
