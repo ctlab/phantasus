@@ -14,12 +14,6 @@
 #'
 #' @param preloadedDir Full path to directory with preloaded files.
 #'
-#' @param runInBackground Boolean variable that states if
-#'   function must run in background.
-#'
-#' @param openInBrowser Boolean variable that states if
-#'   application should be automatically opened in default browser.
-#'
 #' @return Running instance of phantasus application.
 #'
 #' @import opencpu
@@ -28,37 +22,19 @@
 #' @export
 #'
 #' @examples
-#' servePhantasus()
-#'
-servePhantasus <- function(host = '0.0.0.0', port = 8000,
-                            staticRoot = system.file("www/phantasus.js",
+#' \dontrun{
+#' servePhantasus('0.0.0.0', 8000, cacheDir=file.path(getwd(), 'cache'))
+#' }
+servePhantasus <- function(host, port,
+                           staticRoot = system.file("www/phantasus.js",
                                                     package = "phantasus"),
-                                                    cacheDir = tempdir(),
-                                                    preloadedDir = NULL,
-                                                    runInBackground = TRUE,
-                                                    openInBrowser = TRUE) {
+                           cacheDir = tempdir(),
+                           preloadedDir = NULL) {
     options(phantasusCacheDir = cacheDir, phantasusPreloadedDir = preloadedDir)
-
-    hostDeclaration <- paste0('host <- ', '"', host, '"', ';')
-    portDeclaration <- paste0('port <- ', port, ';')
-    staticRootDeclaration <- paste0('staticRoot <- ', '"', staticRoot, '"', ';')
-
-    appDeclaration <- 'app <- Rook::URLMap$new(`/ocpu` = opencpu:::rookhandler("/ocpu"),
+    app <- Rook::URLMap$new(`/ocpu` = opencpu:::rookhandler("/ocpu"),
                             `/?` = Rook::Static$new(urls = c("/"),
-                            root = staticRoot));'
+                                                    root = staticRoot))
 
-    runServerScript <- 'httpuv::runServer(host, port, app = app);'
+    httpuv::runServer(host, port, app = app)
 
-    fullScript <- c(hostDeclaration, portDeclaration,
-                        staticRootDeclaration, appDeclaration, runServerScript)
-
-    scriptFile <- tempfile(pattern = "script", fileext = ".R")
-
-    writeLines(fullScript, scriptFile)
-
-    if (openInBrowser) {
-      browseURL(paste0(host, ':', port))
-    }
-
-    system(paste('Rscript', scriptFile), wait = !runInBackground)
 }
