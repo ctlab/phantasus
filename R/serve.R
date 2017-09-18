@@ -25,12 +25,14 @@
 #' \dontrun{
 #' servePhantasus('0.0.0.0', 8000, cacheDir=file.path(getwd(), 'cache'))
 #' }
-servePhantasus <- function(host, port,
+servePhantasus <- function(host = '0.0.0.0',
+                           port = 8000,
                            staticRoot = system.file("www/phantasus.js",
                                                     package = "phantasus"),
                            cacheDir = tempdir(),
                            preloadedDir = NULL) {
     options(phantasusCacheDir = cacheDir, phantasusPreloadedDir = preloadedDir)
+
     app <- Rook::URLMap$new(`/ocpu` = opencpu:::rookhandler("/ocpu"),
                             `/?` = Rook::Static$new(urls = c("/"),
                                                     root = staticRoot))
