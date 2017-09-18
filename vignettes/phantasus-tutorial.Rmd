@@ -51,7 +51,7 @@ There are three ways to upload a dataset into application:
 
 ### Prepare the dataset for analysis
 
-#### Open the dataset
+#### Open the datasetg
 
 Choose a loading option "GEO Datasets" and put "GSE53986" in the input field. 
 After a few seconds, corresponding heatmap will be loaded. 
