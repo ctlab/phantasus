@@ -19,7 +19,8 @@ Vector of filenames serialized in JSON format.
     the specified GEO identifier.
 }
 \examples{
+\dontrun{
 checkGPLs('GSE27112')
 checkGPLs('GSE14308')
-
+}
 }

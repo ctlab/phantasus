@@ -15,16 +15,17 @@
 #'
 #' @return produced ExpressionSet object
 #'
-#' @export
 #' @import Biobase
 #'
 #' @examples
+#' \dontrun{
 #' data <- matrix(1:15, 5, 3)
 #' pData <- c("A", "B", "C")
 #' varLabels <- "cat"
 #' fData <- c("p", "r", "s", "t", "u")
 #' fvarLabels <- "id"
 #' createES(data, pData, varLabels, fData, fvarLabels)
+#' }
 #'
 createES <- function(data, pData, varLabels, fData, fvarLabels) {
     phenoData <- AnnotatedDataFrame(data.frame(pData))

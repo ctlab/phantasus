@@ -17,13 +17,14 @@
 #'
 #' @return Name of the file containing serialized de-matrix.
 #'
-#' @export
 #' @import Biobase
 #' @import limma
 #'
 #' @examples
+#' \dontrun{
 #' data(es)
 #' limmaAnalysis(es, fieldValues = c("A", "A", "A", "B", "B"))
+#' }
 limmaAnalysis <- function(es, rows = c(), columns = c(), fieldValues) {
     assertthat::assert_that(length(columns) == length(fieldValues)
                             || length(columns) == 0)

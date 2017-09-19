@@ -14,7 +14,6 @@
 #' @return File with ProtoBuf-serialized ExpressionSet-s
 #'     that were loaded from specified file.
 #'
-#' @export
 #' @import Biobase
 loadPreloaded <- function(name, exactName = NULL) {
   preloadedDir <- getOption("phantasusPreloadedDir")
@@ -85,8 +84,6 @@ loadPreloaded <- function(name, exactName = NULL) {
 #'   directory with preloaded files.
 #'
 #' @return Boolean value.
-#'
-#' @export
 preloadedDirExists <- function() {
   preloadedDir <- getOption("phantasusPreloadedDir")
   jsonlite::toJSON(!is.null(preloadedDir) && dir.exists(preloadedDir))
@@ -103,7 +100,6 @@ preloadedDirExists <- function() {
 #'
 #' @return Vector of names serialized in JSON format.
 #'
-#' @export
 checkPreloadedNames <- function(name) {
   if (jsonlite::fromJSON(preloadedDirExists())) {
     preloadedDir <- getOption("phantasusPreloadedDir")

@@ -30,6 +30,7 @@
 ^inst/www/phantasus.js/LICENSE$
 ^inst/www/phantasus.js/README.md$
 ^inst/tutorials$
+^inst/www/phantasus.js/node_modules$
 
 ^inst/docker$
 ^inst-raw$

@@ -27,6 +27,8 @@ Name of the file containing serialized de-matrix.
     de-matrix.
 }
 \examples{
+\dontrun{
 data(es)
 limmaAnalysis(es, fieldValues = c("A", "A", "A", "B", "B"))
+}
 }

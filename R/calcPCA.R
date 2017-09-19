@@ -13,14 +13,15 @@
 #'
 #' @return json with full description of the plot for plotly.js
 #'
-#' @export
 #' @import ggplot2
 #' @import htmltools
 #' @import jsonlite
 #'
 #' @examples
+#' \dontrun{
 #' data(es)
 #' calcPCA(es)
+#' }
 calcPCA <- function(es, columns = c(), rows = c(), replacena = "mean") {
 
     data <- t(prepareData(es, columns, rows, replacena))

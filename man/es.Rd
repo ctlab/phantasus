@@ -13,8 +13,10 @@ Small slice from GSE27112-GPL6103 for
     runnable examples.
 }
 \examples{
+\dontrun{
 data(es)
 performKmeans(es, k = 2)
+}
 
 }
 \keyword{datasets}

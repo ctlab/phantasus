@@ -9,3 +9,4 @@ cp phantasus.js/my.conf.js phantasus.js/package.json ../inst/www/phantasus.js/
 cp -r phantasus.js/css/images ../inst/www/phantasus.js/css/
 cp -r phantasus.js/css/phantasus-latest.min.css ../inst/www/phantasus.js/css/
 
+cp -r phantasus.js/phantasus-tutorial* ../inst/www/phantasus.js/

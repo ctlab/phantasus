@@ -54,10 +54,11 @@ filternaRows <- function(data, currentRows) {
 #' @param ... additional options for read.csv
 #'
 #' @return ExpressionSet object
-#' @export
 #'
 #' @examples
+#' \dontrun{
 #' read.gct(system.file("extdata", "centers.gct", package = "phantasus"))
+#' }
 read.gct <- function(gct, ...) {
     meta <- readLines(gct, n = 3)
     version <- meta[1]

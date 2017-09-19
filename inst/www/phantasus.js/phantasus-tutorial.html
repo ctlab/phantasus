@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0071)file:///tmp/Rtmp6Tsyjx/preview-291d21074a04.dir/phantasus-tutorial.html -->
+<!-- saved from url=(0071)file:///tmp/RtmpqD9uLJ/preview-21116463ace8.dir/phantasus-tutorial.html -->
 <html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 
@@ -10,7 +10,7 @@
 
 <meta name="author" content="Daria Zenkova">
 
-<meta name="date" content="2017-09-13">
+<meta name="date" content="2017-09-19">
 
 <title>Using phantasus application</title>
 
@@ -163,11 +163,11 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">Using phantasus application</h1>
 <h4 class="author"><em>Daria Zenkova</em></h4>
-<h4 class="date"><em>2017-09-13</em></h4>
+<h4 class="date"><em>2017-09-19</em></h4>
 
 
 
-<p>This is an extended version of the project Morpheus. We are integrating widely used gene epression analysis methods from Bioconductor. You can use it in multiple ways, either locally, using <code>servePhantasus</code>-function from this package, this way would be described in this tutorial, either on <a href="https://artyomovlab.wustl.edu/phantasus">web-site</a>.</p>
+<p>This is an extended version of the project Morpheus. We are integrating widely used gene expression analysis methods from Bioconductor. You can use it in multiple ways, either locally, using <code>servePhantasus</code>-function from this package, this way would be described in this tutorial, either on <a href="https://artyomovlab.wustl.edu/phantasus">web-site</a>.</p>
 <div id="loading-required-libraries" class="section level2">
 <h2>Loading required libraries</h2>
 <p>That package needs GEOquery as a dependency. Although, we recommend to install this package from it’s forked version due to its better cache support:</p>
@@ -177,12 +177,22 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <h2>Running</h2>
 <p>To run this package use its exported function:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(phantasus)
-<span class="kw">servePhantasus</span>(<span class="st">'0.0.0.0'</span>, <span class="dv">8000</span>, <span class="dt">cacheDir =</span> <span class="kw">file.path</span>(<span class="kw">getwd</span>(), <span class="st">'cache'</span>))</code></pre></div>
-<p>Then, open (<a href="http://localhost:8000/" class="uri">http://localhost:8000</a>) at your browser.</p>
+<span class="kw">servePhantasus</span>()</code></pre></div>
+<p>This command will run the application with default parameters, open it in your default browser (from <code>browser</code> option) with address <a href="http://0.0.0.0:8000/" class="uri">http://0.0.0.0:8000</a>.</p>
+<div id="advanced-options" class="section level3">
+<h3>Advanced options</h3>
+<p>You can customise serving of the application with specifying following parameters:</p>
+<ul>
+<li>host and port (by default ‘0.0.0.0’ and 8000);</li>
+<li>cache directory (by default tempdir()) – directory where downloaded datasets will be saved and they can be reused in new sessions;</li>
+<li>preloaded directory (by default NULL) – directory with ExpressionSets encoded in rda-files, that can be quickly loaded to application by name;</li>
+<li>openInBrowser (by default TRUE).</li>
+</ul>
+</div>
 </div>
 <div id="loading-a-dataset-for-analysis" class="section level2">
 <h2>Loading a dataset for analysis</h2>
-<p>There are two ways to upload a dataset into application:</p>
+<p>There are three ways to upload a dataset into application:</p>
 <ul>
 <li>As a file from
 <ul>
@@ -194,6 +204,11 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <ul>
 <li>with “Open file” interface;</li>
 <li>with adding parameter “geo” to the link (e.g.&nbsp;<a href="http://localhost:8000/?geo=GSE27112" class="uri">http://localhost:8000/?geo=GSE27112</a>).</li>
+</ul></li>
+<li>By specified name (provider must specify it for you)
+<ul>
+<li>with “Saved on server datasets”</li>
+<li>with adding parameter “preloaded” to the link (e.g.&nbsp;<a href="http://localhost:8000/?preloaded=fileName" class="uri">http://localhost:8000/?preloaded=fileName</a>)</li>
 </ul></li>
 </ul>
 </div>

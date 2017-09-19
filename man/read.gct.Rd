@@ -18,5 +18,7 @@ ExpressionSet object
 Only versions 1.2 and 1.3 are supported.
 }
 \examples{
+\dontrun{
 read.gct(system.file("extdata", "centers.gct", package = "phantasus"))
+}
 }

@@ -21,9 +21,7 @@
 #'     loadGEO("GSE27112")
 #'     loadGEO("GDS4922")
 #' }
-#' loadGEO("GSE27112-GPL6885")
 #'
-#' @export
 #' @import Biobase
 #' @import GEOquery
 loadGEO <- function(name, type = NA) {
@@ -54,6 +52,27 @@ loadGEO <- function(name, type = NA) {
     jsonlite::toJSON(f)
 }
 
+#' Load ExpressionSet from GEO Datasets
+#'
+#'\code{getGDS} return the ExpressionSet object corresponding
+#'     to GEO Dataset identifier.
+#'
+#' @param name String, containing GEO identifier of the dataset.
+#'     It should start with 'GSE' or 'GDS' and can include exact GPL
+#'     to annotate dataset, separated with dash ('-') from the identifier.
+#'
+#' @param destdir Directory for caching loaded Series and GPL
+#'     files from GEO database.
+#'
+#' @param mirrorPath URL string which specifies the source of matrices.
+#'
+#' @return ExpressionSet object wrapped in list, that was available by given
+#'     in \code{name} variable GEO identifier.
+#'
+#' @examples
+#' getGDS('GDS4922')
+#'
+#' @export
 getGDS <- function(name, destdir = tempdir(),
                    mirrorPath = "https://ftp.ncbi.nlm.nih.gov") {
     stub <- gsub("\\d{1,3}$", "nnn", name, perl = TRUE)
@@ -117,6 +136,31 @@ getGDS <- function(name, destdir = tempdir(),
                         featureData = fData))
 }
 
+#' Load ExpressionSet from GEO Series
+#'
+#'\code{getGSE} return the ExpressionSet object(s) corresponding
+#'     to GEO Series Identifier.
+#'
+#' @param name String, containing GEO identifier of the dataset.
+#'     It should start with 'GSE' or 'GDS' and can include exact GPL
+#'     to annotate dataset, separated with dash ('-') from the identifier.
+#'
+#' @param destdir Directory for caching loaded Series and GPL
+#'     files from GEO database.
+#'
+#' @param mirrorPath URL string which specifies the source of matrices.
+#'
+#' @return List of ExpressionSet objects, that were available by given
+#'     in \code{name} variable GEO identifier.
+#'
+#' @examples
+#' \dontrun{
+#'     getGSE('GSE14308', destdir = file.path(getwd(), 'cache'))
+#'     getGSE('GSE27112')
+#' }
+#' getGSE('GSE53986')
+#'
+#' @export
 #' @import rhdf5
 getGSE <- function(name, destdir = tempdir(),
                    mirrorPath = "https://ftp.ncbi.nlm.nih.gov") {
@@ -185,7 +229,7 @@ getGSE <- function(name, destdir = tempdir(),
             expression <- h5read(destfile,
                                  "data/expression",
                                  index=list(seq_along(genes),
-                                            na.omit(sampleIndexes)))
+                                            stats::na.omit(sampleIndexes)))
             rownames(expression) <- genes
             colnames(expression) <- colnames(es)[!is.na(sampleIndexes)]
             H5close()
@@ -339,10 +383,10 @@ getES <- function(name, type = NA, destdir = tempdir(),
 #'     return \code{name}.
 #'
 #' @examples
+#' \dontrun{
 #' checkGPLs('GSE27112')
 #' checkGPLs('GSE14308')
-#'
-#' @export
+#' }
 checkGPLs <- function(name) {
     mirrorPath <- getOption('phantasusMirrorPath')
     if (is.null(mirrorPath)) {
