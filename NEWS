@@ -1,2 +1,10 @@
 CHANGES IN VERSION 0.99.12
 * Added possibility to load GEO-dataset by specifying its id in link parameters
+
+CHANGES IN VERSTION 0.99.13
+* Added possibility to load datasets from preloaded rda-files in specialized directory on server
+* servePhantasus now opens browser with web-application automatically on start-up
+* Added tutorial on main site
+* Updated biocViews
+* Updated tutorial and mans according to changes
+* Added experimental support for loading RNA-seq dataset from GEO
