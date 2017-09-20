@@ -8,7 +8,9 @@
 #' @usage data(es)
 #'
 #' @examples
+#' \dontrun{
 #' data(es)
 #' performKmeans(es, k = 2)
+#' }
 #'
 "es"

@@ -5,12 +5,12 @@ date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Using phantasus application}
-  %\VignetteEngine{knitr::knitr}
+  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
 This is an extended version of the project Morpheus. 
-We are integrating widely used gene epression analysis methods 
+We are integrating widely used gene expression analysis methods 
 from Bioconductor. You can use it in multiple ways, either locally, 
 using `servePhantasus`-function from this package, this way would be 
 described in this tutorial, 
@@ -29,20 +29,34 @@ devtools::install_github('assaron/GEOquery')
 To run this package use its exported function:
 ```{r,eval=FALSE}
 library(phantasus)
-servePhantasus('0.0.0.0', 8000, cacheDir = file.path(getwd(), 'cache'))
+servePhantasus()
 ```
-Then, open (http://localhost:8000) at your browser.
+This command will run the application with default parameters, open it in your default browser (from `browser` option) with address http://0.0.0.0:8000. 
+
+### Advanced options
+
+You can customise serving of the application with specifying following parameters:
+
+- host and port (by default '0.0.0.0' and 8000);
+- cache directory (by default tempdir()) -- directory where downloaded datasets will be saved and they can be reused in new sessions;
+- preloaded directory (by default NULL) -- directory with ExpressionSets encoded in rda-files, that can be quickly loaded to application by name;
+- openInBrowser (by default TRUE).
 
 ## Loading a dataset for analysis
 
-There are two ways to upload a dataset into application:
+There are three ways to upload a dataset into application:
 
 - As a file from
     - computer;
     - URL;
     - Dropbox;
-- By GEO identifier.
-
+- By GEO identifier
+    - with "Open file" interface;
+    - with adding parameter "geo" to the link (e.g. http://localhost:8000/?geo=GSE27112).
+- By specified name (provider must specify it for you)
+    - with "Saved on server datasets"
+    - with adding parameter "preloaded" to the link (e.g. http://localhost:8000/?preloaded=fileName)
+    
 ## Workflow example with GSE53986
 
 ### Prepare the dataset for analysis

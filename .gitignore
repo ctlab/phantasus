@@ -7,5 +7,6 @@ cache/
 *.bin
 *.xcf
 inst/doc
-inst/www/phantasus.js/node_modules/
+inst/node_modules
+inst/www/phantasus.js/node_modules
 inst/www/phantasus.js/package-lock.json

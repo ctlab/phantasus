@@ -26,16 +26,16 @@ RUN a2ensite opencpu2
 RUN sh -c 'echo "deb http://cran.rstudio.com/bin/linux/ubuntu trusty/" >> /etc/apt/sources.list'
 RUN gpg --keyserver keyserver.ubuntu.com --recv-key E084DAB9
 RUN gpg -a --export E084DAB9 | apt-key add -
-RUN apt-get -y update && apt-get -y install \
+RUN apt-get -y update && apt-get -y --allow-unauthenticated install \
     r-base \
     libprotobuf-dev \
     protobuf-compiler \
     r-cran-xml
 
-RUN git clone --recursive https://github.com/ctlab/phantasus /root/phantasus
+RUN git clone -b develop --recursive https://github.com/ctlab/phantasus /root/phantasus
 
-RUN R -e 'source("https://bioconductor.org/biocLite.R")'
-RUN R -e 'install.packages("devtools", repo = "http://cran.gis-lab.info"); library(devtools); install_github("hadley/scales"); install_github("assaron/GEOquery"); install("/root/phantasus", build_vignettes=T)'
+RUN R -e 'source("https://bioconductor.org/biocLite.R"); install.packages("XML", repo = "http://cran.gis-lab.info"); biocLite("Biobase"); biocLite("limma"); biocLite("org.Mm.eg.db")'
+RUN R -e 'install.packages("devtools", repo = "http://cran.gis-lab.info"); library(devtools); install_github("hadley/scales"); install_github("assaron/GEOquery"); install("/root/phantasus")'
 
 RUN cp -r /root/phantasus/inst/www/phantasus.js /var/www/html/phantasus
 
@@ -43,7 +43,6 @@ RUN a2enmod proxy_http
 
 EXPOSE 80
 EXPOSE 443
-EXPOSE 8004
 
 RUN locale-gen en_US.UTF-8
 ENV LANG en_US.UTF-8
@@ -53,5 +52,8 @@ ENV LC_ALL en_US.UTF-8
 RUN mkdir -p /var/phantasus/cache
 VOLUME ["/var/phantasus/cache"]
 
+RUN mkdir -p /var/phantasus/preloaded
+VOLUME ["/var/phantasus/preloaded"]
+
 CMD service apache2 start && \
-    R -e 'library(phantasus); servePhantasus("0.0.0.0", 8001, cacheDir="/var/phantasus/cache")'
+    R -e 'library(phantasus); servePhantasus("0.0.0.0", 8001, cacheDir="/var/phantasus/cache", preloadedDir="/var/phantasus/preloaded")'

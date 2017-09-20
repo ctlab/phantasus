@@ -54,10 +54,11 @@ filternaRows <- function(data, currentRows) {
 #' @param ... additional options for read.csv
 #'
 #' @return ExpressionSet object
-#' @export
 #'
 #' @examples
+#' \dontrun{
 #' read.gct(system.file("extdata", "centers.gct", package = "phantasus"))
+#' }
 read.gct <- function(gct, ...) {
     meta <- readLines(gct, n = 3)
     version <- meta[1]
@@ -128,4 +129,26 @@ take <- function(x, n) {
   sapply(x, function(x) {
     x[[n]]
   })
+}
+
+writeToList <- function(es) {
+  data <- as.matrix(exprs(es))
+  colnames(data) <- NULL
+  row.names(data) <- NULL
+
+  pdata <- as.matrix(pData(es))
+  colnames(pdata) <- NULL
+  row.names(pdata) <- NULL
+
+  rownames <- rownames(es)
+
+  fdata <- as.matrix(fData(es))
+  colnames(fdata) <- NULL
+  row.names(fdata) <- NULL
+
+  res <- list(data = data, pdata = pdata, fdata = fdata,
+              rownames = rownames,
+              colMetaNames = varLabels(phenoData(es)),
+              rowMetaNames = varLabels(featureData(es)))
+  res
 }

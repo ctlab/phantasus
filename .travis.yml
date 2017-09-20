@@ -48,8 +48,13 @@ after_script:
   - bash inst/test_js.sh
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
     docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
-    docker build -t dzenkova/phantasus inst/ ;
+    docker build -t dzenkova/phantasus inst/docker/latest/ ;
     docker push dzenkova/phantasus;
+    fi
+  - if [ "$TRAVIS_BRANCH" == "develop" ]; then
+    docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
+    docker build -t dzenkova/phantasus:develop inst/docker/develop/ ;
+    docker push dzenkova/phantasus:develop;
     fi
 
 after_success:

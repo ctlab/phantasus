@@ -4,8 +4,9 @@
 \alias{servePhantasus}
 \title{Serve phantasus.}
 \usage{
-servePhantasus(host, port, staticRoot = system.file("www/phantasus.js",
-  package = "phantasus"), cacheDir = tempdir())
+servePhantasus(host = "0.0.0.0", port = 8000,
+  staticRoot = system.file("www/phantasus.js", package = "phantasus"),
+  cacheDir = tempdir(), preloadedDir = NULL, openInBrowser = TRUE)
 }
 \arguments{
 \item{host}{Host to listen.}
@@ -16,6 +17,11 @@ servePhantasus(host, port, staticRoot = system.file("www/phantasus.js",
 (on local file system).}
 
 \item{cacheDir}{Full path to cache directory.}
+
+\item{preloadedDir}{Full path to directory with preloaded files.}
+
+\item{openInBrowser}{Boolean value which states if application will be
+automatically loaded in default browser.}
 }
 \value{
 Running instance of phantasus application.

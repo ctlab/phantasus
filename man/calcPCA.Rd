@@ -23,6 +23,8 @@ json with full description of the plot for plotly.js
     and returns this matrix encoded to JSON.
 }
 \examples{
+\dontrun{
 data(es)
 calcPCA(es)
+}
 }

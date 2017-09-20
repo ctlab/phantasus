@@ -21,9 +21,7 @@
 #'     loadGEO("GSE27112")
 #'     loadGEO("GDS4922")
 #' }
-#' loadGEO("GSE27112-GPL6885")
 #'
-#' @export
 #' @import Biobase
 #' @import GEOquery
 loadGEO <- function(name, type = NA) {
@@ -42,29 +40,6 @@ loadGEO <- function(name, type = NA) {
 
     ess <- getES(name, type, destdir = cacheDir, mirrorPath = mirrorPath)
 
-    writeToList <- function(es) {
-        data <- as.matrix(exprs(es))
-        colnames(data) <- NULL
-        row.names(data) <- NULL
-
-        pdata <- as.matrix(pData(es))
-        colnames(pdata) <- NULL
-        row.names(pdata) <- NULL
-
-        rownames <- rownames(es)
-
-        fdata <- as.matrix(fData(es))
-        colnames(fdata) <- NULL
-        row.names(fdata) <- NULL
-
-        res <- list(data = data, pdata = pdata, fdata = fdata,
-                    rownames = rownames,
-                    colMetaNames = varLabels(phenoData(es)),
-                    rowMetaNames = varLabels(featureData(es)))
-        res
-    }
-
-
     files <- list()
     for (i in 1:length(ess)) {
         assign(paste0("es_", i), ess[[i]], envir = parent.frame())
@@ -77,6 +52,27 @@ loadGEO <- function(name, type = NA) {
     jsonlite::toJSON(f)
 }
 
+#' Load ExpressionSet from GEO Datasets
+#'
+#'\code{getGDS} return the ExpressionSet object corresponding
+#'     to GEO Dataset identifier.
+#'
+#' @param name String, containing GEO identifier of the dataset.
+#'     It should start with 'GSE' or 'GDS' and can include exact GPL
+#'     to annotate dataset, separated with dash ('-') from the identifier.
+#'
+#' @param destdir Directory for caching loaded Series and GPL
+#'     files from GEO database.
+#'
+#' @param mirrorPath URL string which specifies the source of matrices.
+#'
+#' @return ExpressionSet object wrapped in list, that was available by given
+#'     in \code{name} variable GEO identifier.
+#'
+#' @examples
+#' getGDS('GDS4922')
+#'
+#' @export
 getGDS <- function(name, destdir = tempdir(),
                    mirrorPath = "https://ftp.ncbi.nlm.nih.gov") {
     stub <- gsub("\\d{1,3}$", "nnn", name, perl = TRUE)
@@ -140,6 +136,32 @@ getGDS <- function(name, destdir = tempdir(),
                         featureData = fData))
 }
 
+#' Load ExpressionSet from GEO Series
+#'
+#'\code{getGSE} return the ExpressionSet object(s) corresponding
+#'     to GEO Series Identifier.
+#'
+#' @param name String, containing GEO identifier of the dataset.
+#'     It should start with 'GSE' or 'GDS' and can include exact GPL
+#'     to annotate dataset, separated with dash ('-') from the identifier.
+#'
+#' @param destdir Directory for caching loaded Series and GPL
+#'     files from GEO database.
+#'
+#' @param mirrorPath URL string which specifies the source of matrices.
+#'
+#' @return List of ExpressionSet objects, that were available by given
+#'     in \code{name} variable GEO identifier.
+#'
+#' @examples
+#' \dontrun{
+#'     getGSE('GSE14308', destdir = file.path(getwd(), 'cache'))
+#'     getGSE('GSE27112')
+#' }
+#' getGSE('GSE53986')
+#'
+#' @export
+#' @import rhdf5
 getGSE <- function(name, destdir = tempdir(),
                    mirrorPath = "https://ftp.ncbi.nlm.nih.gov") {
     GEO <- unlist(strsplit(name, "-"))[1]
@@ -174,9 +196,50 @@ getGSE <- function(name, destdir = tempdir(),
                                                 AnnotGPL = TRUE)))
     } else {
         gpls <- fromJSON(checkGPLs(name))
-        ess <- c()
+        ess <- list()
         for (i in 1:length(gpls)) {
-          ess <- c(ess, getGSE(gpls[[i]], destdir = destdir, mirrorPath = mirrorPath))
+          ess[[gpls[[i]]]] <- getGSE(gpls[[i]], destdir = destdir, mirrorPath = mirrorPath)[[1]]
+        }
+    }
+
+
+    archs4_gpls <- rbind(
+        data.frame(gpl=c("GPL13112", "GPL17021", "GPL15103"),
+                   file="mouse_matrix.h5"),
+        data.frame(gpl=c("GPL11154", "GPL16791", "GPL10999", "GPL9115", "GPL18460"),
+                   file="human_matrix.h5"))
+
+    for (i in seq_along(ess)) {
+        es <- ess[[i]]
+        if (es@annotation %in% archs4_gpls$gpl) {
+            destfile <- file.path(destdir, archs4_gpls$file[match(es@annotation, archs4_gpls$gpl)])
+            if (!file.exists(destfile)) {
+                warning(paste0(
+                    "Found GPL supported by ARCHS4 but not corresponding file available at ",
+                    destfile))
+                next
+            }
+
+            samples <- h5read(destfile, "meta/Sample_geo_accession")
+            genes <- as.character(h5read(destfile, "meta/genes"))
+
+            sampleIndexes <- match(es$geo_accession,
+                                   samples)
+
+            expression <- h5read(destfile,
+                                 "data/expression",
+                                 index=list(seq_along(genes),
+                                            stats::na.omit(sampleIndexes)))
+            rownames(expression) <- genes
+            colnames(expression) <- colnames(es)[!is.na(sampleIndexes)]
+            H5close()
+
+            es2 <- ExpressionSet(assayData = expression,
+                                 phenoData = phenoData(es[, !is.na(sampleIndexes)]),
+                                 annotation = annotation(es))
+            fData(es2) <- cbind(fData(es2), "Gene symbol"=rownames(es2))
+            ess[[i]] <- es2
+
         }
     }
 
@@ -294,7 +357,7 @@ getES <- function(name, type = NA, destdir = tempdir(),
         }
         if (length(res) > 1) {
             for (i in 1:length(res)) {
-                ess <- c(res[[i]])
+                ess <- list(res[[i]])
                 save(ess, file = file.path(destdir,
                                             paste0(name,
                                                     "-",
@@ -320,10 +383,10 @@ getES <- function(name, type = NA, destdir = tempdir(),
 #'     return \code{name}.
 #'
 #' @examples
+#' \dontrun{
 #' checkGPLs('GSE27112')
 #' checkGPLs('GSE14308')
-#'
-#' @export
+#' }
 checkGPLs <- function(name) {
     mirrorPath <- getOption('phantasusMirrorPath')
     if (is.null(mirrorPath)) {
@@ -348,6 +411,8 @@ checkGPLs <- function(name) {
     url <- sprintf(gdsurl, mirrorPath,
                    if (type == "GDS") "datasets" else "series", stub, name)
 
+    gpls <- c()
+
     tryCatch({
         httr::GET(url)
         if (httr::status_code(httr::GET(url)) == 404) {
@@ -355,7 +420,7 @@ checkGPLs <- function(name) {
             return(jsonlite::toJSON(c()))
         } else {
             if (type == "GDS") {
-                return(jsonlite::toJSON(name))
+                gpls <- c(name)
             } else {
                 file.names <- GEOquery:::getDirListing(paste0(url, "matrix/"))
 

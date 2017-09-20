@@ -16,13 +16,13 @@
 #'
 #' @return Vector of corresponding clusters, serialized to JSON.
 #'
-#' @export
 #' @import Biobase
 #'
 #' @examples
+#' \dontrun{
 #' data(es)
 #' performKmeans(es, k = 2)
-#'
+#' }
 performKmeans <- function(es, columns = c(), rows = c(), k,
                             replacena = "mean") {
     assertthat::assert_that(k > 0)

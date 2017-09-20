@@ -26,7 +26,8 @@ Vector of corresponding clusters, serialized to JSON.
     each gene from a given ExpressionSet.
 }
 \examples{
+\dontrun{
 data(es)
 performKmeans(es, k = 2)
-
+}
 }
