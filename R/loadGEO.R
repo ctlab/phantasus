@@ -196,6 +196,9 @@ getGSE <- function(name, destdir = tempdir(),
                                                 AnnotGPL = TRUE)))
     } else {
         gpls <- fromJSON(checkGPLs(name))
+        if (length(gpls) == 0) {
+            stop(paste("Dataset", name, "not found"))
+        }
         ess <- list()
         for (i in 1:length(gpls)) {
           ess[[gpls[[i]]]] <- getGSE(gpls[[i]], destdir = destdir, mirrorPath = mirrorPath)[[1]]
