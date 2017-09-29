@@ -8,3 +8,6 @@ CHANGES IN VERSTION 0.99.13
 * Updated biocViews
 * Updated tutorial and mans according to changes
 * Added experimental support for loading RNA-seq dataset from GEO
+
+CHANGES IN VERSION 0.99.13
+* Correct error messages when dataset is not present in GEO
