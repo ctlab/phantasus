@@ -16,15 +16,9 @@ using `servePhantasus`-function from this package, this way would be
 described in this tutorial, 
 either on [web-site](https://artyomovlab.wustl.edu/phantasus).
 
-## Loading required libraries
+## Quick start
 
-That package needs GEOquery as a dependency. Although, we recommend to install 
-this package from it's forked version due to its better cache support:
-```{r,eval=FALSE}
-devtools::install_github('assaron/GEOquery')
-```
-
-## Running
+### Start application
 
 To run this package use its exported function:
 ```{r,eval=FALSE}
@@ -33,35 +27,11 @@ servePhantasus()
 ```
 This command will run the application with default parameters, open it in your default browser (from `browser` option) with address http://0.0.0.0:8000. 
 
-### Advanced options
+### Workflow example with GSE53986
 
-You can customise serving of the application with specifying following parameters:
+#### Prepare the dataset for analysis
 
-- host and port (by default '0.0.0.0' and 8000);
-- cache directory (by default tempdir()) -- directory where downloaded datasets will be saved and they can be reused in new sessions;
-- preloaded directory (by default NULL) -- directory with ExpressionSets encoded in rda-files, that can be quickly loaded to application by name;
-- openInBrowser (by default TRUE).
-
-## Loading a dataset for analysis
-
-There are three ways to upload a dataset into application:
-
-- As a file from
-    - computer;
-    - URL;
-    - Dropbox;
-- By GEO identifier
-    - with "Open file" interface;
-    - with adding parameter "geo" to the link (e.g. http://localhost:8000/?geo=GSE27112).
-- By specified name (provider must specify it for you)
-    - with "Saved on server datasets"
-    - with adding parameter "preloaded" to the link (e.g. http://localhost:8000/?preloaded=fileName)
-    
-## Workflow example with GSE53986
-
-### Prepare the dataset for analysis
-
-#### Open the dataset
+**Open the dataset**
 
 Choose a loading option "GEO Datasets" and put "GSE53986" in the input field. 
 After a few seconds, corresponding heatmap will be loaded. 
@@ -69,7 +39,7 @@ After a few seconds, corresponding heatmap will be loaded.
 knitr::include_graphics("images/dataset_loaded.jpg")
 ```
 
-#### Adjust values
+**Adjust values**
 
 As you can see on the image, values are not scaled. 
 So for the proper further analysis it is recommended to rescale the 
@@ -83,7 +53,7 @@ To adjust values go to Tools/Adjust and use Log2 and Quantile Normalization.
 knitr::include_graphics("images/adjust_tool.jpg")
 ```
 
-#### Remove duplicates
+**Remove duplicates**
 
 There can be duplicated genes, it is important to collapse their values.
 
@@ -98,7 +68,7 @@ For that go to Tools/Collapse and choose "Mean" as the method and
 knitr::include_graphics("images/collapse_tool.jpg")
 ```
 
-#### Filter lowly expressed genes
+**Filter lowly expressed genes**
 
 To calculate mean expression of each gene go to 
 Tools/Create Calculated Annotation.
@@ -129,9 +99,9 @@ Although it is more convenient to extract this genes to a new dataset,
 so select all genes (click on any gene and press Ctrl+A) and 
 use Tools/New Heat Map (Ctrl+X).
 
-### Explore the dataset
+#### Explore the dataset
 
-#### PCA Plot
+**PCA Plot**
 
 Use Tools/PCA Plot to analyse the data with 
 Principal Component Analysis method. 
@@ -148,7 +118,7 @@ that need to be analysed further to see if they can be eliminated.
 knitr::include_graphics("images/pcaplot_tool_finished.jpg")
 ```
 
-#### K-means clustering
+**K-means clustering**
 
 Use Tools/k-means to cluster genes into predefined number of clusters.
 
@@ -163,7 +133,7 @@ by using View/Fit to window. Here you can also see outlier samples.
 knitr::include_graphics("images/kmeans_result.jpg")
 ```
 
-#### Hierarchical clustering
+**Hierarchical clustering**
 
 Use Tool/Hierarchical clustering to cluster samples. 
 
@@ -171,7 +141,7 @@ Use Tool/Hierarchical clustering to cluster samples.
 knitr::include_graphics("images/hierarchical_tool.jpg")
 ```
 
-#### Filtering outliers
+**Filtering outliers**
 
 Now, when outliers are confirmed, you can choose good samples 
 and extract them into another heatmap (Ctrl+X).
@@ -180,7 +150,7 @@ and extract them into another heatmap (Ctrl+X).
 knitr::include_graphics("images/good_samples.jpg")
 ```
 
-#### Differential expression
+**Differential expression**
 
 Use Tools/Limma to compare samples. Choose "treatment" as a field, 
 "Untreated" and "LPS" as classes.
@@ -195,6 +165,40 @@ between classes.
 ```{r, out.width = "600px", echo = FALSE}
 knitr::include_graphics("images/limma_results.jpg")
 ```
+
+## Additional settings 
+
+### Recommended dependencies
+
+That package needs GEOquery as a dependency. Although, we recommend to install 
+this package from it's forked version due to its better cache support:
+```{r,eval=FALSE}
+devtools::install_github('assaron/GEOquery')
+```
+
+### Advanced options for `servePhantasus`
+
+You can customise serving of the application with specifying following parameters:
+
+- host and port (by default '0.0.0.0' and 8000);
+- cache directory (by default tempdir()) -- directory where downloaded datasets will be saved and they can be reused in new sessions;
+- preloaded directory (by default NULL) -- directory with ExpressionSets encoded in rda-files, that can be quickly loaded to application by name;
+- openInBrowser (by default TRUE).
+
+### Loading dataset options
+
+There are three ways to upload a dataset into application:
+
+- As a file from
+    - computer;
+    - URL;
+    - Dropbox;
+- By GEO identifier
+    - with "Open file" interface;
+    - with adding parameter "geo" to the link (e.g. http://localhost:8000/?geo=GSE27112).
+- By specified name (provider must specify it for you)
+    - with "Saved on server datasets"
+    - with adding parameter "preloaded" to the link (e.g. http://localhost:8000/?preloaded=fileName)
 
 ## Feedback
 

@@ -9,5 +9,8 @@ CHANGES IN VERSTION 0.99.13
 * Updated tutorial and mans according to changes
 * Added experimental support for loading RNA-seq dataset from GEO
 
-CHANGES IN VERSION 0.99.13
+CHANGES IN VERSION 0.99.14
 * Correct error messages when dataset is not present in GEO
+
+CHANGES IN VERSION 0.99.15
+* Updated tutorial
