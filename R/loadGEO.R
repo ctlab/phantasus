@@ -279,7 +279,9 @@ getGSE <- function(name, destdir = tempdir(),
 
         if ("Gene ID" %in% fvarLabels(es)) {
             fvarsToKeep <- c(fvarsToKeep, "Gene ID")
-        } else  {
+        } else if ("ID" %in% fvarLabels(es)) {
+            fvarsToKeep <- c(fvarsToKeep, "ID")
+        } else {
             fvarsToKeep <- c(fvarsToKeep, grep("entrez",
                                                 fvarLabels(es),
                                                 ignore.case = TRUE,

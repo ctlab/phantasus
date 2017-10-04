@@ -148,7 +148,7 @@ writeToList <- function(es) {
 
   res <- list(data = data, pdata = pdata, fdata = fdata,
               rownames = rownames,
-              colMetaNames = varLabels(phenoData(es)),
-              rowMetaNames = varLabels(featureData(es)))
+              colMetaNames = varLabels(es),
+              rowMetaNames = fvarLabels(es))
   res
 }

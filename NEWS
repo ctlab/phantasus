@@ -17,3 +17,6 @@ CHANGES IN VERSION 0.99.15
 
 CHANGES IN VERSION 0.99.16
 * Fixed issue with incorrect perfomance of LimmaTool when columns are passed as args
+
+CHANGES IN VERSION 0.99.17
+* Fixed issue with null featureData for GSE37270
