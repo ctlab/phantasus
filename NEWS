@@ -14,3 +14,6 @@ CHANGES IN VERSION 0.99.14
 
 CHANGES IN VERSION 0.99.15
 * Updated tutorial
+
+CHANGES IN VERSION 0.99.16
+* Fixed issue with incorrect perfomance of LimmaTool when columns are passed as args

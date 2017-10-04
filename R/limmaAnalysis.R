@@ -32,6 +32,8 @@ limmaAnalysis <- function(es, rows = c(), columns = c(), fieldValues) {
     rows <- getIndicesVector(rows, nrow(exprs(es)))
     columns <- getIndicesVector(columns, ncol(exprs(es)))
 
+    fieldValues <- fieldValues[columns]
+
     fieldName <- "Comparison"
     fieldValues <- replace(fieldValues, fieldValues == "", NA)
 
