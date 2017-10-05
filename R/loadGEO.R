@@ -203,6 +203,7 @@ getGSE <- function(name, destdir = tempdir(),
         for (i in 1:length(gpls)) {
           ess[[gpls[[i]]]] <- getGSE(gpls[[i]], destdir = destdir, mirrorPath = mirrorPath)[[1]]
         }
+        return(ess)
     }
 
 
@@ -303,11 +304,40 @@ getGSE <- function(name, destdir = tempdir(),
                                     varLabels(es),
                                     ignore.case = TRUE)]
 
-        renamed <- lapply(chr, function(x) {
-            rename(x, as.vector(pData(es)[, x]))
-        })
-        phenoData(es) <- phenoData(es)[, !(varLabels(es) %in% chr)]
-        pData(es)[, take(renamed, 1)] <- take(renamed, 2)
+        parsePData <- function(old.phenodata) {
+            old.pdata <- pData(old.phenodata)
+            labels <- varLabels(old.phenodata)
+
+            new.pdata <- as.data.frame(matrix(NA, nrow = nrow(old.pdata), ncol = 0))
+
+
+            for (i in 1:ncol(old.pdata)) {
+                splitted <- strsplit(as.vector(old.pdata[[i]]), ':')
+                lengths <- sapply(splitted, length)
+                if (any(lengths != 2 & lengths != 0)) {
+                    new.pdata[[labels[i]]] <- old.pdata[[i]]
+                } else {
+                    zeros <- which(lengths == 0)
+
+                    splitted[zeros] <- replicate(length(zeros), list(c(NA, NA)))
+
+                    newnames <- unique(trimws(take(splitted, 1)))
+                    newnames <- newnames[which(!is.na(newnames))]
+
+                    for (j in 1:length(newnames)) {
+                        name <- newnames[j]
+                        if (!(name %in% names(new.pdata))) {
+                            new.pdata[[name]] <- replicate(nrow(new.pdata), NA)
+                        }
+                        indices <- which(name == trimws(take(splitted, 1)))
+                        new.pdata[[name]][indices] <- trimws(take(splitted, 2)[indices])
+                    }
+                }
+            }
+            AnnotatedDataFrame(new.pdata)
+        }
+
+        phenoData(es) <- parsePData(phenoData(es))
 
         es
     }

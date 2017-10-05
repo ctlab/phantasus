@@ -20,3 +20,6 @@ CHANGES IN VERSION 0.99.16
 
 CHANGES IN VERSION 0.99.17
 * Fixed issue with null featureData for GSE37270
+
+CHANGES IN VERSION 0.99.18
+* New phenoData parsing strategy for GEO Series
