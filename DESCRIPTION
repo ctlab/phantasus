@@ -13,7 +13,8 @@ URL: https://artyomovlab.wustl.edu/phantasus,
 BugReports: https://github.com/ctlab/phantasus/issues
 Depends: R (>= 3.4)
 biocViews: GeneExpression, GUI, Visualization, DataRepresentation, Transcriptomics, 
-            RNASeq, Microarray, Normalization, Clustering, DifferentialExpression
+            RNASeq, Microarray, Normalization, Clustering, DifferentialExpression,
+            PrincipalComponent
 Imports: ggplot2, protolite, Biobase, GEOquery, Rook, htmltools,
         httpuv, jsonlite, limma, opencpu, assertthat, methods, httr, rhdf5
 License: MIT + file LICENSE

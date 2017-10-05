@@ -311,7 +311,7 @@ getGSE <- function(name, destdir = tempdir(),
             new.pdata <- as.data.frame(matrix(NA, nrow = nrow(old.pdata), ncol = 0))
 
 
-            for (i in 1:ncol(old.pdata)) {
+            for (i in seq_len(ncol(old.pdata))) {
                 splitted <- strsplit(as.vector(old.pdata[[i]]), ':')
                 lengths <- sapply(splitted, length)
                 if (any(lengths != 2 & lengths != 0)) {
@@ -324,7 +324,7 @@ getGSE <- function(name, destdir = tempdir(),
                     newnames <- unique(trimws(take(splitted, 1)))
                     newnames <- newnames[which(!is.na(newnames))]
 
-                    for (j in 1:length(newnames)) {
+                    for (j in seq_along(newnames)) {
                         name <- newnames[j]
                         if (!(name %in% names(new.pdata))) {
                             new.pdata[[name]] <- replicate(nrow(new.pdata), NA)
