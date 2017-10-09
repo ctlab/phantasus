@@ -38,7 +38,7 @@
 ^inst/test_js.sh$
 ^inst/update_static.sh$
 
-^cache/*$
+^cache$
 ^build/*$
 ^.*\.Rproj$
 
