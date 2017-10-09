@@ -10,6 +10,8 @@ test_that("loadGEO finishes with result", {
   expect_is(loadGEO("GSE14308"), "json")
   expect_is(loadGEO("GDS4885"), "json")
 
+  expect_error(loadGEO("WRONGNAME"))
+
   options(phantasusMirrorPath = NULL)
 })
 
@@ -24,4 +26,16 @@ test_that("checkGPLs counts gpls correctly", {
   expect_warning(checkGPLs("GSE201"))
 
   options(phantasusMirrorPath = NULL)
+})
+
+test_that("checkGPLs counts existing files correctly without connection", {
+    options(phantasusMirrorPath = "https://notworkingdomain",
+            phantasusCacheDir = "testdata")
+
+    expect_message(checkGPLs("GSE27112"), regexp = "Problems establishing connection")
+    expect_length(fromJSON(checkGPLs("GSE27112")), 1)
+    expect_warning(checkGPLs("GSE14308"))
+
+    options(phantasusCacheDir = NULL,
+            phantasusMirrorPath = NULL)
 })

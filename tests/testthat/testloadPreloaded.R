@@ -34,3 +34,22 @@ test_that("loadPreloaded loads file with list of ExpressionSets", {
 
     options(phantasusPreloadedDir = NULL)
 })
+
+test_that("checkPreloadedNames", {
+    options(phantasusPreloadedDir = "testdata")
+
+    expect_equal(fromJSON(checkPreloadedNames("wrapped_aa")), c("wrapped_aa_1", "wrapped_aa_2"))
+    expect_equal(fromJSON(checkPreloadedNames("aa")), c("aa"))
+
+    expect_error(checkPreloadedNames("falseFile"), regexp = "No such file")
+
+    options(phantasusPreloadedDir = NULL)
+
+    expect_error(checkPreloadedNames("noDirectory"), regexp = "No such directory")
+
+    options(phantasusPreloadedDir = "falseDirectory")
+
+    expect_error(checkPreloadedNames("noDirectory"), regexp = "No such directory")
+
+    options(phantasusPreloadedDir = NULL)
+})

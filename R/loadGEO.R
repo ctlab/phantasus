@@ -247,26 +247,6 @@ getGSE <- function(name, destdir = tempdir(),
         }
     }
 
-    rename <- function(prevName, x) {
-        splitted <- strsplit(x, ": ")
-        lengths <- sapply(splitted, length)
-        if (any(lengths != 2 & lengths != 0)) {
-            return(list(name = prevName, x = x))
-        }
-        splittedFirst <- unique(take(splitted[lengths > 0], 1))
-        if (length(splittedFirst) == 1) {
-
-            res <- list(name = splittedFirst[1],
-                        x = ifelse(lengths == 2,
-                                    take(splitted[lengths == 2], 2),
-                                    NA))
-
-        } else {
-            res <- list(name = prevName, x = x)
-        }
-        res
-    }
-
     processInputES <- function(es) {
         fvarsToKeep <- c()
         if ("Gene symbol" %in% fvarLabels(es)) {
@@ -469,6 +449,8 @@ checkGPLs <- function(name) {
                 }))
                 gpls <- file.names
             }
+
+            return(jsonlite::toJSON(gpls))
         }
     },
     error = function(e) {
@@ -477,15 +459,14 @@ checkGPLs <- function(name) {
 
         files <- list.files(path = cacheDir)
 
-        corresponding <- files[grep(x = files,
-                                    pattern = paste0(name, "[-_].*gz$"))]
-        gpls <- take(sapply(corresponding,
-                            FUN = function(x) { strsplit(x, "_") }), 1)
+        corresponding <- take(sapply(files[grep(x = files,
+                                    pattern = paste0(name, "[-_].*(gz|rda)$"))],
+                                    FUN = function(x) { strsplit(x, ".", fixed = TRUE) }), 1)
+        gpls <- unique(take(sapply(corresponding,
+                            FUN = function(x) { strsplit(x, "_") }), 1))
         if (length(gpls) == 0) {
             warning("No corresponding files were found")
         }
+        return(jsonlite::toJSON(gpls))
     })
-
-    return(jsonlite::toJSON(gpls))
-
 }

@@ -27,3 +27,6 @@ CHANGES IN VERSION 0.99.18
 CHANGES IN VERSION 0.99.19
 * Safer procedure for phenoData parsing
 * Even sample-empty datasets deserve to have displayed meta
+
+CHANGES IN VERSION 0.99.20
+* A bit better code coverage with tests
