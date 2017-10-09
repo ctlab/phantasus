@@ -337,7 +337,9 @@ getGSE <- function(name, destdir = tempdir(),
             AnnotatedDataFrame(new.pdata)
         }
 
-        phenoData(es) <- parsePData(phenoData(es))
+        if (length(sampleNames(es)) > 0) {
+            phenoData(es) <- parsePData(phenoData(es))
+        }
 
         es
     }

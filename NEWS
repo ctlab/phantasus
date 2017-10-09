@@ -23,3 +23,7 @@ CHANGES IN VERSION 0.99.17
 
 CHANGES IN VERSION 0.99.18
 * New phenoData parsing strategy for GEO Series
+
+CHANGES IN VERSION 0.99.19
+* Safer procedure for phenoData parsing
+* Even sample-empty datasets deserve to have displayed meta
