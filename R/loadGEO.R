@@ -411,7 +411,7 @@ listCachedESs <- function(destdir) {
 #' @return vector of previously cached GSE IDs
 #'
 #' @examples
-#' reparseChachedESs(destdir=tempdir())
+#' reparseCachedESs(destdir=tempdir())
 #'
 #' @export
 reparseCachedESs <- function(destdir, mirrorPath = "https://ftp.ncbi.nlm.nih.gov") {

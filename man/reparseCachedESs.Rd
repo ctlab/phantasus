@@ -21,6 +21,6 @@ that were cached and runs `getES` for them again. The function
 uses cached Series and other files from GEO.
 }
 \examples{
-reparseChachedESs(destdir=tempdir())
+reparseCachedESs(destdir=tempdir())
 
 }
