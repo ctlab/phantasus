@@ -155,7 +155,7 @@ getGDS <- function(name, destdir = tempdir(),
 #'
 #' @examples
 #' \dontrun{
-#'     getGSE('GSE14308', destdir = file.path(getwd(), 'cache'))
+#'     getGSE('GSE14308', destdir = 'cache')
 #'     getGSE('GSE27112')
 #' }
 #' getGSE('GSE53986')
@@ -349,7 +349,7 @@ getGSE <- function(name, destdir = tempdir(),
 #'
 #' @examples
 #' \dontrun{
-#'     getES('GSE14308', type = 'GSE', destdir = file.path(getwd(), 'cache'))
+#'     getES('GSE14308', type = 'GSE', destdir = 'cache')
 #'     getES('GSE27112')
 #' }
 #' getES('GDS4922')

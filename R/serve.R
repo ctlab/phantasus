@@ -26,7 +26,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' servePhantasus('0.0.0.0', 8000, cacheDir=file.path(getwd(), 'cache'))
+#' servePhantasus('0.0.0.0', 8000, cacheDir='./cache')
 #' }
 servePhantasus <- function(host = '0.0.0.0',
                            port = 8000,
@@ -35,7 +35,8 @@ servePhantasus <- function(host = '0.0.0.0',
                            cacheDir = tempdir(),
                            preloadedDir = NULL,
                            openInBrowser = TRUE) {
-    options(phantasusCacheDir = cacheDir, phantasusPreloadedDir = preloadedDir)
+    options(phantasusCacheDir = normalizePath(cacheDir),
+            phantasusPreloadedDir = if (is.null(preloadedDir)) NULL else normalizePath(preloadedDir))
 
     app <- Rook::URLMap$new(`/ocpu` = opencpu:::rookhandler("/ocpu"),
                             `/?` = Rook::Static$new(urls = c("/"),
