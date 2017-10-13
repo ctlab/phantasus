@@ -15,6 +15,12 @@ test_that("loadGEO finishes with result", {
   options(phantasusMirrorPath = NULL)
 })
 
+test_that("reparseCachedGSEs works", {
+    cacheDir <- tempdir()
+    getES("GSE14308", destdir = cacheDir)
+    expect_true("GSE14308" %in% reparseCachedESs(destdir = cacheDir))
+})
+
 test_that("checkGPLs counts gpls correctly", {
   options(phantasusMirrorPath = "https://genome.ifmo.ru/files/software/phantasus")
 

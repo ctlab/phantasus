@@ -388,6 +388,51 @@ getES <- function(name, type = NA, destdir = tempdir(),
     ess
 }
 
+
+listCachedESs <- function(destdir) {
+    res <- list.files(destdir, pattern=".*\\.rda")
+    res <- grep("\\.gz\\.rda$", res, invert = T, value = T)
+    res <- grep("^(GSE|GDS)", res, value = T)
+    res <- sub("\\.rda$", "", res)
+    res
+}
+
+#' Reparse cached expression sets from GEO.
+#'
+#' The function should be used on phantasus version updates that change
+#' behavior of loading datasets from GEO. It finds all the datasets
+#' that were cached and runs `getES` for them again. The function
+#' uses cached Series and other files from GEO.
+#'
+#' @param destdir Directory used for caching loaded Series files from GEO database.
+#'
+#' @param mirrorPath URL string which specifies the source of matrices.
+#'
+#' @return vector of previously cached GSE IDs
+#'
+#' @examples
+#' reparseChachedESs(destdir=tempdir())
+#'
+#' @export
+reparseCachedESs <- function(destdir, mirrorPath = "https://ftp.ncbi.nlm.nih.gov") {
+    toReparse <- listCachedESs(destdir)
+
+    for (name in toReparse) {
+        message(paste0("Reparsing dataset ", name))
+        destfile <- file.path(destdir, paste0(name, ".rda"))
+        bakfile <- paste0(destfile, ".bak")
+        tryCatch({
+            file.rename(destfile, bakfile)
+            getES(name, destdir = destdir, mirrorPath = mirrorPath)
+            file.remove(bakfile)
+        }, error = function(e) {
+            message(paste0("Error occured while reparsing, old file stored as ", bakfile))
+        })
+    }
+    return(toReparse)
+}
+
+
 #' Check possible annotations for GEO Dataset.
 #'
 #' \code{checkGPLs} returns GPL-names for

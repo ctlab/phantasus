@@ -3,6 +3,7 @@
 export(getES)
 export(getGDS)
 export(getGSE)
+export(reparseCachedESs)
 export(servePhantasus)
 import(Biobase)
 import(GEOquery)
