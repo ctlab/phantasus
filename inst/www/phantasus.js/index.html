@@ -13,6 +13,8 @@
     <script>
         ocpu.seturl("/ocpu/library/phantasus/R");
     </script>
+    <script type="text/javascript"
+                     src="https://apis.google.com/js/api.js"></script>
     <script src="js/phantasus-latest.min.js"></script>
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
     <script type="text/javascript"
@@ -51,18 +53,21 @@
       var pair = keyValuePairs[i].split('=');
       params[pair[0]] = decodeURIComponent(pair[1]);
     }
-    console.log(params);
+    // console.log(params);
     if (params.json) {
       var options = JSON.parse(decodeURIComponent(params.json));
       landingPage.open(options);
     } else if (params.url) { // url to config
-      $.ajax({
-        url: params.url
-      }).done(function (json) {
-        landingPage.open(json);
-      }).fail(function () {
-        // console.log('Unable to get config file');
+      var $loading = phantasus.Util.createLoadingEl();
+      $loading.appendTo($('#vis'));
+      phantasus.Util.getText(params.url).done(function (text) {
+        var options = JSON.parse(text);
+        landingPage.open(options);
+      }).fail(function (err) {
+        console.log('Unable to get config file');
         landingPage.show();
+      }).always(function () {
+        $loading.remove();
       });
     } else if (params.geo) {
       var options = {

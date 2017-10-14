@@ -40,8 +40,11 @@ module.exports = function(config) {
 
 
     // list of files to exclude
-    exclude: [
-    ],
+    exclude: ['jasmine/spec/marker_selection_test.js',
+              'jasmine/spec/nearest_neighbors_test.js',
+              'jasmine/spec/qnorm_test.js',
+              'jasmine/spec/adjust_tool_test.js',
+              'jasmine/spec/save_dataset_test.js'],
 
 
     // preprocess matching files before serving them to the browser
