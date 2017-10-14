@@ -1,6 +1,6 @@
 Package: phantasus
 Title: Extended project Morpheus with Bioconductor methods
-Version: 0.99.20
+Version: 0.99.21
 Authors@R: c(person("Daria", "Zenkova", email = "daria.zenkova.cs@gmail.com", role = c("aut", "cre")),
              person("Joshua", "Gould", email = "jgould@broadinstitute.org", role = "aut"),
              person("Alexey", "Sergushichev", email = "alsergbox@gmail.com", role = "aut"))

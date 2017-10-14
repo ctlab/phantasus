@@ -1,5 +1,28 @@
-CHANGES IN VERSION 0.99.12
-* Added possibility to load GEO-dataset by specifying its id in link parameters
+CHANGES IN VERSION 0.99.21
+* Merged changes from morpheus.js repository
+* Added function `reparseCachedESs` for updating downloaded GEO-datasets, which are saved in cache
+
+CHANGES IN VERSION 0.99.20
+* A bit better code coverage with tests
+
+CHANGES IN VERSION 0.99.19
+* Safer procedure for phenoData parsing
+* Even sample-empty datasets deserve to have displayed meta
+
+CHANGES IN VERSION 0.99.18
+* New phenoData parsing strategy for GEO Series
+
+CHANGES IN VERSION 0.99.17
+* Fixed issue with null featureData for GSE37270
+
+CHANGES IN VERSION 0.99.16
+* Fixed issue with incorrect perfomance of LimmaTool when columns are passed as args
+
+CHANGES IN VERSION 0.99.15
+* Updated tutorial
+
+CHANGES IN VERSION 0.99.14
+* Correct error messages when dataset is not present in GEO
 
 CHANGES IN VERSTION 0.99.13
 * Added possibility to load datasets from preloaded rda-files in specialized directory on server
@@ -9,24 +32,6 @@ CHANGES IN VERSTION 0.99.13
 * Updated tutorial and mans according to changes
 * Added experimental support for loading RNA-seq dataset from GEO
 
-CHANGES IN VERSION 0.99.14
-* Correct error messages when dataset is not present in GEO
+CHANGES IN VERSION 0.99.12
+* Added possibility to load GEO-dataset by specifying its id in link parameters
 
-CHANGES IN VERSION 0.99.15
-* Updated tutorial
-
-CHANGES IN VERSION 0.99.16
-* Fixed issue with incorrect perfomance of LimmaTool when columns are passed as args
-
-CHANGES IN VERSION 0.99.17
-* Fixed issue with null featureData for GSE37270
-
-CHANGES IN VERSION 0.99.18
-* New phenoData parsing strategy for GEO Series
-
-CHANGES IN VERSION 0.99.19
-* Safer procedure for phenoData parsing
-* Even sample-empty datasets deserve to have displayed meta
-
-CHANGES IN VERSION 0.99.20
-* A bit better code coverage with tests
