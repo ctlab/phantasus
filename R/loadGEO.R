@@ -414,7 +414,8 @@ listCachedESs <- function(destdir) {
 #' reparseCachedESs(destdir=tempdir())
 #'
 #' @export
-reparseCachedESs <- function(destdir, mirrorPath = "https://ftp.ncbi.nlm.nih.gov") {
+reparseCachedESs <- function(destdir,
+                                mirrorPath = "https://ftp.ncbi.nlm.nih.gov") {
     toReparse <- listCachedESs(destdir)
 
     for (name in toReparse) {
@@ -426,7 +427,8 @@ reparseCachedESs <- function(destdir, mirrorPath = "https://ftp.ncbi.nlm.nih.gov
             getES(name, destdir = destdir, mirrorPath = mirrorPath)
             file.remove(bakfile)
         }, error = function(e) {
-            message(paste0("Error occured while reparsing, old file stored as ", bakfile))
+            message(paste0("Error occured while reparsing, old file stored as ",
+                           bakfile))
         })
     }
     return(toReparse)

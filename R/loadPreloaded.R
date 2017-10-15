@@ -30,7 +30,8 @@ loadPreloaded <- function(name, exactName = NULL) {
     loaded <- get(x)
 
     wrongFormat <- paste("Wrong format.",
-                         "File must contain either ExpressionSet or list of ExpressionSets")
+                            "File must contain either ExpressionSet",
+                            "or list of ExpressionSets")
 
     ess <- NULL
 
@@ -126,7 +127,8 @@ checkPreloadedNames <- function(name) {
         }
       } else {
         wrongFormat <- paste("Wrong format.",
-                             "File must contain either ExpressionSet or list of ExpressionSets")
+                                "File must contain either ExpressionSet",
+                                "or list of ExpressionSets")
         stop(wrongFormat)
       }
 

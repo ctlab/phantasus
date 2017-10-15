@@ -36,7 +36,10 @@ servePhantasus <- function(host = '0.0.0.0',
                            preloadedDir = NULL,
                            openInBrowser = TRUE) {
     options(phantasusCacheDir = normalizePath(cacheDir),
-            phantasusPreloadedDir = if (is.null(preloadedDir)) NULL else normalizePath(preloadedDir))
+            phantasusPreloadedDir = if (is.null(preloadedDir))
+                                        NULL
+                                    else
+                                        normalizePath(preloadedDir))
 
 
     utils::capture.output(type = "output", {
@@ -46,18 +49,23 @@ servePhantasus <- function(host = '0.0.0.0',
 
         tryCatch({
             server <- startServer(host, port, app = app)
-            message(sprintf("Server was started with following parameters: host=%s, port=%s", host, port))
+            message(sprintf(
+                "Server was started with following parameters: host=%s, port=%s",
+                host,
+                port))
         },
         error = function(e) {
             stop(paste(e,
-                       "The reason may be that requested port", port, "is occupied with some other application"))
+                       "The reason may be that requested port", port,
+                       "is occupied with some other application"))
         })
 
         if (openInBrowser) {
             url <- sprintf("http://%s:%s", host, port)
             utils::browseURL(url)
             message(paste(url, "have been opened in your default browser.\n",
-                          "If nothing happened, check your 'browser' option with getOption('browser')",
+                          "If nothing happened, check your 'browser'",
+                          "option with getOption('browser')",
                           "or open the address manually."))
         }
         on.exit(stopServer(server))
