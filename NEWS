@@ -1,3 +1,8 @@
+CHANGES IN VERSION 0.99.22
+* Fixed AdjustTool
+* Removed obsolete output produced by servePhantasus
+* Updated tutorial
+
 CHANGES IN VERSION 0.99.21
 * Merged changes from morpheus.js repository
 * Added function `reparseCachedESs` for updating downloaded GEO-datasets, which are saved in cache
