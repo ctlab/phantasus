@@ -39,7 +39,7 @@ servePhantasus <- function(host = '0.0.0.0',
             phantasusPreloadedDir = if (is.null(preloadedDir)) NULL else normalizePath(preloadedDir))
 
 
-    capture.output(type = "output", {
+    utils::capture.output(type = "output", {
         app <- Rook::URLMap$new(`/ocpu` = opencpu:::rookhandler("/ocpu"),
                                 `/?` = Rook::Static$new(urls = c("/"),
                                                         root = staticRoot))
