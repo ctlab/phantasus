@@ -16,7 +16,6 @@ module.exports = function(config) {
 
     plugins: [
       require( 'karma-jasmine' ),
-      require( 'karma-chrome-launcher' ),
       require( 'karma-phantomjs-launcher' )
     ],
 
@@ -43,7 +42,6 @@ module.exports = function(config) {
     exclude: ['jasmine/spec/marker_selection_test.js',
               'jasmine/spec/nearest_neighbors_test.js',
               'jasmine/spec/qnorm_test.js',
-              'jasmine/spec/adjust_tool_test.js',
               'jasmine/spec/save_dataset_test.js'],
 
 

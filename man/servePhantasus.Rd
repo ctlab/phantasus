@@ -32,6 +32,6 @@ Running instance of phantasus application.
 }
 \examples{
 \dontrun{
-servePhantasus('0.0.0.0', 8000, cacheDir='./cache')
+servePhantasus()
 }
 }

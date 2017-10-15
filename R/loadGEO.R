@@ -41,9 +41,9 @@ loadGEO <- function(name, type = NA) {
     ess <- getES(name, type, destdir = cacheDir, mirrorPath = mirrorPath)
 
     files <- list()
-    for (i in 1:length(ess)) {
+    for (i in 1:seq_along(ess)) {
         assign(paste0("es_", i), ess[[i]], envir = parent.frame())
-        seriesName <- if (!grepl(pattern = "-", name))
+        seriesName <- if (!grepl(pattern = "-", name) && length(ess) > 1)
             paste0(name, "-", annotation(ess[[i]])) else name
         files[[seriesName]] <- writeToList(ess[[i]])
     }
@@ -391,8 +391,8 @@ getES <- function(name, type = NA, destdir = tempdir(),
 
 listCachedESs <- function(destdir) {
     res <- list.files(destdir, pattern=".*\\.rda")
-    res <- grep("\\.gz\\.rda$", res, invert = T, value = T)
-    res <- grep("^(GSE|GDS)", res, value = T)
+    res <- grep("\\.gz\\.rda$", res, invert = TRUE, value = TRUE)
+    res <- grep("^(GSE|GDS)", res, value = TRUE)
     res <- sub("\\.rda$", "", res)
     res
 }
@@ -492,6 +492,9 @@ checkGPLs <- function(name) {
                 file.names <- unlist(lapply(file.names, function(x) {
                     paste0(substr(x, 1, regexpr("_", x) - 1))
                 }))
+                if (length(file.names) == 1) {
+                    file.names <- c(name)
+                }
                 gpls <- file.names
             }
 
