@@ -1,3 +1,7 @@
+CHANGES IN VERSION 0.99.23
+* Added options "Maximum Mean Probe" and "Maximum Median Probe" to Collapse Tool
+* Fixed a bug emerging when one applies R-based function after collapsing by columns
+
 CHANGES IN VERSION 0.99.22
 * Fixed AdjustTool
 * Removed obsolete output produced by servePhantasus
