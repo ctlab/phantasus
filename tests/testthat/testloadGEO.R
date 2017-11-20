@@ -3,16 +3,28 @@ library(jsonlite)
 library(Biobase)
 
 test_that("loadGEO finishes with result", {
-  options(phantasusMirrorPath = "https://genome.ifmo.ru/files/software/phantasus")
+    options(phantasusMirrorPath = "https://genome.ifmo.ru/files/software/phantasus")
 
-  expect_is(loadGEO("GSE27112"), "json")
-  expect_is(loadGEO("GSE27112-GPL6885"), "json")
-  expect_is(loadGEO("GSE14308"), "json")
-  expect_is(loadGEO("GDS4885"), "json")
+    x <- loadGEO("GSE27112")
+    expect_is(x, "json")
 
-  expect_error(loadGEO("WRONGNAME"))
+    ess <- protolite::unserialize_pb(readBin(fromJSON(x), what="raw", n=100000000))
 
-  options(phantasusMirrorPath = NULL)
+    expect_equal(length(ess), 2)
+
+    x <- loadGEO("GSE27112-GPL6885")
+    expect_is(x, "json")
+
+    ess <- protolite::unserialize_pb(readBin(fromJSON(x), what="raw", n=100000000))
+
+    expect_equal(length(ess), 1)
+
+    expect_is(loadGEO("GSE14308"), "json")
+    expect_is(loadGEO("GDS4885"), "json")
+
+    expect_error(loadGEO("WRONGNAME"))
+
+    options(phantasusMirrorPath = NULL)
 })
 
 test_that("reparseCachedGSEs works", {
