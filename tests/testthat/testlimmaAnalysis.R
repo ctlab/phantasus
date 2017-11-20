@@ -21,3 +21,13 @@ test_that("limmaAnalysisImpl works", {
 
     expect_equal(de$logFC[1], mean(exprs(es)[1, 3:4]) - mean(exprs(es)[1, 1:2]))
 })
+
+test_that("limmaAnalysisImpl works for subsamples", {
+    load(file = "testdata/GSE27112-GPL6103.rda")
+    de1 <- limmaAnalysisImpl(es, rows=seq_len(nrow(es)), columns=seq_len(ncol(es)),
+                            fieldValues = c(rep("A", 2), NA, rep("B", 2)))
+
+    de2 <- limmaAnalysisImpl(es, rows=seq_len(nrow(es)), columns=c(1:2, 4:5),
+                             fieldValues = c(rep("A", 2), rep("B", 2)))
+    expect_equal(de1$t, de2$t)
+})

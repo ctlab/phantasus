@@ -1,6 +1,4 @@
 limmaAnalysisImpl <- function(es, rows, columns, fieldValues) {
-    fieldValues <- fieldValues[columns]
-
     fieldValues <- replace(fieldValues, fieldValues == "", NA)
 
     es.copy <- es[rows, columns]
