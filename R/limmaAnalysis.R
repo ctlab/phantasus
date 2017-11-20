@@ -37,7 +37,7 @@ limmaAnalysis <- function(es, rows = c(), columns = c(), fieldValues) {
     fieldName <- "Comparison"
     fieldValues <- replace(fieldValues, fieldValues == "", NA)
 
-    new.pdata <- pData(es)[columns, ]
+    new.pdata <- pData(es)[columns, , drop=F]
     new.pdata[[fieldName]] <- as.factor(fieldValues)
     new.pdata <- new.pdata[!is.na(new.pdata[[fieldName]]), ]
     new.sampleNames <- row.names(new.pdata)
