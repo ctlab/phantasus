@@ -32,6 +32,6 @@ performKmeans <- function(es, columns = c(), rows = c(), k,
     km <- stats::kmeans(data, k, iter.max = 100L)
     res <- data.frame(row.names = row.names(exprs(es)))
     res[["cluster"]] <- NA
-    res[names(km$cluster), "cluster"] <- as.vector(km$cluster)
-    return(jsonlite::toJSON(as.vector(km$cluster)))
+    res[names(km$cluster), "cluster"] <- km$cluster
+    return(jsonlite::toJSON(res$cluster))
 }

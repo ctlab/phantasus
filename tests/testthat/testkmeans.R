@@ -8,5 +8,5 @@ test_that("kmeans finishes with result", {
 
 test_that("kmeans works with datasets with lots of NAs", {
   es <- read.gct("testdata/centers.gct")
-  expect_length(fromJSON(performKmeans(es, k = 2)), 5)
+  expect_length(fromJSON(performKmeans(es, k = 2)), nrow(es))
 })
