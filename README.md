@@ -32,7 +32,7 @@ Open `http://localhost:8000` in your browser.
 There are several system packages that have to be installed on the system. The names of these packages will be displayed during installation. On Ubuntu can install them beforehand and alltogether using command:
 
 ```{bash}
-sudo apt-get install libapparmor-dev libprotobuf-dev protobuf-compiler libcurl4-openssl-dev
+sudo apt-get install libapparmor-dev libprotobuf-dev protobuf-compiler libcurl4-openssl-dev libssl-dev libxml2-dev
 ```
 
 ## Installation example (CentOS 7)
@@ -45,7 +45,7 @@ yum install openssl-devel protobuf-compiler R R-Rcpp R-Rcpp-devel libcurl-devel 
 
 Install `devtools` and `bioclite`:
 ```
-R -e 'install.packages("devtools")'
+R -e 'install.packages("devtools", repos="https://cloud.r-project.org")'
 R -e 'source("https://bioconductor.org/biocLite.R"); biocLite()'
 R -e 'devtools::install_github("assaron/GEOquery")'
 ```
