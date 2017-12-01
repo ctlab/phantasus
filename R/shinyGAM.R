@@ -1,6 +1,8 @@
 #' Constructs data frame with gene annotations and submits it into Shiny GAM web-server
+#' @param fData list of annotation columns
+#' @param fvarLabels vector of column names
 #' @return URL for Shiny GAM
-#' @import httr
+#' @importFrom httr POST stop_for_status content
 shinyGAMAnalysis <- function(fData, fvarLabels) {
     featureData <- data.frame(fData)
     colnames(featureData) <- fvarLabels
