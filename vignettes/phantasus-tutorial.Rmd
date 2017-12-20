@@ -1,6 +1,8 @@
 ---
 title: "Using phantasus application"
-author: "Daria Zenkova"
+author: 
+- "Daria Zenkova"
+- "Vladislav Kamenev"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
@@ -70,8 +72,8 @@ There can be duplicated genes, it is important to collapse their values.
 knitr::include_graphics("images/duplicates.jpg")
 ```
 
-For that go to Tools/Collapse and choose "Mean" as the method and 
-"Gene Symbol" as the collapse field.
+For that go to Tools/Collapse and choose "Maximum Median Probe" as the method and 
+"Gene ID" as the collapse field.
 
 ```{r, out.width = "500px", echo = FALSE}
 knitr::include_graphics("images/collapse_tool.jpg")
@@ -188,6 +190,20 @@ between classes.
 
 ```{r, out.width = "600px", echo = FALSE}
 knitr::include_graphics("images/limma_results.jpg")
+```
+
+**Shiny GAM analysis**
+
+After differential expression you can submit current dataset to Shiny Gam analysis. Use Tools/Sumbit to Shiny GAM.
+
+```{r, out.width = "300px", echo = FALSE}
+knitr::include_graphics("images/shiny_gam.jpg")
+```
+
+Result will open in a new browser tab.
+
+```{r, out.width = "600px", echo = FALSE}
+knitr::include_graphics("images/shiny_gam_result.jpg")
 ```
 
 ## Additional settings 
