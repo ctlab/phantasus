@@ -35,7 +35,7 @@ RUN apt-get -y update && apt-get -y install \
 RUN git clone --recursive https://github.com/ctlab/phantasus /root/phantasus
 
 RUN R -e 'source("https://bioconductor.org/biocLite.R")'
-RUN R -e 'install.packages("devtools", repo = "http://cran.gis-lab.info"); library(devtools); install_github("hadley/scales"); install_github("assaron/GEOquery"); install("/root/phantasus", build_vignettes=T)'
+RUN R -e 'install.packages("devtools", repo = "http://cran.gis-lab.info"); library(devtools); install("/root/phantasus", build_vignettes=T)'
 
 RUN cp -r /root/phantasus/inst/www/phantasus.js /var/www/html/phantasus
 
