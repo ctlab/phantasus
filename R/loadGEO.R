@@ -136,6 +136,122 @@ getGDS <- function(name, destdir = tempdir(),
                         featureData = fData))
 }
 
+loadFromARCHS4 <- function(es, archs4_gpls) {
+    if (!es@annotation %in% archs4_gpls$gpl) {
+        return(es)
+    }
+
+    destfile <- file.path(destdir, archs4_gpls$file[match(es@annotation, archs4_gpls$gpl)])
+    if (!file.exists(destfile)) {
+        warning(paste0(
+            "Found GPL supported by ARCHS4 but not corresponding file available at ",
+            destfile))
+        next
+    }
+
+    samples <- h5read(destfile, "meta/Sample_geo_accession")
+    genes <- as.character(h5read(destfile, "meta/genes"))
+
+    sampleIndexes <- match(es$geo_accession,
+                           samples)
+
+    expression <- h5read(destfile,
+                         "data/expression",
+                         index=list(seq_along(genes),
+                                    stats::na.omit(sampleIndexes)))
+    rownames(expression) <- genes
+    colnames(expression) <- colnames(es)[!is.na(sampleIndexes)]
+    H5close()
+
+    es2 <- ExpressionSet(assayData = expression,
+                         phenoData = phenoData(es[, !is.na(sampleIndexes)]),
+                         annotation = annotation(es))
+    fData(es2) <- cbind(fData(es2), "Gene symbol"=rownames(es2))
+    return(es2)
+}
+
+filterFeatureAnnotations <- function(es) {
+    fvarsToKeep <- c()
+    if ("Gene symbol" %in% fvarLabels(es)) {
+        fvarsToKeep <- c(fvarsToKeep, "Gene symbol")
+    } else {
+        fvarsToKeep <- c(fvarsToKeep, grep("symbol",
+                                           fvarLabels(es),
+                                           ignore.case = TRUE,
+                                           value = TRUE))
+    }
+
+    if ("Gene ID" %in% fvarLabels(es)) {
+        fvarsToKeep <- c(fvarsToKeep, "Gene ID")
+    } else if ("ID" %in% fvarLabels(es)) {
+        fvarsToKeep <- c(fvarsToKeep, "ID")
+    } else {
+        fvarsToKeep <- c(fvarsToKeep, grep("entrez",
+                                           fvarLabels(es),
+                                           ignore.case = TRUE,
+                                           value = TRUE))
+    }
+
+    featureData(es) <- featureData(es)[, fvarsToKeep]
+
+    es
+}
+
+filterPhenoAnnotations <- function(es) {
+    phenoData(es) <- phenoData(es)[,
+                                   grepl("characteristics",
+                                         varLabels(es),
+                                         ignore.case = TRUE) |
+                                       (varLabels(es) %in% c("title",
+                                                             "id",
+                                                             "geo_accession"
+                                       ))]
+
+    chr <- varLabels(es)[grepl("characteristics",
+                               varLabels(es),
+                               ignore.case = TRUE)]
+
+    parsePData <- function(old.phenodata) {
+        old.pdata <- pData(old.phenodata)
+        labels <- varLabels(old.phenodata)
+
+        new.pdata <- as.data.frame(matrix(NA, nrow = nrow(old.pdata), ncol = 0))
+
+
+        for (i in seq_len(ncol(old.pdata))) {
+            splitted <- strsplit(as.vector(old.pdata[[i]]), ':')
+            lengths <- sapply(splitted, length)
+            if (any(lengths != 2 & lengths != 0)) {
+                new.pdata[[labels[i]]] <- old.pdata[[i]]
+            } else {
+                zeros <- which(lengths == 0)
+
+                splitted[zeros] <- replicate(length(zeros), list(c(NA, NA)))
+
+                newnames <- unique(trimws(take(splitted, 1)))
+                newnames <- newnames[which(!is.na(newnames))]
+
+                for (j in seq_along(newnames)) {
+                    name <- newnames[j]
+                    if (!(name %in% names(new.pdata))) {
+                        new.pdata[[name]] <- replicate(nrow(new.pdata), NA)
+                    }
+                    indices <- which(name == trimws(take(splitted, 1)))
+                    new.pdata[[name]][indices] <- trimws(take(splitted, 2)[indices])
+                }
+            }
+        }
+        AnnotatedDataFrame(new.pdata)
+    }
+
+    if (ncol(es) > 0) {
+        phenoData(es) <- parsePData(phenoData(es))
+    }
+
+    es
+}
+
+
 #' Load ExpressionSet from GEO Series
 #'
 #'\code{getGSE} return the ExpressionSet object(s) corresponding
@@ -213,117 +329,13 @@ getGSE <- function(name, destdir = tempdir(),
         data.frame(gpl=c("GPL11154", "GPL16791", "GPL10999", "GPL9115", "GPL18460"),
                    file="human_matrix.h5"))
 
-    for (i in seq_along(ess)) {
-        es <- ess[[i]]
-        if (es@annotation %in% archs4_gpls$gpl) {
-            destfile <- file.path(destdir, archs4_gpls$file[match(es@annotation, archs4_gpls$gpl)])
-            if (!file.exists(destfile)) {
-                warning(paste0(
-                    "Found GPL supported by ARCHS4 but not corresponding file available at ",
-                    destfile))
-                next
-            }
+    ess <- lapply(ess, loadFromARCHS4, archs4_gpls=archs4_gpls)
 
-            samples <- h5read(destfile, "meta/Sample_geo_accession")
-            genes <- as.character(h5read(destfile, "meta/genes"))
+    ess <- lapply(ess, filterFeatureAnnotations)
 
-            sampleIndexes <- match(es$geo_accession,
-                                   samples)
+    ess <- lapply(ess, filterPhenoAnnotations)
 
-            expression <- h5read(destfile,
-                                 "data/expression",
-                                 index=list(seq_along(genes),
-                                            stats::na.omit(sampleIndexes)))
-            rownames(expression) <- genes
-            colnames(expression) <- colnames(es)[!is.na(sampleIndexes)]
-            H5close()
-
-            es2 <- ExpressionSet(assayData = expression,
-                                 phenoData = phenoData(es[, !is.na(sampleIndexes)]),
-                                 annotation = annotation(es))
-            fData(es2) <- cbind(fData(es2), "Gene symbol"=rownames(es2))
-            ess[[i]] <- es2
-
-        }
-    }
-
-    processInputES <- function(es) {
-        fvarsToKeep <- c()
-        if ("Gene symbol" %in% fvarLabels(es)) {
-            fvarsToKeep <- c(fvarsToKeep, "Gene symbol")
-        } else {
-            fvarsToKeep <- c(fvarsToKeep, grep("symbol",
-                                                fvarLabels(es),
-                                                ignore.case = TRUE,
-                                                value = TRUE))
-        }
-
-        if ("Gene ID" %in% fvarLabels(es)) {
-            fvarsToKeep <- c(fvarsToKeep, "Gene ID")
-        } else if ("ID" %in% fvarLabels(es)) {
-            fvarsToKeep <- c(fvarsToKeep, "ID")
-        } else {
-            fvarsToKeep <- c(fvarsToKeep, grep("entrez",
-                                                fvarLabels(es),
-                                                ignore.case = TRUE,
-                                                value = TRUE))
-        }
-
-        featureData(es) <- featureData(es)[, fvarsToKeep]
-
-        phenoData(es) <- phenoData(es)[,
-                                        grepl("characteristics",
-                                                varLabels(es),
-                                                ignore.case = TRUE) |
-                                        (varLabels(es) %in% c("title",
-                                                                "id",
-                                                                "geo_accession"
-                                                                ))]
-
-        chr <- varLabels(es)[grepl("characteristics",
-                                    varLabels(es),
-                                    ignore.case = TRUE)]
-
-        parsePData <- function(old.phenodata) {
-            old.pdata <- pData(old.phenodata)
-            labels <- varLabels(old.phenodata)
-
-            new.pdata <- as.data.frame(matrix(NA, nrow = nrow(old.pdata), ncol = 0))
-
-
-            for (i in seq_len(ncol(old.pdata))) {
-                splitted <- strsplit(as.vector(old.pdata[[i]]), ':')
-                lengths <- sapply(splitted, length)
-                if (any(lengths != 2 & lengths != 0)) {
-                    new.pdata[[labels[i]]] <- old.pdata[[i]]
-                } else {
-                    zeros <- which(lengths == 0)
-
-                    splitted[zeros] <- replicate(length(zeros), list(c(NA, NA)))
-
-                    newnames <- unique(trimws(take(splitted, 1)))
-                    newnames <- newnames[which(!is.na(newnames))]
-
-                    for (j in seq_along(newnames)) {
-                        name <- newnames[j]
-                        if (!(name %in% names(new.pdata))) {
-                            new.pdata[[name]] <- replicate(nrow(new.pdata), NA)
-                        }
-                        indices <- which(name == trimws(take(splitted, 1)))
-                        new.pdata[[name]][indices] <- trimws(take(splitted, 2)[indices])
-                    }
-                }
-            }
-            AnnotatedDataFrame(new.pdata)
-        }
-
-        if (length(sampleNames(es)) > 0) {
-            phenoData(es) <- parsePData(phenoData(es))
-        }
-
-        es
-    }
-    lapply(ess, processInputES)
+    ess
 }
 
 #' Load ExpressionSet by GEO identifier
