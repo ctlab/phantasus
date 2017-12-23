@@ -5,6 +5,14 @@ getIndicesVector <- function(current, neededLength) {
     current + 1
 }
 
+#' Subsets es, if rows or columns are not specified, all are retained
+subsetES <- function(es, columns = c(), rows=c()) {
+    rows <- getIndicesVector(rows, nrow(exprs(es)))
+    columns <- getIndicesVector(columns, ncol(exprs(es)))
+
+    es[rows, columns]
+}
+
 prepareData <- function(es, columns = c(), rows = c(), replacena = "mean") {
     rows <- getIndicesVector(rows, nrow(exprs(es)))
     columns <- getIndicesVector(columns, ncol(exprs(es)))
