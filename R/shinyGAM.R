@@ -2,7 +2,6 @@
 #' @param fData list of annotation columns
 #' @param fvarLabels vector of column names
 #' @return URL for Shiny GAM
-#' @importFrom httr POST stop_for_status content
 shinyGAMAnalysis <- function(fData, fvarLabels) {
     featureData <- data.frame(fData)
     colnames(featureData) <- fvarLabels
