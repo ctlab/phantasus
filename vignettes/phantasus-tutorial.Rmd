@@ -3,77 +3,118 @@ title: "Using phantasus application"
 author: 
 - "Daria Zenkova"
 - "Vladislav Kamenev"
+- "Alexey Sergushichev"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
+output:  
+    BiocStyle::html_document:
+        toc_float: true
 vignette: >
   %\VignetteIndexEntry{Using phantasus application}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-This is an extended version of the project Morpheus. 
-We are integrating widely used gene expression analysis methods 
-from Bioconductor. You can use it in multiple ways, either locally, 
-using `servePhantasus`-function from this package, this way would be 
-described in this tutorial, 
-either on [web-site](https://artyomovlab.wustl.edu/phantasus).
+This tutorial describes phantasus -- a web-application for visual and interactive gene expression analysis.
+Phantasus is based on 
+[Morpheus](https://software.broadinstitute.org/morpheus/) -- a web-based software
+for heatmap visualisation and analysis, integrated with an R environment via OpenCPU API. 
 
-## Quick start
+The main object in Phantasus is a gene expression matrix.
+It can either be uploaded from a local text or Excel file 
+or loaded from Gene Expression Omnibus by the series identifier.
+Aside from basic visualization and filtering methods as implemented in Morpheus,
+R-based methods such as k-means clustering, principal component analysis, 
+differential expression analysis with limma package are supported.  
 
-### Start application
+In this vignette we show example usage of Phantasus for analysis of public gene
+expression data from Gene Expression Omnibus. It starts from loading dat, normalization and filtering outliers, to doing differential gene expression analysis and downstream analysis.
 
-To run this package use its exported function:
+# Quick start
+
+## Start application
+
+The simplest way to try Phantasus application is to go to web-site
+https://genome.ifmo.ru/phantasus or its mirror https://artyomovlab.wustl.edu/phantasus
+where the latest version is deployed.
+
+Alternatively, Phantaus can be start locally using the corresponding R package:
+
 ```{r,eval=FALSE}
 library(phantasus)
 servePhantasus()
 ```
-This command will run the application with default parameters, open it in your default browser (from `browser` option) with address http://0.0.0.0:8000. 
 
-### Workflow example with GSE53986
+This command runs the application with the default parameters, opens it in the default browser (from `browser` option) with address http://0.0.0.0:8000. Starting screen should appear:
 
-To illustrate the usage of Phantasus we use dataset [GSE53986](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE53986) from GEO database with multiple treatments of bone marrow derived macrophages
+```{r, out.width = "750px", echo = FALSE}
+knitr::include_graphics("images/start_screen.jpg")
+```
 
-#### Prepare the dataset for analysis
+## Example of workfow for analysing gene expression changes in macrophage activation
+
+To illustrate the usage of Phantasus let us consider public dataset from Gene Expression Omnibus (GEO) database
+[GSE53986](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE53986). 
+This dataset contains data from experiments, where bone marrow derived macrophages were
+treated with three stimuli: LPS, IFNg and combined LPS+INFg.
+
+### Prepare the dataset for analysis
 
 **Open the dataset**
 
-Choose a loading option "GEO Datasets" and put "GSE53986" in the input field. 
-After a few seconds, corresponding heatmap will be loaded. 
+First, let us open this dataset. To do this, select "GEO Datasets" option
+in "Choose a file..." dropdown menu. There, a text field will appear
+where "GSE53986" should be entered. Hitting the "Load" button (or hitting "Enter" on the keyboard)
+will start the loading. After a few seconds, the corresponding heatmap should appear. 
 
 ```{r, out.width = "750px", echo = FALSE}
 knitr::include_graphics("images/dataset_loaded.jpg")
 ```
 
+One the heatmap, the rows correspond to genes (or microarray probes).
+The rows are annotated with "Gene symbol" and "Gene ID" annotaions (as loaded from GEO database). 
+Columns correspond to samples. They are annotated with titles, GEO sample accession IDs and treatment field.
+The annotations such as treatment are loaded from user-submitted GEO annotations (they can be seen, for example, in "Charateristics" secion at https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM1304836).
+We note that not for all of the datasets in GEO such proper annotations are supplied.
 
-**Adjust values**
+**Adjusting expression values**
 
-As you can see on the image, values are not normalized. 
-So for the proper further analysis it is recommended to normalize the 
-series matrix.
+By hovering at heatmap cell, gene expression values are displayed. Large values there
+inform that data is not log-scaled which is important for most types of gene expression analysis.
+
 
 ```{r, out.width = "500px", echo = FALSE}
 knitr::include_graphics("images/huge_value.jpg")
 ```
 
-To normalize values go to Tools/Adjust and use Log2 and Quantile Normalization.
+For the proper further analysis it is recommended to normalize the 
+matrix. To normalize values go to _Tools/Adjust_ menu and check "Log 2"" and "Quantile normalize"
+adjustments.
 
 ```{r, out.width = "500px", echo = FALSE}
 knitr::include_graphics("images/adjust_tool.jpg")
 ```
 
-The new tab will appear representing the normalized dataset as the product of Adjust tool.
+The new tab with adjusted values will appear. All operations that modify gene expression
+matrix (such as adjustment, subsetting and several others) create a new tab. This allows 
+to revert the operation by going back to one of the previous tabs.
 
+**Removing duplicate genes**
 
-**Remove duplicates**
-
-There can be duplicated genes, it is important to collapse their values.
+Since the dataset is obtained with a mircroarray, a single gene can be represented by
+several probes. This can be seen, for example, by sorting rows 
+by "Gene symbol" column (one click on column header), entering "Actb" in the search 
+field and going to the first match by clicking down-arrow next to the field. 
+There are five probes corresponding to Actb gene in a considered array.
 
 ```{r, out.width = "600px", echo = FALSE}
 knitr::include_graphics("images/duplicates.jpg")
 ```
 
-For that go to Tools/Collapse and choose "Maximum Median Probe" as the method and 
-"Gene ID" as the collapse field.
+To simplify the analysis it is better to have on row per gene in the gene expression matrix. 
+One of the easiest ways is to chose only one row that has the maximal median level of expression
+across all samples. Such method removes the noise of lowly-expressed probes.
+Go to _Tools/Collapse_ and choose "Maximum Median Probe" as the method and 
+"Gene ID" as the collapse field. 
 
 ```{r, out.width = "500px", echo = FALSE}
 knitr::include_graphics("images/collapse_tool.jpg")
@@ -82,50 +123,60 @@ knitr::include_graphics("images/collapse_tool.jpg")
 The result will be shown in a new tab. 
 
 
-**Filter lowly expressed genes**
+**Filtering lowly-expressed genes**
 
-To calculate mean expression of each gene go to 
-Tools/Create Calculated Annotation.
+Additionally, lowly-epxressed genes can be filtered explicitly. It helps to reduce noise and increase
+power of downstream analysis methods. 
 
-Put there annotation name and formula for calculation.
+First, we calculate mean expression of each gene using 
+_Tools/Create Calculated Annotation_ menu. 
+Enter `mean_expression` as the annotation name and `MEAN()` in the _Formula_ field
+and click _OK_. The result will appear as an additional column in row annotations.
 
 ```{r, out.width = "500px", echo = FALSE}
 knitr::include_graphics("images/calculated_annotation_tool.jpg")
 ```
 
-The result will appear as additional row annotation, now you can use this annotation 
-to sort genes by:
 
 ```{r, out.width = "600px", echo = FALSE}
 knitr::include_graphics("images/calculated_annotation_loaded.jpg")
 ```
 
-To filter genes go to Tools/Filter, press "Add", choose "mean_expression" 
-as the field, then press to "Switch to top filter", and input the number 
-of genes you want to proceed with.
+Now this annotation can be used to filter genes.
+Open _Tools/Filter_ menu. Click _Add_ to add a new filter. Choose `mean_expression`
+as a _Field_ for filtering. Then press _Switch to top filter_ button
+and input the number of genes to keep. A good choice for a typical mamallian dataset
+is to keep around 10--12 thousand most expressed genes. Filter is applied automatically,
+so after closing the dialog with _Close_ button only the genes passing the filter 
+will be displayed.
 
-Then you can close tool, the added filter will be still active. 
 
 ```{r, out.width = "500px", echo = FALSE}
 knitr::include_graphics("images/filter_tool.jpg")
 ```
 
-Now in the same tab only filtered genes are displayed.
-As you can see on the image, Filter tool has left 12001 genes, not 12000. That happens because some genes have the equivalent mean_expression value.
+
+After filtering 12001 genes should be shown. The number is not equal to required 12000 genes due to
+some of the genes having the same *mean_expression* value.
 
 ```{r, out.width = "500px", echo = FALSE}
 knitr::include_graphics("images/filter_tool_result.jpg")
 ```
 
-It is more convenient to extract this genes to a new dataset, 
-so select all genes (click on any gene and press Ctrl+A) and 
-use Tools/New Heat Map (Ctrl+X).
+It is more convenient to extract these genes into a new tab. 
+For this, select all genes (click on any gene and press _Ctrl+A_) and 
+use _Tools/New Heat Map_ menu (or press _Ctrl+X_).
 
-Now you have the tab with fully prepared dataset for the further analysis. To easily distinguish it from other tabs, you can rename it by right click on the tab and choosing "Rename". We will call it "GSE53986_norm".
+Now you have the tab with fully prepared dataset for the further analysis. 
+To easily distinguish it from other tabs, you can rename it
+by right click on the tab and choosing _Rename_ option. Let us rename it to `GSE53986_norm`.
 
-It's also useful to save the current result to be able to return to it in some time. In order to save it use File/Save Dataset, input name and press OK.
+It is also useful to save the current result to be able to return to it later.
+In order to save it use _File/Save Dataset_ menu. Enter an appropriate file name (e.g. `GSE53986_norm`)
+and press `OK`. A file in text [GCT format](https://software.broadinstitute.org/cancer/software/gsea/wiki/index.php/Data_formats#GCT:_Gene_Cluster_Text_file_format_.28.2A.gct.29)
+will be downloaded.
 
-#### Explore the dataset
+### Explore the dataset
 
 **PCA Plot**
 
@@ -206,9 +257,9 @@ Result will open in a new browser tab.
 knitr::include_graphics("images/shiny_gam_result.jpg")
 ```
 
-## Additional settings 
+# Additional settings 
 
-### Recommended dependencies
+## Recommended dependencies
 
 That package needs GEOquery as a dependency. Although, we recommend to install 
 this package from it's forked version due to its better cache support:
@@ -216,7 +267,7 @@ this package from it's forked version due to its better cache support:
 devtools::install_github('assaron/GEOquery')
 ```
 
-### Advanced options for `servePhantasus`
+## Advanced options for `servePhantasus`
 
 You can customise serving of the application with specifying following parameters:
 
@@ -225,7 +276,7 @@ You can customise serving of the application with specifying following parameter
 - preloaded directory (by default NULL) -- directory with ExpressionSets encoded in rda-files, that can be quickly loaded to application by name;
 - openInBrowser (by default TRUE).
 
-### Loading dataset options
+## Loading dataset options
 
 There are three ways to upload a dataset into application:
 
@@ -247,7 +298,7 @@ knitr::include_graphics("images/open_file_tool.jpg")
 ```
 
 
-## Feedback
+# Feedback
 
 You can see known issues and place yours here:
 (https://github.com/ctlab/phantasus/issues)
