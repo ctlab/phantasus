@@ -4,7 +4,7 @@ Version: 0.99.23
 Authors@R: c(person("Daria", "Zenkova", email = "daria.zenkova.cs@gmail.com", role = c("aut", "cre")),
              person("Joshua", "Gould", email = "jgould@broadinstitute.org", role = "aut"),
              person("Alexey", "Sergushichev", email = "alsergbox@gmail.com", role = "aut"))
-Description: This is an extended version of the project Morpheus. 
+Description: This is an extended version of the project Morpheus.
     We are integrating widely used gene epression analysis methods from Bioconductor.
     You can use it in multiple ways, either locally, using servePhantasus-function from this package,
     or on web-sites, that are presented in URL section.
@@ -12,7 +12,7 @@ URL: https://artyomovlab.wustl.edu/phantasus,
         https://genome.ifmo.ru/phantasus
 BugReports: https://github.com/ctlab/phantasus/issues
 Depends: R (>= 3.4)
-biocViews: GeneExpression, GUI, Visualization, DataRepresentation, Transcriptomics, 
+biocViews: GeneExpression, GUI, Visualization, DataRepresentation, Transcriptomics,
             RNASeq, Microarray, Normalization, Clustering, DifferentialExpression,
             PrincipalComponent
 Imports: ggplot2, protolite, Biobase, GEOquery, Rook, htmltools,
@@ -21,6 +21,6 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.0.1
-Suggests: testthat, knitr, rmarkdown
+Suggests: testthat, BiocStyle, knitr, rmarkdown
 VignetteBuilder: knitr
 NeedsCompilation: no
