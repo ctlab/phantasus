@@ -31,7 +31,7 @@ expression data from Gene Expression Omnibus. It starts from loading dat, normal
 
 # Quick start
 
-## Start application
+## Starting application
 
 The simplest way to try Phantasus application is to go to web-site
 https://genome.ifmo.ru/phantasus or its mirror https://artyomovlab.wustl.edu/phantasus
@@ -57,9 +57,9 @@ To illustrate the usage of Phantasus let us consider public dataset from Gene Ex
 This dataset contains data from experiments, where bone marrow derived macrophages were
 treated with three stimuli: LPS, IFNg and combined LPS+INFg.
 
-### Prepare the dataset for analysis
+### Preparing the dataset for analysis
 
-**Open the dataset**
+**Opening the dataset**
 
 First, let us open this dataset. To do this, select "GEO Datasets" option
 in "Choose a file..." dropdown menu. There, a text field will appear
@@ -176,35 +176,42 @@ In order to save it use _File/Save Dataset_ menu. Enter an appropriate file name
 and press `OK`. A file in text [GCT format](https://software.broadinstitute.org/cancer/software/gsea/wiki/index.php/Data_formats#GCT:_Gene_Cluster_Text_file_format_.28.2A.gct.29)
 will be downloaded.
 
-### Explore the dataset
+### Exploring the dataset
 
 **PCA Plot**
 
-Use Tools/PCA Plot to analyse the data with 
-Principal Component Analysis method. 
+One of the ways to asses quality of the dataset is to use
+principal component analysis (PCA) method. This can be done
+using _Tools/PCA Plot_ menu.
 
 ```{r, out.width = "550px", echo = FALSE}
 knitr::include_graphics("images/pcaplot_tool_clean.jpg")
 ```
 
 You can customize color, size and label of points on the chart 
-by values in annotation. By analysing the plot you may find some outliers 
-that need to be analysed further to see if they can be eliminated.
+using values from annotation. Here we set color to come from
+_treatment_ annotation.
+
 
 ```{r, out.width = "550px", echo = FALSE}
 knitr::include_graphics("images/pcaplot_tool_finished.jpg")
 ```
 
+It can be seen, that in this dataset the first replicates in each condition 
+are outliers.
+
 **K-means clustering**
 
-Use Tools/k-means to cluster genes into predefined number of clusters.
+Another useful dataset exploration tool is k-means clustering.
+Use _Tools/k-means_ to cluster genes into 16 clusters.
 
 ```{r, out.width = "500px", echo = FALSE}
 knitr::include_graphics("images/kmeans_tool.jpg")
 ```
 
-Then you can sort by annotation "clusters" and view the whole dataset 
-by using View/Fit to window. Here you can also see outlier samples.
+Afterwards, rows can be sorted by _clusters_ column. By using 
+menu _View/Fit to window_ one can get a "bird's-eye view" on the dataset.
+Here also one can see outlying samples.
 
 ```{r, out.width = "600px", echo = FALSE}
 knitr::include_graphics("images/kmeans_result.jpg")
@@ -212,7 +219,8 @@ knitr::include_graphics("images/kmeans_result.jpg")
 
 **Hierarchical clustering**
 
-Use Tool/Hierarchical clustering to cluster samples. 
+_Tool/Hierarchical clustering_ menu can be used to cluster samples and highlight outliers (and 
+concordance of other samples) even further. 
 
 ```{r, out.width = "500px", echo = FALSE}
 knitr::include_graphics("images/hierarchical_tool.jpg")
@@ -220,38 +228,55 @@ knitr::include_graphics("images/hierarchical_tool.jpg")
 
 **Filtering outliers**
 
-Now, when outliers are confirmed and easily viewed with the dendrogram from the previous step, you can choose only good samples 
-and extract them into another heatmap (Ctrl+X).
+Now, when outliers are confirmed and easily viewed with the dendrogram 
+from the previous step, you can select only good samples 
+and extract them into another heatmap (_Tools/New Heat Map_ of pressing _Ctrl+X_).
 
 ```{r, out.width = "600px", echo = FALSE}
 knitr::include_graphics("images/good_samples.jpg")
 ```
 
-**Differential expression**
+### Differential gene expression
 
-Use Tools/Limma to compare samples. Choose "treatment" as a field, 
-"Untreated" and "LPS" as classes.
+**Apllying _limma_ tool**
+
+Differential gene expression analysis can be carried out
+with _Tool/limma_ menu. 
+Choose _treatment_ as a _Field_, with
+_Untreated_ and _LPS_ as classes. Clicking _OK_
+will call differential gene expression analysis method 
+with [*limma*](https://bioconductor.org/packages/limma) R package.
 
 ```{r, out.width = "500px", echo = FALSE}
 knitr::include_graphics("images/limma_tool.jpg")
 ```
 
-Now you can sort by t-statistic and see genes with the highest difference 
-between classes.
+The rows can be ordered by decreasing *t*-statistic column to see which genes are the most
+up-regulated upon LPS treatment. 
 
 ```{r, out.width = "600px", echo = FALSE}
 knitr::include_graphics("images/limma_results.jpg")
 ```
 
-**Shiny GAM analysis**
+The results of differential gene expression can be used, for example,
+for pathway enrichment analysis with online tools such as
+[MSigDB](software.broadinstitute.org/gsea/msigdb/compute_overlaps.jsp)
+or [Enrichr](http://amp.pharm.mssm.edu/Enrichr/).
 
-After differential expression you can submit current dataset to Shiny Gam analysis. Use Tools/Sumbit to Shiny GAM.
+
+**Metabolic network analysis**
+
+Another analysis that integrated into Phantasus is metabolic network analysis
+with [Shiny GAM](https://artyomovlab.wustl.edu/shiny/gam/).
+After differential expression you can submit 
+the table with limma results using _Tools/Sumbit to Shiny GAM_ menu.
 
 ```{r, out.width = "300px", echo = FALSE}
 knitr::include_graphics("images/shiny_gam.jpg")
 ```
 
-Result will open in a new browser tab.
+After successful submission, a new browser tab will be opened with Shiny GAM interface
+and the submitted data.
 
 ```{r, out.width = "600px", echo = FALSE}
 knitr::include_graphics("images/shiny_gam_result.jpg")
