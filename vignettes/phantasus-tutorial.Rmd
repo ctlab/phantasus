@@ -282,22 +282,14 @@ and the submitted data.
 knitr::include_graphics("images/shiny_gam_result.jpg")
 ```
 
-# Additional settings 
+# Advanced usage
 
-## Recommended dependencies
-
-That package needs GEOquery as a dependency. Although, we recommend to install 
-this package from it's forked version due to its better cache support:
-```{r,eval=FALSE}
-devtools::install_github('assaron/GEOquery')
-```
-
-## Advanced options for `servePhantasus`
+## Options for `servePhantasus`
 
 You can customise serving of the application with specifying following parameters:
 
 - host and port (by default '0.0.0.0' and 8000);
-- cache directory (by default tempdir()) -- directory where downloaded datasets will be saved and they can be reused in new sessions;
+- cache directory (by default tempdir()) -- directory where downloaded datasets will be saved and reused in later sessions;
 - preloaded directory (by default NULL) -- directory with ExpressionSets encoded in rda-files, that can be quickly loaded to application by name;
 - openInBrowser (by default TRUE).
 
@@ -305,25 +297,74 @@ You can customise serving of the application with specifying following parameter
 
 There are three ways to upload a dataset into application:
 
-- As a file from
+- As a file from:
     - computer;
     - URL;
-    - Dropbox;
-- By GEO identifier
+    - Dropbox.
+- By GEO identifier:
     - with "Open file" interface;
     - with adding parameter "geo" to the link (e.g. http://localhost:8000/?geo=GSE27112).
-- By specified name (provider must specify it for you)
+- By an identifier of a dataset saved on the server (see section \@ref(preloaded-datasets))
     - with "Saved on server datasets"
     - with adding parameter "preloaded" to the link (e.g. http://localhost:8000/?preloaded=fileName)
     
-You can either open the dataset from the main page, or if you are already looking at some datasets and don't want to lose your progress you can use File/Open (Ctrl+O) choose "Open dataset in new tab" and then choose the opening option.
+You can either open the dataset from the main page, or if you are already looking at some datasets and don't want to lose your progress you can use _File/Open_ (_Ctrl+O_) choose _Open dataset in new tab_ and then select the open option.
 
 ```{r, out.width="500px", echo = FALSE}
 knitr::include_graphics("images/open_file_tool.jpg")
 ```
 
+## Preloaded datasets 
+
+Preloaded datasets is a feature that allows quick access to frequently-accessed datasets
+or to share them inside the research group.
+
+To store dataset on a server, on nead to save list `ess` of `ExpressionSet` objects
+into an RData file with `.rda` extension into a directory as specified in `servePhantasus`.
+
+Let us preprocess and save `GSE14308` dataset:
+
+```{r, message=FALSE}
+library(GEOquery)
+library(limma)
+gse14308 <- getGEO("GSE14308", AnnotGPL = TRUE)[[1]]
+gse14308$condition <- sub("-.*$", "", gse14308$title)
+pData(gse14308) <- pData(gse14308)[, c("title", "geo_accession", "condition")]
+gse14308 <- gse14308[, order(gse14308$condition)]
+
+fData(gse14308) <- fData(gse14308)[, c("Gene ID", "Gene symbol")]
+exprs(gse14308) <- normalizeBetweenArrays(log2(exprs(gse14308)+1), method="quantile")
+
+ess <- list(GSE14308_norm=gse14308)
+
+preloadedDir <- tempdir()
+
+save(ess, file=file.path(preloadedDir, "GSE14308_norm.rda"))
+```
+
+Next we can serve Phantasus with set `preloadedDir` option:
+
+```{r, eval=F}
+servePhantasus(preloadedDir=preloadedDir)
+```
+
+There you can either put `GSE14308_norm` name when using open option _Saved on server datasets_ or just 
+open by specifying the name in URL: http://localhost:8000/?preloaded=GSE14308_norm.
+
+```{r, out.width="650px", echo = FALSE}
+knitr::include_graphics("images/gse14308_norm.png")
+```
+
+## Support for RNA-seq datasets
+
+Phantasus supports loading RNA-seq datasets from GEO using 
+gene expression counts as computed by [ARCHS4 project](http://amp.pharm.mssm.edu/archs4/index.html).
+To make it work one need to download gene level expression from 
+the [Download](http://amp.pharm.mssm.edu/archs4/download.html) section. The
+downloaded files `human_matrix.h5` and `mouse_matrix.h5` should be placed 
+into Phantasus cache folder.
 
 # Feedback
 
-You can see known issues and place yours here:
+You can see known issues and submit yours at GitHub:
 (https://github.com/ctlab/phantasus/issues)
