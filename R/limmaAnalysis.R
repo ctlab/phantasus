@@ -7,6 +7,9 @@ limmaAnalysisImpl <- function(es, rows, columns, fieldValues) {
 
     es.copy <- es.copy[, !is.na(es.copy$Comparison)]
 
+    # Getting rid of check NOTEs
+    Comparison=ComparisonA=ComparisonB=NULL
+
     es.design <- stats::model.matrix(~0 + Comparison, data = pData(es.copy))
 
     fit <- lmFit(es.copy, es.design)

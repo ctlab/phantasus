@@ -34,16 +34,16 @@ test_that("reparseCachedGSEs works", {
 })
 
 test_that("checkGPLs counts gpls correctly", {
-  options(phantasusMirrorPath = "https://genome.ifmo.ru/files/software/phantasus")
+    options(phantasusMirrorPath = "https://genome.ifmo.ru/files/software/phantasus")
 
-  expect_equal(fromJSON(checkGPLs("GSE14308")), c("GSE14308"))
-  expect_equal(fromJSON(checkGPLs("GDS4885")), c("GDS4885"))
-  expect_length(fromJSON(checkGPLs("GSE27112")), 2)
-  expect_length(fromJSON(checkGPLs("GSE10000")), 2)
-  expect_warning(checkGPLs("GSE101"))
-  expect_warning(checkGPLs("GSE201"))
+    expect_equal(fromJSON(checkGPLs("GSE14308")), c("GSE14308"))
+    expect_equal(fromJSON(checkGPLs("GDS4885")), c("GDS4885"))
+    expect_length(fromJSON(checkGPLs("GSE27112")), 2)
+    expect_length(fromJSON(checkGPLs("GSE10000")), 2)
+    expect_warning(checkGPLs("GSE101"))
+    expect_warning(checkGPLs("GSE201"))
 
-  options(phantasusMirrorPath = NULL)
+    options(phantasusMirrorPath = NULL)
 })
 
 test_that("checkGPLs counts existing files correctly without connection", {

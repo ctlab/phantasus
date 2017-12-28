@@ -35,7 +35,7 @@ loadGEO <- function(name, type = NA) {
 
     mirrorPath <- getOption('phantasusMirrorPath')
     if (is.null(mirrorPath)) {
-      mirrorPath <- "https://ftp.ncbi.nlm.nih.gov"
+        mirrorPath <- "https://ftp.ncbi.nlm.nih.gov"
     }
 
     ess <- getES(name, type, destdir = cacheDir, mirrorPath = mirrorPath)
