@@ -4,7 +4,7 @@ Version: 0.99.24
 Authors@R: c(person("Daria", "Zenkova", email = "daria.zenkova.cs@gmail.com", role = "aut"),
              person("Vladislav", "Kamenev", email = "kamenev@rain.ifmo.ru", role = "aut"),        
              person("Maxim", "Artyomov", email = "martyomov@wustl.edu", role = "aut"),
-             person("Alexey", "Sergushichev", email = "alsergbox@gmail.com", role = c("aut", "cre"))
+             person("Alexey", "Sergushichev", email = "alsergbox@gmail.com", role = c("aut", "cre")))
 Description: 
     Phantasus is a web-application for visual and interactive gene expression analysis.
     Phantasus is based on Morpheus – a web-based software for heatmap visualisation 
