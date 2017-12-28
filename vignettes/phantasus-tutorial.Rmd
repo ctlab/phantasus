@@ -1,9 +1,10 @@
 ---
-title: "Using phantasus application"
+title: "Using Phantasus application"
 author: 
 - "Daria Zenkova"
 - "Vladislav Kamenev"
-- "Alexey Sergushichev"
+- "Maxim N. Artyomov"
+- "Alexey A. Sergushichev"
 date: "`r Sys.Date()`"
 output:  
     BiocStyle::html_document:
@@ -380,3 +381,7 @@ into Phantasus cache folder.
 
 You can see known issues and submit yours at GitHub:
 (https://github.com/ctlab/phantasus/issues)
+
+# Acknowledgments
+
+The authors are very thankful to Joshua Gould for developing Morpheus.
