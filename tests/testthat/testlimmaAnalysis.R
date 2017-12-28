@@ -1,13 +1,13 @@
 context("Limma Analysis")
 
 test_that("limmaAnalysis finishes with result", {
-  load(file = "testdata/GSE27112-GPL6103.rda")
+  load(file = system.file("testdata/GSE27112-GPL6103.rda", package="phantasus"))
   expect_is(limmaAnalysis(es,
                           fieldValues = c(rep("A", 3), rep("B", 2))), "json")
 })
 
 test_that("limmaAnalysis works when there is only one phenotype attribute", {
-    load(file = "testdata/GSE27112-GPL6103.rda")
+    load(file = system.file("testdata/GSE27112-GPL6103.rda", package="phantasus"))
     pData(es) <- pData(es)[, "title", drop=F]
     expect_is(limmaAnalysis(es,
                             fieldValues = c(rep("A", 3), rep("B", 2))), "json")
@@ -15,7 +15,7 @@ test_that("limmaAnalysis works when there is only one phenotype attribute", {
 
 
 test_that("limmaAnalysisImpl works", {
-    load(file = "testdata/GSE27112-GPL6103.rda")
+    load(file = system.file("testdata/GSE27112-GPL6103.rda", package="phantasus"))
     de <- limmaAnalysisImpl(es, rows=seq_len(nrow(es)), columns=seq_len(ncol(es)),
                             fieldValues = c(rep("A", 2), rep("B", 2), NA))
 
@@ -23,7 +23,7 @@ test_that("limmaAnalysisImpl works", {
 })
 
 test_that("limmaAnalysisImpl works for subsamples", {
-    load(file = "testdata/GSE27112-GPL6103.rda")
+    load(file = system.file("testdata/GSE27112-GPL6103.rda", package="phantasus"))
     de1 <- limmaAnalysisImpl(es, rows=seq_len(nrow(es)), columns=seq_len(ncol(es)),
                             fieldValues = c(rep("A", 2), NA, rep("B", 2)))
 

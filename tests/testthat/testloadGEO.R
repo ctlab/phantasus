@@ -48,7 +48,7 @@ test_that("checkGPLs counts gpls correctly", {
 
 test_that("checkGPLs counts existing files correctly without connection", {
     options(phantasusMirrorPath = "https://notworkingdomain",
-            phantasusCacheDir = "testdata")
+            phantasusCacheDir = system.file("testdata", package="phantasus"))
 
     expect_message(checkGPLs("GSE27112"), regexp = "Problems establishing connection")
     expect_length(fromJSON(checkGPLs("GSE27112")), 1)
