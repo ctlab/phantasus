@@ -10,3 +10,4 @@ inst/doc
 inst/node_modules
 inst/www/phantasus.js/node_modules
 inst/www/phantasus.js/package-lock.json
+vignettes/phantasus-tutorial_cache
