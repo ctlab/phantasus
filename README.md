@@ -12,7 +12,6 @@ From shell do `git clone` with submodules:
 
 ```{shell}
 git clone --recursive https://github.com/ctlab/phantasus
-R -e 'devtools::install_github("assaron/GEOquery")' # Installing GEOquery with better caching support
 R -e 'devtools::install("phantasus")'
 ````
 
@@ -47,7 +46,6 @@ Install `devtools` and `bioclite`:
 ```
 R -e 'install.packages("devtools", repos="https://cloud.r-project.org")'
 R -e 'source("https://bioconductor.org/biocLite.R"); biocLite()'
-R -e 'devtools::install_github("assaron/GEOquery")'
 ```
 
 Install `phantasus`:
