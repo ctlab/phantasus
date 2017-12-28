@@ -15,6 +15,9 @@ write.gct(es, file, gzip = FALSE)
 
 \item{...}{additional options for read.csv}
 }
+\value{
+Result of the closing file (as in `close()` function`)
+}
 \description{
 Saves ExpressionSet to a GCT file (version 1.3).
 }

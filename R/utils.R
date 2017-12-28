@@ -136,7 +136,7 @@ read.tsv <- function(file, header = TRUE, sep = "\t", quote = "",
 #' @param file Path to output gct file
 #' @param gzip Whether to gzip apply gzip-compression for the output file#'
 #' @param ... additional options for read.csv
-#'
+#' @return Result of the closing file (as in `close()` function`)
 #' @examples
 #' es <- read.gct(system.file("extdata", "centers.gct", package = "phantasus"))
 #' out <- tempfile(fileext = ".gct.gz")
@@ -158,8 +158,8 @@ write.gct <- function(es, file, gzip=FALSE) {
 
     ann.col.table <- t(as.matrix(pData(es)))
     ann.col.table <- cbind(matrix(rep(NA, ann.row*ann.col), nrow=ann.col), ann.col.table)
-    write.table(ann.col.table, file=con, quote=F, sep="\t", row.names=T, col.names=F)
-    write.table(cbind(fData(es), exprs(es)), file=con, quote=F, sep="\t", row.names=T, col.names=F)
+    write.table(ann.col.table, file=con, quote=FALSE, sep="\t", row.names=TRUE, col.names=FALSE)
+    write.table(cbind(fData(es), exprs(es)), file=con, quote=FALSE, sep="\t", row.names=TRUE, col.names=FALSE)
     close(con)
 }
 

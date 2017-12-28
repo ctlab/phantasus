@@ -16,7 +16,8 @@ biocViews: GeneExpression, GUI, Visualization, DataRepresentation, Transcriptomi
             RNASeq, Microarray, Normalization, Clustering, DifferentialExpression,
             PrincipalComponent
 Imports: ggplot2, protolite, Biobase, GEOquery, Rook, htmltools,
-        httpuv, jsonlite, limma, opencpu, assertthat, methods, httr, rhdf5
+        httpuv, jsonlite, limma, opencpu, assertthat, methods, httr, rhdf5,
+        utils
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true

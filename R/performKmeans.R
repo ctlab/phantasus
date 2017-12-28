@@ -35,7 +35,7 @@ performKmeans <- function(es, columns = c(), rows = c(), k,
 
     naInd <- which(is.na(scaledExprs), arr.ind = TRUE)
     if (nrow(naInd) > 0) {
-        replaceValues <- apply(scaledExprs, 1, replacena, na.rm=T)
+        replaceValues <- apply(scaledExprs, 1, replacena, na.rm=TRUE)
         scaledExprs[naInd] <- replaceValues[naInd[,1]]
         rowsToCluster <- is.finite(replaceValues)
     } else {

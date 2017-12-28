@@ -10,7 +10,7 @@ shinyGAMAnalysis <- function(fData, fvarLabels) {
 
 
     deFile <- tempfile()
-    write.table(de, deFile, sep="\t", row.names=F, col.names=T)
+    write.table(de, deFile, sep="\t", row.names=FALSE, col.names=TRUE)
 
     # :ToDo: deal with bad certificates and remove ssl_verifypeer option
     r <- httr::POST(url="https://artyomovlab.wustl.edu/upload",
