@@ -14,22 +14,29 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-This tutorial describes phantasus -- a web-application for visual and interactive gene expression analysis.
+This tutorial describes Phantasus -- a web-application for visual and interactive gene expression analysis.
 Phantasus is based on 
 [Morpheus](https://software.broadinstitute.org/morpheus/) -- a web-based software
-for heatmap visualisation and analysis, integrated with an R environment via OpenCPU API. 
+for heatmap visualisation and analysis, which was integrated with an R environment via [OpenCPU API](https://www.opencpu.org/). 
 
 The main object in Phantasus is a gene expression matrix.
 It can either be uploaded from a local text or Excel file 
-or loaded from Gene Expression Omnibus by the series identifier.
+or loaded from Gene Expression Omnibus (GEO) database by the series identifier.
 Aside from basic visualization and filtering methods as implemented in Morpheus,
 R-based methods such as k-means clustering, principal component analysis, 
 differential expression analysis with limma package are supported.  
 
 In this vignette we show example usage of Phantasus for analysis of public gene
-expression data from Gene Expression Omnibus. It starts from loading dat, normalization and filtering outliers, to doing differential gene expression analysis and downstream analysis.
+expression data from GEO database.
+It starts from loading data, normalization and filtering outliers, 
+to doing differential gene expression analysis and downstream analysis.
 
-# Quick start
+# Example workfow for analysing gene expression changes in macrophage activation
+
+To illustrate the usage of Phantasus let us consider public dataset from Gene Expression Omnibus (GEO) database
+[GSE53986](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE53986). 
+This dataset contains data from experiments, where bone marrow derived macrophages were
+treated with three stimuli: LPS, IFNg and combined LPS+INFg.
 
 ## Starting application
 
@@ -44,42 +51,44 @@ library(phantasus)
 servePhantasus()
 ```
 
-This command runs the application with the default parameters, opens it in the default browser (from `browser` option) with address http://0.0.0.0:8000. Starting screen should appear:
+This command runs the application with the default parameters,
+opens it in the default browser (from `browser` option) 
+with address http://0.0.0.0:8000. 
+The starting screen should appear:
 
 ```{r, out.width = "750px", echo = FALSE}
 knitr::include_graphics("images/start_screen.jpg")
 ```
 
-## Example of workfow for analysing gene expression changes in macrophage activation
-
-To illustrate the usage of Phantasus let us consider public dataset from Gene Expression Omnibus (GEO) database
-[GSE53986](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE53986). 
-This dataset contains data from experiments, where bone marrow derived macrophages were
-treated with three stimuli: LPS, IFNg and combined LPS+INFg.
-
-### Preparing the dataset for analysis
+## Preparing the dataset for analysis
 
 **Opening the dataset**
 
-First, let us open this dataset. To do this, select "GEO Datasets" option
-in "Choose a file..." dropdown menu. There, a text field will appear
-where "GSE53986" should be entered. Hitting the "Load" button (or hitting "Enter" on the keyboard)
-will start the loading. After a few seconds, the corresponding heatmap should appear. 
+Let us open the dataset. To do this, select _GEO Datasets_ option
+in _Choose a file..._ dropdown menu. There, a text field will appear
+where `GSE53986` should be entered. Clicking the _Load_ button
+(or pressing _Enter_ on the keyboard) will start the loading.
+After a few seconds, the corresponding heatmap should appear. 
 
 ```{r, out.width = "750px", echo = FALSE}
 knitr::include_graphics("images/dataset_loaded.jpg")
 ```
 
-One the heatmap, the rows correspond to genes (or microarray probes).
-The rows are annotated with "Gene symbol" and "Gene ID" annotaions (as loaded from GEO database). 
-Columns correspond to samples. They are annotated with titles, GEO sample accession IDs and treatment field.
-The annotations such as treatment are loaded from user-submitted GEO annotations (they can be seen, for example, in "Charateristics" secion at https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM1304836).
+On the heatmap, the rows correspond to genes (or microarray probes).
+The rows are annotated with _Gene symbol_ and _Gene ID_ annotaions
+(as loaded from GEO database). 
+Columns correspond to samples. 
+They are annotated with titles, GEO sample accession identifiers and treatment field.
+The annotations, such as treatment, are loaded from user-submitted GEO annotations 
+(they can be seen, for example, in _Charateristics_
+secion at https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM1304836).
 We note that not for all of the datasets in GEO such proper annotations are supplied.
 
 **Adjusting expression values**
 
-By hovering at heatmap cell, gene expression values are displayed. Large values there
-inform that data is not log-scaled which is important for most types of gene expression analysis.
+By hovering at heatmap cell, gene expression values can be viewed.
+The large values there indicate that the data is not log-scaled,
+which is important for most types of gene expression analysis.
 
 
 ```{r, out.width = "500px", echo = FALSE}
@@ -87,8 +96,8 @@ knitr::include_graphics("images/huge_value.jpg")
 ```
 
 For the proper further analysis it is recommended to normalize the 
-matrix. To normalize values go to _Tools/Adjust_ menu and check "Log 2"" and "Quantile normalize"
-adjustments.
+matrix. To normalize values go to _Tools/Adjust_ menu and
+check _Log 2_ and _Quantile normalize_ adjustments.
 
 ```{r, out.width = "500px", echo = FALSE}
 knitr::include_graphics("images/adjust_tool.jpg")
@@ -102,19 +111,21 @@ to revert the operation by going back to one of the previous tabs.
 
 Since the dataset is obtained with a mircroarray, a single gene can be represented by
 several probes. This can be seen, for example, by sorting rows 
-by "Gene symbol" column (one click on column header), entering "Actb" in the search 
+by _Gene symbol_ column (one click on column header), entering `Actb` in the search 
 field and going to the first match by clicking down-arrow next to the field. 
-There are five probes corresponding to Actb gene in a considered array.
+There are five probes corresponding to Actb gene in the considered microarray.
 
 ```{r, out.width = "600px", echo = FALSE}
 knitr::include_graphics("images/duplicates.jpg")
 ```
 
-To simplify the analysis it is better to have on row per gene in the gene expression matrix. 
-One of the easiest ways is to chose only one row that has the maximal median level of expression
+To simplify the analysis it is better to have one row per gene 
+in the gene expression matrix. 
+One of the easiest ways is to chose only one row that has
+the maximal median level of expression
 across all samples. Such method removes the noise of lowly-expressed probes.
-Go to _Tools/Collapse_ and choose "Maximum Median Probe" as the method and 
-"Gene ID" as the collapse field. 
+Go to _Tools/Collapse_ and choose _Maximum Median Probe_ as the method and 
+_Gene ID_ as the collapse field. 
 
 ```{r, out.width = "500px", echo = FALSE}
 knitr::include_graphics("images/collapse_tool.jpg")
@@ -145,7 +156,7 @@ knitr::include_graphics("images/calculated_annotation_loaded.jpg")
 Now this annotation can be used to filter genes.
 Open _Tools/Filter_ menu. Click _Add_ to add a new filter. Choose `mean_expression`
 as a _Field_ for filtering. Then press _Switch to top filter_ button
-and input the number of genes to keep. A good choice for a typical mamallian dataset
+and input the number of genes to keep. A good choice for a typical mammalian dataset
 is to keep around 10--12 thousand most expressed genes. Filter is applied automatically,
 so after closing the dialog with _Close_ button only the genes passing the filter 
 will be displayed.
@@ -167,7 +178,7 @@ It is more convenient to extract these genes into a new tab.
 For this, select all genes (click on any gene and press _Ctrl+A_) and 
 use _Tools/New Heat Map_ menu (or press _Ctrl+X_).
 
-Now you have the tab with fully prepared dataset for the further analysis. 
+Now you have the tab with a fully prepared dataset for the further analysis. 
 To easily distinguish it from other tabs, you can rename it
 by right click on the tab and choosing _Rename_ option. Let us rename it to `GSE53986_norm`.
 
@@ -176,7 +187,7 @@ In order to save it use _File/Save Dataset_ menu. Enter an appropriate file name
 and press `OK`. A file in text [GCT format](https://software.broadinstitute.org/cancer/software/gsea/wiki/index.php/Data_formats#GCT:_Gene_Cluster_Text_file_format_.28.2A.gct.29)
 will be downloaded.
 
-### Exploring the dataset
+## Exploring the dataset
 
 **PCA Plot**
 
@@ -188,7 +199,7 @@ using _Tools/PCA Plot_ menu.
 knitr::include_graphics("images/pcaplot_tool_clean.jpg")
 ```
 
-You can customize color, size and label of points on the chart 
+You can customize color, size and labels of points on the chart 
 using values from annotation. Here we set color to come from
 _treatment_ annotation.
 
@@ -197,7 +208,7 @@ _treatment_ annotation.
 knitr::include_graphics("images/pcaplot_tool_finished.jpg")
 ```
 
-It can be seen, that in this dataset the first replicates in each condition 
+It can be seen that in this dataset the first replicates in each condition 
 are outliers.
 
 **K-means clustering**
@@ -211,7 +222,7 @@ knitr::include_graphics("images/kmeans_tool.jpg")
 
 Afterwards, rows can be sorted by _clusters_ column. By using 
 menu _View/Fit to window_ one can get a "bird's-eye view" on the dataset.
-Here also one can see outlying samples.
+Here also one can clearly see outlying samples.
 
 ```{r, out.width = "600px", echo = FALSE}
 knitr::include_graphics("images/kmeans_result.jpg")
@@ -219,7 +230,8 @@ knitr::include_graphics("images/kmeans_result.jpg")
 
 **Hierarchical clustering**
 
-_Tool/Hierarchical clustering_ menu can be used to cluster samples and highlight outliers (and 
+_Tool/Hierarchical clustering_ menu can be used to cluster 
+samples and highlight outliers (and 
 concordance of other samples) even further. 
 
 ```{r, out.width = "500px", echo = FALSE}
@@ -229,14 +241,14 @@ knitr::include_graphics("images/hierarchical_tool.jpg")
 **Filtering outliers**
 
 Now, when outliers are confirmed and easily viewed with the dendrogram 
-from the previous step, you can select only good samples 
+from the previous step, you can select the good samples 
 and extract them into another heatmap (_Tools/New Heat Map_ of pressing _Ctrl+X_).
 
 ```{r, out.width = "600px", echo = FALSE}
 knitr::include_graphics("images/good_samples.jpg")
 ```
 
-### Differential gene expression
+## Differential gene expression
 
 **Apllying _limma_ tool**
 
@@ -266,16 +278,16 @@ or [Enrichr](http://amp.pharm.mssm.edu/Enrichr/).
 
 **Metabolic network analysis**
 
-Another analysis that integrated into Phantasus is metabolic network analysis
+Another analysis integrated into Phantasus is metabolic network analysis
 with [Shiny GAM](https://artyomovlab.wustl.edu/shiny/gam/).
 After differential expression you can submit 
-the table with limma results using _Tools/Sumbit to Shiny GAM_ menu.
+the table with _limma_ results using _Tools/Sumbit to Shiny GAM_ menu.
 
 ```{r, out.width = "300px", echo = FALSE}
 knitr::include_graphics("images/shiny_gam.jpg")
 ```
 
-After successful submission, a new browser tab will be opened with Shiny GAM interface
+After successful submission, a new browser tab will be opened with _Shiny GAM_ interface
 and the submitted data.
 
 ```{r, out.width = "600px", echo = FALSE}
@@ -286,12 +298,12 @@ knitr::include_graphics("images/shiny_gam_result.jpg")
 
 ## Options for `servePhantasus`
 
-You can customise serving of the application with specifying following parameters:
+You can customise serving of the application by specifying following parameters:
 
-- host and port (by default '0.0.0.0' and 8000);
-- cache directory (by default tempdir()) -- directory where downloaded datasets will be saved and reused in later sessions;
-- preloaded directory (by default NULL) -- directory with ExpressionSets encoded in rda-files, that can be quickly loaded to application by name;
-- openInBrowser (by default TRUE).
+- `host` and `port` (by default: `"0.0.0.0"` and `8000`);
+- `cacheDir` (by default: `tempdir()`) -- directory where downloaded datasets will be saved and reused in later sessions;
+- `preloadedDir` (by default: `NULL`) -- directory with `ExpressionSet` objects encoded in rda-files, that can be quickly loaded to application by name (see section \@ref(preloaded-datasets));
+- `openInBrowser` (by default `TRUE`).
 
 ## Loading dataset options
 
@@ -302,13 +314,13 @@ There are three ways to upload a dataset into application:
     - URL;
     - Dropbox.
 - By GEO identifier:
-    - with "Open file" interface;
-    - with adding parameter "geo" to the link (e.g. http://localhost:8000/?geo=GSE27112).
+    - with _Open file_ interface;
+    - with adding parameter `geo` to the link (_e.g._, http://localhost:8000/?geo=GSE27112).
 - By an identifier of a dataset saved on the server (see section \@ref(preloaded-datasets))
-    - with "Saved on server datasets"
-    - with adding parameter "preloaded" to the link (e.g. http://localhost:8000/?preloaded=fileName)
+    - with _Saved on server datasets_
+    - with adding parameter `preloaded` to the link (_e.g._, http://localhost:8000/?preloaded=fileName)
     
-You can either open the dataset from the main page, or if you are already looking at some datasets and don't want to lose your progress you can use _File/Open_ (_Ctrl+O_) choose _Open dataset in new tab_ and then select the open option.
+You can either open the dataset from the main page, or if you are already looking at some datasets and don't want to lose your progress you can use _File/Open_ (_Ctrl+O_), choose _Open dataset in new tab_ and then select the open option.
 
 ```{r, out.width="500px", echo = FALSE}
 knitr::include_graphics("images/open_file_tool.jpg")
@@ -324,7 +336,7 @@ into an RData file with `.rda` extension into a directory as specified in `serve
 
 Let us preprocess and save `GSE14308` dataset:
 
-```{r, message=FALSE}
+```{r, message=FALSE, cache=TRUE}
 library(GEOquery)
 library(limma)
 gse14308 <- getGEO("GSE14308", AnnotGPL = TRUE)[[1]]
