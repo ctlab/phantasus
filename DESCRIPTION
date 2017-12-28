@@ -1,15 +1,19 @@
 Package: phantasus
-Title: Extended project Morpheus with Bioconductor methods
+Title: Visual and interactive gene expression analysis
 Version: 0.99.23
-Authors@R: c(person("Daria", "Zenkova", email = "daria.zenkova.cs@gmail.com", role = c("aut", "cre")),
-             person("Joshua", "Gould", email = "jgould@broadinstitute.org", role = "aut"),
-             person("Alexey", "Sergushichev", email = "alsergbox@gmail.com", role = "aut"))
-Description: This is an extended version of the project Morpheus.
-    We are integrating widely used gene epression analysis methods from Bioconductor.
-    You can use it in multiple ways, either locally, using servePhantasus-function from this package,
-    or on web-sites, that are presented in URL section.
-URL: https://artyomovlab.wustl.edu/phantasus,
-        https://genome.ifmo.ru/phantasus
+Authors@R: c(person("Daria", "Zenkova", email = "daria.zenkova.cs@gmail.com", role = "aut"),
+             person("Vladislav", "Kamenev", email = "kamenev@rain.ifmo.ru", role = "aut"),        
+             person("Maxim", "Artyomov", email = "martyomov@wustl.edu", role = "aut"),
+             person("Alexey", "Sergushichev", email = "alsergbox@gmail.com", role = c("aut", "cre"))
+Description: 
+    Phantasus is a web-application for visual and interactive gene expression analysis.
+    Phantasus is based on Morpheus – a web-based software for heatmap visualisation 
+    and analysis, which was integrated with an R environment via OpenCPU API.
+    Aside from basic visualization and filtering methods, R-based methods such 
+    as k-means clustering, principal component analysis or differential expression analysis
+    with limma package are supported.
+URL: https://genome.ifmo.ru/phantasus,
+     https://artyomovlab.wustl.edu/phantasus
 BugReports: https://github.com/ctlab/phantasus/issues
 Depends: R (>= 3.4)
 biocViews: GeneExpression, GUI, Visualization, DataRepresentation, Transcriptomics,
