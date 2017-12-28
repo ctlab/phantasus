@@ -6,6 +6,11 @@ getIndicesVector <- function(current, neededLength) {
 }
 
 #' Subsets es, if rows or columns are not specified, all are retained
+#' @param es ExpressionSet object.#'
+#' @param columns List of specified columns' indices (optional), indices start from 0#'
+#' @param rows List of specified rows' indices (optional), indices start from 0
+#' @return `es`'s subset
+#'
 subsetES <- function(es, columns = c(), rows=c()) {
     rows <- getIndicesVector(rows, nrow(exprs(es)))
     columns <- getIndicesVector(columns, ncol(exprs(es)))
@@ -53,7 +58,7 @@ filternaRows <- function(data, currentRows) {
     rows
 }
 
-#' Reads ExpressionSet from GCT file.
+#' Reads ExpressionSet from a GCT file.
 #'
 #' Only versions 1.2 and 1.3 are supported.
 #'
@@ -64,9 +69,8 @@ filternaRows <- function(data, currentRows) {
 #' @return ExpressionSet object
 #'
 #' @examples
-#' \dontrun{
 #' read.gct(system.file("extdata", "centers.gct", package = "phantasus"))
-#' }
+#' @export
 read.gct <- function(gct, ...) {
     meta <- readLines(gct, n = 3)
     version <- meta[1]
@@ -125,6 +129,40 @@ read.tsv <- function(file, header = TRUE, sep = "\t", quote = "",
     }
     res
 }
+
+#' Saves ExpressionSet to a GCT file (version 1.3).
+#'
+#' @param es ExpresionSet obeject to save
+#' @param file Path to output gct file
+#' @param gzip Whether to gzip apply gzip-compression for the output file#'
+#' @param ... additional options for read.csv
+#'
+#' @examples
+#' es <- read.gct(system.file("extdata", "centers.gct", package = "phantasus"))
+#' out <- tempfile(fileext = ".gct.gz")
+#' write.gct(es, out, gzip=TRUE)
+#' @import Biobase
+#' @export
+write.gct <- function(es, file, gzip=FALSE) {
+    if (gzip) {
+        con <- gzfile(file)
+    } else {
+        con <- file(file)
+    }
+    open(con, open="w")
+    writeLines("#1.3", con)
+    ann.col <- ncol(pData(es))
+    ann.row <- ncol(fData(es))
+    writeLines(sprintf("%s\t%s\t%s\t%s", nrow(es), ncol(es), ann.row, ann.col), con)
+    writeLines(paste0(c("ID", colnames(fData(es)), colnames(es)), collapse="\t"), con)
+
+    ann.col.table <- t(as.matrix(pData(es)))
+    ann.col.table <- cbind(matrix(rep(NA, ann.row*ann.col), nrow=ann.col), ann.col.table)
+    write.table(ann.col.table, file=con, quote=F, sep="\t", row.names=T, col.names=F)
+    write.table(cbind(fData(es), exprs(es)), file=con, quote=F, sep="\t", row.names=T, col.names=F)
+    close(con)
+}
+
 
 makeAnnotated <- function(data) {
     meta <- data.frame(labelDescription = colnames(data))

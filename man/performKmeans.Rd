@@ -9,9 +9,9 @@ performKmeans(es, columns = c(), rows = c(), k, replacena = "mean")
 \arguments{
 \item{es}{ExpressionSet object.}
 
-\item{columns}{List of specified columns' indices (optional).}
+\item{columns}{List of specified columns' indices (optional), indices start from 0}
 
-\item{rows}{List of specified rows' indices (optional).}
+\item{rows}{List of specified rows' indices (optional), indices start from 0}
 
 \item{k}{Expected number of clusters.}
 
