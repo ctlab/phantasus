@@ -136,7 +136,7 @@ getGDS <- function(name, destdir = tempdir(),
                         featureData = fData))
 }
 
-loadFromARCHS4 <- function(es, archs4_gpls) {
+loadFromARCHS4 <- function(es, archs4_gpls, destdir) {
     if (!es@annotation %in% archs4_gpls$gpl) {
         return(es)
     }
@@ -146,7 +146,7 @@ loadFromARCHS4 <- function(es, archs4_gpls) {
         warning(paste0(
             "Found GPL supported by ARCHS4 but not corresponding file available at ",
             destfile))
-        next
+        return(es)
     }
 
     samples <- h5read(destfile, "meta/Sample_geo_accession")
@@ -329,7 +329,7 @@ getGSE <- function(name, destdir = tempdir(),
         data.frame(gpl=c("GPL11154", "GPL16791", "GPL10999", "GPL9115", "GPL18460"),
                    file="human_matrix.h5"))
 
-    ess <- lapply(ess, loadFromARCHS4, archs4_gpls=archs4_gpls)
+    ess <- lapply(ess, loadFromARCHS4, archs4_gpls=archs4_gpls, destdir=destdir)
 
     ess <- lapply(ess, filterFeatureAnnotations)
 

@@ -57,3 +57,9 @@ test_that("checkGPLs counts existing files correctly without connection", {
     options(phantasusCacheDir = NULL,
             phantasusMirrorPath = NULL)
 })
+
+test_that("getGSE works with ARCHS4", {
+    ess <- getGSE("GSE99709", destdir=system.file("testdata", package="phantasus"))
+    expect_gt(nrow(ess[[1]]), 0)
+    expect_gt(ncol(ess[[1]]), 0)
+})
