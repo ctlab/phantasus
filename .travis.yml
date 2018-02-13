@@ -27,7 +27,7 @@ r_packages:
 
 os:
   - linux
-#  - osx
+  - osx
 
 bioc_required: true
 bioc_packages:
@@ -45,12 +45,13 @@ after_script:
   - FILE=$(ls -1t *.tar.gz | head -n 1)
   - Rscript -e "library(BiocCheck); BiocCheck(\"${FILE}\")"
   - bash inst/test_js.sh
-  - if [ "$TRAVIS_BRANCH" == "master" ]; then
+  - if [ "$TRAVIS_OS_NAME" == "linux"] && [ "$TRAVIS_BRANCH" == "master" ]; then
     docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
     docker build -t dzenkova/phantasus inst/docker/latest/ ;
+    docker tag dzenkova/phantasus dzenkova/phantasu:travis-$TRAVIS_BUILD_NUMBER
     docker push dzenkova/phantasus;
     fi
-  - if [ "$TRAVIS_BRANCH" == "develop" ]; then
+  - if [ "$TRAVIS_OS_NAME" == "linux"] && [ "$TRAVIS_BRANCH" == "develop" ]; then
     docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
     docker build -t dzenkova/phantasus:develop inst/docker/develop/ ;
     docker push dzenkova/phantasus:develop;
