@@ -22,6 +22,8 @@
 #' @import opencpu
 #' @import httpuv
 #' @import Rook
+#' @importFrom utils getFromNamespace
+#' @importFrom parallel makeCluster stopCluster
 #' @export
 #'
 #' @examples
@@ -41,9 +43,85 @@ servePhantasus <- function(host = '0.0.0.0',
                                     else
                                         normalizePath(preloadedDir))
 
+    if (!opencpu:::win_or_mac()) {
+        run_worker <- NULL
+    } else {
+        #### this fragment is adopted from opencpu::ocpu_start_server function
+        #### https://github.com/opencpu/opencpu/blob/master/R/start.R
+        #### :ToDo: remove code duplication
+
+        # set root home for workers
+        Sys.setenv("OCPU_MASTER_HOME" = opencpu:::tmp_root())
+        on.exit(Sys.unsetenv("OCPU_MASTER_HOME"))
+
+        # import
+        sendCall <- getFromNamespace('sendCall', 'parallel')
+        recvResult <- getFromNamespace('recvResult', 'parallel')
+        preload <- "opencpu"
+
+        # worker pool
+        pool <- list()
+
+        # add new workers if needed
+        add_workers <- function(n = 1){
+            if(length(pool) < 2){
+                cl <- parallel::makeCluster(n)
+                lapply(cl, sendCall, fun = function(){
+                    lapply(preload, getNamespace)
+                    Sys.getpid()
+                }, args = list())
+                pool <<- c(pool, cl)
+            }
+        }
+
+        # get a worker
+        get_worker <- function(){
+            if(!length(pool))
+                add_workers(1)
+            node <- pool[[1]]
+            pool <<- pool[-1]
+            pid <- recvResult(node)
+            if(inherits(pid, "try-error"))
+                warning("Worker preload error: ", pid, call. = FALSE, immediate. = TRUE)
+            node$pid <- pid
+            structure(list(node), class = c("SOCKcluster", "cluster"))
+        }
+
+        # main interface
+        run_worker <- function(fun, ..., timeout = NULL){
+            res <- tryCatch({
+                if(length(timeout)){
+                    setTimeLimit(elapsed = timeout)
+                    on.exit(setTimeLimit(cpu = Inf, elapsed = Inf), add = TRUE)
+                }
+                cl <- get_worker()
+                on.exit(kill_workers(cl), add = TRUE)
+                node <- cl[[1]]
+                sendCall(node, fun, list(...))
+                recvResult(node)
+            }, error = function(e){
+                if(grepl("elapsed time limit", e$message)){
+                    tools::pskill(node$pid)
+                    stop(sprintf("Timeout reached: %ds (see rlimit.post in user.conf)", timeout))
+                }
+                stop(e)
+            })
+            if(inherits(res, "try-error"))
+                stop(res)
+            res
+        }
+
+        kill_workers <- function(cl){
+            parallel::stopCluster(cl) # does not work when child is busy
+        }
+
+        add_workers(2)
+        on.exit(kill_workers(structure(pool, class = c("SOCKcluster", "cluster"))), add = TRUE)
+    }
+
 
     utils::capture.output(type = "output", {
-        app <- Rook::URLMap$new(`/ocpu` = opencpu:::rookhandler("/ocpu"),
+        app <- Rook::URLMap$new(`/ocpu` = opencpu:::rookhandler("/ocpu", worker_cb=run_worker),
                                 `/?` = Rook::Static$new(urls = c("/"),
                                                         root = staticRoot))
 

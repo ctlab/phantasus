@@ -49,7 +49,7 @@ after_script:
   - if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$TRAVIS_BRANCH" == "master" ]; then
     docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
     docker build -t dzenkova/phantasus inst/docker/latest/ ;
-    docker tag dzenkova/phantasus dzenkova/phantasu:travis-$TRAVIS_BUILD_NUMBER
+    docker tag dzenkova/phantasus dzenkova/phantasu:travis-$TRAVIS_BUILD_NUMBER ;
     docker push dzenkova/phantasus;
     fi
   - if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$TRAVIS_BRANCH" == "develop" ]; then
