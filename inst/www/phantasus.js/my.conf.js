@@ -24,8 +24,10 @@ module.exports = function(config) {
       {pattern: './js/jquery-2.2.4.min.js', watched: false},
       {pattern: './jasmine/test_files/**', watched: false, included: false, served: true, nocache: false},
       {pattern: './*.proto', watched: false, included: false, served: true, nocache: false},
-      './js/phantasus-external-latest.min.js',
-      './js/phantasus-latest.min.js',
+      './js/phantasus-external-other.min.js',
+      './js/phantasus-external-pdfkit-xlsx.min.js',
+      './js/phantasus-external-plotly-echarts.min.js',
+      './js/phantasus.js',
       './jasmine/matchers/*.js',
       './jasmine/run_ocpu.js',
       './jasmine/spec/*[tT]est.js'

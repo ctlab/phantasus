@@ -27,7 +27,7 @@
     "phantasus"
   ],
   "scripts": {
-    "test:js": "grunt concat:phantasus concat:extJs concat:extJsAll uglify",
+    "test:js": "grunt dist",
     "test:karma": "./node_modules/.bin/karma start --single-run",
     "test": "npm run test:js && npm run test:karma"
   },
