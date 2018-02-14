@@ -197,7 +197,7 @@ principal component analysis (PCA) method. This can be done
 using _Tools/PCA Plot_ menu.
 
 ```{r, out.width = "550px", echo = FALSE}
-knitr::include_graphics("images/pcaplot_tool_clean.jpg")
+knitr::include_graphics("images/pcaplot_tool_clean.png")
 ```
 
 You can customize color, size and labels of points on the chart 
@@ -206,7 +206,7 @@ _treatment_ annotation.
 
 
 ```{r, out.width = "550px", echo = FALSE}
-knitr::include_graphics("images/pcaplot_tool_finished.jpg")
+knitr::include_graphics("images/pcaplot_tool_finished.png")
 ```
 
 It can be seen that in this dataset the first replicates in each condition 
@@ -268,16 +268,35 @@ The rows can be ordered by decreasing *t*-statistic column to see which genes ar
 up-regulated upon LPS treatment. 
 
 ```{r, out.width = "600px", echo = FALSE}
-knitr::include_graphics("images/limma_results.jpg")
+knitr::include_graphics("images/limma_results.png")
 ```
+
+**Pahway analysis with Enrichr**
 
 The results of differential gene expression can be used, for example,
 for pathway enrichment analysis with online tools such as
 [MSigDB](software.broadinstitute.org/gsea/msigdb/compute_overlaps.jsp)
 or [Enrichr](http://amp.pharm.mssm.edu/Enrichr/).
 
+For ease of use Enrichr is integrated into Phantasus. 
+Open _Tools/Submit to Enrichr_ menu and select about top 200 genes up-regulated on LPS.
+Also select _Gene symbol_ as the column with gene symbols.
 
-**Metabolic network analysis**
+```{r, out.width = "600px", echo = FALSE}
+knitr::include_graphics("images/enrichr.png")
+```
+
+
+Clicking _OK_ will result in a new browser tab with Enrichr being opened with results
+of pathway enrichment analysis.
+
+```{r, out.width = "600px", echo = FALSE}
+knitr::include_graphics("images/enrichr_result.png")
+```
+
+
+
+**Metabolic network analysis with Shiny GAM**
 
 Another analysis integrated into Phantasus is metabolic network analysis
 with [Shiny GAM](https://artyomovlab.wustl.edu/shiny/gam/).
