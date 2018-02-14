@@ -49,15 +49,14 @@ after_script:
 
 after_success:
   - Rscript -e 'covr::codecov()'
-  - if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$TRAVIS_BRANCH" == "master" ]; then
+  - if [ "$TRAVIS_R_VERSION_STRING" = 'bioc-release' ] && [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$TRAVIS_BRANCH" == "master" ]; then
     docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
     docker build -t dzenkova/phantasus inst/docker/latest/ ;
     DOCKER_TAG="travis-$TRAVIS_BUILD_NUMBER" ;
-    docker tag dzenkova/phantasus dzenkova/phantasu:$DOCKER_TAG ;
-    docker push dzenkova/phantasus:latest;
-    docker push dzenkova/phantasus:$DOCKER_TAG;
+    docker tag dzenkova/phantasus dzenkova/phantasus:$DOCKER_TAG ;
+    docker push dzenkova/phantasus;
     fi
-  - if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$TRAVIS_BRANCH" == "develop" ]; then
+  - if [ "$TRAVIS_R_VERSION_STRING" = 'bioc-devel' ] && [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$TRAVIS_BRANCH" == "develop" ]; then
     docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
     docker build -t dzenkova/phantasus:develop inst/docker/develop/ ;
     docker push dzenkova/phantasus:develop;
