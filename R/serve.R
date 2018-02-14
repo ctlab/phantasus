@@ -37,11 +37,14 @@ servePhantasus <- function(host = '0.0.0.0',
                            cacheDir = tempdir(),
                            preloadedDir = NULL,
                            openInBrowser = TRUE) {
-    options(phantasusCacheDir = normalizePath(cacheDir),
-            phantasusPreloadedDir = if (is.null(preloadedDir))
-                                        NULL
-                                    else
-                                        normalizePath(preloadedDir))
+    cacheDir <- normalizePath(cacheDir)
+    preloadedDir <- if (is.null(preloadedDir))
+        NULL
+    else
+        normalizePath(preloadedDir)
+
+    options(phantasusCacheDir = cacheDir,
+            phantasusPreloadedDir = preloadedDir)
 
     if (!opencpu:::win_or_mac()) {
         run_worker <- NULL
@@ -68,6 +71,8 @@ servePhantasus <- function(host = '0.0.0.0',
                 cl <- parallel::makeCluster(n)
                 lapply(cl, sendCall, fun = function(){
                     lapply(preload, getNamespace)
+                    options(phantasusCacheDir = cacheDir,
+                            phantasusPreloadedDir = preloadedDir)
                     Sys.getpid()
                 }, args = list())
                 pool <<- c(pool, cl)
