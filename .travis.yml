@@ -46,6 +46,9 @@ script:
 after_script:
   - FILE=$(ls -1t *.tar.gz | head -n 1)
   - Rscript -e "library(BiocCheck); BiocCheck(\"${FILE}\")"
+
+after_success:
+  - Rscript -e 'covr::codecov()'
   - if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$TRAVIS_BRANCH" == "master" ]; then
     docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
     docker build -t dzenkova/phantasus inst/docker/latest/ ;
@@ -57,7 +60,4 @@ after_script:
     docker build -t dzenkova/phantasus:develop inst/docker/develop/ ;
     docker push dzenkova/phantasus:develop;
     fi
-
-after_success:
-  - Rscript -e 'covr::codecov()'
 
