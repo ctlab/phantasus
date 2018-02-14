@@ -20102,7 +20102,7 @@ phantasus.ActionManager = function () {
     cb: function (options) {
       phantasus.FormBuilder.showInModal({
         title: 'Contact',
-        html: 'Please email us at daria.zenkova.cs@gmail.com',
+        html: 'Please email us at alsergbox@gmail.com',
         focus: options.heatMap.getFocusEl()
       });
     }
@@ -33993,7 +33993,6 @@ phantasus.HelpMenu = function () {
 
   html.push('<li><a data-name="tutorial" href="#">Tutorial</a></li>');
   html.push('<li><a data-name="source" href="#">Source Code</a></li>');
-  html.push('<li><a data-name="about" href="#">About</a></li>');
 
   html.push('</ul>');
   html.push('</div>');
@@ -34001,7 +34000,7 @@ phantasus.HelpMenu = function () {
   this.$el.find('[data-name=contact]').on('click', function (e) {
     phantasus.FormBuilder.showInModal({
       title: 'Contact',
-      html: 'Please email us at daria.zenkova.cs@gmail.com',
+      html: 'Please email us at alsergbox@gmail.com',
       focus: document.activeElement
     });
     e.preventDefault();

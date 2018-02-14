@@ -7,7 +7,7 @@ cd inst-raw/phantasus.js
 
 grunt dist
 
-cp ./index.html ./about.html ../../inst/www/phantasus.js/
+cp ./index.html ../../inst/www/phantasus.js/
 cp ./js/phantasus.js ../../inst/www/phantasus.js/js/
 cp ./js/phantasus-external-*.min.js ../../inst/www/phantasus.js/js/
 cp -r ./jasmine ../../inst/www/phantasus.js/
