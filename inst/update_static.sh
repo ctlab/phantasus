@@ -1,7 +1,7 @@
 #!/bin/bash
 
-R -e "devtools::build_vignettes()"
-cp inst/doc/phantasus-tutorial.html inst/www/phantasus.js/
+R -e "rmarkdown::render('./vignettes/phantasus-tutorial.Rmd')"
+cp ./vignettes/phantasus-tutorial.html inst/www/phantasus.js/
 
 cd inst-raw/phantasus.js
 
