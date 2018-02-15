@@ -32,7 +32,7 @@ RUN apt-get -y update && apt-get -y install \
     protobuf-compiler \
     r-cran-xml
 
-RUN git clone --recursive https://github.com/ctlab/phantasus /root/phantasus
+RUN git clone -b r-3.4 --recursive https://github.com/ctlab/phantasus /root/phantasus
 
 RUN R -e 'source("https://bioconductor.org/biocLite.R")'
 RUN R -e 'install.packages("devtools", repo = "http://cran.gis-lab.info"); library(devtools); install("/root/phantasus", build_vignettes=T)'
