@@ -8,12 +8,19 @@ This project contains several tools for gene expression analysis with help of R/
 
 The package requires installing `devtools` package and Bioconductor library set up.
 
-From shell do `git clone` with submodules:
+```{r}
+devtools::install_github("ctlab/phantasus")
+```
 
-```{shell}
-git clone --recursive https://github.com/ctlab/phantasus
-R -e 'devtools::install("phantasus")'
-````
+A warning could appear that the repository contain submodules. This warning 
+can be safely ignored.
+
+
+To install `phantasus` on R 3.4, use r-3.4 branch:
+
+```{r}
+devtools::install_github("ctlab/phantasus", ref="r-3.4")
+```
 
 ## Running
 
@@ -50,8 +57,7 @@ R -e 'source("https://bioconductor.org/biocLite.R"); biocLite()'
 
 Install `phantasus`:
 ```
-git clone --recursive https://github.com/ctlab/phantasus
-R -e 'devtools::install("phantasus")'
+R -e 'devtools::install_github("ctlab/phantasus", ref="r-3.4")'
 ```
 
 Run `phantasus` at 80 port in screen:
