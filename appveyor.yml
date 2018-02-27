@@ -16,7 +16,7 @@ cache:
 # Adapt as necessary starting from here
 
 environment:
-    matirx:
+    matrix:
         - R_VERSION: release
         - R_VERSION: devel
 
