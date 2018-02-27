@@ -34,7 +34,7 @@ describe('geo_reader_test', function () {
       })
     });
 
-    xit('loades dataset GSE53986 correctly', function () {
+    it('loades dataset GSE53986 correctly', function () {
       expect(result).not.toBeUndefined();
       expect(result.length).toEqual(1);
 

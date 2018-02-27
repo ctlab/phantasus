@@ -1,11 +1,12 @@
 #!/bin/bash
 R -e "devtools::install('.')"
 
+mkdir -p inst/www/phantasus.js/jasmine/cache
+cp "./inst/testdata/GSE27112-GPL6103.rda" inst/www/phantasus.js/jasmine/cache
 cd inst/www/phantasus.js/
 npm install karma --save-dev
 npm install
 
-mkdir "jasmine/cache"
 R -e "phantasus::getES('GSE53986', destdir='jasmine/cache')"
 
 R -e "phantasus::servePhantasus('0.0.0.0', 8000, cacheDir = 'jasmine/cache', preloadedDir = 'jasmine/cache', openInBrowser=FALSE)" |& tee server.log &
