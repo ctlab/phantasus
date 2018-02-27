@@ -1,6 +1,7 @@
 language: r
 r:
   - bioc-devel
+  - bioc-release
 # warnings_are_errors: true
 sudo: false
 cache: packages
@@ -23,16 +24,25 @@ r_packages:
   - testthat
   - knitr
   - rmarkdown
+  - httpuv
+  - opencpu
+  - protolite
+  - Rook
 
 os:
-  - linux
+    #- linux
   - osx
 
 bioc_required: true
 bioc_packages:
   - BiocCheck
+  - GEOquery
+  - limma
+  - rhdf5
+  - BiocStyle
 
 before_install:
+  - if [ ${TRAVIS_OS_NAME} = 'osx' ]; then brew install protobuf; fi
   - R -e 'install.packages("devtools")'
   - R -e 'source("https://bioconductor.org/biocLite.R"); biocLite()'
 
