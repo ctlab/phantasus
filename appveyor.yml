@@ -23,6 +23,7 @@ environment:
         - R_VERSION: devel
 
 build_script:
+  - travis-tool.sh install tidyselect
   - travis-tool.sh install_deps
   - travis-tool.sh install_bioc_deps
 
