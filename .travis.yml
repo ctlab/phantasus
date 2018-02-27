@@ -24,6 +24,10 @@ r_packages:
   - testthat
   - knitr
   - rmarkdown
+  - httpuv
+  - opencpu
+  - protolite
+  - Rook
 
 os:
     #- linux
@@ -32,11 +36,15 @@ os:
 bioc_required: true
 bioc_packages:
   - BiocCheck
+  - GEOquery
+  - limma
+  - rhdf5
 
 before_install:
+  - if [ ${TRAVIS_OS_NAME} = 'osx' ]; then brew install protobuf; fi
   - R -e 'install.packages("devtools")'
   - R -e 'source("https://bioconductor.org/biocLite.R"); biocLite()'
-  - R -e 'BiocInstaller::biocLite(c("GEOquery", "httpuv", "limma", "opencpu", "protolite", "rhdf5", "Rook"))'
+    #- R -e 'BiocInstaller::biocLite(c("GEOquery", "httpuv", "limma", "opencpu", "protolite", "rhdf5", "Rook"))'
 
 script:
   - R CMD build .
