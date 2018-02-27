@@ -99,7 +99,7 @@ getGDS <- function(name, destdir = tempdir(),
         message(paste("Loading from locally found file", destfile))
     }
 
-    if (infile) {
+    if (infile && file.size(destfile) > 0) {
         l <- suppressWarnings(getGEO(filename = destfile,
                                         destdir = destdir,
                                         AnnotGPL = TRUE))
@@ -306,7 +306,7 @@ getGSE <- function(name, destdir = tempdir(),
         message(paste("Loading from locally found file", destfile))
     }
 
-    if (infile) {
+    if (infile && file.size(destfile) > 0) {
         ess <- list(suppressWarnings(getGEO(filename = destfile,
                                                 destdir = destdir,
                                                 AnnotGPL = TRUE)))
