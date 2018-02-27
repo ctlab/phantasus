@@ -10,7 +10,7 @@ init:
 install:
     - ps: Bootstrap
       # Get the latest stable version of Node.js or io.js
-    - ps: Install-Product node $env:nodejs_version
+      #- ps: Install-Product node $env:nodejs_version
 
 cache:
   - C:\RLibrary
@@ -29,9 +29,9 @@ build_script:
 test_script:
   - travis-tool.sh run_tests
   # Output useful info for debugging.
-  - node --version
-  - npm --version
-  - inst/test_js.sh
+  #- node --version
+  #- npm --version
+  #- inst/test_js.sh
 
 on_failure:
   - 7z a failure.zip *.Rcheck\*
