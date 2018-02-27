@@ -387,15 +387,19 @@ getES <- function(name, type = NA, destdir = tempdir(),
         if (length(res) > 1) {
             for (i in 1:length(res)) {
                 ess <- list(res[[i]])
-                save(ess, file = file.path(destdir,
-                                            paste0(name,
-                                                    "-",
-                                                    annotation(res[[i]]),
-                                                    ".rda")))
+                destfile <- file.path(destdir,
+                                      paste0(name,
+                                             "-",
+                                             annotation(res[[i]]),
+                                             ".rda"))
+                message(paste("Cached dataset to ", destfile))
+                save(ess, file = destfile)
             }
         }
         ess <- res
-        save(ess, file = file.path(destdir, paste0(name, ".rda")))
+        destfile <- file.path(destdir, paste0(name, ".rda"))
+        message(paste("Cached dataset to ", destfile))
+        save(ess, file = destfile)
     }
     ess
 }

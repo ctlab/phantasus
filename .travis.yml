@@ -1,0 +1,73 @@
+language: r
+r:
+  - bioc-devel
+  - bioc-release
+# warnings_are_errors: true
+sudo: false
+cache: packages
+
+services:
+  - docker
+
+addons:
+  apt:
+    packages:
+      - libprotobuf-dev
+      - libapparmor-dev
+      - protobuf-compiler
+      - libcurl4-openssl-dev
+
+r_packages:
+  - covr
+  - data.table
+  - ggplot2
+  - testthat
+  - knitr
+  - rmarkdown
+  - httpuv
+  - opencpu
+  - protolite
+  - Rook
+
+os:
+    #- linux
+  - osx
+
+bioc_required: true
+bioc_packages:
+  - BiocCheck
+  - GEOquery
+  - limma
+  - rhdf5
+  - BiocStyle
+
+before_install:
+  - if [ ${TRAVIS_OS_NAME} = 'osx' ]; then brew install protobuf; fi
+  - R -e 'install.packages("devtools")'
+  - R -e 'source("https://bioconductor.org/biocLite.R"); biocLite()'
+
+script:
+  - R CMD build .
+  - FILE=$(ls -1t *.tar.gz | head -n 1)
+  - R CMD check "$FILE"
+  - bash inst/test_js.sh
+
+after_script:
+  - FILE=$(ls -1t *.tar.gz | head -n 1)
+  - Rscript -e "library(BiocCheck); BiocCheck(\"${FILE}\")"
+
+after_success:
+  - Rscript -e 'covr::codecov()'
+    #  - if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$TRAVIS_BRANCH" == "r-3.4" ]; then
+    #    docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
+    #    docker build -t dzenkova/phantasus inst/docker/latest/ ;
+    #    DOCKER_TAG="travis-$TRAVIS_BUILD_NUMBER" ;
+    #    docker tag dzenkova/phantasus dzenkova/phantasus:$DOCKER_TAG ;
+    #    docker push dzenkova/phantasus;
+    #    fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$TRAVIS_BRANCH" == "develop" ]; then
+    docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
+    docker build -t dzenkova/phantasus:develop inst/docker/develop/ ;
+    docker push dzenkova/phantasus:develop;
+    fi
+
