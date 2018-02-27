@@ -3,14 +3,14 @@
 # Download script file from GitHub
 init:
   ps: |
-      # $ErrorActionPreference = "Stop"
+        $ErrorActionPreference = "Stop"
         Invoke-WebRequest http://raw.github.com/krlmlr/r-appveyor/master/scripts/appveyor-tool.ps1 -OutFile "..\appveyor-tool.ps1"
         Import-Module '..\appveyor-tool.ps1'
 
 install:
     - ps: Bootstrap
       # Get the latest stable version of Node.js or io.js
-    - ps: Install-Product node $env:nodejs_version
+      # - ps: Install-Product node $env:nodejs_version
 
 cache:
   - C:\RLibrary
@@ -33,7 +33,7 @@ test_script:
   # Output useful info for debugging.
   - node --version
   - npm --version
-  - inst/test_js.sh
+  # - inst/test_js.sh
 
 on_failure:
   - 7z a failure.zip *.Rcheck\*
