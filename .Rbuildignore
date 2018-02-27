@@ -4,7 +4,6 @@
 vignettes/phantasus-tutorial_cache 
 ^tests/testthat/cache$
 ^inst/www/phantasus.js/.git$
-^inst/www/phantasus.js/.git$
 ^inst/www/phantasus.js/.idea$
 ^inst/www/phantasus.js/jasmine$
 ^inst/www/phantasus.js/node_modules$
@@ -32,18 +31,13 @@ vignettes/phantasus-tutorial_cache
 ^inst/www/phantasus.js/LICENSE$
 ^inst/www/phantasus.js/README.md$
 ^inst/tutorials$
-^inst/www/phantasus.js/node_modules$
-
 ^inst/docker$
 ^inst-raw$
-
 ^inst/test_js.sh$
 ^inst/update_static.sh$
-
 ^cache$
 ^build/*$
 ^.*\.Rproj$
-
 ^.*bin$
-
 ^.travis.yml$
+^appveyor\.yml$
