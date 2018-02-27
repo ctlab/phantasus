@@ -8,7 +8,7 @@ npm install karma --save-dev
 npm install
 
 touch server.log
-R -e "phantasus::servePhantasus('0.0.0.0', 8000, cacheDir = 'jasmine/cache', preloadedDir = 'jasmine/cache', openInBrowser=FALSE)" 2>&1  | tee server.log &
+R -e "phantasus::servePhantasus('0.0.0.0', 8000, cacheDir = 'jasmine/cache', preloadedDir = 'jasmine/cache', openInBrowser=FALSE)"  > server.log 2>&1 &
 PH_PID=$!
 
 
@@ -24,6 +24,7 @@ cd
 
 function finish {
     kill $PH_PID
+    echo Killed $PH_PID
     echo "Killed OpenCPU-server"
 }
 trap finish EXIT
