@@ -402,7 +402,7 @@ getES <- function(name, type = NA, destdir = tempdir(),
 
 
 listCachedESs <- function(destdir) {
-    res <- list.files(destdir, pattern=".*\\.rda")
+    res <- list.files(destdir, pattern=".*\\.rda$")
     res <- grep("\\.gz\\.rda$", res, invert = TRUE, value = TRUE)
     res <- grep("^(GSE|GDS)", res, value = TRUE)
     res <- sub("\\.rda$", "", res)
