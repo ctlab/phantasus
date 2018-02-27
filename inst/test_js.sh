@@ -8,10 +8,14 @@ npm install
 mkdir "jasmine/cache"
 R -e "phantasus::getES('GSE53986', destdir='jasmine/cache')"
 
-R -e "phantasus::servePhantasus('0.0.0.0', 8000, cacheDir = 'jasmine/cache', preloadedDir = 'jasmine/cache', openInBrowser=FALSE)" &
+R -e "phantasus::servePhantasus('0.0.0.0', 8000, cacheDir = 'jasmine/cache', preloadedDir = 'jasmine/cache', openInBrowser=FALSE)" |& tee server.log &
 PH_PID=$!
 
-sleep 2
+
+# Waiting for the server to start
+while ! grep -q started server.log ; do sleep 0.1; done
+
+sleep 0.1
 
 ./node_modules/karma/bin/karma start my.conf.js --single-run
 RETVAL=$?
