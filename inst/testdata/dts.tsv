@@ -1,0 +1,237 @@
+Accession	Title	Series	InferCondition	Replicate
+GSM2674833	leaf_control_Erkner_rep1	GSE100221	leaf_control_Erkner_rep1	
+GSM2674834	leaf_control_Friesland_rep2	GSE100221	leaf_control_Friesland_rep2	
+GSM2674835	leaf_control_Siethen_rep3	GSE100221	leaf_control_Siethen_rep3	
+GSM2674836	leaf_eggs_Erkner_rep1	GSE100221	leaf_eggs_Erkner_rep1	
+GSM2674837	leaf_eggs_Friesland_rep2	GSE100221	leaf_eggs_Friesland_rep2	
+GSM2674838	leaf_eggs_Siethen_rep3	GSE100221	leaf_eggs_Siethen_rep3	
+GSM2705187	Untreated rep1	GSE101508	Untreated	1
+GSM2705188	Untreated rep2	GSE101508	Untreated	2
+GSM2705189	IFNγ+LPS rep1	GSE101508	IFNγ+LPS	1
+GSM2705190	IFNγ+LPS rep2	GSE101508	IFNγ+LPS	2
+GSM2705191	50µM C01L_F03 IFNγ+LPS rep1	GSE101508	50µM C01L_F03 IFNγ+LPS	1
+GSM2705192	50µM C01L_F03 IFNγ+LPS rep2	GSE101508	50µM C01L_F03 IFNγ+LPS	2
+GSM2705193	25µM STX-0119 IFNγ+LPS rep1	GSE101508	25µM STX-0119 IFNγ+LPS	1
+GSM2705194	25µM STX-0119 IFNγ+LPS rep2	GSE101508	25µM STX-0119 IFNγ+LPS	2
+GSM2705195	10µM STATTIC IFNγ+LPS rep1	GSE101508	10µM STATTIC IFNγ+LPS	1
+GSM2705196	10µM STATTIC IFNγ+LPS rep2	GSE101508	10µM STATTIC IFNγ+LPS	2
+GSM262297	Brain_animal-4453_line-61	GSE10380	Brain_animal-4453_line-61	
+GSM262298	Brain_animal-4626_line-6	GSE10380	Brain_animal-4626_line-6	
+GSM262299	Brain_animal-4535_line-61	GSE10380	Brain_animal-4535_line-61	
+GSM262300	Brain_animal-4679_line-6	GSE10380	Brain_animal-4679_line-6	
+GSM262301	Brain_animal-4086_line-62	GSE10380	Brain_animal-4086_line-62	
+GSM262302	Brain_animal-4554_line-61	GSE10380	Brain_animal-4554_line-61	
+GSM262303	Brain_animal-4156_line-62	GSE10380	Brain_animal-4156_line-62	
+GSM262304	Brain_animal-4435_line-61	GSE10380	Brain_animal-4435_line-61	
+GSM262305	Brain_animal-4521_line-61	GSE10380	Brain_animal-4521_line-61	
+GSM262306	Brain_animal-4469_line-61	GSE10380	Brain_animal-4469_line-61	
+GSM262307	Brain_animal-4424_line-61	GSE10380	Brain_animal-4424_line-61	
+GSM262308	Brain_animal-4133_line-62	GSE10380	Brain_animal-4133_line-62	
+GSM262309	Brain_animal-4464_line-61	GSE10380	Brain_animal-4464_line-61	
+GSM262310	Brain_animal-4428_line-61	GSE10380	Brain_animal-4428_line-61	
+GSM262311	Brain_animal-4173_line-62	GSE10380	Brain_animal-4173_line-62	
+GSM262312	Brain_animal-4007_line-62	GSE10380	Brain_animal-4007_line-62	
+GSM262313	Brain_animal-4540_line-61	GSE10380	Brain_animal-4540_line-61	
+GSM262314	Brain_animal-4548_line-61	GSE10380	Brain_animal-4548_line-61	
+GSM262315	Brain_animal-4211_line-62	GSE10380	Brain_animal-4211_line-62	
+GSM262316	Brain_animal-4169_line-62	GSE10380	Brain_animal-4169_line-62	
+GSM262317	Brain_animal-4431_line-61	GSE10380	Brain_animal-4431_line-61	
+GSM262318	Brain_animal-4439_line-61	GSE10380	Brain_animal-4439_line-61	
+GSM262319	Brain_animal-4109_line-62	GSE10380	Brain_animal-4109_line-62	
+GSM262320	Brain_animal-4788_line-6	GSE10380	Brain_animal-4788_line-6	
+GSM262321	Brain_animal-4011_line-62	GSE10380	Brain_animal-4011_line-62	
+GSM262322	Brain_animal-4481_line-61	GSE10380	Brain_animal-4481_line-61	
+GSM262323	Brain_animal-4561_line-61	GSE10380	Brain_animal-4561_line-61	
+GSM262324	Brain_animal-4517_line-61	GSE10380	Brain_animal-4517_line-61	
+GSM262325	Brain_animal-4205_line-62	GSE10380	Brain_animal-4205_line-62	
+GSM262326	Brain_animal-4813_line-6	GSE10380	Brain_animal-4813_line-6	
+GSM262327	Brain_animal-4722_line-6	GSE10380	Brain_animal-4722_line-6	
+GSM262328	Brain_animal-4528_line-61	GSE10380	Brain_animal-4528_line-61	
+GSM262329	Brain_animal-4475_line-61	GSE10380	Brain_animal-4475_line-61	
+GSM262330	Brain_animal-4447_line-61	GSE10380	Brain_animal-4447_line-61	
+GSM262331	Brain_animal-4489_line-61	GSE10380	Brain_animal-4489_line-61	
+GSM262332	Brain_animal-4666_line-6	GSE10380	Brain_animal-4666_line-6	
+GSM262333	Brain_animal-4445_line-61	GSE10380	Brain_animal-4445_line-61	
+GSM262334	Brain_animal-4112_line-62	GSE10380	Brain_animal-4112_line-62	
+GSM262335	Brain_animal-4036_line-62	GSE10380	Brain_animal-4036_line-62	
+GSM262336	Brain_animal-4130_line-62	GSE10380	Brain_animal-4130_line-62	
+GSM262337	Brain_animal-4669_line-6	GSE10380	Brain_animal-4669_line-6	
+GSM262338	Brain_animal-4515_line-61	GSE10380	Brain_animal-4515_line-61	
+GSM262339	Brain_animal-4551_line-61	GSE10380	Brain_animal-4551_line-61	
+GSM262340	Brain_animal-4800_line-6	GSE10380	Brain_animal-4800_line-6	
+GSM262341	Brain_animal-4204_line-62	GSE10380	Brain_animal-4204_line-62	
+GSM262342	Brain_animal-4240_line-62	GSE10380	Brain_animal-4240_line-62	
+GSM262343	Brain_animal-4082_line-62	GSE10380	Brain_animal-4082_line-62	
+GSM262344	Brain_animal-4065_line-62	GSE10380	Brain_animal-4065_line-62	
+GSM262345	Brain_animal-4467_line-61	GSE10380	Brain_animal-4467_line-61	
+GSM262346	Brain_animal-4100_line-62	GSE10380	Brain_animal-4100_line-62	
+GSM262347	Brain_animal-4097_line-62	GSE10380	Brain_animal-4097_line-62	
+GSM262348	Brain_animal-4524_line-61	GSE10380	Brain_animal-4524_line-61	
+GSM262349	Brain_animal-4218_line-62	GSE10380	Brain_animal-4218_line-62	
+GSM262350	Brain_animal-4826_line-6	GSE10380	Brain_animal-4826_line-6	
+GSM262351	Brain_animal-4105_line-62	GSE10380	Brain_animal-4105_line-62	
+GSM262352	Brain_animal-4365_line-61	GSE10380	Brain_animal-4365_line-61	
+GSM262353	Brain_animal-4712_line-6	GSE10380	Brain_animal-4712_line-6	
+GSM262354	Brain_animal-4058_line-62	GSE10380	Brain_animal-4058_line-62	
+GSM262355	Brain_animal-4538_line-61	GSE10380	Brain_animal-4538_line-61	
+GSM262356	Brain_animal-4124_line-62	GSE10380	Brain_animal-4124_line-62	
+GSM262357	Brain_animal-4877_line-6	GSE10380	Brain_animal-4877_line-6	
+GSM262358	Brain_animal-4294_line-62	GSE10380	Brain_animal-4294_line-62	
+GSM262359	Brain_animal-4392_line-61	GSE10380	Brain_animal-4392_line-61	
+GSM262360	Brain_animal-4299_line-62	GSE10380	Brain_animal-4299_line-62	
+GSM262361	Brain_animal-4841_line-6	GSE10380	Brain_animal-4841_line-6	
+GSM262362	Brain_animal-4513_line-61	GSE10380	Brain_animal-4513_line-61	
+GSM262363	Brain_animal-4500_line-61	GSE10380	Brain_animal-4500_line-61	
+GSM262364	Brain_animal-4286_line-62	GSE10380	Brain_animal-4286_line-62	
+GSM262365	Brain_animal-4072_line-62	GSE10380	Brain_animal-4072_line-62	
+GSM262366	Brain_animal-4074_line-62	GSE10380	Brain_animal-4074_line-62	
+GSM262367	Brain_animal-4045_line-62	GSE10380	Brain_animal-4045_line-62	
+GSM262368	Brain_animal-4808_line-6	GSE10380	Brain_animal-4808_line-6	
+GSM262369	Brain_animal-4148_line-62	GSE10380	Brain_animal-4148_line-62	
+GSM262370	Brain_animal-4009_line-62	GSE10380	Brain_animal-4009_line-62	
+GSM262371	Brain_animal-4532_line-61	GSE10380	Brain_animal-4532_line-61	
+GSM262372	Brain_animal-4231_line-62	GSE10380	Brain_animal-4231_line-62	
+GSM262373	Brain_animal-4262_line-62	GSE10380	Brain_animal-4262_line-62	
+GSM262374	Brain_animal-4684_line-6	GSE10380	Brain_animal-4684_line-6	
+GSM262375	Brain_animal-4682_line-6	GSE10380	Brain_animal-4682_line-6	
+GSM262376	Brain_animal-4419_line-61	GSE10380	Brain_animal-4419_line-61	
+GSM262377	Brain_animal-4271_line-62	GSE10380	Brain_animal-4271_line-62	
+GSM262378	Brain_animal-4250_line-62	GSE10380	Brain_animal-4250_line-62	
+GSM262379	Brain_animal-4862_line-6	GSE10380	Brain_animal-4862_line-6	
+GSM262380	Brain_animal-4574_line-61	GSE10380	Brain_animal-4574_line-61	
+GSM262381	Brain_animal-4569_line-61	GSE10380	Brain_animal-4569_line-61	
+GSM262382	Brain_animal-4375_line-61	GSE10380	Brain_animal-4375_line-61	
+GSM262383	Brain_animal-4495_line-61	GSE10380	Brain_animal-4495_line-61	
+GSM262384	Brain_animal-4061_line-62	GSE10380	Brain_animal-4061_line-62	
+GSM262385	Brain_animal-4232_line-62	GSE10380	Brain_animal-4232_line-62	
+GSM262386	Brain_animal-4050_line-62	GSE10380	Brain_animal-4050_line-62	
+GSM262387	Brain_animal-4849_line-6	GSE10380	Brain_animal-4849_line-6	
+GSM262388	Brain_animal-4147_line-62	GSE10380	Brain_animal-4147_line-62	
+GSM262389	Brain_animal-4413_line-61	GSE10380	Brain_animal-4413_line-61	
+GSM262390	Brain_animal-4806_line-6	GSE10380	Brain_animal-4806_line-6	
+GSM262391	Brain_animal-4233_line-62	GSE10380	Brain_animal-4233_line-62	
+GSM262392	Brain_animal-4835_line-6	GSE10380	Brain_animal-4835_line-6	
+GSM262393	Brain_animal-4292_line-62	GSE10380	Brain_animal-4292_line-62	
+GSM262394	Brain_animal-4729_line-6	GSE10380	Brain_animal-4729_line-6	
+GSM262395	Brain_animal-4822_line-6	GSE10380	Brain_animal-4822_line-6	
+GSM262396	Brain_animal-4685_line-6	GSE10380	Brain_animal-4685_line-6	
+GSM262397	Brain_animal-4053_line-62	GSE10380	Brain_animal-4053_line-62	
+GSM262398	Brain_animal-4832_line-6	GSE10380	Brain_animal-4832_line-6	
+GSM262399	Brain_animal-4709_line-6	GSE10380	Brain_animal-4709_line-6	
+GSM262400	Brain_animal-4042_line-62	GSE10380	Brain_animal-4042_line-62	
+GSM262401	Brain_animal-4028_line-62	GSE10380	Brain_animal-4028_line-62	
+GSM262402	Brain_animal-4395_line-61	GSE10380	Brain_animal-4395_line-61	
+GSM262403	Brain_animal-4246_line-62	GSE10380	Brain_animal-4246_line-62	
+GSM262404	Brain_animal-4307_line-62	GSE10380	Brain_animal-4307_line-62	
+GSM262405	Brain_animal-4433_line-61	GSE10380	Brain_animal-4433_line-61	
+GSM262406	Brain_animal-4410_line-61	GSE10380	Brain_animal-4410_line-61	
+GSM262407	Brain_animal-4238_line-62	GSE10380	Brain_animal-4238_line-62	
+GSM262408	Brain_animal-4637_line-6	GSE10380	Brain_animal-4637_line-6	
+GSM262409	Brain_animal-4283_line-62	GSE10380	Brain_animal-4283_line-62	
+GSM262410	Brain_animal-4796_line-6	GSE10380	Brain_animal-4796_line-6	
+GSM262411	Brain_animal-4735_line-6	GSE10380	Brain_animal-4735_line-6	
+GSM262412	Brain_animal-4477_line-61	GSE10380	Brain_animal-4477_line-61	
+GSM262413	Brain_animal-4725_line-6	GSE10380	Brain_animal-4725_line-6	
+GSM262414	Brain_animal-4346_line-61	GSE10380	Brain_animal-4346_line-61	
+GSM262415	Brain_animal-4228_line-62	GSE10380	Brain_animal-4228_line-62	
+GSM262416	Brain_animal-4720_line-6	GSE10380	Brain_animal-4720_line-6	
+GSM262417	Brain_animal-4777_line-6	GSE10380	Brain_animal-4777_line-6	
+GSM262418	Brain_animal-4750_line-6	GSE10380	Brain_animal-4750_line-6	
+GSM262419	Brain_animal-4360_line-61	GSE10380	Brain_animal-4360_line-61	
+GSM262420	Brain_animal-4650_line-6	GSE10380	Brain_animal-4650_line-6	
+GSM262421	Brain_animal-4248_line-62	GSE10380	Brain_animal-4248_line-62	
+GSM262422	Brain_animal-4839_line-6	GSE10380	Brain_animal-4839_line-6	
+GSM262423	Brain_animal-4331_line-61	GSE10380	Brain_animal-4331_line-61	
+GSM262424	Brain_animal-4697_line-6	GSE10380	Brain_animal-4697_line-6	
+GSM262425	Brain_animal-4342_line-61	GSE10380	Brain_animal-4342_line-61	
+GSM262426	Brain_animal-4836_line-6	GSE10380	Brain_animal-4836_line-6	
+GSM262427	Brain_animal-4792_line-6	GSE10380	Brain_animal-4792_line-6	
+GSM262428	Brain_animal-4658_line-6	GSE10380	Brain_animal-4658_line-6	
+GSM262429	Brain_animal-4056_line-62	GSE10380	Brain_animal-4056_line-62	
+GSM262430	Brain_animal-4379_line-61	GSE10380	Brain_animal-4379_line-61	
+GSM262431	Brain_animal-4870_line-6	GSE10380	Brain_animal-4870_line-6	
+GSM262432	Brain_animal-4126_line-62	GSE10380	Brain_animal-4126_line-62	
+GSM262433	Brain_animal-4646_line-6	GSE10380	Brain_animal-4646_line-6	
+GSM262434	Brain_animal-4371_line-61	GSE10380	Brain_animal-4371_line-61	
+GSM262435	Brain_animal-4779_line-6	GSE10380	Brain_animal-4779_line-6	
+GSM262436	Brain_animal-4344_line-61	GSE10380	Brain_animal-4344_line-61	
+GSM262437	Brain_animal-4252_line-62	GSE10380	Brain_animal-4252_line-62	
+GSM262438	Brain_animal-4767_line-6	GSE10380	Brain_animal-4767_line-6	
+GSM262439	Brain_animal-4741_line-6	GSE10380	Brain_animal-4741_line-6	
+GSM262440	Brain_animal-4351_line-61	GSE10380	Brain_animal-4351_line-61	
+GSM262441	Brain_animal-4401_line-61	GSE10380	Brain_animal-4401_line-61	
+GSM262442	Brain_animal-4745_line-6	GSE10380	Brain_animal-4745_line-6	
+GSM262443	Brain_animal-4566_line-61	GSE10380	Brain_animal-4566_line-61	
+GSM262444	Brain_animal-4753_line-6	GSE10380	Brain_animal-4753_line-6	
+GSM262445	Brain_animal-4771_line-6	GSE10380	Brain_animal-4771_line-6	
+GSM262446	Brain_animal-4653_line-6	GSE10380	Brain_animal-4653_line-6	
+GSM262447	Brain_animal-4617_line-6	GSE10380	Brain_animal-4617_line-6	
+GSM262448	Brain_animal-4493_line-61	GSE10380	Brain_animal-4493_line-61	
+GSM262449	Brain_animal-4285_line-62	GSE10380	Brain_animal-4285_line-62	
+GSM262450	Brain_animal-4116_line-62	GSE10380	Brain_animal-4116_line-62	
+GSM262451	Brain_animal-4620_line-6	GSE10380	Brain_animal-4620_line-6	
+GSM262452	Brain_animal-4358_line-61	GSE10380	Brain_animal-4358_line-61	
+GSM262453	Brain_animal-4760_line-6	GSE10380	Brain_animal-4760_line-6	
+GSM262454	Brain_animal-4153_line-62	GSE10380	Brain_animal-4153_line-62	
+GSM262455	Brain_animal-4337_line-61	GSE10380	Brain_animal-4337_line-61	
+GSM262456	Brain_animal-4093_line-62	GSE10380	Brain_animal-4093_line-62	
+GSM262457	Brain_animal-4737_line-6	GSE10380	Brain_animal-4737_line-6	
+GSM262458	Brain_animal-4765_line-6	GSE10380	Brain_animal-4765_line-6	
+GSM262459	Brain_animal-4420_line-61	GSE10380	Brain_animal-4420_line-61	
+GSM262460	Brain_animal-4691_line-6	GSE10380	Brain_animal-4691_line-6	
+GSM262461	Brain_animal-4769_line-6	GSE10380	Brain_animal-4769_line-6	
+GSM262462	Brain_animal-4843_line-6	GSE10380	Brain_animal-4843_line-6	
+GSM262463	Brain_animal-4655_line-6	GSE10380	Brain_animal-4655_line-6	
+GSM262464	Brain_animal-4506_line-61	GSE10380	Brain_animal-4506_line-61	
+GSM262465	Brain_animal-4356_line-61	GSE10380	Brain_animal-4356_line-61	
+GSM262466	Brain_animal-4015_line-62	GSE10380	Brain_animal-4015_line-62	
+GSM262467	Brain_animal-4748_line-6	GSE10380	Brain_animal-4748_line-6	
+GSM262468	Brain_animal-4382_line-61	GSE10380	Brain_animal-4382_line-61	
+GSM262469	Brain_animal-4443_line-61	GSE10380	Brain_animal-4443_line-61	
+GSM262470	Brain_animal-4526_line-61	GSE10380	Brain_animal-4526_line-61	
+GSM262471	Brain_animal-4790_line-6	GSE10380	Brain_animal-4790_line-6	
+GSM262472	Brain_animal-4846_line-6	GSE10380	Brain_animal-4846_line-6	
+GSM262473	Brain_animal-4123_line-62	GSE10380	Brain_animal-4123_line-62	
+GSM262474	Brain_animal-4680_line-6	GSE10380	Brain_animal-4680_line-6	
+GSM262475	Brain_animal-4165_line-62	GSE10380	Brain_animal-4165_line-62	
+GSM262476	16641	GSE10382	16641	
+GSM262477	16551	GSE10382	16551	
+GSM262478	16552	GSE10382	16552	
+GSM262479	16612	GSE10382	16612	
+GSM262480	16611	GSE10382	16611	
+GSM262481	16699	GSE10382	16699	
+GSM262482	13275764 - dcl1-9 flg22 30min vs dcl1-9 flg15 30min	GSE10383	13275764 - dcl1-9 flg22 30min vs dcl1-9 flg15 30min	
+GSM262483	13279314 - dcl1-9 flg15 30min vs dcl1-9 flg22 30min	GSE10383	13279314 - dcl1-9 flg15 30min vs dcl1-9 flg22 30min	
+GSM262484	13275765 - dcl1-9 flg15 60min vs dcl1-9 flg22 60min	GSE10383	13275765 - dcl1-9 flg15 60min vs dcl1-9 flg22 60min	
+GSM262485	13279315 - dcl1-9 flg22 60min vs dcl1-9 flg15 60min	GSE10383	13279315 - dcl1-9 flg22 60min vs dcl1-9 flg15 60min	
+GSM262486	13281163 - rdr6-1 flg15 30min vs rdr6-1 flg22 30min	GSE10383	13281163 - rdr6-1 flg15 30min vs rdr6-1 flg22 30min	
+GSM262487	13278966 - rdr6-1 flg22 30min vs rdr6-1 flg15 30min	GSE10383	13278966 - rdr6-1 flg22 30min vs rdr6-1 flg15 30min	
+GSM262488	13278968 - ler flg15 60min vs ler flg22 60min	GSE10383	13278968 - ler flg15 60min vs ler flg22 60min	
+GSM262489	13281175 - ler flg22 60min vs ler flg15 60min	GSE10383	13281175 - ler flg22 60min vs ler flg15 60min	
+GSM262490	13279309 - dcl4-1 flg15 30min vs dcl4-1 flg22 30min	GSE10383	13279309 - dcl4-1 flg15 30min vs dcl4-1 flg22 30min	
+GSM262491	13279310 - dcl4-1 flg22 30min vs dcl4-1 flg15 30min	GSE10383	13279310 - dcl4-1 flg22 30min vs dcl4-1 flg15 30min	
+GSM262492	13279312 - ler flg15 30min vs ler flg22 30min	GSE10383	13279312 - ler flg15 30min vs ler flg22 30min	
+GSM262493	13279313 - ler flg22 30min vs ler flg15 30min	GSE10383	13279313 - ler flg22 30min vs ler flg15 30min	
+GSM262494	13281060 - Col-0 flg15 30min vs Col-0 flg22 30min	GSE10383	13281060 - Col-0 flg15 30min vs Col-0 flg22 30min	
+GSM262495	13281062 - Col-0 flg22 30min vs Col-0 flg15 30min	GSE10383	13281062 - Col-0 flg22 30min vs Col-0 flg15 30min	
+GSM262512	Ath_infection_rep1	GSE10385	Ath_infection_rep1	
+GSM262513	Ath_infection_rep2	GSE10385	Ath_infection_rep2	
+GSM262514	Ath_infection_rep3	GSE10385	Ath_infection_rep3	
+GSM262515	Ath_infection_rep4	GSE10385	Ath_infection_rep4	
+GSM262516	Ath_infection_rep5	GSE10385	Ath_infection_rep5	
+GSM262517	Ath_infection_rep6	GSE10385	Ath_infection_rep6	
+GSM262518	Ath_infection_rep7	GSE10385	Ath_infection_rep7	
+GSM262519	Ath_infection_rep8	GSE10385	Ath_infection_rep8	
+GSM262522	Ath_infection_rep9	GSE10385	Ath_infection_rep9	
+GSM262676	MPA 1	GSE10392	MPA	1
+GSM262677	MPA 2	GSE10392	MPA	2
+GSM262678	MPA 3	GSE10392	MPA	3
+GSM262679	MPA 4	GSE10392	MPA	4
+GSM262680	MPA 5	GSE10392	MPA	5
+GSM262681	MPA 6	GSE10392	MPA	6
+GSM262682	Etoh 1	GSE10392	Etoh	1
+GSM262683	Etoh 2	GSE10392	Etoh	2
+GSM262684	Etoh 3	GSE10392	Etoh	3
+GSM262685	Etoh 4	GSE10392	Etoh	4
+GSM262686	Etoh 5	GSE10392	Etoh	5
+GSM262687	Etoh 6	GSE10392	Etoh	6

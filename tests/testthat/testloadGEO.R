@@ -1,6 +1,7 @@
 context("Load GEO and its utils")
 library(jsonlite)
 library(Biobase)
+library(data.table)
 
 test_that("loadGEO finishes with result", {
     options(phantasusMirrorPath = "https://genome.ifmo.ru/files/software/phantasus")
@@ -63,3 +64,24 @@ test_that("getGSE works with ARCHS4", {
     expect_gt(nrow(ess[[1]]), 0)
     expect_gt(ncol(ess[[1]]), 0)
 })
+
+test_that("InferConditionImpl  works correctly", {
+    tests <- fread(system.file("testdata/dts.tsv", package="phantasus"))
+    test_ds <- data.table(title=tests$Title, series=tests$Series, accession=tests$Accession, rep=tests$Replicate, inferCondition=tests$InferCondition)
+    cond <- split(test_ds$title, test_ds$series)
+    inf_cond_test <- split(test_ds$inferCondition, test_ds$series)
+    rep_test <- split(test_ds$rep, test_ds$series)
+    new_cond <- lapply(cond, inferConditionImpl)
+    expect_equal(new_cond$GSE100221, list()) # text in all titles is unique
+    expect_equal(new_cond$GSE10380, list())  # long dataset
+    expect_equal(new_cond$GSE10382, list())  # number-only titles
+    expect_equal(new_cond$GSE10383, list())  # two-color datasets
+    expect_equal(new_cond$GSE10385, list())  # the same text and replicate number in all titles
+    expect_equal(new_cond$GSE101508$condition, inf_cond_test$GSE101508) #"IFNγ+LPS rep2" -> "IFNγ+LPS" + "2"
+    expect_equal(new_cond$GSE101508$replicate, as.character(rep_test$GSE101508))
+    expect_equal(new_cond$GSE10392$condition, inf_cond_test$GSE10392) # "MPA 1" - > "MPA" + "1"
+    expect_equal(new_cond$GSE10392$replicate, as.character(rep_test$GSE10392))
+
+
+})
+
