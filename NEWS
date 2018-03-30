@@ -1,3 +1,6 @@
+CHANGES IN VERSION 0.99.34
+* Detecting conditions and replicates in GEO data
+
 CHANGES IN VERSION 0.99.28
 * Submit to Enrichr tool
 * Changing shapes in PCA plot
