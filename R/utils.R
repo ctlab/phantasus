@@ -89,21 +89,35 @@ read.gct <- function(gct, ...) {
         stop("Unsupported version of gct: use 1.2 or 1.3")
     }
 
-    t <- read.tsv(gct, skip = 2 + 1 + ann.col, nrows = size[1],
-                col.names = unlist(strsplit(meta[3], "\t")),
-                row.names = 1, header = FALSE,  ...)
+    colNames <- unlist(strsplit(meta[3], "\t"))
+    if (grepl("/", colNames[1])) {
+        rowIdField <- sub("(.*)/(.*)", "\\1", colNames[1])
+        colIdField <- sub("(.*)/(.*)", "\\2", colNames[1])
+    } else {
+        rowIdField <- "id"
+        colIdField <- "id"
+    }
 
-    exp <- as.matrix(t[, (ann.row + 1):ncol(t)])
+    colNames[1] <- rowIdField
+
+    t <- read.tsv(gct, skip = 2 + 1 + ann.col, nrows = size[1],
+                col.names = colNames,
+                row.names = NULL, header = FALSE,  ...)
+
+    rownames(t) <- t[,1]
+
+    exp <- as.matrix(t[, (ann.row + 2):ncol(t)])
 
     fdata <- makeAnnotated(t[, seq_len(ann.row), drop = FALSE])
 
 
     if (ann.col > 0) {
-        pdata.raw <- t(read.tsv(gct, skip = 2 + 1, nrows = ann.col,
-                                header = FALSE))
+        pdata.raw <- t(read.tsv(gct, skip = 2, nrows = ann.col,
+                                header = FALSE, row.names=NULL))
         pdata <- data.frame(pdata.raw[seq_len(ncol(exp)) + 1 + ann.row, ,
                                 drop = FALSE])
         colnames(pdata) <- pdata.raw[1, ]
+        colnames(pdata)[1] <- colIdField
         rownames(pdata) <- colnames(exp)
         pdata <- makeAnnotated(pdata)
 
