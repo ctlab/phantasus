@@ -15,7 +15,7 @@ Description:
 URL: https://genome.ifmo.ru/phantasus,
      https://artyomovlab.wustl.edu/phantasus
 BugReports: https://github.com/ctlab/phantasus/issues
-Depends: R (>= 3.5)
+Depends: R (>= 3.4)
 biocViews: GeneExpression, GUI, Visualization, DataRepresentation, Transcriptomics,
             RNASeq, Microarray, Normalization, Clustering, DifferentialExpression,
             PrincipalComponent
