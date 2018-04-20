@@ -1,7 +1,7 @@
 language: r
 r:
-  - bioc-devel
-  # - bioc-release
+    #- bioc-devel
+  - bioc-release
 # warnings_are_errors: true
 sudo: false
 cache: packages
