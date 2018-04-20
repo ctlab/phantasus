@@ -194,6 +194,10 @@ filterFeatureAnnotations <- function(es) {
 
     featureData(es) <- featureData(es)[, fvarsToKeep]
 
+    if (!any(sapply(fData(es), identical, rownames(es)))) {
+        fData(es) <- cbind("id"=rownames(es), fData(es))
+    }
+
     es
 }
 
