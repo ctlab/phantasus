@@ -7,6 +7,8 @@ cd inst-raw/phantasus.js
 
 grunt dist
 
+git log -1 > ../../inst/www/phantasus.js/commit
+
 cp ./index.html ../../inst/www/phantasus.js/
 cp ./js/phantasus.js ../../inst/www/phantasus.js/js/
 cp ./js/phantasus-external-*.min.js ../../inst/www/phantasus.js/js/
