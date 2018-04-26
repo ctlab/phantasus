@@ -1,5 +1,6 @@
-commit 1d3a169cd631e5d8594f0e4dc26a48380d8eaf9a
-Author: petrovich <mazahakaforever@ya.ru>
-Date:   Sun Apr 22 03:58:37 2018 +0300
+commit 7c590222e72ed60e1d687e783ccf6097714b5310
+Merge: 4a806b5 1d3a169
+Author: Alexey Sergushichev <alsergbox@gmail.com>
+Date:   Thu Apr 26 09:46:31 2018 +0200
 
-    Echarts padding fix.
+    Merge branch 'echartsPaddingFix'

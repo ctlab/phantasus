@@ -14486,7 +14486,7 @@ phantasus.DevAPI.prototype = {
   }
 };
 
-var ENRICHR_URL = 'http://amp.pharm.mssm.edu/Enrichr/addList';
+var ENRICHR_URL = 'https://amp.pharm.mssm.edu/Enrichr/addList';
 var ENRICHR_SUBMIT_LIMIT = 10000;
 
 phantasus.enrichrTool = function (project) {
@@ -14645,7 +14645,7 @@ phantasus.enrichrTool.prototype = {
       processData: false,
       success: function (data) {
         data = JSON.parse(data);
-        window.open('http://amp.pharm.mssm.edu/Enrichr/enrich?dataset=' + data.shortId, '_blank');
+        window.open('https://amp.pharm.mssm.edu/Enrichr/enrich?dataset=' + data.shortId, '_blank');
         promise.resolve();
       },
       error: function (_, __, error) {
