@@ -1,6 +1,5 @@
-commit 7c590222e72ed60e1d687e783ccf6097714b5310
-Merge: 4a806b5 1d3a169
+commit e985f6d1f5b0ee20ae8e28fd6ecababfcad4669c
 Author: Alexey Sergushichev <alsergbox@gmail.com>
-Date:   Thu Apr 26 09:46:31 2018 +0200
+Date:   Sun Apr 29 13:59:11 2018 +0200
 
-    Merge branch 'echartsPaddingFix'
+    Changing selection coloring
