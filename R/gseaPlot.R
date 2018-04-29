@@ -12,7 +12,7 @@ gseaPlot <- function(fData, fvarLabels, rankBy, selectedGenes, width, height) {
     featureData <- data.frame(fData)
     colnames(featureData) <- fvarLabels
 
-    ranks <- setNames(featureData[, rankBy], as.character(selectedGenes))
+    ranks <- setNames(featureData[, rankBy], as.character(seq_len(nrow(featureData))))
 
     pathway <- as.character(selectedGenes)
 
