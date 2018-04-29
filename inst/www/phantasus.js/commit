@@ -1,5 +1,5 @@
-commit 1d3a169cd631e5d8594f0e4dc26a48380d8eaf9a
-Author: petrovich <mazahakaforever@ya.ru>
-Date:   Sun Apr 22 03:58:37 2018 +0300
+commit 59ecba9b7261bdb6718b1a89d5d1ddb686be4064
+Author: Alexey Sergushichev <alsergbox@gmail.com>
+Date:   Sun Apr 29 21:56:59 2018 +0200
 
-    Echarts padding fix.
+    Better check for selected rows

@@ -9019,6 +9019,37 @@ phantasus.MetadataUtil.getMetadataNames = function (metadataModel, unsorted) {
   }
   return names;
 };
+
+phantasus.MetadataUtil.getMetadataSignedNumericFields = function (metadataModel) {
+  var fields = [];
+  for (var i = 0, count = metadataModel.getMetadataCount(); i < count; i++) {
+    var field = metadataModel.get(i);
+    var properties = field.getProperties();
+    if (properties.get('phantasus.dataType') === 'number') {
+      var hasPositive = false;
+      var hasNegative = false;
+      for (var j = 0; j < field.size(); j++) {
+          if (field.getValue(j) > 0) {
+              hasPositive = true;
+          }
+          if (field.getValue(j) < 0) {
+              hasNegative = true;
+          }
+          if (hasPositive && hasNegative) {
+              break;
+          }
+
+      }
+      if (hasPositive && hasNegative) {
+        fields.push(field);
+      }
+     
+    }
+  }
+
+  return fields;
+};
+
 phantasus.MetadataUtil.getVectors = function (metadataModel, names) {
   var vectors = [];
   names.forEach(function (name) {
@@ -13729,19 +13760,9 @@ phantasus.ChartTool.prototype = {
     var axisLabelVector = options.axisLabelVector; // for row scatter, row vector
     var transpose = options.transpose;
     var axisLabel = [];
-    var rotateXAxis = 0;
-    var bottomPadding = 60;
     for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
       axisLabel.push(axisLabelVector != null ? axisLabelVector.getValue(j) : '' + j);
     }
-
-    if (dataset.getColumnCount() >= 5 &&
-        axisLabel.every(function (val) { return val.length >= 2;}) ||
-        axisLabel.some(function (val) { return val.length >= 7;})) {
-      rotateXAxis = 45;
-      bottomPadding = 150;
-    }
-
     var series = [];
     var colorMap = phantasus.VectorColorModel.getColorMapForNumber(dataset.getRowCount());
     for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
@@ -13780,7 +13801,7 @@ phantasus.ChartTool.prototype = {
         left: 'right',
         top: 2,
         itemWidth: 14,
-        height: dataset.getRowCount() * 25,
+        height: dataset.getRowCount() * 20,
         data: series.map(function (s) {
           return s.name;
         })
@@ -13791,14 +13812,7 @@ phantasus.ChartTool.prototype = {
       },
       xAxis: {
         type: 'category',
-        data: axisLabel,
-        axisLabel: {
-          rotate: rotateXAxis,
-          interval: 0
-        },
-        axisTick: {
-          alignWithLabel: true
-        }
+        data: axisLabel
       },
       yAxis: {
         axisLine: {
@@ -13808,7 +13822,7 @@ phantasus.ChartTool.prototype = {
         type: 'value',
         name: ''
       },
-      grid: {right: 120, bottom: bottomPadding},
+      grid: {right: 120},
       series: series
     };
 
@@ -14655,6 +14669,157 @@ phantasus.enrichrTool.prototype = {
     });
 
     return promise;
+  }
+};
+
+phantasus.gseaTool = function (project) {
+  var self = this;
+
+  var dataset = project.getSelectedDataset();
+  var fullDataset = project.getFullDataset();
+  var numberFields = phantasus.MetadataUtil.getMetadataSignedNumericFields(fullDataset
+    .getRowMetadata());
+
+  if (numberFields.length === 0) {
+    throw new Error('No number fields available. Cannot rank by');
+  }
+
+  var rows = numberFields.map(function (field) {
+    return field.getName();
+  });
+
+  this.$dialog = $('<div style="background:white;" title="gsea plot tool"><h4>Please select rows.</h4></div>');
+  this.$el = $('<div class="container-fluid">'
+    + '<div class="row">'
+    + '<div data-name="configPane" class="col-xs-2"></div>'
+    + '<div class="col-xs-10"><div style="position:relative;" data-name="chartDiv"></div></div>'
+    + '</div></div>');
+
+  this.formBuilder = new phantasus.FormBuilder({
+    formStyle: 'vertical'
+  });
+
+  [{
+    name: 'rank_by',
+    options: rows,
+    value: _.first(rows),
+    type: 'select'
+  }/*, {
+    name: 'chart_width',
+    type: 'range',
+    value: 400,
+    min: 60,
+    max: 800,
+    step: 10
+  }, {
+    name: 'chart_height',
+    type: 'range',
+    value: 400,
+    min: 60,
+    max: 800,
+    step: 10
+  }*/].forEach(function (a) {
+    self.formBuilder.append(a);
+  });
+
+  var onChange = _.debounce(function (e) {
+    if (self.promise) {
+      self.promise.reject('Cancelled');
+    }
+
+    self.request(project).then(self.draw.bind(self), function (e) {
+      self.$chart.empty();
+    });
+  }, 500);
+
+  this.formBuilder.$form.on('change', 'select', onChange);
+  project.getRowSelectionModel().on('selectionChanged.chart', onChange);
+
+  var $configPane = this.$el.find('[data-name=configPane]');
+  this.formBuilder.$form.appendTo($configPane);
+  this.$el.appendTo(this.$dialog);
+  this.$chart = this.$el.find("[data-name=chartDiv]");
+  this.$dialog.dialog({
+    close: function (event, ui) {
+      project.getRowSelectionModel().off("selectionChanged.chart", onChange);
+      self.$dialog.dialog('destroy').remove();
+      event.stopPropagation();
+    },
+
+    resizable: true,
+    height: 600,
+    width: 900
+  });
+
+  if (project.getSelectedDataset().dataset.rows !== project.getSortedFilteredDataset().dataset.rows)
+    onChange();
+};
+
+phantasus.gseaTool.prototype = {
+  toString: function () {
+    return 'gsea Plot';
+  },
+  request: function (project) {
+    this.$chart.empty();
+    phantasus.Util.createLoadingEl().appendTo(this.$chart);
+    this.promise = $.Deferred();
+
+    var selectedDataset = project.getSelectedDataset();
+    var fullDataset = project.getSortedFilteredDataset();
+
+    if (selectedDataset.getRowCount() === fullDataset.getRowCount()) {
+      this.promise.reject('Invalid rows');
+      // throw new Error('Invalid amount of rows are selected (zero rows or whole dataset selected)');
+        return this.promise;
+    }
+
+    var idxs = selectedDataset.rowIndices.map(function (idx) {
+      return idx + 1; // #' @param selectedGenes indexes of selected genes (starting from one, in the order of fData)
+    });
+
+    var self = this;
+    var rankBy = this.formBuilder.getValue('rank_by');
+    var rows = phantasus.Dataset.toJSON(fullDataset).rowMetadataModel.vectors;
+    rows = rows.filter(function(row) { return row.name == rankBy; })
+
+    var fvarLabels = rows.map(function (row) {
+      return row.name
+    });
+    var fData = rows.reduce(function (acc, currentRow) {
+      acc[currentRow.name] = currentRow.array;
+      return acc;
+    }, {});
+
+    var height = 2;//this.formBuilder.getValue('chart_height');
+    var width = 2;//this.formBuilder.getValue('chart_width');
+
+
+    var req = ocpu.call('gseaPlot', {
+      fData: fData,
+      fvarLabels: fvarLabels,
+      rankBy: rankBy,
+      selectedGenes: idxs,
+      width: width,
+      height: height
+    }, function (session) {
+      session.getObject(function (filenames) {
+        var svgPath = JSON.parse(filenames)[0];
+        var absolutePath = phantasus.Util.getFilePath(session, svgPath);
+        phantasus.BlobFromPath.getFileObject(absolutePath, function (blob) {
+          self.imageURL = URL.createObjectURL(blob);
+          self.promise.resolve(self.imageURL);
+        });
+      });
+    }).fail(function () {
+      self.promise.reject();
+    });
+
+    return self.promise;
+  },
+  draw: function (url) {
+    this.$chart.empty();
+    var svg = $('<img src="' + url + '">');
+    svg.appendTo(this.$chart);
   }
 };
 
@@ -19721,6 +19886,15 @@ phantasus.ActionManager = function () {
       );
     },
     icon: 'fa fa-table'
+  });
+
+  this.add({
+    name: 'GSEA plot',
+    cb: function (options) {
+      new phantasus.gseaTool(
+        options.heatMap.getProject()
+      );
+    }
   });
 
   this.add({
@@ -29847,7 +30021,8 @@ phantasus.HeatMap = function (options) {
           'limma',
           'PCA Plot',
           'Submit to Enrichr',
-          'Submit to Shiny GAM'],
+          'Submit to Shiny GAM',
+          'GSEA plot'],
         View: ['Zoom In', 'Zoom Out', null, 'Fit To Window', 'Fit Rows To Window', 'Fit Columns To Window', null, '100%', null, 'Options'],
         Edit: [
           'Copy Image',
