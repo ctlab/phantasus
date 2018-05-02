@@ -1,5 +1,6 @@
-commit e985f6d1f5b0ee20ae8e28fd6ecababfcad4669c
+commit 122f061ff52df973eda80da3c0929a52b485cd05
+Merge: e985f6d 3892eef
 Author: Alexey Sergushichev <alsergbox@gmail.com>
-Date:   Sun Apr 29 13:59:11 2018 +0200
+Date:   Wed May 2 21:17:30 2018 +0300
 
-    Changing selection coloring
+    Merge branch 'gseaPlot'
