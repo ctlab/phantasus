@@ -17426,18 +17426,14 @@ phantasus.PcaPlotTool.prototype = {
     var plotlyDefaults = phantasus.PcaPlotTool.getPlotlyDefaults();
     var layout = plotlyDefaults.layout;
     var config = plotlyDefaults.config;
+    var dataset = _this.project.getSortedFilteredDataset();
 
     return function () {
       _this.$chart.empty();
 
-      var dataset = _this.project.getSortedFilteredDataset();
-
       // console.log("PCAPlot :: dataset:", dataset, "trueIndices:", phantasus.Util.getTrueIndices(dataset));
 
       var indices = phantasus.Util.getTrueIndices(dataset);
-
-      _this.dataset = dataset;
-
       var colorBy = _this.formBuilder.getValue('color');
       var sizeBy = _this.formBuilder.getValue('size');
       var shapeBy = _this.formBuilder.getValue('shape');
