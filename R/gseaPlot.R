@@ -8,6 +8,7 @@
 #' @return path to an svg file
 #' @importFrom fgsea plotEnrichment fgsea
 #' @importFrom ggplot2 ggtitle
+#' @import svglite
 gseaPlot <- function(fData, fvarLabels, rankBy, selectedGenes, width, height) {
     featureData <- data.frame(fData)
     colnames(featureData) <- fvarLabels
