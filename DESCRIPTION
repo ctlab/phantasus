@@ -15,17 +15,17 @@ Description:
 URL: https://genome.ifmo.ru/phantasus,
      https://artyomovlab.wustl.edu/phantasus
 BugReports: https://github.com/ctlab/phantasus/issues
-Depends: R (>= 3.5)
+Depends: R (>= 3.4)
 biocViews: GeneExpression, GUI, Visualization, DataRepresentation, Transcriptomics,
             RNASeq, Microarray, Normalization, Clustering, DifferentialExpression,
             PrincipalComponent
 Imports: ggplot2, protolite, Biobase, GEOquery, Rook, htmltools,
         httpuv, jsonlite, limma, opencpu, assertthat, methods, httr, rhdf5,
-        utils, parallel, stringr
+        utils, parallel, stringr, fgsea, svglite
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.0.1
-Suggests: testthat, BiocStyle, knitr, rmarkdown, data.table
+Suggests: testthat, BiocStyle, knitr, rmarkdown, data.table, svglite
 VignetteBuilder: knitr
 NeedsCompilation: no
