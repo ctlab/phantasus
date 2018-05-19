@@ -1,4 +1,6 @@
-CHANGES IN VERSION 0.99.34
+CHANGES IN VERSION 1.1.1
+* Fixes in PCA plot
+* GSEA plotCHANGES IN VERSION 0.99.34
 * Detecting conditions and replicates in GEO data
 
 CHANGES IN VERSION 0.99.28
