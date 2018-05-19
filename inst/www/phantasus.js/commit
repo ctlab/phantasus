@@ -1,6 +1,5 @@
-commit 80312eb66c982229b9cc136c0625606aac626b9f
-Merge: 122f061 e630c09
+commit 99dba21f9f50a60483001a9597a4f34c92436c76
 Author: Alexey Sergushichev <alsergbox@gmail.com>
-Date:   Thu May 10 21:21:05 2018 +0300
+Date:   Sat May 19 17:32:40 2018 +0300
 
-    Merge branch 'pcaplotfix'
+    Not showing selected bound for small selections

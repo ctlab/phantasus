@@ -13303,7 +13303,7 @@ phantasus.ChartTool = function (chartOptions) {
     name: 'chart_type',
     type: 'bootstrap-select',
     options: [
-      'boxplot', 'row profile', 'column profile', 'row scatter matrix', 'column scatter' +
+      'row profile', 'column profile', 'boxplot', 'row scatter matrix', 'column scatter' +
       ' matrix']
   });
   var rowOptions = [];
@@ -26325,7 +26325,10 @@ phantasus.HeatMapElementCanvas.prototype = {
           var c = selectedColumnElements[j];
           var x1 = columnPositions.getPosition(c[0]);
           var x2 = columnPositions.getPosition(c[1]) + columnPositions.getItemSize(j);
-          context.strokeRect(x1, y1, x2 - x1, y2 - y1);
+          if (y2 - y1 >= 4) {
+              context.strokeRect(x1, y1, x2 - x1, y2 - y1);
+          }
+        
         }
       }
     }
@@ -27868,12 +27871,13 @@ phantasus.HeatMapToolBar = function (heatMap) {
     searchHtml.push('<ul data-name="searchOptions" class="dropdown-menu">');
     searchHtml.push(
       '<li><a data-group="matchMode" data-name="exact" href="#"><span' +
-      ' data-type="toggle"></span>Exact' +
+      ' data-type="toggle"' +
+      ' class="dropdown-checkbox fa fa-check"></span>Exact' +
       ' Match</a></li>');
     searchHtml.push(
       '<li><a data-group="matchMode" data-name="contains" href="#"><span' +
       ' data-type="toggle"' +
-      ' class="dropdown-checkbox fa fa-check"></span>Contains</a></li>');
+      ' ></span>Contains</a></li>');
     searchHtml.push('<li role="separator" class="divider"></li>');
 
     searchHtml.push(
@@ -28241,7 +28245,7 @@ phantasus.HeatMapToolBar = function (heatMap) {
 
   this.$searchRowDendrogramGroup = $searchRowDendrogramGroup;
   this.$searchColumnDendrogramGroup = $searchColumnDendrogramGroup;
-  this.matchMode = 'contains';
+  this.matchMode = 'exact';
   this.matchAllPredicates = false;
   var $searchToggle = $searchForm.find('[name=searchToggle]'); // buttons
   var nameToSearchObject = {};
