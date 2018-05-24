@@ -20,7 +20,7 @@ cache:
 environment:
     nodejs_version: "9"
     matrix:
-        - R_VERSION: devel
+        - R_VERSION: release
           USE_RTOOLS: true
 
 build_script:
