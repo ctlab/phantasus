@@ -83,17 +83,20 @@ getGDS <- function(name, destdir = tempdir(),
 
     infile <- FALSE
     if (!file.exists(destfile)) {
+        tempDestFile <- tempfile(paste0(filename, ".load"), tmpdir=destdir)
         tryCatch({
             utils::download.file(sprintf(gdsurl, mirrorPath,
                                          stub, name, filename),
-                            destfile = destfile)
+                            destfile = tempDestFile,
+                            method="libcurl")
+            file.rename(tempDestFile, destfile)
             infile <- TRUE
         },
         error = function(e) {
-            file.remove(destfile)
+            file.remove(tempDestFile)
         },
         warning = function(w) {
-            file.remove(destfile)
+            file.remove(tempDestFile)
         })
     } else {
         message(paste("Loading from locally found file", destfile))
@@ -295,18 +298,22 @@ getGSE <- function(name, destdir = tempdir(),
     destfile <- file.path(destdir, filename)
 
     infile <- file.exists(destfile)
+
     if (!file.exists(destfile)) {
+        tempDestFile <- tempfile(paste0(filename, ".load"), tmpdir=destdir)
         tryCatch({
             utils::download.file(sprintf(gdsurl, mirrorPath,
                                          stub, GEO, filename),
-                                    destfile = destfile)
+                                    destfile = tempDestFile,
+                                 method="libcurl")
+            file.rename(tempDestFile, destfile)
             infile <- TRUE
         },
         error = function(e) {
-            file.remove(destfile)
+            file.remove(tempDestFile)
         },
         warning = function(w) {
-            file.remove(destfile)
+            file.remove(tempDestFile)
         })
     } else {
         message(paste("Loading from locally found file", destfile))
@@ -320,6 +327,10 @@ getGSE <- function(name, destdir = tempdir(),
         gpls <- fromJSON(checkGPLs(name))
         if (length(gpls) == 0) {
             stop(paste("Dataset", name, "not found"))
+        }
+        if (length(gpls) == 1 && gpls == name) {
+            stop(paste("Can't download dataset ", name))
+
         }
         ess <- list()
         for (i in 1:length(gpls)) {
