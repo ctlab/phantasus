@@ -13,6 +13,7 @@ RUN apt-get -y update && \
         apache2 \
         libapparmor-dev \
         locales && \
+    apt-add-repository -y ppa:marutter/rrutter3.5 && \
     apt-add-repository -y ppa:opencpu/opencpu-1.6 && \
     apt-get update && \
     apt-get install -y \
@@ -24,8 +25,8 @@ RUN printf "ProxyPass /ocpu/ http://localhost:8001/ocpu/\nProxyPassReverse /ocpu
 RUN a2ensite opencpu2
 
 #RUN sh -c 'echo "deb http://cran.rstudio.com/bin/linux/ubuntu xenial/" >> /etc/apt/sources.list'
-RUN apt-add-repository -y ppa:marutter/rrutter3.5 && \
-    apt-add-repository -y 'deb http://ppa.launchpad.net/maarten-fonville/protobuf/ubuntu trusty main' && \
+# protobuf 3.5, with 2GB byte limit
+RUN apt-add-repository -y 'deb http://ppa.launchpad.net/maarten-fonville/protobuf/ubuntu trusty main' && \
     apt-get update
 RUN gpg --keyserver keyserver.ubuntu.com --recv-key E084DAB9
 RUN gpg -a --export E084DAB9 | apt-key add -
