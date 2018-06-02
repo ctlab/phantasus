@@ -1,4 +1,5 @@
 CHANGES IN VERSION 1.1.2
+* Moved to protobuf 3.4 in docker (supports messages up to 2GB)
 * Set exact match to be default
 * Set row profile as the default chart
 

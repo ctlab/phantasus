@@ -4801,7 +4801,7 @@ phantasus.TcgaUtil.getDataset = function (options) {
         });
       }
       // console.log("phantasus.TcgaUtil.setIdAndSampleType ::", datasetToReturn);
-      phantasus.DatasetUtil.toESSessionPromise(datasetToReturn);
+      // phantasus.DatasetUtil.toESSessionPromise(datasetToReturn);
       returnDeferred.resolve(datasetToReturn);
     });
   return returnDeferred;
