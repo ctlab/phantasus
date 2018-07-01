@@ -31,13 +31,8 @@ limmaAnalysisImpl <- function(es, rows, columns, fieldValues) {
 #' @param es ExpressionSet object. It should be normalized for
 #'     more accurate analysis.
 #'
-#' @param columns Vector of specified columns' indices (optional).
-#'
-#' @param rows Vector of specified rows' indices (optional).
-#'
 #' @param fieldValues Vector of comparison values, mapping
 #'     categories' names to columns/samples
-#'     (must be equal length with columns' vector if specified).
 #'
 #' @return Name of the file containing serialized de-matrix.
 #'
@@ -49,14 +44,16 @@ limmaAnalysisImpl <- function(es, rows, columns, fieldValues) {
 #' data(es)
 #' limmaAnalysis(es, fieldValues = c("A", "A", "A", "B", "B"))
 #' }
-limmaAnalysis <- function(es, rows = c(), columns = c(), fieldValues) {
-    assertthat::assert_that(length(columns) == length(fieldValues)
-                            || length(columns) == 0)
-
-    rows <- getIndicesVector(rows, nrow(exprs(es)))
-    columns <- getIndicesVector(columns, ncol(exprs(es)))
+limmaAnalysis <- function(es, fieldValues) {
+    rows <- getIndicesVector(c(), nrow(exprs(es)))
+    columns <- getIndicesVector(c(), ncol(exprs(es)))
 
     de <- limmaAnalysisImpl(es, rows=rows, columns = columns, fieldValues)
+
+    toRemove <- intersect(colnames(fData(es)), colnames(de))
+    fData(es)[, toRemove] <- NULL
+    fData(es) <- cbind(fData(es), de)
+    assign("es", es, envir = parent.frame())
 
     f <- tempfile(pattern = "de", tmpdir = getwd(), fileext = ".bin")
     writeBin(protolite::serialize_pb(as.list(de)), f)

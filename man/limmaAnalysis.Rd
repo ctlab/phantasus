@@ -4,15 +4,11 @@
 \alias{limmaAnalysis}
 \title{Differential Expression analysis.}
 \usage{
-limmaAnalysis(es, rows = c(), columns = c(), fieldValues)
+limmaAnalysis(es, fieldValues)
 }
 \arguments{
 \item{es}{ExpressionSet object. It should be normalized for
 more accurate analysis.}
-
-\item{rows}{Vector of specified rows' indices (optional).}
-
-\item{columns}{Vector of specified columns' indices (optional).}
 
 \item{fieldValues}{Vector of comparison values, mapping
 categories' names to columns/samples

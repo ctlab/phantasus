@@ -9,10 +9,6 @@ calcPCA(es, columns = c(), rows = c(), replacena = "mean")
 \arguments{
 \item{es}{an ExpressionSet object, should be normalized}
 
-\item{columns}{list of specified columns' indices (optional)}
-
-\item{rows}{list of specified rows' indices (optional)}
-
 \item{replacena}{method for replacing NA values (mean by default)}
 }
 \value{

@@ -18,46 +18,6 @@ subsetES <- function(es, columns = c(), rows=c()) {
     es[rows, columns]
 }
 
-prepareData <- function(es, columns = c(), rows = c(), replacena = "mean") {
-    rows <- getIndicesVector(rows, nrow(exprs(es)))
-    columns <- getIndicesVector(columns, ncol(exprs(es)))
-
-    data <- replacenas(data.frame(exprs(es[rows, columns])), replacena)
-
-    rows <- getIndicesVector(c(), nrow(data))
-
-    data <- t(scale(t(data)))
-    while (sum(is.na(data)) > 0) {
-        message("need to filter rows")
-        rows <- filternaRows(data, rows)
-
-        message(length(rows))
-        message(rows[length(rows)])
-
-        data <- data[rows, ]
-        data <- replacenas(data, replacena)
-        data <- t(scale(t(data)))
-    }
-    data
-}
-
-replacenas <- function(data, replacena) {
-    ind <- which(is.na(data), arr.ind = TRUE)
-    if (nrow(ind) > 0) {
-        data[ind] <- apply(data, 1, replacena, na.rm = TRUE)[ind[, 1]]
-    }
-    ind1 <- which(!is.nan(as.matrix(data)), arr.ind = TRUE)
-    left.rows <- unique(ind1[, "row"])
-    data <- data[left.rows, ]
-    data
-}
-
-filternaRows <- function(data, currentRows) {
-    sums <- rowSums(data)
-    rows <- currentRows[!(currentRows %in% which(is.na(sums)))]
-    rows
-}
-
 #' Reads ExpressionSet from a GCT file.
 #'
 #' Only versions 1.2 and 1.3 are supported.
