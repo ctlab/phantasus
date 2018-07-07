@@ -1,4 +1,4 @@
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000 * 50; // 100 seconds
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000 * 240; // 240 seconds
 
 describe('geo_reader_test', function () {
 
@@ -14,7 +14,7 @@ describe('geo_reader_test', function () {
       })
     });
 
-    xit('loades dataset GSE53986 correctly', function () {
+    it('loades dataset GSE53986 correctly', function () {
       expect(result).not.toBeUndefined();
       expect(result.length).toEqual(1);
 
