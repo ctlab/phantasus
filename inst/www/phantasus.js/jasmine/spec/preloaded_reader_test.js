@@ -6,17 +6,13 @@ describe('preloaded_reader_test', function () {
     beforeEach(function (done) {
       var reader = new phantasus.PreloadedReader();
       reader.read('GSE53986', function (err, success) {
-        console.log("got the result");
         result = success;
 
-        console.log("before done");
         done();
-        console.log("after done");
       })
     });
 
     it('loades dataset GSE53986 correctly', function () {
-      console.log("checking");
       expect(result).not.toBeUndefined();
       expect(result.length).toEqual(1);
 
