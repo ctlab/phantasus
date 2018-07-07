@@ -19,6 +19,9 @@ while ! grep -q started server.log ; do sleep 0.1; done
 
 sleep 0.1
 
+curl http://localhost:8000/ocpu/library/phantasus/R/loadPreloaded -d "name='GSE53986'&exactName='GSE53986'" | tee curl.log
+curl http://localhost:8000`grep stdout curl.log`/text
+
 ./node_modules/karma/bin/karma start my.conf.js --single-run
 RETVAL=$?
 
