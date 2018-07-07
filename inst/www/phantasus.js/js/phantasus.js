@@ -2329,7 +2329,7 @@ phantasus.ParseDatasetFromProtoBin.getDataset = function (session, seriesName, j
   var metaNames = jsondata.colMetaNames.values;
   var rowMetaNames = jsondata.rowMetaNames.values;
 
-  // console.log(seriesName, jsondata);
+  console.log(seriesName, jsondata);
 
   var matrix = [];
   for (var i = 0; i < nrowData; i++) {
@@ -2350,7 +2350,7 @@ phantasus.ParseDatasetFromProtoBin.getDataset = function (session, seriesName, j
     preloaded: options.preloaded
   });
 
-  // console.log(seriesName, dataset);
+  console.log(seriesName, dataset);
 
   if (metaNames) {
     for (i = 0; i < metaNames.length; i++) {
@@ -4247,7 +4247,9 @@ phantasus.PreloadedReader.prototype = {
     console.log("preloaded read", name);
     name = typeof name === "string" ? { name : name } : name;
     var req = ocpu.call('loadPreloaded', name, function(session) {
+      console.log("before parsing");
       phantasus.ParseDatasetFromProtoBin.parse(session, callback, { preloaded : true });
+      console.log("after parsing");
     });
     req.fail(function () {
       callback(req.responseText);
