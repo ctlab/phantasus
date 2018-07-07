@@ -1,3 +1,4 @@
+/*
 var flag = false;
 
 function testAsyncWithDeferred() {
@@ -50,3 +51,4 @@ describe('geo_reader_test', function () {
   });
 
 });
+*/
