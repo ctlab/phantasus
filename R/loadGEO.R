@@ -139,39 +139,60 @@ getGDS <- function(name, destdir = tempdir(),
                         featureData = fData))
 }
 
-loadFromARCHS4 <- function(es, archs4_gpls, destdir) {
-    if (!es@annotation %in% archs4_gpls$gpl) {
-        return(es)
-    }
 
-    destfile <- file.path(destdir, archs4_gpls$file[match(es@annotation, archs4_gpls$gpl)])
-    if (!file.exists(destfile)) {
-        warning(paste0(
-            "Found GPL supported by ARCHS4 but not corresponding file available at ",
-            destfile))
-        return(es)
-    }
-
-    samples <- h5read(destfile, "meta/Sample_geo_accession")
-    genes <- as.character(h5read(destfile, "meta/genes"))
-
-    sampleIndexes <- match(es$geo_accession,
-                           samples)
-
-    expression <- h5read(destfile,
-                         "data/expression",
-                         index=list(seq_along(genes),
-                                    stats::na.omit(sampleIndexes)))
-    rownames(expression) <- genes
-    colnames(expression) <- colnames(es)[!is.na(sampleIndexes)]
-    H5close()
-
-    es2 <- ExpressionSet(assayData = expression,
-                         phenoData = phenoData(es[, !is.na(sampleIndexes)]),
-                         annotation = annotation(es))
-    fData(es2) <- cbind(fData(es2), "Gene symbol"=rownames(es2))
-    return(es2)
+#' Returns list of ARCHS4 hdf5 files with expression data
+#' @param cachDir base directory for cache
+#' @return list of .h5 files
+getArchs4Files <- function(cacheDir) {
+    list.files(file.path(cacheDir), '*.h5', full.names = TRUE)
 }
+
+
+#' Loads expression data from ARCHS4 count files.
+#' Only sapmles with counted expression are kept.
+#' If es already containts expression data it is returned as is.
+#' @param es ExpressionSet from GEO to check for expression in ARCHS4
+#' @param archs4_files list of available .h5 files from ARCHS4 project
+#' @return either original es or an ExpressionSet with loaded count data from ARCHS4
+loadFromARCHS4 <- function(es, archs4_files) {
+    if (nrow(es) > 0 ) {
+        return(es)
+    }
+    for (destfile in archs4_files) {
+
+        samples <- h5read(destfile, "meta/Sample_geo_accession")
+        sampleIndexes <- match(es$geo_accession,
+                               samples)
+
+        if (sum(!is.na(sampleIndexes)) == 0) {
+            # no needed samples in this file
+            H5close()
+            next
+        }
+
+        genes <- as.character(h5read(destfile, "meta/genes"))
+        geneIndexes <- which(genes != "NA") # happens in ARCHS4 version from Jun 2018
+        genes <- genes[geneIndexes]
+
+
+        expression <- h5read(destfile,
+                             "data/expression",
+                             index=list(geneIndexes,
+                                        stats::na.omit(sampleIndexes)))
+        rownames(expression) <- genes
+        colnames(expression) <- colnames(es)[!is.na(sampleIndexes)]
+        H5close()
+
+        es2 <- ExpressionSet(assayData = expression,
+                             phenoData = phenoData(es[, !is.na(sampleIndexes)]),
+                             annotation = annotation(es))
+        fData(es2) <- cbind(fData(es2), "Gene symbol"=rownames(es2))
+        return(es2)
+    }
+
+    return(es)
+}
+
 
 filterFeatureAnnotations <- function(es) {
     fvarsToKeep <- c()
@@ -340,13 +361,10 @@ getGSE <- function(name, destdir = tempdir(),
     }
 
 
-    archs4_gpls <- rbind(
-        data.frame(gpl=c("GPL13112", "GPL17021", "GPL15103"),
-                   file="mouse_matrix.h5"),
-        data.frame(gpl=c("GPL11154", "GPL16791", "GPL10999", "GPL9115", "GPL18460"),
-                   file="human_matrix.h5"))
-
-    ess <- lapply(ess, loadFromARCHS4, archs4_gpls=archs4_gpls, destdir=destdir)
+    archs4_files <- getArchs4Files(destdir)
+    if (length(archs4_files) > 0)  {
+        ess <- lapply(ess, loadFromARCHS4, archs4_files=archs4_files)
+    }
 
     ess <- lapply(ess, filterFeatureAnnotations)
 
