@@ -1,11 +1,12 @@
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000 * 50; // 100 seconds
-describe('preloaded_reader_test', function () {
 
-  describe('loading mono preloaded datasets', function () {
+describe('geo_reader_test', function () {
+
+  describe('loading mono gse datasets', function () {
+    var originalTimeout;
     var result;
-
     beforeEach(function (done) {
-      var reader = new phantasus.PreloadedReader();
+      var reader = new phantasus.GeoReader();
       reader.read('GSE53986', function (err, success) {
         result = success;
 
@@ -21,6 +22,7 @@ describe('preloaded_reader_test', function () {
 
       expect(dataset.getRowCount()).toEqual(45101);
       expect(dataset.getColumnCount()).toEqual(16);
-    })
-  })
+    });
+  });
+
 });

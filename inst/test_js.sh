@@ -8,10 +8,10 @@ npm install karma --save-dev
 npm install
 
 mkdir -p jasmine/preloaded
-R --vanilla -e "phantasus::getES('GSE53986', destdir = 'jasmine/preloaded')" 
+R --vanilla -e "phantasus::getES('GSE53986', destdir = 'jasmine/cache')" 
 
 touch server.log
-R --vanilla -e "phantasus::servePhantasus('0.0.0.0', 8000, cacheDir = 'jasmine/cache', preloadedDir = 'jasmine/preloaded', openInBrowser=FALSE)"  > server.log 2>&1 &
+R --vanilla -e "phantasus::servePhantasus('0.0.0.0', 8000, cacheDir = 'jasmine/cache', preloadedDir = 'jasmine/cache', openInBrowser=FALSE)"  > server.log 2>&1 &
 PH_PID=$!
 
 
