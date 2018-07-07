@@ -1,3 +1,5 @@
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000 * 50; // 50 seconds
+
 describe('preloaded_reader_test', function () {
 
   describe('loading mono preloaded datasets', function () {
