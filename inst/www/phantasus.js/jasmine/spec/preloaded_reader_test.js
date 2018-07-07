@@ -1,12 +1,10 @@
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000 * 100; // 100 seconds
 describe('preloaded_reader_test', function () {
 
   describe('loading mono preloaded datasets', function () {
     var result;
 
     beforeEach(function (done) {
-      originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
-      jasmine.DEFAULT_TIMEOUT_INTERVAL = 100000;
-
       var reader = new phantasus.PreloadedReader();
       reader.read('GSE53986', function (err, success) {
         result = success;
@@ -24,9 +22,5 @@ describe('preloaded_reader_test', function () {
       expect(dataset.getRowCount()).toEqual(45101);
       expect(dataset.getColumnCount()).toEqual(16);
     })
-
-    afterEach(function() {
-      jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
-    });
   })
 });
