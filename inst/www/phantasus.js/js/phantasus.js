@@ -14705,10 +14705,12 @@ phantasus.gseaTool = function (project) {
   });
 
   this.$dialog = $('<div style="background:white;" title="gsea plot tool"><h4>Please select rows.</h4></div>');
-  this.$el = $('<div class="container-fluid">'
-    + '<div class="row">'
+  this.$el = $('<div class="container-fluid" style="height: 100%">'
+    + '<div class="row" style="height: 100%">'
     + '<div data-name="configPane" class="col-xs-2"></div>'
-    + '<div class="col-xs-10"><div style="position:relative;" data-name="chartDiv"></div></div>'
+    + '<div class="col-xs-10" style="height: 100%">'
+    + '   <div style="position:relative; height: 100%;" data-name="chartDiv"></div>'
+    + '</div>'
     + '</div></div>');
 
   var $notifyRow = this.$dialog.find('h4');
@@ -14722,6 +14724,10 @@ phantasus.gseaTool = function (project) {
     options: rows,
     value: _.first(rows),
     type: 'select'
+  }, {
+    name: 'vertical',
+    type: 'checkbox',
+    value: false
   }/*, {
     name: 'chart_width',
     type: 'range',
@@ -14759,6 +14765,7 @@ phantasus.gseaTool = function (project) {
   }, 500);
 
   this.formBuilder.$form.on('change', 'select', onChange);
+  this.formBuilder.$form.on('change', 'input', onChange);
   project.getRowSelectionModel().on('selectionChanged.chart', onChange);
 
 
@@ -14767,6 +14774,9 @@ phantasus.gseaTool = function (project) {
   this.$el.appendTo(this.$dialog);
   this.$chart = this.$el.find("[data-name=chartDiv]");
   this.$dialog.dialog({
+    open: function (event, ui) {
+      $(this).css('overflow', 'hidden'); //this line does the actual hiding
+    },
     close: function (event, ui) {
       project.getRowSelectionModel().off("selectionChanged.chart", onChange);
       self.$dialog.dialog('destroy').remove();
@@ -14816,17 +14826,24 @@ phantasus.gseaTool.prototype = {
       return acc;
     }, {});
 
-    var height = 2;//this.formBuilder.getValue('chart_height');
-    var width = 2;//this.formBuilder.getValue('chart_width');
+    var vertical = this.formBuilder.getValue('vertical');
+
+    var height = 4;//this.formBuilder.getValue('chart_height');
+    var width = 6;//this.formBuilder.getValue('chart_width');
+    if (vertical) {
+        height = 6;
+        width = 3;
+    }
 
 
-    var req = ocpu.call('gseaPlot', {
+    ocpu.call('gseaPlot', {
       fData: fData,
       fvarLabels: fvarLabels,
       rankBy: rankBy,
       selectedGenes: idxs,
       width: width,
-      height: height
+      height: height,
+      vertical: vertical
     }, function (session) {
       session.getObject(function (filenames) {
         var svgPath = JSON.parse(filenames)[0];
@@ -14844,7 +14861,7 @@ phantasus.gseaTool.prototype = {
   },
   draw: function (url) {
     this.$chart.empty();
-    var svg = $('<img src="' + url + '">');
+    var svg = $('<img src="' + url + '" style="max-width: 100%; height: 100%; position: absolute; margin: auto; top: 0; left: 0; right: 0; bottom: 0;">');
     svg.appendTo(this.$chart);
   }
 };
