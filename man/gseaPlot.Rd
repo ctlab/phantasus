@@ -4,7 +4,8 @@
 \alias{gseaPlot}
 \title{Returns path to an svg file with enrichment plot}
 \usage{
-gseaPlot(fData, fvarLabels, rankBy, selectedGenes, width, height)
+gseaPlot(fData, fvarLabels, rankBy, selectedGenes, width, height,
+  vertical = FALSE)
 }
 \arguments{
 \item{fData}{list of annotation columns}
@@ -18,6 +19,8 @@ gseaPlot(fData, fvarLabels, rankBy, selectedGenes, width, height)
 \item{width}{width of the image (in inches)}
 
 \item{height}{height of the image (in inches)}
+
+\item{vertical}{whether to use vertical orientation (default: FALSE)}
 }
 \value{
 path to an svg file
