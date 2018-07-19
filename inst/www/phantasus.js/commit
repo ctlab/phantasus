@@ -1,5 +1,8 @@
-commit efed5170cddaab74a9982e8aba539490cd16f50f
-Author: Alexey Sergushichev <alsergbox@gmail.com>
-Date:   Tue Jul 10 16:02:34 2018 +0300
+commit b30552abc06112f157bd4c5ad7585dd587a2b04e
+Author: petrovich <mazahakaforever@ya.ru>
+Date:   Sat Jun 30 03:38:18 2018 +0300
 
-    240 seconds for jasmine again
+    Phantasus js grand rework.
+    Limma, GSEA, PCAPlot, Kmeans uses dataset on backend.
+    Datasets with own sessions.
+    Less bandwidth usage with backend.
