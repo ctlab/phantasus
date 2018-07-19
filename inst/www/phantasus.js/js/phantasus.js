@@ -14785,7 +14785,7 @@ phantasus.gseaTool.prototype = {
 
     fullDataset.getESSession().then(function (esSession) {
         ocpu.call('gseaPlot', {
-            es: esSession
+            es: esSession,
             rankBy: rankBy,
             selectedGenes: idxs,
             width: width,
