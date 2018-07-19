@@ -1,3 +1,27 @@
+limmaAnalysisImpl <- function(es, rows, columns, fieldValues) {
+    fieldValues <- replace(fieldValues, fieldValues == "", NA)
+
+    es.copy <- es[rows, columns]
+    es.copy$Comparison <- fieldValues
+    fData(es.copy) <- data.frame(row.names = rownames(es.copy))
+
+    es.copy <- es.copy[, !is.na(es.copy$Comparison)]
+
+    # Getting rid of check NOTEs
+    Comparison=ComparisonA=ComparisonB=NULL
+
+    es.design <- stats::model.matrix(~0 + Comparison, data = pData(es.copy))
+
+    fit <- lmFit(es.copy, es.design)
+
+    A <- NULL; B <- NULL
+    fit2 <- contrasts.fit(fit, makeContrasts(ComparisonB - ComparisonA, levels = es.design))
+    fit2 <- eBayes(fit2)
+    de <- topTable(fit2, adjust.method = "BH", number = Inf)
+    de <- de[row.names(fData(es.copy)), ]
+    de
+}
+
 #' Differential Expression analysis.
 #'
 #' \code{limmaAnalysis} performs differential expression analysis
@@ -7,13 +31,8 @@
 #' @param es ExpressionSet object. It should be normalized for
 #'     more accurate analysis.
 #'
-#' @param columns Vector of specified columns' indices (optional).
-#'
-#' @param rows Vector of specified rows' indices (optional).
-#'
 #' @param fieldValues Vector of comparison values, mapping
 #'     categories' names to columns/samples
-#'     (must be equal length with columns' vector if specified).
 #'
 #' @return Name of the file containing serialized de-matrix.
 #'
@@ -25,36 +44,17 @@
 #' data(es)
 #' limmaAnalysis(es, fieldValues = c("A", "A", "A", "B", "B"))
 #' }
-limmaAnalysis <- function(es, rows = c(), columns = c(), fieldValues) {
-    assertthat::assert_that(length(columns) == length(fieldValues)
-                            || length(columns) == 0)
+limmaAnalysis <- function(es, fieldValues) {
+    rows <- getIndicesVector(c(), nrow(exprs(es)))
+    columns <- getIndicesVector(c(), ncol(exprs(es)))
 
-    rows <- getIndicesVector(rows, nrow(exprs(es)))
-    columns <- getIndicesVector(columns, ncol(exprs(es)))
+    de <- limmaAnalysisImpl(es, rows=rows, columns = columns, fieldValues)
 
-    fieldName <- "Comparison"
-    fieldValues <- replace(fieldValues, fieldValues == "", NA)
+    toRemove <- intersect(colnames(fData(es)), colnames(de))
+    fData(es)[, toRemove] <- NULL
+    fData(es) <- cbind(fData(es), de)
+    assign("es", es, envir = parent.frame())
 
-    new.pdata <- pData(es)[columns, ]
-    new.pdata[[fieldName]] <- as.factor(fieldValues)
-    new.pdata <- new.pdata[!is.na(new.pdata[[fieldName]]), ]
-    new.sampleNames <- row.names(new.pdata)
-
-    es.copy <- es[rows, new.sampleNames]
-    pData(es.copy) <- new.pdata
-    fData(es.copy) <- data.frame(row.names = rownames(es.copy))
-
-    es.design <- stats::model.matrix(~0 + Comparison, data = pData(es.copy))
-    colnames(es.design) <- gsub(pattern = fieldName, replacement = "",
-                                x = make.names(colnames(es.design)))
-
-    fit <- lmFit(es.copy, es.design)
-
-    A <- NULL; B <- NULL
-    fit2 <- contrasts.fit(fit, makeContrasts(B - A, levels = es.design))
-    fit2 <- eBayes(fit2)
-    de <- topTable(fit2, adjust.method = "BH", number = Inf)
-    de <- de[row.names(fData(es.copy)), ]
     f <- tempfile(pattern = "de", tmpdir = getwd(), fileext = ".bin")
     writeBin(protolite::serialize_pb(as.list(de)), f)
     jsonlite::toJSON(f)

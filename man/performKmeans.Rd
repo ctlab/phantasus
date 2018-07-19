@@ -4,14 +4,10 @@
 \alias{performKmeans}
 \title{K-means clusterisation.}
 \usage{
-performKmeans(es, columns = c(), rows = c(), k, replacena = "mean")
+performKmeans(es, k, replacena = "mean")
 }
 \arguments{
 \item{es}{ExpressionSet object.}
-
-\item{columns}{List of specified columns' indices (optional).}
-
-\item{rows}{List of specified rows' indices (optional).}
 
 \item{k}{Expected number of clusters.}
 

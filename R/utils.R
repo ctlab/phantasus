@@ -5,47 +5,20 @@ getIndicesVector <- function(current, neededLength) {
     current + 1
 }
 
-prepareData <- function(es, columns = c(), rows = c(), replacena = "mean") {
+#' Subsets es, if rows or columns are not specified, all are retained
+#' @param es ExpressionSet object.#'
+#' @param columns List of specified columns' indices (optional), indices start from 0#'
+#' @param rows List of specified rows' indices (optional), indices start from 0
+#' @return `es`'s subset
+#'
+subsetES <- function(es, columns = c(), rows=c()) {
     rows <- getIndicesVector(rows, nrow(exprs(es)))
     columns <- getIndicesVector(columns, ncol(exprs(es)))
 
-    data <- replacenas(data.frame(exprs(es[rows, columns])), replacena)
-
-    rows <- getIndicesVector(c(), nrow(data))
-
-    data <- t(scale(t(data)))
-    while (sum(is.na(data)) > 0) {
-        message("need to filter rows")
-        rows <- filternaRows(data, rows)
-
-        message(length(rows))
-        message(rows[length(rows)])
-
-        data <- data[rows, ]
-        data <- replacenas(data, replacena)
-        data <- t(scale(t(data)))
-    }
-    data
+    es[rows, columns]
 }
 
-replacenas <- function(data, replacena) {
-    ind <- which(is.na(data), arr.ind = TRUE)
-    if (nrow(ind) > 0) {
-        data[ind] <- apply(data, 1, replacena, na.rm = TRUE)[ind[, 1]]
-    }
-    ind1 <- which(!is.nan(as.matrix(data)), arr.ind = TRUE)
-    left.rows <- unique(ind1[, "row"])
-    data <- data[left.rows, ]
-    data
-}
-
-filternaRows <- function(data, currentRows) {
-    sums <- rowSums(data)
-    rows <- currentRows[!(currentRows %in% which(is.na(sums)))]
-    rows
-}
-
-#' Reads ExpressionSet from GCT file.
+#' Reads ExpressionSet from a GCT file.
 #'
 #' Only versions 1.2 and 1.3 are supported.
 #'
@@ -56,9 +29,8 @@ filternaRows <- function(data, currentRows) {
 #' @return ExpressionSet object
 #'
 #' @examples
-#' \dontrun{
 #' read.gct(system.file("extdata", "centers.gct", package = "phantasus"))
-#' }
+#' @export
 read.gct <- function(gct, ...) {
     meta <- readLines(gct, n = 3)
     version <- meta[1]
@@ -77,21 +49,35 @@ read.gct <- function(gct, ...) {
         stop("Unsupported version of gct: use 1.2 or 1.3")
     }
 
-    t <- read.tsv(gct, skip = 2 + 1 + ann.col, nrows = size[1],
-                col.names = unlist(strsplit(meta[3], "\t")),
-                row.names = 1, header = FALSE,  ...)
+    colNames <- unlist(strsplit(meta[3], "\t"))
+    if (grepl("/", colNames[1])) {
+        rowIdField <- sub("(.*)/(.*)", "\\1", colNames[1])
+        colIdField <- sub("(.*)/(.*)", "\\2", colNames[1])
+    } else {
+        rowIdField <- "id"
+        colIdField <- "id"
+    }
 
-    exp <- as.matrix(t[, (ann.row + 1):ncol(t)])
+    colNames[1] <- rowIdField
+
+    t <- read.tsv(gct, skip = 2 + 1 + ann.col, nrows = size[1],
+                col.names = colNames,
+                row.names = NULL, header = FALSE,  ...)
+
+    rownames(t) <- t[,1]
+
+    exp <- as.matrix(t[, (ann.row + 2):ncol(t)])
 
     fdata <- makeAnnotated(t[, seq_len(ann.row), drop = FALSE])
 
 
     if (ann.col > 0) {
-        pdata.raw <- t(read.tsv(gct, skip = 2 + 1, nrows = ann.col,
-                                header = FALSE))
+        pdata.raw <- t(read.tsv(gct, skip = 2, nrows = ann.col,
+                                header = FALSE, row.names=NULL))
         pdata <- data.frame(pdata.raw[seq_len(ncol(exp)) + 1 + ann.row, ,
                                 drop = FALSE])
         colnames(pdata) <- pdata.raw[1, ]
+        colnames(pdata)[1] <- colIdField
         rownames(pdata) <- colnames(exp)
         pdata <- makeAnnotated(pdata)
 
@@ -117,6 +103,40 @@ read.tsv <- function(file, header = TRUE, sep = "\t", quote = "",
     }
     res
 }
+
+#' Saves ExpressionSet to a GCT file (version 1.3).
+#'
+#' @param es ExpresionSet obeject to save
+#' @param file Path to output gct file
+#' @param gzip Whether to gzip apply gzip-compression for the output file#'
+#' @param ... additional options for read.csv
+#' @return Result of the closing file (as in `close()` function`)
+#' @examples
+#' es <- read.gct(system.file("extdata", "centers.gct", package = "phantasus"))
+#' out <- tempfile(fileext = ".gct.gz")
+#' write.gct(es, out, gzip=TRUE)
+#' @import Biobase
+#' @export
+write.gct <- function(es, file, gzip=FALSE) {
+    if (gzip) {
+        con <- gzfile(file)
+    } else {
+        con <- file(file)
+    }
+    open(con, open="w")
+    writeLines("#1.3", con)
+    ann.col <- ncol(pData(es))
+    ann.row <- ncol(fData(es))
+    writeLines(sprintf("%s\t%s\t%s\t%s", nrow(es), ncol(es), ann.row, ann.col), con)
+    writeLines(paste0(c("ID", colnames(fData(es)), colnames(es)), collapse="\t"), con)
+
+    ann.col.table <- t(as.matrix(pData(es)))
+    ann.col.table <- cbind(matrix(rep(NA, ann.row*ann.col), nrow=ann.col), ann.col.table)
+    write.table(ann.col.table, file=con, quote=FALSE, sep="\t", row.names=TRUE, col.names=FALSE)
+    write.table(cbind(fData(es), exprs(es)), file=con, quote=FALSE, sep="\t", row.names=TRUE, col.names=FALSE)
+    close(con)
+}
+
 
 makeAnnotated <- function(data) {
     meta <- data.frame(labelDescription = colnames(data))
@@ -148,7 +168,7 @@ writeToList <- function(es) {
 
   res <- list(data = data, pdata = pdata, fdata = fdata,
               rownames = rownames,
-              colMetaNames = varLabels(phenoData(es)),
-              rowMetaNames = varLabels(featureData(es)))
+              colMetaNames = varLabels(es),
+              rowMetaNames = fvarLabels(es))
   res
 }

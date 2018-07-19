@@ -3,10 +3,16 @@
 .RData
 .Rproj
 .idea/
-cache/
+cache
+preloaded
 *.bin
 *.xcf
 inst/doc
 inst/node_modules
+inst/testdata/GSE99709_series_matrix.txt.gz
+inst/testdata/GPL17021.soft
 inst/www/phantasus.js/node_modules
 inst/www/phantasus.js/package-lock.json
+inst/www/phantasus.js/server.log
+vignettes/phantasus-tutorial_cache
+vignettes/phantasus-tutorial.html

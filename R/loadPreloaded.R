@@ -30,7 +30,8 @@ loadPreloaded <- function(name, exactName = NULL) {
     loaded <- get(x)
 
     wrongFormat <- paste("Wrong format.",
-                         "File must contain either ExpressionSet or list of ExpressionSets")
+                            "File must contain either ExpressionSet",
+                            "or list of ExpressionSets")
 
     ess <- NULL
 
@@ -101,41 +102,51 @@ preloadedDirExists <- function() {
 #' @return Vector of names serialized in JSON format.
 #'
 checkPreloadedNames <- function(name) {
-  if (jsonlite::fromJSON(preloadedDirExists())) {
+    if (!jsonlite::fromJSON(preloadedDirExists())) {
+        stop("No such directory")
+    }
+
     preloadedDir <- getOption("phantasusPreloadedDir")
     fileToLoad <- file.path(preloadedDir, paste0(name, '.rda'))
 
-    if (file.exists(fileToLoad)) {
-      x <- load(fileToLoad) # must return the object ess
-      loaded <- get(x)
+    if (!file.exists(fileToLoad)) {
+        fileToLoadGct <- file.path(preloadedDir, paste0(name, '.gct'))
 
-      answer <- c()
+        if (!file.exists(fileToLoadGct)) {
+            stop("No such file")
+        }
 
-      if (class(loaded) == "ExpressionSet") {
+        es <- read.gct(fileToLoadGct)
+        ess <- list(es=es)
+        names(ess) <- name
+        save(ess, file=fileToLoad, compress = TRUE)
+    }
+
+    x <- load(fileToLoad) # must return the object ess
+    loaded <- get(x)
+
+    answer <- c()
+
+    if (class(loaded) == "ExpressionSet") {
         answer <- c(x)
-      } else if (class(loaded) == "list") {
+    } else if (class(loaded) == "list") {
         if (!is.null(names(loaded))) {
-          answer <- names(loaded)
+            answer <- names(loaded)
         }
         else {
-          if (length(loaded) > 1) {
-            answer <- paste0(name, "_", 1:length(loaded))
-          } else {
-            answer <- c(name)
-          }
+            if (length(loaded) > 1) {
+                answer <- paste0(name, "_", 1:length(loaded))
+            } else {
+                answer <- c(name)
+            }
         }
-      } else {
-        wrongFormat <- paste("Wrong format.",
-                             "File must contain either ExpressionSet or list of ExpressionSets")
-        stop(wrongFormat)
-      }
-
-      jsonlite::toJSON(answer)
     } else {
-      stop("No such file")
+        wrongFormat <- paste("Wrong format.",
+                             "File must contain either ExpressionSet",
+                             "or list of ExpressionSets")
+        stop(wrongFormat)
     }
-  } else {
-    stop("No such directory")
-  }
+
+    jsonlite::toJSON(answer)
 }
 

@@ -11,8 +11,8 @@ describe('buffered_reader_test', function () {
   }
 
   it('test_chunk', function (done) {
-    if (phantasus.Util.isFetchSupported()) {
-      var url = '/jasmine/test_files/CCLE_hybrid_capture1650_hg19_NoCommonSNPs_NoNeutralVariants_CDS_2012.05.07.maf.txt';
+    if (phantasus.Util.isFetchStreamingSupported()) {
+      var url = 'test_files/CCLE_hybrid_capture1650_hg19_NoCommonSNPs_NoNeutralVariants_CDS_2012.05.07.maf.txt';
       var lines = [];
       var splitLines = null;
       var p1 = $.Deferred();

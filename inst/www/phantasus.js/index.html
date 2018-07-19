@@ -9,11 +9,12 @@
           content="7UY7VcXR28Tpmw6m6fc6wtJJQvar71GKqGojp3HPb4Q"/>
     <title>phantasus</title>
     <link rel="stylesheet" href="css/phantasus-latest.min.css">
-    <script type="text/javascript" src="js/phantasus-external-latest.min.js"></script>
-    <script>
-        ocpu.seturl("/ocpu/library/phantasus/R");
-    </script>
-    <script src="js/phantasus-latest.min.js"></script>
+    <script type="text/javascript" src="js/phantasus-external-other.min.js"></script>
+    <script type="text/javascript" src="js/phantasus-external-pdfkit-xlsx.min.js"></script>
+    <script type="text/javascript" src="js/phantasus-external-plotly-echarts.min.js"></script>
+    <script type="text/javascript"
+                     src="https://apis.google.com/js/api.js"></script>
+    <script src="js/phantasus.js"></script>
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
     <script type="text/javascript"
             src="https://www.dropbox.com/static/api/2/dropins.js" id="dropboxjs"
@@ -27,11 +28,14 @@
 <div id="vis"></div>
 
 <script type="text/javascript">
+  phantasus.Util.setLibrary('phantasus');
   phantasus.Util.loadTrackingCode();
   window.onerror = function () {
+    var errorObj = _.last(arguments);
+    var errorMsg = _.size(errorObj.message) ? errorObj.message : 'Oops, something went wrong. Please try again.';
     phantasus.FormBuilder.showInModal({
       title: 'Error',
-      html: 'Oops, something went wrong. Please try again.'
+      html: errorMsg
     });
   };
 
@@ -51,18 +55,21 @@
       var pair = keyValuePairs[i].split('=');
       params[pair[0]] = decodeURIComponent(pair[1]);
     }
-    console.log(params);
+    // console.log(params);
     if (params.json) {
       var options = JSON.parse(decodeURIComponent(params.json));
       landingPage.open(options);
     } else if (params.url) { // url to config
-      $.ajax({
-        url: params.url
-      }).done(function (json) {
-        landingPage.open(json);
-      }).fail(function () {
-        // console.log('Unable to get config file');
+      var $loading = phantasus.Util.createLoadingEl();
+      $loading.appendTo($('#vis'));
+      phantasus.Util.getText(params.url).done(function (text) {
+        var options = JSON.parse(text);
+        landingPage.open(options);
+      }).fail(function (err) {
+        console.log('Unable to get config file');
         landingPage.show();
+      }).always(function () {
+        $loading.remove();
       });
     } else if (params.geo) {
       var options = {

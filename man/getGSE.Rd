@@ -27,7 +27,7 @@ List of ExpressionSet objects, that were available by given
 }
 \examples{
 \dontrun{
-    getGSE('GSE14308', destdir = file.path(getwd(), 'cache'))
+    getGSE('GSE14308', destdir = 'cache')
     getGSE('GSE27112')
 }
 getGSE('GSE53986')

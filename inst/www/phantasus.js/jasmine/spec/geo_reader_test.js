@@ -1,20 +1,4 @@
-var flag = false;
-
-function testAsyncWithDeferred() {
-  // Get a jQuery deferred
-  var deferred = $.Deferred();
-
-  // Wait two seconds, then set the flag to true
-  setTimeout(function () {
-    flag = true;
-
-    // Resolve the deferred
-    deferred.resolve();
-  }, 2000);
-
-  // Return the deferred promise
-  return deferred.promise();
-}
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 240000;
 
 describe('geo_reader_test', function () {
 

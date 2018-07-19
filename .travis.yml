@@ -1,6 +1,6 @@
 language: r
 r:
-#  - bioc-devel
+    #- bioc-devel
   - bioc-release
 # warnings_are_errors: true
 sudo: false
@@ -24,39 +24,50 @@ r_packages:
   - testthat
   - knitr
   - rmarkdown
+  - httpuv
+  - opencpu
+  - protolite
+  - Rook
 
 os:
   - linux
-#  - osx
+  - osx
 
 bioc_required: true
 bioc_packages:
   - BiocCheck
+  - GEOquery
+  - limma
+  - rhdf5
+  - BiocStyle
 
-# Set CXX1X for R-devel, as R-devel does not detect CXX1X support for gcc 4.6.3,
-# see https://github.com/travis-ci/travis-ci/issues/6587
 before_install:
+  - if [ ${TRAVIS_OS_NAME} = 'osx' ]; then brew unlink python; brew install protobuf; fi
   - R -e 'install.packages("devtools")'
   - R -e 'source("https://bioconductor.org/biocLite.R"); biocLite()'
-  - R -e 'devtools::install_github("assaron/GEOquery")'
-  - if [[ "$TRAVIS_R_VERSION_STRING" = 'bioc-devel' ]]; then mkdir ~/.R && echo -e 'CXX1X=g++ -std=c++0x -g -O2 -fPIC\nCXX11=g++ -std=c++0x -g -O2 -fPIC' > ~/.R/Makevars; fi
+
+script:
+  - R CMD build .
+  - FILE=$(ls -1t *.tar.gz | head -n 1)
+  - R CMD check "$FILE"
+  - bash inst/test_js.sh
 
 after_script:
-  - ls -lah
   - FILE=$(ls -1t *.tar.gz | head -n 1)
   - Rscript -e "library(BiocCheck); BiocCheck(\"${FILE}\")"
-  - bash inst/test_js.sh
-  - if [ "$TRAVIS_BRANCH" == "master" ]; then
+
+after_success:
+  - Rscript -e 'covr::codecov()'
+  - if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$TRAVIS_BRANCH" == "master" ]; then
     docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
     docker build -t dzenkova/phantasus inst/docker/latest/ ;
+    DOCKER_TAG="travis-$TRAVIS_BUILD_NUMBER" ;
+    docker tag dzenkova/phantasus dzenkova/phantasus:$DOCKER_TAG ;
     docker push dzenkova/phantasus;
     fi
-  - if [ "$TRAVIS_BRANCH" == "develop" ]; then
+  - if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$TRAVIS_BRANCH" == "develop" ]; then
     docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
     docker build -t dzenkova/phantasus:develop inst/docker/develop/ ;
     docker push dzenkova/phantasus:develop;
     fi
-
-after_success:
-  - Rscript -e 'covr::codecov()'
 

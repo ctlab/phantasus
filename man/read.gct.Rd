@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{read.gct}
 \alias{read.gct}
-\title{Reads ExpressionSet from GCT file.}
+\title{Reads ExpressionSet from a GCT file.}
 \usage{
 read.gct(gct, ...)
 }
@@ -18,7 +18,5 @@ ExpressionSet object
 Only versions 1.2 and 1.3 are supported.
 }
 \examples{
-\dontrun{
 read.gct(system.file("extdata", "centers.gct", package = "phantasus"))
-}
 }

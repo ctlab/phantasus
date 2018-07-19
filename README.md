@@ -1,4 +1,5 @@
 [![Travis-CI Build Status](https://travis-ci.org/ctlab/phantasus.svg?branch=master)](https://travis-ci.org/ctlab/phantasus)
+[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/ctlab/phantasus?branch=master&svg=true)](https://ci.appveyor.com/project/ctlab/phantasus)
 [![codecov](https://codecov.io/gh/ctlab/phantasus/branch/master/graph/badge.svg)](https://codecov.io/gh/ctlab/phantasus)
 
 
@@ -8,13 +9,19 @@ This project contains several tools for gene expression analysis with help of R/
 
 The package requires installing `devtools` package and Bioconductor library set up.
 
-From shell do `git clone` with submodules:
+```{r}
+devtools::install_github("ctlab/phantasus")
+```
 
-```{shell}
-git clone --recursive https://github.com/ctlab/phantasus
-R -e 'devtools::install_github("assaron/GEOquery")' # Installing GEOquery with better caching support
-R -e 'devtools::install("phantasus")'
-````
+A warning could appear that the repository contain submodules. This warning 
+can be safely ignored.
+
+
+To install `phantasus` on R 3.4, use r-3.4 branch:
+
+```{r}
+devtools::install_github("ctlab/phantasus", ref="r-3.4")
+```
 
 ## Running
 
@@ -22,7 +29,7 @@ In R:
 
 ```{r}
 library(phantasus)
-servePhantasus('0.0.0.0', 8000, cacheDir=file.path(getwd(), 'cache'))
+servePhantasus('0.0.0.0', 8000, cacheDir='cache')
 ```
 
 Open `http://localhost:8000` in your browser.
@@ -32,7 +39,7 @@ Open `http://localhost:8000` in your browser.
 There are several system packages that have to be installed on the system. The names of these packages will be displayed during installation. On Ubuntu can install them beforehand and alltogether using command:
 
 ```{bash}
-sudo apt-get install libapparmor-dev libprotobuf-dev protobuf-compiler libcurl4-openssl-dev
+sudo apt-get install libapparmor-dev libprotobuf-dev protobuf-compiler libcurl4-openssl-dev libssl-dev libxml2-dev
 ```
 
 ## Installation example (CentOS 7)
@@ -45,15 +52,13 @@ yum install openssl-devel protobuf-compiler R R-Rcpp R-Rcpp-devel libcurl-devel 
 
 Install `devtools` and `bioclite`:
 ```
-R -e 'install.packages("devtools")'
+R -e 'install.packages("devtools", repos="https://cloud.r-project.org")'
 R -e 'source("https://bioconductor.org/biocLite.R"); biocLite()'
-R -e 'devtools::install_github("assaron/GEOquery")'
 ```
 
 Install `phantasus`:
 ```
-git clone --recursive https://github.com/ctlab/phantasus
-R -e 'devtools::install("phantasus")'
+R -e 'devtools::install_github("ctlab/phantasus", ref="r-3.4")'
 ```
 
 Run `phantasus` at 80 port in screen:

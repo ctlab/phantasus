@@ -13,10 +13,8 @@ module.exports = function(config) {
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
     frameworks: ['jasmine'],
 
-
     plugins: [
       require( 'karma-jasmine' ),
-      require( 'karma-chrome-launcher' ),
       require( 'karma-phantomjs-launcher' )
     ],
 
@@ -25,8 +23,10 @@ module.exports = function(config) {
       {pattern: './js/jquery-2.2.4.min.js', watched: false},
       {pattern: './jasmine/test_files/**', watched: false, included: false, served: true, nocache: false},
       {pattern: './*.proto', watched: false, included: false, served: true, nocache: false},
-      './js/phantasus-external-latest.min.js',
-      './js/phantasus-latest.min.js',
+      './js/phantasus-external-other.min.js',
+      './js/phantasus-external-pdfkit-xlsx.min.js',
+      './js/phantasus-external-plotly-echarts.min.js',
+      './js/phantasus.js',
       './jasmine/matchers/*.js',
       './jasmine/run_ocpu.js',
       './jasmine/spec/*[tT]est.js'
@@ -40,8 +40,10 @@ module.exports = function(config) {
 
 
     // list of files to exclude
-    exclude: [
-    ],
+    exclude: ['jasmine/spec/marker_selection_test.js',
+              'jasmine/spec/nearest_neighbors_test.js',
+              'jasmine/spec/qnorm_test.js',
+              'jasmine/spec/save_dataset_test.js'],
 
 
     // preprocess matching files before serving them to the browser
@@ -89,6 +91,6 @@ module.exports = function(config) {
     // captureTimeout: 60000, // it was already there
     browserDisconnectTimeout : 10000,
     browserDisconnectTolerance : 1,
-    browserNoActivityTimeout : 60000 //by default 10000
+    browserNoActivityTimeout : 240000 //by default 10000
   })
 };

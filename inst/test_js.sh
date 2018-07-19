@@ -1,14 +1,23 @@
 #!/bin/bash
 R -e "devtools::install('.')"
 
+mkdir -p inst/www/phantasus.js/jasmine/cache
+cp "./inst/testdata/GSE27112-GPL6103.rda" inst/www/phantasus.js/jasmine/cache
 cd inst/www/phantasus.js/
 npm install karma --save-dev
 npm install
 
-R -e "phantasus::servePhantasus('0.0.0.0', 8000, cacheDir = file.path(getwd(), 'jasmine', 'cache'), preloadedDir = file.path(getwd(), 'jasmine', 'cache'))" &
+R -e "phantasus::getES('GSE53986', destdir = 'jasmine/cache')" 
+
+touch server.log
+R -e "phantasus::servePhantasus('0.0.0.0', 8000, cacheDir = 'jasmine/cache', preloadedDir = 'jasmine/cache', openInBrowser=FALSE)"  > server.log 2>&1 &
 PH_PID=$!
 
-sleep 2
+
+# Waiting for the server to start
+while ! grep -q started server.log ; do sleep 0.1; done
+
+sleep 0.1
 
 ./node_modules/karma/bin/karma start my.conf.js --single-run
 RETVAL=$?
@@ -17,6 +26,7 @@ cd
 
 function finish {
     kill $PH_PID
+    echo Killed $PH_PID
     echo "Killed OpenCPU-server"
 }
 trap finish EXIT
