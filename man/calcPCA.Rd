@@ -4,7 +4,7 @@
 \alias{calcPCA}
 \title{Principal Component Analysis.}
 \usage{
-calcPCA(es, columns = c(), rows = c(), replacena = "mean")
+calcPCA(es, replacena = "mean")
 }
 \arguments{
 \item{es}{an ExpressionSet object, should be normalized}

@@ -14783,29 +14783,29 @@ phantasus.gseaTool.prototype = {
         width = 3;
     }
 
+
     fullDataset.getESSession().then(function (esSession) {
-        ocpu.call('gseaPlot', {
-            es: esSession,
-            rankBy: rankBy,
-            selectedGenes: idxs,
-            width: width,
-            height: height,
-            vertical: vertical
-        }, function (session) {
-            session.getObject(function (filenames) {
-                var svgPath = JSON.parse(filenames)[0];
-                var absolutePath = phantasus.Util.getFilePath(session, svgPath);
-                phantasus.BlobFromPath.getFileObject(absolutePath, function (blob) {
-                    self.imageURL = URL.createObjectURL(blob);
-                    self.promise.resolve(self.imageURL);
-                });
-            });
-        }, false, "::" + fullDataset.getESVariable())
-            .fail(function () {
-            self.promise.reject();
+      ocpu.call('gseaPlot', {
+        es: esSession,
+        rankBy: rankBy,
+        selectedGenes: idxs,
+        width: width,
+        height: height,
+        vertical: vertical
+      }, function (session) {
+        session.getObject(function (filenames) {
+          var svgPath = JSON.parse(filenames)[0];
+          var absolutePath = phantasus.Util.getFilePath(session, svgPath);
+          phantasus.BlobFromPath.getFileObject(absolutePath, function (blob) {
+            self.imageURL = URL.createObjectURL(blob);
+            self.promise.resolve(self.imageURL);
+          });
+        });
+      }, false, "::" + fullDataset.getESVariable())
+        .fail(function () {
+          self.promise.reject();
         });
     })
-
 
     return self.promise;
   },

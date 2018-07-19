@@ -11,8 +11,7 @@ limmaAnalysis(es, fieldValues)
 more accurate analysis.}
 
 \item{fieldValues}{Vector of comparison values, mapping
-categories' names to columns/samples
-(must be equal length with columns' vector if specified).}
+categories' names to columns/samples}
 }
 \value{
 Name of the file containing serialized de-matrix.

@@ -4,11 +4,10 @@
 \alias{gseaPlot}
 \title{Returns path to an svg file with enrichment plot}
 \usage{
-gseaPlot(es, rankBy, selectedGenes, width, height,
-  vertical = FALSE)
+gseaPlot(es, rankBy, selectedGenes, width, height, vertical = FALSE)
 }
 \arguments{
-\item{es}{Expression set object}
+\item{es}{ExpressionSet object.}
 
 \item{rankBy}{name of the numeric column used for gene ranking}
 
