@@ -101,21 +101,28 @@ read.gct <- function(gct, ...) {
     colNames[1] <- rowIdField
 
     t <- read.tsv(gct, skip = 2 + 1 + ann.col, nrows = size[1],
-                col.names = colNames,
-                row.names = NULL, header = FALSE,  ...)
+                  col.names = colNames,
+                  row.names = NULL, header = FALSE,  ...)
 
-    rownames(t) <- t[,1]
+    if (any(duplicated(t[,1]))) {
+        warning(sprintf("duplicated row IDs: %s; they were renamed",
+                        paste0(t[head(which(duplicated(t[, 1]))),1], collapse = " ")))
+        rownames(t) <- make.unique(t[,1])
+    } else {
+        rownames(t) <- t[,1]
+    }
+
 
     exp <- as.matrix(t[, (ann.row + 2):ncol(t)])
 
-    fdata <- makeAnnotated(t[, seq_len(ann.row), drop = FALSE])
+    fdata <- makeAnnotated(t[, seq_len(ann.row + 1), drop = FALSE])
 
 
     if (ann.col > 0) {
-        pdata.raw <- t(read.tsv(gct, skip = 2, nrows = ann.col,
+        pdata.raw <- t(read.tsv(gct, skip = 2, nrows = ann.col + 1,
                                 header = FALSE, row.names=NULL))
         pdata <- data.frame(pdata.raw[seq_len(ncol(exp)) + 1 + ann.row, ,
-                                drop = FALSE])
+                                      drop = FALSE])
         colnames(pdata) <- pdata.raw[1, ]
         colnames(pdata)[1] <- colIdField
         rownames(pdata) <- colnames(exp)
