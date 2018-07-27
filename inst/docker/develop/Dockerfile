@@ -76,6 +76,9 @@ VOLUME ["/var/phantasus/cache"]
 RUN mkdir -p /var/phantasus/preloaded
 VOLUME ["/var/phantasus/preloaded"]
 
+RUN mkdir -p /var/phantasus/ocpu-root
+VOLUME ["/var/phantasus/ocpu-root"]
+
 CMD service apache2 start && \
-    R -e 'library(phantasus); servePhantasus("0.0.0.0", 8001, cacheDir="/var/phantasus/cache", preloadedDir="/var/phantasus/preloaded")'
+    OCPU_MASTER_HOME=/var/phantasus/ocpu-root R -e 'library(phantasus); servePhantasus("0.0.0.0", 8001, cacheDir="/var/phantasus/cache", preloadedDir="/var/phantasus/preloaded")'
 
