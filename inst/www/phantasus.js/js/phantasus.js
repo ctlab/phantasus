@@ -7143,7 +7143,7 @@ phantasus.DatasetUtil.probeDataset = function (dataset, session) {
         reject();
       });
 
-    });
+    }, function () { reject(); });
   });
 };
 
@@ -16142,7 +16142,31 @@ phantasus.NewHeatMapTool.prototype = {
       selectedColumns: true
     });
     phantasus.DatasetUtil.shallowCopy(dataset);
-    phantasus.DatasetUtil.toESSessionPromise(dataset);
+    var oldSession = dataset.getESSession();
+    var oldVariable = dataset.getESVariable();
+
+    dataset.setESSession(new Promise(function (resolve, reject) {
+      oldSession.then(function (esSession) {
+        var args = {
+          es: esSession,
+          rows: dataset.rowIndices,
+          columns: dataset.columnIndices
+        };
+
+        var req = ocpu.call("subsetES", args, function (newSession) {
+          dataset.setESVariable('es');
+          resolve(newSession);
+          console.log('Old dataset session: ', esSession, ', New dataset session: ', newSession);
+        }, false, "::" + oldVariable);
+
+        req.fail(function () {
+          reject();
+        });
+      })
+    }));
+
+
+    //phantasus.DatasetUtil.toESSessionPromise(dataset);
     // console.log(dataset);
     // TODO see if we can subset dendrograms
     // only handle contiguous selections for now
