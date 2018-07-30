@@ -28,10 +28,10 @@
 #' }
 #'
 createES <- function(data, pData, varLabels, fData, fvarLabels) {
-    phenoData <- AnnotatedDataFrame(data.frame(pData))
+    phenoData <- AnnotatedDataFrame(data.frame(pData, stringsAsFactors = FALSE))
     varLabels(phenoData) <- varLabels
 
-    featureData <- AnnotatedDataFrame(data.frame(fData))
+    featureData <- AnnotatedDataFrame(data.frame(fData, stringsAsFactors = FALSE))
     varLabels(featureData) <- fvarLabels
 
     es <- ExpressionSet(assayData = data,
