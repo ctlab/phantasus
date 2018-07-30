@@ -13081,10 +13081,10 @@ phantasus.AdjustDataTool.prototype = {
     var project = options.project;
     var heatMap = options.heatMap;
 
-    var sweepBy = this.sweepRowColumnSelect[0].value;
+    var sweepBy = (_.size(this.sweepRowColumnSelect) > 0) ? this.sweepRowColumnSelect[0].value : '<None>';
 
     if (options.input.log_2 || options.input.inverse_log_2
-      || options.input['z-score'] || options.input['robust_z-score'] || options.input.quantile_normalize || options.input.scale_column_sum || sweepBy !== 'None') {
+      || options.input['z-score'] || options.input['robust_z-score'] || options.input.quantile_normalize || options.input.scale_column_sum || sweepBy !== '<None>') {
       // clone the values 1st
       var sortedFilteredDataset = phantasus.DatasetUtil.copy(project
         .getSortedFilteredDataset());

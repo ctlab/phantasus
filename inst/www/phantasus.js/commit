@@ -1,5 +1,5 @@
-commit e30b9c77cc4221e3a9ff3e98c74c8b868f8055f7
+commit 38525cb574556bdcacab5a48f10456ebc7da0aec
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Mon Jul 30 14:16:42 2018 +0300
+Date:   Mon Jul 30 14:46:36 2018 +0300
 
-    Sweep tool implemented
+    Sweep in test fix
