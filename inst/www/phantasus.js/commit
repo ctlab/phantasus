@@ -1,5 +1,5 @@
-commit a952417a456354729684506bd55e9a766b41df9a
+commit 7f2c8fc97235cc3ab709be5e604eedd0e65dd230
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Mon Jul 30 15:50:45 2018 +0300
+Date:   Mon Jul 30 16:57:39 2018 +0300
 
-    New heatmap tool revapmed: creates session by subsetting old ES, not by sending whole ES back to R
+    Sweep tool test implemented

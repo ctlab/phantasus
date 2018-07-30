@@ -119,4 +119,115 @@ describe('adjust_tool_test', function () {
       }), 0.00001);
   });
 
+  describe('sweep', function () {
+    var TEST_ROW_NAME = 'test';
+    var tool, dataset, heatmap;
+
+    beforeEach(function () {
+      tool = new phantasus.AdjustDataTool();
+      dataset = new phantasus.Dataset({
+        array: [[1, 2], [3, 4]],
+        rows: 2,
+        columns: 2
+      });
+      var vecRow = dataset.getRowMetadata().add(TEST_ROW_NAME); vecRow.setArray([10,20]);
+      vecRow.getProperties().set(phantasus.VectorKeys.DATA_TYPE, 'number');
+
+      var vecColumn = dataset.getColumnMetadata().add(TEST_ROW_NAME); vecColumn.setArray([50,100]);
+      vecColumn.getProperties().set(phantasus.VectorKeys.DATA_TYPE, 'number');
+
+      heatmap = new phantasus.HeatMap({
+        dataset: dataset
+      });
+    });
+
+    describe('row', function () {
+      beforeEach(function () {
+        tool.sweepTarget = [{value: 'row'}];
+        tool.sweepRowColumnSelect = [{value: TEST_ROW_NAME}];
+      });
+
+
+      it('divide', function () {
+        tool.sweepAction = [{value: 'Divide'}];
+
+        var newHeatMap = tool.execute({
+          heatMap: heatmap,
+          project: heatmap.getProject(),
+          input: {}
+        });
+
+        expect(newHeatMap.getProject().getFullDataset()).toBeDatasetValues(
+          new phantasus.Dataset({
+            array: [[1/10, 2/10],
+              [3/20, 4/20]],
+            rows: 2,
+            columns: 2
+          }), 0.1);
+      });
+
+      it('subtract', function () {
+        tool.sweepAction = [{value: 'Subtract'}];
+
+        var newHeatMap = tool.execute({
+          heatMap: heatmap,
+          project: heatmap.getProject(),
+          input: {}
+        });
+
+        expect(newHeatMap.getProject().getFullDataset()).toBeDatasetValues(
+          new phantasus.Dataset({
+            array: [[1 - 10, 2 - 10],
+              [3 - 20, 4 - 20]],
+            rows: 2,
+            columns: 2
+          }), 1);
+      });
+    });
+
+    describe('column', function () {
+      beforeEach(function () {
+        tool.sweepTarget = [{value: 'column'}];
+        tool.sweepRowColumnSelect = [{value: TEST_ROW_NAME}];
+      });
+
+
+      it('divide', function () {
+        tool.sweepAction = [{value: 'Divide'}];
+
+        var newHeatMap = tool.execute({
+          heatMap: heatmap,
+          project: heatmap.getProject(),
+          input: {}
+        });
+
+        expect(newHeatMap.getProject().getFullDataset()).toBeDatasetValues(
+          new phantasus.Dataset({
+            array: [[1/50, 2/100],
+              [3/50, 4/100]],
+            rows: 2,
+            columns: 2
+          }), 0.01);
+      });
+
+      it('subtract', function () {
+        tool.sweepAction = [{value: 'Subtract'}];
+
+        var newHeatMap = tool.execute({
+          heatMap: heatmap,
+          project: heatmap.getProject(),
+          input: {}
+        });
+
+        expect(newHeatMap.getProject().getFullDataset()).toBeDatasetValues(
+          new phantasus.Dataset({
+            array: [[1 - 50, 2 - 100],
+              [3 - 50, 4 - 100]],
+            rows: 2,
+            columns: 2
+          }), 1);
+      });
+    });
+  })
+
 });
