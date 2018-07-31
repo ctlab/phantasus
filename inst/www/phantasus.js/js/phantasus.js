@@ -24120,7 +24120,7 @@ phantasus.FormBuilder.prototype = {
       // type = 'bootstrap-select';
       // }
       if (type == 'bootstrap-select') {
-        html.push('<select style="' + style + '" data-live-search="' + (field.search ? true : false) + '" data-selected-text-format="count" name="'
+        html.push('<select style="' + style + '" data-size="5" data-live-search="' + (field.search ? true : false) + '" data-selected-text-format="count" name="'
           + name + '" id="' + id
           + '" data-actions-box="' + (field.selectAll ? true : false) + '" class="selectpicker' + (this.formStyle !== 'inline' ? ' form-control' : '') + '"');
       } else {

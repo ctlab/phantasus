@@ -1,5 +1,5 @@
-commit 59529caa66f81d6dd9029d1acca9e97e8f4f1c73
-Author: petrovich <mazahakaforever@ya.ru>
-Date:   Tue Jul 31 10:12:43 2018 +0300
+commit 7cfd4ae6d6d4186919ec02bca0849186e5dd18a6
+Author: Vladislav Kamenev <mazahakaforever@ya.ru>
+Date:   Tue Jul 31 14:03:05 2018 +0300
 
-    New heatmap tool fixed again.
+    Bootstrap select height limited to 5 items
