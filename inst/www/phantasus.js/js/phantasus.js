@@ -1892,6 +1892,75 @@ phantasus.Util.setLibrary = function (libraryName) {
   ocpu.seturl(window.libraryPrefix + 'ocpu/library/' + libraryName + '/R');
 };
 
+
+phantasus.Util.getTrueIndices = function (dataset) {
+  //console.log('TrueIndices', dataset, dataset.dataset, dataset.dataset === undefined);
+  var rowIndices = dataset.rowIndices ? dataset.rowIndices : [];
+  var rows = phantasus.Util.getConsNumbers(rowIndices.length);
+  var columnIndices = dataset.columnIndices ? dataset.columnIndices : [];
+  var columns = phantasus.Util.getConsNumbers(columnIndices.length);
+  var iter = 0;
+  var savedDataset = dataset;
+  //console.log("rows processing");
+  while (dataset.dataset && dataset.esSource !== 'original') {
+    var transposed = dataset instanceof phantasus.TransposedDatasetView;
+    var currentIndices = transposed ? dataset.columnIndices : dataset.rowIndices;
+    if (currentIndices == undefined) {
+      dataset = dataset.dataset;
+      continue;
+    }
+    rowIndices = currentIndices;
+    //console.log(iter, "rows:", rows.length, rows);
+    var newRows = Array.apply(null, Array(rows.length)).map(Number.prototype.valueOf, 0);
+    for (var i = 0; i < rows.length; i++) {
+      newRows[i] = currentIndices[rows[i]];
+    }
+    rows = newRows;
+    dataset = dataset.dataset;
+    iter++;
+  }
+  iter = 0;
+  //console.log("columns processing");
+  dataset = savedDataset;
+  while (dataset.dataset && dataset.esSource !== 'original') {
+    transposed = dataset instanceof phantasus.TransposedDatasetView;
+    currentIndices = transposed ? dataset.rowIndices : dataset.columnIndices;
+    if (currentIndices == undefined) {
+      dataset = dataset.dataset;
+      continue;
+    }
+    columnIndices = dataset.columnIndices;
+    var newCols = Array.apply(null, Array(columns.length)).map(Number.prototype.valueOf, 0);
+    for (i = 0; i < columns.length; i++) {
+      newCols[i] = currentIndices[columns[i]];
+    }
+    columns = newCols;
+    dataset = dataset.dataset;
+    iter++;
+  }
+  //console.log("res", rows, columns);
+  var conseqRows = phantasus.Util.getConsNumbers(dataset.rows);
+  var conseqCols = phantasus.Util.getConsNumbers(dataset.columns);
+  //console.log(conseqCols);
+  var ans = {};
+  //console.log(phantasus.Util.equalArrays(rows, conseqRows));
+  if (phantasus.Util.equalArrays(rows, conseqRows) || rows.length == 0 && phantasus.Util.equalArrays(conseqRows, rowIndices)) {
+    ans.rows = [];
+  }
+  else {
+    ans.rows = rows.length > 0 ? rows : rowIndices;
+  }
+  //console.log(phantasus.Util.equalArrays(columns, conseqCols));
+  if (phantasus.Util.equalArrays(columns, conseqCols) || columns.length == 0 && phantasus.Util.equalArrays(conseqCols, columnIndices)) {
+    ans.columns = [];
+  }
+  else {
+    ans.columns = columns.length > 0 ? columns : columnIndices;
+  }
+  //console.log(ans);
+  return ans;
+};
+
 phantasus.BlobFromPath = function () {
 };
 phantasus.BlobFromPath.getFileBlob = function (url, cb) {
@@ -5696,11 +5765,11 @@ phantasus.DatasetAdapter = function (dataset, rowMetadata, columnMetadata) {
     throw 'dataset is null';
   }
   this.dataset = dataset;
-  this.esSession = new Promise(function (resolve) {resolve(dataset.getESSession())});
-  this.esVariable = _.clone(this.dataset.getESVariable());
   this.rowMetadata = rowMetadata || dataset.getRowMetadata();
   this.columnMetadata = columnMetadata || dataset.getColumnMetadata();
-
+  this.esSession = dataset.esSession;
+  this.esVariable = dataset.esVariable;
+  this.esSource = 'copied';
 };
 phantasus.DatasetAdapter.prototype = {
   getDataset: function () {
@@ -7013,6 +7082,7 @@ phantasus.DatasetUtil.toESSessionPromise = function (dataset) {
     phantasus.DatasetUtil.probeDataset(dataset, datasetSession).then(function (result) {
       if (result) { // dataset identical to one in session.
         resolve(datasetSession);
+        dataset.esSource = 'original';
         return;
       }
 
@@ -7087,6 +7157,7 @@ phantasus.DatasetUtil.toESSessionPromise = function (dataset) {
         var proto = new REXP(messageJSON);
         var req = ocpu.call('createES', proto, function (session) {
           dataset.setESVariable('es');
+          dataset.esSource = 'original';
           resolve(session);
         }, true);
 
@@ -7100,8 +7171,8 @@ phantasus.DatasetUtil.toESSessionPromise = function (dataset) {
 phantasus.DatasetUtil.probeDataset = function (dataset, session) {
   var targetSession = session || dataset.getESSession();
 
-  return new Promise(function (resolve, reject) {
-    if (!targetSession) {
+  return new Promise(function (resolve) {
+    if (!targetSession || !dataset.getESVariable()) {
       return resolve(false);
     }
 
@@ -7140,10 +7211,10 @@ phantasus.DatasetUtil.probeDataset = function (dataset, session) {
 
 
       req.fail(function () {
-        reject();
+        resolve(false);
       });
 
-    }, function () { reject(); });
+    }, function () { resolve(false); });
   });
 };
 
@@ -16142,22 +16213,24 @@ phantasus.NewHeatMapTool.prototype = {
       selectedColumns: true
     });
     phantasus.DatasetUtil.shallowCopy(dataset);
-    var oldSession = dataset.getESSession();
-    var oldVariable = dataset.getESVariable();
+    var indices = phantasus.Util.getTrueIndices(dataset);
+    var currentSessionPromise = dataset.getESSession();
+    var currentESVariable = dataset.getESVariable();
 
     dataset.setESSession(new Promise(function (resolve, reject) {
-      oldSession.then(function (esSession) {
+      currentSessionPromise.then(function (esSession) {
         var args = {
           es: esSession,
-          rows: dataset.rowIndices,
-          columns: dataset.columnIndices
+          rows: indices.rows,
+          columns: indices.columns
         };
 
         var req = ocpu.call("subsetES", args, function (newSession) {
           dataset.setESVariable('es');
+          dataset.esSource = 'original';
           resolve(newSession);
           console.log('Old dataset session: ', esSession, ', New dataset session: ', newSession);
-        }, false, "::" + oldVariable);
+        }, false, "::" + currentESVariable);
 
         req.fail(function () {
           reject();

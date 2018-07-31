@@ -1,5 +1,5 @@
-commit 7f2c8fc97235cc3ab709be5e604eedd0e65dd230
-Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Mon Jul 30 16:57:39 2018 +0300
+commit 59529caa66f81d6dd9029d1acca9e97e8f4f1c73
+Author: petrovich <mazahakaforever@ya.ru>
+Date:   Tue Jul 31 10:12:43 2018 +0300
 
-    Sweep tool test implemented
+    New heatmap tool fixed again.
