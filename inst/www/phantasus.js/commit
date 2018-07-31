@@ -1,5 +1,7 @@
-commit 7cfd4ae6d6d4186919ec02bca0849186e5dd18a6
+commit b0d864dbf5afad254e44e3ba1b46f4c5dd602518
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Tue Jul 31 14:03:05 2018 +0300
+Date:   Tue Jul 31 19:08:07 2018 +0300
 
-    Bootstrap select height limited to 5 items
+    Filters fix (topN gives top N genes, not top N values)
+    Filters revamped.
+    Dev API removedю

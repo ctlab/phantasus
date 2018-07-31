@@ -7907,14 +7907,16 @@ phantasus.TopNFilter.prototype = {
         };
       }
       this.vector = vector;
-      var set = new phantasus.Set();
-      for (var i = 0, size = vector.size(); i < size; i++) {
-        var value = vector.getValue(i);
-        if (!isNaN(value)) {
-          set.add(value);
-        }
-      }
-      var values = set.values();
+      // Get exactly N top genes, not values
+
+      // var set = new phantasus.Set();
+      // for (var i = 0, size = vector.size(); i < size; i++) {
+      //   var value = vector.getValue(i);
+      //   if (!isNaN(value)) {
+      //     set.add(value);
+      //   }
+      // }
+      var values = this.vector.array;
       // ascending order
       values.sort(function (a, b) {
         return (a === b ? 0 : (a < b ? -1 : 1));
@@ -14574,30 +14576,6 @@ phantasus.DendrogramEnrichmentTool.prototype = {
   }
 };
 
-phantasus.DevAPI = function () {
-};
-phantasus.DevAPI.prototype = {
-  toString: function () {
-    return 'API';
-  },
-  gui: function () {
-    return [{
-      name: 'code',
-      value: '',
-      type: 'textarea',
-      required: true,
-      help: 'Enter your code'
-    }];
-  },
-  execute: function (options) {
-    var heatMap = options.heatMap;
-    var code = options.input.code;
-    eval(code);
-    // force a repaint of everything
-    heatMap.getProject().setFullDataset(heatMap.getProject().getFullDataset(), true);
-  }
-};
-
 var ENRICHR_URL = 'https://amp.pharm.mssm.edu/Enrichr/addList';
 var ENRICHR_SUBMIT_LIMIT = 10000;
 
@@ -19918,13 +19896,16 @@ phantasus.ActionManager = function () {
         $filterModal.on('mousewheel', function (e) {
           e.stopPropagation();
         });
-        var $filter = $('<div style="padding-bottom:30px;"></div>');
+        var $filter = $('<div></div>');
         $filter.appendTo($filterModal.find('.modal-body'));
-        var filterHtml = [];
-        filterHtml
-          .push('<div class="radio"><label><input type="radio" name="rowsOrColumns" value="rows" checked>Rows</label></div> ');
-        filterHtml
-          .push('<div class="radio"><label><input type="radio" name="rowsOrColumns" value="columns">Columns</label></div>');
+        var filterHtml = ['<ul class="nav nav-tabs" id="rowsOrColumns">',
+                          ' <li class="active"><a>Rows</a></li>',
+                          ' <li><a>Columns</a></li>',
+                          '</ul>'];
+        // filterHtml
+        //   .push('<div class="radio"><label><input type="radio" name="rowsOrColumns" value="rows" checked>Rows</label></div> ');
+        // filterHtml
+        //   .push('<div class="radio"><label><input type="radio" name="rowsOrColumns" value="columns">Columns</label></div>');
 
         var $filterChooser = $(filterHtml.join(''));
         $filterChooser.appendTo($filter);
@@ -19954,10 +19935,13 @@ phantasus.ActionManager = function () {
         rowFilterUI.$div.appendTo($filter);
         columnFilterUI.$div.appendTo($filter);
         columnFilterUI.$div.css('display', 'none');
-        var $filterRadio = $filterChooser.find('[name=rowsOrColumns]');
-        $filterRadio.on('change', function (e) {
-          var val = $filterRadio.filter(':checked').val();
-          if (val === 'columns') {
+        var filterTabs = $filterChooser.find('li');
+        filterTabs.on('click', function (e) {
+          filterTabs.toggleClass('active', false);
+          var target = $(e.currentTarget);
+          var mode = target.text();
+          target.toggleClass('active', true);
+          if (mode === 'Columns') {
             columnFilterUI.$div.show();
             rowFilterUI.$div.hide();
           } else {
@@ -20836,7 +20820,7 @@ phantasus.ActionManager = function () {
     new phantasus.HClusterTool(), new phantasus.MarkerSelection(),
     new phantasus.NearestNeighbors(), new phantasus.AdjustDataTool(),
     new phantasus.CollapseDatasetTool(), new phantasus.CreateAnnotation(), new phantasus.SimilarityMatrixTool(),
-    new phantasus.TransposeTool(), new phantasus.TsneTool(), new phantasus.DevAPI(),
+    new phantasus.TransposeTool(), new phantasus.TsneTool(),
     new phantasus.KmeansTool(), new phantasus.LimmaTool()].forEach(function (tool) {
     _this.add({
       ellipsis: false,
@@ -23191,9 +23175,9 @@ phantasus.FilterUI.rangeFilter = function (project, name, isColumns, $ui, filter
   var html = [];
   html.push('<label>Range of values</label><br />');
   html
-    .push('<label>>= </label> <input style="max-width:200px;" class="form-control input-sm" name="min" type="text" />');
+    .push('<div style="display:inline-block"><label>>= </label> <input style="max-width:100px;" class="form-control input-sm" name="min" type="text" /></div>');
   html
-    .push('<label> and <= </label> <input style="max-width:200px;" class="form-control input-sm" name="max" type="text" />');
+    .push('<div style="display:inline-block; margin-left: 5px;"><label> and <= </label> <input style="max-width:100px;" class="form-control input-sm" name="max" type="text" /></div>');
   html.push('<br /><a data-name="switch" href="#">Switch to top filter</a>');
   var $form = $(html.join(''));
   $form.appendTo($ui);
@@ -23251,13 +23235,16 @@ phantasus.FilterUI.rangeFilter = function (project, name, isColumns, $ui, filter
 };
 phantasus.FilterUI.topFilter = function (project, name, isColumns, $ui, filter) {
   $ui.empty();
-  var html = [];
-  html.push('<label>Top</label><br />');
-  html
-    .push('<select style="width:auto;" class="form-control input-sm" name="direction"><option value="Top">Top</option><option value="Bottom">Bottom</option><option value="TopBottom">Top/Bottom</option></select>');
-  html
-    .push(' <label>N </label> <input style="max-width:200px;" class="form-control input-sm" name="n" type="text" />');
-  html.push('<br /><a data-name="switch" href="#">Switch to range filter</a>');
+  var html = ['<label>Direction: </label>',
+              '<select class="form-control input-sm phantasus-filter-input" name="direction">',
+                '<option value="Top">Top</option>',
+                '<option value="Bottom">Bottom</option>',
+                '<option value="TopBottom">Top/Bottom</option>',
+              '</select>',
+              '<label>Amount:</label>',
+              '<input class="form-control input-sm phantasus-filter-input" name="n" type="text" />',
+              '<br /><a data-name="switch" href="#">Switch to range filter</a>'];
+
   var $form = $(html.join(''));
   $form.appendTo($ui);
   var $n = $ui.find('[name=n]');
@@ -23435,12 +23422,11 @@ phantasus.FilterUI.prototype = {
     var html = [];
     html.push('<div class="phantasus-entry">');
 
-    html.push('<div class="form-group">');
-    html.push('<label>Field</label>');
+    html.push('<div class="form-group" style="margin-bottom: 0px;">');
+    html.push('<label>Field:</label>');
     // field
 
-    html
-      .push('<select style="max-width:160px;overflow-x:hidden;" name="by" class="form-control input-sm">');
+    html.push('<select style="max-width:150px;overflow-x:hidden; display: inline-block; margin: 5px; padding: 5px; line-height: normal; height: auto;" name="by" class="form-control input-sm">');
     html.push('<option disabled selected value style="display: none">--select field--</option>');
     var filterField = filter ? filter.toString() : null;
 
@@ -30261,8 +30247,6 @@ phantasus.HeatMap = function (options) {
           null,
           'Sort/Group',
           'Filter',
-          null,
-          'API',
           null,
           'K-means',
           'Limma',
