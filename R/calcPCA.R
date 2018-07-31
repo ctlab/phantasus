@@ -21,18 +21,17 @@
 
 calcPCA <- function(es, replacena = "mean") {
 
-    scaledExprs <- unname(exprs(es))
+    scaledExprs <- unname(t(scale(t(exprs(es)))))
 
     naInd <- which(is.na(scaledExprs), arr.ind = TRUE)
     if (nrow(naInd) > 0) {
         replaceValues <- apply(scaledExprs, 1, replacena, na.rm=TRUE)
         scaledExprs[naInd] <- replaceValues[naInd[,1]]
         rowsToPca <- is.finite(replaceValues)
+        scaledExprs <- t(scale(t(scaledExprs))) # if there were NA - scale again
     } else {
         rowsToPca <- seq_len(nrow(scaledExprs))
     }
-
-    scaledExprs <- t(scale(t(scaledExprs)))
 
     pca <- stats::prcomp(t(scaledExprs[rowsToPca, ]))
     explained <- (pca$sdev) ^ 2 / sum(pca$sdev ^ 2)
