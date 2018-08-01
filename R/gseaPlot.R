@@ -10,8 +10,9 @@
 #' @return path to an svg file
 #' @importFrom fgsea plotEnrichment fgsea
 #' @importFrom ggplot2 ggtitle
+#' @importFrom grDevices colorRampPalette dev.off svg
+#' @importFrom utils head
 #' @import grid
-#' @import gridExtra
 #' @import gtable
 #' @import svglite
 gseaPlot <- function(es, rankBy, selectedGenes, width, height,

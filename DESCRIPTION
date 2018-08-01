@@ -22,11 +22,12 @@ biocViews: GeneExpression, GUI, Visualization, DataRepresentation, Transcriptomi
             PrincipalComponent
 Imports: ggplot2, protolite, Biobase, GEOquery, Rook, htmltools,
         httpuv, jsonlite, limma, opencpu, assertthat, methods, httr, rhdf5,
-        utils, parallel, stringr, fgsea, svglite
+        utils, parallel, stringr, fgsea, svglite, gtable, 
+        Matrix, Matrix.utils, pheatmap, scales
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.0.1
-Suggests: testthat, BiocStyle, knitr, rmarkdown, data.table, svglite
+Suggests: testthat, BiocStyle, knitr, rmarkdown, data.table
 VignetteBuilder: knitr
 NeedsCompilation: no

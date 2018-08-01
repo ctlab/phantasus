@@ -7,7 +7,7 @@
 getArchs4Files(cacheDir)
 }
 \arguments{
-\item{cachDir}{base directory for cache}
+\item{cacheDir}{base directory for cache}
 }
 \value{
 list of .h5 files
