@@ -16,7 +16,7 @@
 #' @import svglite
 gseaPlot <- function(es, rankBy, selectedGenes, width, height,
                      vertical=FALSE,
-                     addHeatmap=TRUE,
+                     addHeatmap=FALSE,
                      showAnnotation=NULL) {
     featureData <- fData(es)
     colnames(featureData) <- fvarLabels(es)
@@ -74,6 +74,7 @@ gseaPlot <- function(es, rankBy, selectedGenes, width, height,
         heatmapWidth <- max(1, 3 - 6/ncol(aggr))
 
         if (vertical) {
+            heatmapWidth <- min(heatmapWidth, width/4)
             ph <- pheatmap::pheatmap(aggr,
                                      cluster_rows = FALSE, cluster_cols = FALSE,
                                      show_rownames = FALSE, show_colnames = FALSE,
@@ -108,6 +109,7 @@ gseaPlot <- function(es, rankBy, selectedGenes, width, height,
 
         } else {
             # horizontal
+            heatmapWidth <- min(heatmapWidth, height/4)
             ph <- pheatmap::pheatmap(Matrix::t(aggr),
                                      cluster_rows = FALSE, cluster_cols = FALSE,
                                      show_rownames = FALSE, show_colnames = FALSE,
