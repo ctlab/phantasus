@@ -33,15 +33,15 @@ gseaPlot <- function(es, rankBy, selectedGenes, width, height,
     fgseaRes <- fgsea(list(pathway), ranks, nperm=2000, nproc=1)
 
     pvalString <- if (fgseaRes$nMoreExtreme == 0) {
-        " < 1e-3"
+        "<1e-3"
     } else {
-        sprintf(" = %.2g", fgseaRes$pval)
+        sprintf("=%.2g", fgseaRes$pval)
     }
 
-    labelString <- sprintf("p-value %s, NES = %.2f", pvalString, fgseaRes$NES)
+    labelString <- sprintf("p-value%s, NES=%.2f", pvalString, fgseaRes$NES)
 
 
-    p <- plotEnrichment(pathway, ranks) + ggtitle(labelString)
+    p <- plotEnrichment(pathway, ranks) + ggtitle(NULL, subtitle=labelString)
     if (vertical) {
         p <- p +
             scale_x_reverse(limits=c(length(ranks) + 1, -1), expand=c(0, 0)) +
@@ -60,9 +60,13 @@ gseaPlot <- function(es, rankBy, selectedGenes, width, height,
         grouping <- ceiling(seq_len(nrow(mat)) / nrow(mat) * 1000)
         aggr <- Matrix.utils::aggregate.Matrix(mat, groupings=grouping, fun="mean")
 
-        annotation_col <- NULL
+        annotation_col <- data.frame(row.names=colnames(es))
         if (!is.null(showAnnotation)) {
-            annotation_col <- data.frame(row.names=colnames(es), condition=es[[showAnnotation]])
+            values <- es[[showAnnotation]]
+            annotation_col <- cbind(annotation_col,
+                                    setNames(list(factor(values,
+                                                            levels=unique(values))),
+                                             showAnnotation))
         }
 
 
