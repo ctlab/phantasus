@@ -1,5 +1,8 @@
 FROM ubuntu:16.04
 
+ARG TARGET_BRANCH=master
+ENV OCPU_MASTER_HOME=/var/phantasus/ocpu-root
+
 RUN apt-get -y update && \
     apt-get -y dist-upgrade && \
     apt-get -y install \
@@ -54,7 +57,7 @@ RUN gpg -a --export E084DAB9 | apt-key add -
 RUN R -e 'install.packages("devtools", repo = "https://cran.rstudio.com/")'
 
 
-RUN git clone -b master --recursive https://github.com/ctlab/phantasus /root/phantasus
+RUN git clone -b ${TARGET_BRANCH} --recursive https://github.com/ctlab/phantasus /root/phantasus
 
 RUN R -e 'source("https://bioconductor.org/biocLite.R")'
 RUN R -e 'devtools::install("/root/phantasus", build_vignettes=T)'
@@ -71,11 +74,9 @@ ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 
 RUN mkdir -p /var/phantasus/cache
-VOLUME ["/var/phantasus/cache"]
-
 RUN mkdir -p /var/phantasus/preloaded
-VOLUME ["/var/phantasus/preloaded"]
+RUN mkdir -p /var/phantasus/ocpu-root
 
 CMD service apache2 start && \
-    R -e 'library(phantasus); servePhantasus("0.0.0.0", 8001, cacheDir="/var/phantasus/cache", preloadedDir="/var/phantasus/preloaded")'
+   R -e 'library(phantasus); servePhantasus("0.0.0.0", 8001, cacheDir="/var/phantasus/cache", preloadedDir="/var/phantasus/preloaded")'
 
