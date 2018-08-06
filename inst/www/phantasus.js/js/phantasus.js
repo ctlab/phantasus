@@ -17688,11 +17688,13 @@ phantasus.PcaPlotTool.prototype = {
             }
 
             var labels = type.x.map(function (x, idx) {
+              var size = (Array.isArray(type.marker.size)) ? type.marker.size[idx] : type.marker.size;
+
               return {
                 x: x,
                 y: type.y[idx],
                 name: type.text[idx],
-                r: type.marker.size
+                r: size
               };
             });
             type.text = null;
