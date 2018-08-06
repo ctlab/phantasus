@@ -1,5 +1,5 @@
-commit 7538ca987b43012ae420b1207f704caedd9e9a61
+commit f489a5ed1d0dbfbc98f243cab478196e62c5aadd
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Mon Aug 6 14:08:21 2018 +0300
+Date:   Mon Aug 6 17:00:00 2018 +0300
 
-    Top filter fix. Sort clone of array - not original array
+    Filter fixes. Valid empty value

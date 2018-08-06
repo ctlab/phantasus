@@ -23299,6 +23299,14 @@ phantasus.FilterUI.prototype = {
       var set = phantasus.VectorUtil.getSet(vector);
       var array = set.values();
       array.sort(phantasus.SortKey.ASCENDING_COMPARATOR);
+
+      array = array.map(function (item) {
+        if (item === '') {
+          return {valueOf: function () { return ''; }, toString: function () { return '(None)'; }};
+        }
+
+        return item;
+      });
       if (!filter) {
         filter = new phantasus.VectorFilter(new phantasus.Set(), set
           .size(), fieldName, isColumns);
@@ -36600,7 +36608,7 @@ phantasus.Table.defaultRenderer = function (item, value) {
     }
     return s.join('');
   } else {
-    return '' + value;
+    return '' + value.toString();
   }
 };
 
