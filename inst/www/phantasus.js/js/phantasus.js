@@ -7916,7 +7916,7 @@ phantasus.TopNFilter.prototype = {
       //     set.add(value);
       //   }
       // }
-      var values = this.vector.array;
+      var values = _.clone(this.vector.array);
       // ascending order
       values.sort(function (a, b) {
         return (a === b ? 0 : (a < b ? -1 : 1));

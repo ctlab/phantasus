@@ -1,6 +1,5 @@
-commit b02d75a6585f5c127e15633d87570e9302788c4c
+commit 7538ca987b43012ae420b1207f704caedd9e9a61
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Mon Aug 6 12:51:06 2018 +0300
+Date:   Mon Aug 6 14:08:21 2018 +0300
 
-    GSEA tool fixed.
-    None in unified style
+    Top filter fix. Sort clone of array - not original array
