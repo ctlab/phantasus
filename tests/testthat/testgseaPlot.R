@@ -25,5 +25,10 @@ test_that("gseaPlot works", {
              width=6, height=4, vertical = FALSE,
              addHeatmap = TRUE, showAnnotation = "time"))
     expect_true(file.exists(f))
+
+    f <- fromJSON(gseaPlot(es, rankBy = "t", selectedGenes = sample.int(nrow(es), 10),
+                           width=6, height=4, vertical = FALSE,
+                           addHeatmap = TRUE))
+    expect_true(file.exists(f))
 })
 

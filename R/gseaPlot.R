@@ -60,10 +60,10 @@ gseaPlot <- function(es, rankBy, selectedGenes, width, height,
         grouping <- ceiling(seq_len(nrow(mat)) / nrow(mat) * 1000)
         aggr <- Matrix.utils::aggregate.Matrix(mat, groupings=grouping, fun="mean")
 
-        annotation_col <- data.frame(row.names=colnames(es))
+        annotation_col <- NULL
         if (!is.null(showAnnotation)) {
             values <- es[[showAnnotation]]
-            annotation_col <- cbind(annotation_col,
+            annotation_col <- data.frame(row.names=colnames(es),
                                     setNames(list(factor(values,
                                                             levels=unique(values))),
                                              showAnnotation))

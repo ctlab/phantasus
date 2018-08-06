@@ -1,5 +1,6 @@
-commit fe0568f92193633dd2a6a7303f4c3df58fa32466
-Author: Alexey Sergushichev <alsergbox@gmail.com>
-Date:   Wed Aug 1 20:21:26 2018 +0300
+commit b02d75a6585f5c127e15633d87570e9302788c4c
+Author: Vladislav Kamenev <mazahakaforever@ya.ru>
+Date:   Mon Aug 6 12:51:06 2018 +0300
 
-    GSEA tool with heatmap
+    GSEA tool fixed.
+    None in unified style
