@@ -1,5 +1,8 @@
-commit 771ccbd76c52a964b7b717283b2b6b49703851a1
+commit f8364dc2df212eb499a07bb36c3b8833b040a522
+Merge: efed517 771ccbd
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Mon Aug 6 18:06:55 2018 +0300
+Date:   Tue Aug 7 12:42:22 2018 +0300
 
-    PCA plot sizeBy performance fix
+    Merge pull request #48 from ctlab/kamenv
+    
+    Kamenv
