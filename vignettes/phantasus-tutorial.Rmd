@@ -243,7 +243,7 @@ knitr::include_graphics("images/hierarchical_tool.jpg")
 
 Now, when outliers are confirmed and easily viewed with the dendrogram 
 from the previous step, you can select the good samples 
-and extract them into another heatmap (_Tools/New Heat Map_ of pressing _Ctrl+X_).
+and extract them into another heatmap (by clicking _Tools/New Heat Map_ or pressing _Ctrl+X_).
 
 ```{r, out.width = "600px", echo = FALSE}
 knitr::include_graphics("images/good_samples.jpg")

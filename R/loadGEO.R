@@ -141,7 +141,7 @@ getGDS <- function(name, destdir = tempdir(),
 
 
 #' Returns list of ARCHS4 hdf5 files with expression data
-#' @param cachDir base directory for cache
+#' @param cacheDir base directory for cache
 #' @return list of .h5 files
 getArchs4Files <- function(cacheDir) {
     list.files(file.path(cacheDir), '*.h5', full.names = TRUE)

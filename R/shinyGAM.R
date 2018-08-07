@@ -1,13 +1,9 @@
 #' Constructs data frame with gene annotations and submits it into Shiny GAM web-server
-#' @param fData list of annotation columns
-#' @param fvarLabels vector of column names
+#' @param es Expression set object
 #' @return URL for Shiny GAM
 #' @importFrom utils write.table
-shinyGAMAnalysis <- function(fData, fvarLabels) {
-    featureData <- data.frame(fData)
-    colnames(featureData) <- fvarLabels
-    de <- featureData
-
+shinyGAMAnalysis <- function(es) {
+    de <- fData(es)
 
     deFile <- tempfile()
     write.table(de, deFile, sep="\t", row.names=FALSE, col.names=TRUE)

@@ -1,4 +1,4 @@
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000 * 240; // 240 seconds
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 240000;
 
 describe('preloaded_reader_test', function () {
 

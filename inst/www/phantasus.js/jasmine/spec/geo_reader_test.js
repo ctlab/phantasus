@@ -1,9 +1,8 @@
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000 * 240; // 240 seconds
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 240000;
 
 describe('geo_reader_test', function () {
 
   describe('loading mono gse datasets', function () {
-    var originalTimeout;
     var result;
     beforeEach(function (done) {
       var reader = new phantasus.GeoReader();

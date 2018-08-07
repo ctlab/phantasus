@@ -4,13 +4,11 @@
 \alias{gseaPlot}
 \title{Returns path to an svg file with enrichment plot}
 \usage{
-gseaPlot(fData, fvarLabels, rankBy, selectedGenes, width, height,
-  vertical = FALSE)
+gseaPlot(es, rankBy, selectedGenes, width, height, vertical = FALSE,
+  addHeatmap = FALSE, showAnnotation = NULL)
 }
 \arguments{
-\item{fData}{list of annotation columns}
-
-\item{fvarLabels}{vector of column names}
+\item{es}{ExpressionSet object.}
 
 \item{rankBy}{name of the numeric column used for gene ranking}
 
@@ -21,6 +19,10 @@ gseaPlot(fData, fvarLabels, rankBy, selectedGenes, width, height,
 \item{height}{height of the image (in inches)}
 
 \item{vertical}{whether to use vertical orientation (default: FALSE)}
+
+\item{addHeatmap}{whether to add an expression heatmap, sorted by rankBy (default: FALSE)}
+
+\item{showAnnotation}{a name of column annotation to add to the heatmap, default: NULL (no annotation)}
 }
 \value{
 path to an svg file

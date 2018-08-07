@@ -5,10 +5,6 @@
 #'
 #' @param es an ExpressionSet object, should be normalized
 #'
-#' @param columns list of specified columns' indices (optional)
-#'
-#' @param rows list of specified rows' indices (optional)
-#'
 #' @param replacena method for replacing NA values (mean by default)
 #'
 #' @return json with full description of the plot for plotly.js
@@ -22,11 +18,21 @@
 #' data(es)
 #' calcPCA(es)
 #' }
-calcPCA <- function(es, columns = c(), rows = c(), replacena = "mean") {
 
-    data <- t(prepareData(es, columns, rows, replacena))
+calcPCA <- function(es, replacena = "mean") {
 
-    pca <- stats::prcomp(data)
+    scaledExprs <- unname(exprs(es))
+
+    naInd <- which(is.na(scaledExprs), arr.ind = TRUE)
+    if (nrow(naInd) > 0) {
+        replaceValues <- apply(scaledExprs, 1, replacena, na.rm=TRUE)
+        scaledExprs[naInd] <- replaceValues[naInd[,1]]
+    }
+
+    scaledExprs <- t(scale(t(scaledExprs)))
+    rowsToPca <- which(!apply(is.na(scaledExprs), 1, any))
+
+    pca <- stats::prcomp(t(scaledExprs[rowsToPca, ]))
     explained <- (pca$sdev) ^ 2 / sum(pca$sdev ^ 2)
 
     xs <- sprintf("PC%s", seq_along(explained))
@@ -37,3 +43,4 @@ calcPCA <- function(es, columns = c(), rows = c(), replacena = "mean") {
     row.names(pca.res) <- NULL
     return(jsonlite::toJSON(list(pca = t(pca.res), xlabs = xlabs)))
 }
+

@@ -4,12 +4,10 @@
 \alias{shinyGAMAnalysis}
 \title{Constructs data frame with gene annotations and submits it into Shiny GAM web-server}
 \usage{
-shinyGAMAnalysis(fData, fvarLabels)
+shinyGAMAnalysis(es)
 }
 \arguments{
-\item{fData}{list of annotation columns}
-
-\item{fvarLabels}{vector of column names}
+\item{es}{Expression set object}
 }
 \value{
 URL for Shiny GAM
