@@ -1,6 +1,8 @@
 FROM ubuntu:16.04
 
 ARG TARGET_BRANCH=master
+ARG PHANTASUS_BUILD
+ARG PHANTASUS_VERSION
 ENV OCPU_MASTER_HOME=/var/phantasus/ocpu-root
 
 RUN apt-get -y update && \
@@ -53,7 +55,7 @@ RUN a2ensite opencpu2
 # protobuf 3.5, with 2GB byte limit
 RUN gpg --keyserver keyserver.ubuntu.com --recv-key E084DAB9
 RUN gpg -a --export E084DAB9 | apt-key add -
-    
+
 RUN R -e 'install.packages("devtools", repo = "https://cran.rstudio.com/")'
 
 
@@ -62,6 +64,7 @@ RUN git clone -b ${TARGET_BRANCH} --recursive https://github.com/ctlab/phantasus
 RUN R -e 'source("https://bioconductor.org/biocLite.R")'
 RUN R -e 'devtools::install("/root/phantasus", build_vignettes=T)'
 
+RUN echo -e "window.PHANTASUS_VERSION=$CURRENT-VERSION;\nwindow.PHANTASUS_BUILD=$DOCKER_TAG;" > /root/phantasus/inst/www/phantasus.js/RELEASE.js
 RUN cp -r /root/phantasus/inst/www/phantasus.js /var/www/html/phantasus
 
 RUN a2enmod proxy_http
