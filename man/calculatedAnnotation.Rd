@@ -4,12 +4,19 @@
 \alias{calculatedAnnotation}
 \title{Create calculated annotation}
 \usage{
-calculatedAnnotation(es, operation)
+calculatedAnnotation(es, operation, rows = c(), columns = c(),
+  isColumns = FALSE)
 }
 \arguments{
 \item{es}{ExpressionSet object.}
 
 \item{operation}{Name of the operation to perform calculation}
+
+\item{rows}{List of specified rows' indices (optional), indices start from 0}
+
+\item{columns}{List of specified columns' indices (optional), indices start from 0#'}
+
+\item{isColumns}{Apply fn to columns}
 }
 \description{
 \code{calculatedAnnotation} adds a column calculated by operation
