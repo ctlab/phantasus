@@ -9,7 +9,7 @@ cd inst-raw/phantasus.js
 grunt dist
 
 git log -1 > ../../inst/www/phantasus.js/commit
-printf "window.PHANTASUS_VERSION=$PHANTASUS_VERSION\nwindow.PHANTASUS_BUILD='none-${PHANTASUS_BUILD::10}'" > ../../inst/www/phantasus.js/RELEASE.js
+printf "window.PHANTASUS_VERSION='$PHANTASUS_VERSION'\nwindow.PHANTASUS_BUILD='none-${PHANTASUS_BUILD::10}'" > ../../inst/www/phantasus.js/RELEASE.js
 
 cp ./index.html ../../inst/www/phantasus.js/
 cp ./js/phantasus.js ../../inst/www/phantasus.js/js/
