@@ -13098,6 +13098,16 @@ phantasus.AdjustDataTool.prototype = {
       });
     });
 
+    this.sweepAction.on('change', function (e) {
+      var action = e.currentTarget.value;
+      form.$form.find('#Sweep-first-divider').text(
+        action === 'Divide' ? 'each' : 'from each'
+      );
+      form.$form.find('#Sweep-second-divider').text(
+        action === 'Divide' ? 'by field:' : 'field:'
+      );
+    });
+
     form.$form.find('[name=scale_column_sum]').on('change', function (e) {
       form.setVisible('column_sum', form.getValue('scale_column_sum'));
     });
@@ -13137,11 +13147,8 @@ phantasus.AdjustDataTool.prototype = {
       type: 'checkbox',
       help: 'Subtract median, divide by median absolute deviation'
     }, {
-      name: 'use_selected_rows_and_columns_only',
-      type: 'checkbox'
-    }, {
       name: 'Sweep',
-      type: "triple-select",
+      type: 'triple-select',
       firstName: 'sweep-action',
       firstOptions: ['Divide', 'Subtract'],
       firstDivider: 'each',
@@ -24035,7 +24042,7 @@ phantasus.FormBuilder.prototype = {
       html.push('</select>');
 
       if (field.firstDivider) {
-        html.push('<span>' + field.firstDivider + '</span>');
+        html.push('<span id="' + name +'-first-divider">' + field.firstDivider + '</span>');
       }
 
       html.push('<select style="' + field.comboboxStyle + '" name="' + field.secondName + '" id="' + id
@@ -24054,7 +24061,7 @@ phantasus.FormBuilder.prototype = {
       html.push('</select>');
 
       if (field.secondDivider) {
-        html.push('<span>' + field.secondDivider + '</span>');
+        html.push('<span id="' + name +'-second-divider">' + field.secondDivider + '</span>');
       }
 
       html.push('<select style="' + field.comboboxStyle + '" name="' + field.thirdName + '" id="' + id

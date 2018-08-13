@@ -1,5 +1,6 @@
-commit 4fb4a4ee305e47fb3bc76f3a1292db45b7dff444
+commit b8e7a9e46ff0af25abc3511d3fb5dc4793e551fa
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Mon Aug 13 19:15:25 2018 +0300
+Date:   Mon Aug 13 19:38:43 2018 +0300
 
-    Dummy release file
+    Added ids to triple selector dividers.
+    Made sweep more english
