@@ -1,8 +1,5 @@
-commit f8364dc2df212eb499a07bb36c3b8833b040a522
-Merge: efed517 771ccbd
+commit 4fb4a4ee305e47fb3bc76f3a1292db45b7dff444
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Tue Aug 7 12:42:22 2018 +0300
+Date:   Mon Aug 13 19:15:25 2018 +0300
 
-    Merge pull request #48 from ctlab/kamenv
-    
-    Kamenv
+    Dummy release file
