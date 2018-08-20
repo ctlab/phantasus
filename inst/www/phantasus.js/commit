@@ -1,6 +1,6 @@
-commit b8e7a9e46ff0af25abc3511d3fb5dc4793e551fa
+commit cf90faa943103facedab1d530dd8a20f369b7c7d
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Mon Aug 13 19:38:43 2018 +0300
+Date:   Mon Aug 20 18:50:17 2018 +0300
 
-    Added ids to triple selector dividers.
-    Made sweep more english
+    fData verification in probe.
+    Debug tool - probe dataset

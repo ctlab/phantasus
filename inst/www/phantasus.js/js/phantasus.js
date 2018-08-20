@@ -1961,6 +1961,18 @@ phantasus.Util.getTrueIndices = function (dataset) {
   return ans;
 };
 
+phantasus.Util.safeTrim = function (string) {
+  if (string && string.trim) {
+    return string.trim();
+  } else {
+    return string;
+  }
+};
+
+phantasus.Util.getURLParameter = function (name) {
+  return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search) || [null, ''])[1].replace(/\+/g, '%20')) || null;
+};
+
 phantasus.BlobFromPath = function () {
 };
 phantasus.BlobFromPath.getFileBlob = function (url, cb) {
@@ -2356,7 +2368,7 @@ phantasus.ParseDatasetFromProtoBin.getDataset = function (session, seriesName, j
     for (i = 0; i < metaNames.length; i++) {
       var curVec = dataset.getColumnMetadata().add(metaNames[i]);
       for (j = 0; j < ncolData; j++) {
-        curVec.setValue(j, flatPdata[j + i * ncolData]);
+        curVec.setValue(j, phantasus.Util.safeTrim(flatPdata[j + i * ncolData]));
       }
     }
   }
@@ -2370,7 +2382,7 @@ phantasus.ParseDatasetFromProtoBin.getDataset = function (session, seriesName, j
   for (i = 0; i < rowMetaNames.length; i++) {
     curVec = dataset.getRowMetadata().add(rowMetaNames[i]);
     for (j = 0; j < nrowData; j++) {
-      curVec.setValue(j, annotation[j + i * nrowData]);
+      curVec.setValue(j, phantasus.Util.safeTrim(annotation[j + i * nrowData]));
       //rowIds.setValue(j, id[j])
     }
   }
@@ -7177,35 +7189,84 @@ phantasus.DatasetUtil.probeDataset = function (dataset, session) {
     }
 
     var meta = phantasus.DatasetUtil.getMetadataArray(dataset);
-    var fvarLabels = meta.fvarLabels.map(function (fvarLabel) { return (fvarLabel.isNA)?'NA':fvarLabel.strval});
-    var indices = [];
-    var eps = 0.001;
+    var fData = dataset.getRowMetadata();
 
-    var testArrByEpsilon = function (value, index) {
-      var ij = indices[index];
-      return Math.abs(value - dataset.getValue(ij[0] - 1, ij[1] - 1)) < eps;
+    var fvarLabels = meta.fvarLabels.map(function (fvarLabel) { return (fvarLabel.isNA)?'NA':fvarLabel.strval});
+    var query = {
+      exprs: [],
+      fData: []
+    };
+    var epsExprs = 0.01;
+    var epsFdata = 0.1;
+
+    var verifyExprs = function (value, index) {
+      var ij = query.exprs[index];
+      var testValue = dataset.getValue(ij[0] - 1, ij[1] - 1);
+      return Math.abs(value - testValue) < epsExprs;
     };
 
-    for(var i = 0;i < 100; i++) {
-      var jIdx = _.random(0, dataset.getColumnCount() - 1);
-      var iIdx = _.random(0, dataset.getRowCount() - 1);
-      indices.push([iIdx + 1, jIdx + 1]);
-    }
+    var verifyFeature = function (name, backendValues) {
+      var indices = _.find(query.fData, {name: name}).indices;
+      var column = fData.getByName(name);
+      var frontendValues = _.map(indices, function (index) {return column.getValue(index - 1)});
+      var type = column.getProperties().get(phantasus.VectorKeys.DATA_TYPE);
+      if (type === 'number' || type === '[number]') {
+        return frontendValues.every(function (value, index) {
+          var backendValue = parseFloat(backendValues[index]);  // backend might be string, frontend number
+
+          return (isNaN(value) && isNaN(backendValue) === isNaN(value)) || // both NaN
+                  Math.abs(value - backendValue) < epsFdata;
+        });
+      } else {
+        backendValues = _.map(backendValues, function (value) { // backend might be numbers, frontend string
+          return value === 'NA' ? null : value.toString();
+        });
+
+        return _.isEqual(backendValues,frontendValues);
+      }
+    };
+
+    query.exprs = _.times(100, function () {
+      var jIdx = _.random(0, dataset.getColumnCount() - 1) + 1;
+      var iIdx = _.random(0, dataset.getRowCount() - 1) + 1;
+      return [iIdx, jIdx];
+    });
+
+    query.fData = _.map(fData.vectors, function (fDataVector) {
+      var fDataVectorMeta = {name: fDataVector.getName()};
+      fDataVectorMeta.indices = _.times(20, function () {
+        return _.random(0, fDataVector.size() - 1) + 1;
+      });
+
+      return fDataVectorMeta;
+    });
 
     targetSession.then(function (essession) {
       var request = {
         es: essession,
-        indices: indices
+        query: query
       };
 
       var req = ocpu.call("probeDataset", request, function (newSession) {
         newSession.getObject(function (success) {
           var backendProbe = JSON.parse(success);
 
-          resolve(backendProbe.dims[0] === dataset.getRowCount() &&
-            backendProbe.dims[1] === dataset.getColumnCount() &&
-            backendProbe.probe.every(testArrByEpsilon) &&
-            _.isEqual(fvarLabels, backendProbe.fvarLabels));
+          var isRowCountEqual = backendProbe.dims[0] === dataset.getRowCount();
+          var isColumnCountEqual = backendProbe.dims[1] === dataset.getColumnCount();
+          var exprsEqual = backendProbe.probe.every(verifyExprs);
+          var fDataNamesEqual = _.isEqual(fvarLabels, backendProbe.fvarLabels);
+          var fDataValuesEqual = true;
+          if (fDataNamesEqual) {
+            _.each(backendProbe.fdata, function (values, name) {
+              if (!fDataValuesEqual) {
+                return;
+              }
+
+              fDataValuesEqual = verifyFeature(name, values);
+            });
+          }
+
+          resolve(isRowCountEqual && isColumnCountEqual && exprsEqual && fDataNamesEqual && fDataValuesEqual);
         })
       }, false, "::" + dataset.getESVariable());
 
@@ -12178,14 +12239,13 @@ phantasus.VectorUtil.maybeConvertStringToNumber = function (vector) {
   var found = false;
   for (var i = 0, nrows = vector.size(); i < nrows; i++) {
     var s = vector.getValue(i);
-    if (s != null && s !== '' && s !== 'NA' && s !== 'NaN') {
-      if (!$.isNumeric(s)) {
-        return false;
-      } else {
-        found = true;
-      }
+    var tmp = parseFloat(s);
+    if (!Number.isNaN(tmp) && Number.isFinite(tmp)) {
+      newValues.push(tmp);
+      found = true;
+    } else {
+      return false;
     }
-    newValues.push(parseFloat(s));
   }
   if (!found) {
     return false;
@@ -14313,7 +14373,12 @@ phantasus.CollapseDatasetTool.prototype = {
     form.setVisible('percentile', false);
     form.$form.find('[name=collapse_method]').on('change', function (e) {
       form.setVisible('percentile', $(this).val() === phantasus.Percentile.toString());
-      form.setVisible('collapse', !phantasus.CollapseDatasetTool.Functions.fromString($(this).val()).selectOne)
+      var collapsableColumns = !phantasus.CollapseDatasetTool.Functions.fromString($(this).val()).selectOne;
+      form.setVisible('collapse', collapsableColumns);
+
+      if (!collapsableColumns) {
+        setValue('Rows');
+      }
     });
 
 
@@ -14486,8 +14551,13 @@ phantasus.CreateAnnotation.prototype = {
         .call("calculatedAnnotation", args, function (newSession) {
           dataset.setESSession(new Promise(function (resolve) {resolve(newSession)}));
           dataset.setESVariable('es');
+          phantasus.VectorUtil.maybeConvertStringToNumber(vector);
+          project.trigger('trackChanged', {
+            vectors: [vector],
+            display: ['text'],
+            columns: isColumns
+          });
           promise.resolve();
-          phantasus.DatasetUtil.probeDataset(dataset).then(function (result) {console.log(result);});
         }, false, "::" + dataset.getESVariable())
         .fail(function () {
           promise.reject();
@@ -14495,12 +14565,7 @@ phantasus.CreateAnnotation.prototype = {
         });
     });
 
-    phantasus.VectorUtil.maybeConvertStringToNumber(vector);
-    project.trigger('trackChanged', {
-      vectors: [vector],
-      display: ['text'],
-      columns: isColumns
-    });
+
 
     return promise;
   }
@@ -16175,7 +16240,7 @@ phantasus.NewHeatMapTool.prototype = {
           dataset.setESVariable('es');
           dataset.esSource = 'original';
           resolve(newSession);
-          console.log('Old dataset session: ', esSession, ', New dataset session: ', newSession);
+          //console.log('Old dataset session: ', esSession, ', New dataset session: ', newSession);
         }, false, "::" + currentESVariable);
 
         req.fail(function () {
@@ -17974,6 +18039,26 @@ phantasus.PcaPlotTool.getPlotlyDefaults = function () {
     layout: layout,
     config: config
   };
+};
+
+phantasus.ProbeDebugTool = function () {
+};
+phantasus.ProbeDebugTool.prototype = {
+  toString: function () {
+    return 'DEBUG: Probe Debug Tool';
+  },
+  execute: function (options) {
+    var project = options.project;
+    var dataset = project.getFullDataset();
+    var promise = $.Deferred();
+
+    phantasus.DatasetUtil.probeDataset(dataset).then(function (status) {
+      alert('Sync status:' + status.toString());
+      promise.resolve();
+    });
+
+    return promise;
+  }
 };
 
 phantasus.SaveDatasetTool = function () {
@@ -20019,6 +20104,15 @@ phantasus.ActionManager = function () {
     },
     icon: 'fa fa-share-square-o'
   });
+
+  if (phantasus.Util.getURLParameter('debug') !== null) {
+    this.add({
+      name: phantasus.ProbeDebugTool.prototype.toString(),
+      cb: function (options) {
+        phantasus.HeatMap.showTool(new phantasus.ProbeDebugTool(), options.heatMap)
+      }
+    })
+  }
 
   this.add({
     name: 'Submit to Enrichr',
@@ -23334,6 +23428,8 @@ phantasus.FilterUI.prototype = {
       array = array.map(function (item) {
         if (item === '') {
           return {valueOf: function () { return ''; }, toString: function () { return '(None)'; }};
+        } else if (item === null || item === undefined) {
+          return {valueOf: function () { return item }, toString: function () { return '(NULL)'; }};
         }
 
         return item;
@@ -30231,7 +30327,8 @@ phantasus.HeatMap = function (options) {
           'PCA Plot',
           'Submit to Enrichr',
           'Submit to Shiny GAM',
-          'GSEA plot'],
+          'GSEA plot',
+          'DEBUG: Probe Debug Tool'],
         View: ['Zoom In', 'Zoom Out', null, 'Fit To Window', 'Fit Rows To Window', 'Fit Columns To Window', null, '100%', null, 'Options'],
         Edit: [
           'Copy Image',
