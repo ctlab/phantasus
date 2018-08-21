@@ -1,5 +1,5 @@
-commit 2d6f41fa43bb3be5183ad7510e33d35106d7f71c
+commit ebeb9fad475d732a7d4872f2ccabe378e138463e
 Author: petrovich <mazahakaforever@ya.ru>
-Date:   Tue Aug 21 16:14:12 2018 +0300
+Date:   Tue Aug 21 16:43:37 2018 +0300
 
-    Number.isNaN is not available in PhantomJS
+    Number.isFinite is not available in PhantomJS
