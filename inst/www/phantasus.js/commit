@@ -1,6 +1,5 @@
-commit cf90faa943103facedab1d530dd8a20f369b7c7d
-Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Mon Aug 20 18:50:17 2018 +0300
+commit 2d6f41fa43bb3be5183ad7510e33d35106d7f71c
+Author: petrovich <mazahakaforever@ya.ru>
+Date:   Tue Aug 21 16:14:12 2018 +0300
 
-    fData verification in probe.
-    Debug tool - probe dataset
+    Number.isNaN is not available in PhantomJS

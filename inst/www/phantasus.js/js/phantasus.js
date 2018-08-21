@@ -12240,7 +12240,7 @@ phantasus.VectorUtil.maybeConvertStringToNumber = function (vector) {
   for (var i = 0, nrows = vector.size(); i < nrows; i++) {
     var s = vector.getValue(i);
     var tmp = parseFloat(s);
-    if (!Number.isNaN(tmp) && Number.isFinite(tmp)) {
+    if (!isNaN(tmp) && Number.isFinite(tmp)) {
       newValues.push(tmp);
       found = true;
     } else {
