@@ -9,11 +9,23 @@ adjustDataset <- function (es, scaleColumnSum = NULL, log2 = FALSE, inverseLog2 
     }
 
     if (log2) {
-        exprs(es) <- apply(exprs(es), c(1,2), log2)
+        exprs(es) <- apply(exprs(es), c(1,2), function (value) {
+            if (value <= 0) {
+                return(0)
+            } else {
+                return(log2(value))
+            }
+        })
     }
 
     if (inverseLog2) {
-        exprs(es) <- apply(exprs(es), c(1,2), function (value) { 2^value })
+        exprs(es) <- apply(exprs(es), c(1,2), function (value) {
+            if (value > 0) {
+                return(2^value)
+            } else {
+                return(value)
+            }
+        })
     }
 
     if (quantileNormalize) {
