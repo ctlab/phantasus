@@ -28,6 +28,12 @@ test_that("loadGEO finishes with result", {
     options(phantasusMirrorPath = NULL)
 })
 
+test_that("filterPhenoAnnotations saves colnames", {
+    cacheDir <- tempdir()
+    es <- getES("GSE53986", destdir = cacheDir)[[1]]
+    expect_true(all(colnames(es) == colnames(exprs(es))))
+})
+
 test_that("reparseCachedGSEs works", {
     cacheDir <- tempdir()
     getES("GSE14308", destdir = cacheDir)
