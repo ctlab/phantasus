@@ -6990,6 +6990,7 @@ phantasus.DatasetUtil.copy = function (dataset) {
   };
   if (dataset.getESSession()) {
     newDataset.setESSession(dataset.getESSession());
+    newDataset.setESVariable(dataset.getESVariable());
   }
   return newDataset;
 };
@@ -13171,6 +13172,7 @@ phantasus.AdjustDataTool.prototype = {
     form.$form.find('[name=scale_column_sum]').on('change', function (e) {
       form.setVisible('column_sum', form.getValue('scale_column_sum'));
     });
+
     form.setVisible('column_sum', false);
     this.sweepTarget.trigger('change');
   },
@@ -13225,126 +13227,179 @@ phantasus.AdjustDataTool.prototype = {
   execute: function (options) {
     var project = options.project;
     var heatMap = options.heatMap;
+    var promise = $.Deferred();
 
     var sweepBy = (_.size(this.sweepRowColumnSelect) > 0) ? this.sweepRowColumnSelect[0].value : '(None)';
+    if (!options.input.log_2 &&
+        !options.input.inverse_log_2 &&
+        !options.input['z-score'] &&
+        !options.input['robust_z-score'] &&
+        !options.input.quantile_normalize &&
+        !options.input.scale_column_sum &&
+        sweepBy === '(None)') {
+        // No action selected;
+        return;
+    }
 
-    if (options.input.log_2 || options.input.inverse_log_2
-      || options.input['z-score'] || options.input['robust_z-score'] || options.input.quantile_normalize || options.input.scale_column_sum || sweepBy !== '(None)') {
-      // clone the values 1st
-      var sortedFilteredDataset = phantasus.DatasetUtil.copy(project
-        .getSortedFilteredDataset());
-      var rowIndices = project.getRowSelectionModel()
-        .getViewIndices().values().sort(
-          function (a, b) {
-            return (a === b ? 0 : (a < b ? -1 : 1));
-          });
-      if (rowIndices.length === 0) {
-        rowIndices = null;
-      }
-      var columnIndices = project.getColumnSelectionModel()
-        .getViewIndices().values().sort(
-          function (a, b) {
-            return (a === b ? 0 : (a < b ? -1 : 1));
-          });
-      if (columnIndices.length === 0) {
-        columnIndices = null;
-      }
-      var dataset = options.input.use_selected_rows_and_columns_only ? new phantasus.Slice
-        : sortedFilteredDataset;
-      var rowView = new phantasus.DatasetRowView(dataset);
-      var functions = [];
-      if (options.input.scale_column_sum) {
-        var scaleToValue = parseFloat(options.input.column_sum);
-        if (!isNaN(scaleToValue)) {
-          for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
-            var sum = 0;
-            for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
-              var value = dataset.getValue(i, j);
-              if (!isNaN(value)) {
-                sum += value;
-              }
-            }
-            var ratio = scaleToValue / sum;
-            for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
-              var value = dataset.getValue(i, j);
-              dataset.setValue(i, j, value * ratio);
-            }
-          }
-        }
-      }
-      if (options.input.log_2) {
-        for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
-          for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
-            dataset.setValue(i, j, phantasus.Log2(dataset.getValue(
-              i, j)));
-          }
-        }
-      }
-      if (options.input.inverse_log_2) {
-        for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
-          for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
-            var value = dataset.getValue(i, j);
-            if (value >= 0) {
-              dataset.setValue(i, j, Math.pow(2, value));
-            }
-          }
-        }
-      }
-      if (options.input.quantile_normalize) {
-        phantasus.QNorm.execute(dataset);
-      }
-      if (options.input['z-score']) {
-        for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
-          rowView.setIndex(i);
-          var mean = phantasus.Mean(rowView);
-          var stdev = Math.sqrt(phantasus.Variance(rowView));
-          for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
-            dataset.setValue(i, j, (dataset.getValue(i, j) - mean)
-              / stdev);
-          }
-        }
-      }
-      if (options.input['robust_z-score']) {
-        for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
-          rowView.setIndex(i);
-          var median = phantasus.Median(rowView);
-          var mad = phantasus.MAD(rowView, median);
-          for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
-            dataset.setValue(i, j,
-              (dataset.getValue(i, j) - median) / mad);
-          }
-        }
-      }
+    // clone the values 1st
+    var sortedFilteredDataset = phantasus.DatasetUtil.copy(project
+      .getSortedFilteredDataset());
 
-      if (sweepBy !== '(None)') {
-        var op = this.sweepAction[0].value === 'Subtract' ?
-                  function (a,b) {return a - b; }         :
-                  function (a,b) {return a / b; }         ;
+    var rowIndices = project
+      .getRowSelectionModel()
+      .getViewIndices()
+      .values().sort(
+        function (a, b) {
+          return (a === b ? 0 : (a < b ? -1 : 1));
+        });
 
-        var mode = this.sweepTarget[0].value;
-        var sweepVector = mode === 'row' ?
-          dataset.getRowMetadata().getByName(sweepBy) :
-          dataset.getColumnMetadata().getByName(sweepBy);
+    if (rowIndices.length === 0) {
+      rowIndices = null;
+    }
 
+    var columnIndices = project
+      .getColumnSelectionModel()
+      .getViewIndices()
+      .values()
+      .sort(
+        function (a, b) {
+          return (a === b ? 0 : (a < b ? -1 : 1));
+        });
+
+    if (columnIndices.length === 0) {
+      columnIndices = null;
+    }
+
+    var dataset = sortedFilteredDataset;
+    var rowView = new phantasus.DatasetRowView(dataset);
+    var functions = {};
+
+    if (options.input.scale_column_sum) {
+      var scaleToValue = parseFloat(options.input.column_sum);
+      functions.scaleColumnSum = scaleToValue;
+
+      if (!isNaN(scaleToValue)) {
         for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
+          var sum = 0;
           for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
             var value = dataset.getValue(i, j);
             if (!isNaN(value)) {
-              var operand = sweepVector.getValue(mode === 'row' ? i : j);
-              dataset.setValue(i, j, op(value, operand));
+              sum += value;
             }
+          }
+          var ratio = scaleToValue / sum;
+          for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
+            var value = dataset.getValue(i, j);
+            dataset.setValue(i, j, value * ratio);
           }
         }
       }
-
-      dataset.setESSession(null);
-      return new phantasus.HeatMap({
-        name: heatMap.getName(),
-        dataset: dataset,
-        parent: heatMap,
-        symmetric: project.isSymmetric() && dataset.getColumnCount() === dataset.getRowCount()
-      });
     }
+
+    if (options.input.log_2) {
+      functions.log2 = true;
+      for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
+        for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
+          dataset.setValue(i, j, phantasus.Log2(dataset.getValue(
+            i, j)));
+        }
+      }
+    }
+
+    if (options.input.inverse_log_2) {
+      functions.inverseLog2 = true;
+      for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
+        for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
+          var value = dataset.getValue(i, j);
+          if (value >= 0) {
+            dataset.setValue(i, j, Math.pow(2, value));
+          }
+        }
+      }
+    }
+
+    if (options.input.quantile_normalize) {
+      functions.quantileNormalize = true;
+      phantasus.QNorm.execute(dataset);
+    }
+
+    if (options.input['z-score']) {
+      functions.zScore = true;
+      for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
+        rowView.setIndex(i);
+        var mean = phantasus.Mean(rowView);
+        var stdev = Math.sqrt(phantasus.Variance(rowView));
+        for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
+          dataset.setValue(i, j, (dataset.getValue(i, j) - mean)
+            / stdev);
+        }
+      }
+    }
+
+    if (options.input['robust_z-score']) {
+      functions.robustZScore = true;
+      for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
+        rowView.setIndex(i);
+        var median = phantasus.Median(rowView);
+        var mad = phantasus.MAD(rowView, median);
+        for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
+          dataset.setValue(i, j,
+            (dataset.getValue(i, j) - median) / mad);
+        }
+      }
+    }
+
+    if (sweepBy !== '(None)') {
+      functions.sweep = {};
+
+      var op = this.sweepAction[0].value === 'Subtract' ?
+                function (a,b) {return a - b; }         :
+                function (a,b) {return a / b; }         ;
+
+      var mode = this.sweepTarget[0].value;
+      var sweepVector = mode === 'row' ?
+        dataset.getRowMetadata().getByName(sweepBy) :
+        dataset.getColumnMetadata().getByName(sweepBy);
+
+      functions.sweep.mode = mode;
+      functions.sweep.name = sweepBy;
+      functions.sweep.op = this.sweepAction[0].value === 'Subtract' ? '-':'/';
+
+      for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
+        for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
+          var value = dataset.getValue(i, j);
+          if (!isNaN(value)) {
+            var operand = sweepVector.getValue(mode === 'row' ? i : j);
+            dataset.setValue(i, j, op(value, operand));
+          }
+        }
+      }
+    }
+
+    dataset.getESSession().then(function (essession) {
+      functions.es = essession;
+      var req = ocpu.call("adjustDataset", functions, function (newSession) {
+          dataset.setESSession(Promise.resolve(newSession));
+          dataset.setESVariable("es");
+
+        new phantasus.HeatMap({
+          name: heatMap.getName(),
+          dataset: dataset,
+          parent: heatMap,
+          symmetric: project.isSymmetric() && dataset.getColumnCount() === dataset.getRowCount()
+        });
+
+        promise.resolve();
+      }, false, "::" + dataset.getESVariable());
+
+
+      req.fail(function () {
+        promise.reject();
+        throw new Error("adjustDataset call to OpenCPU failed" + req.responseText);
+      });
+    });
+
+    return promise;
   }
 };
 

@@ -1,5 +1,5 @@
-commit ebeb9fad475d732a7d4872f2ccabe378e138463e
+commit a20ce8d2cf52bf4d43dc2e3f15e47aecc15c1a6c
 Author: petrovich <mazahakaforever@ya.ru>
-Date:   Tue Aug 21 16:43:37 2018 +0300
+Date:   Thu Aug 30 08:05:01 2018 +0300
 
-    Number.isFinite is not available in PhantomJS
+    Small fix for adjust mirroring. (log2\invertLog2 still broken)
