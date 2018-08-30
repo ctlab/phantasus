@@ -271,7 +271,7 @@ filterPhenoAnnotations <- function(es) {
                 }
             }
         }
-        rownames(new.pdata)[indices] <- rownames(old.pdata)[indices]
+        rownames(new.pdata) <- rownames(old.pdata)[indices]
         AnnotatedDataFrame(new.pdata)
     }
 
