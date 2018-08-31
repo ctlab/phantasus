@@ -13376,30 +13376,32 @@ phantasus.AdjustDataTool.prototype = {
       }
     }
 
-    dataset.getESSession().then(function (essession) {
-      functions.es = essession;
-      var req = ocpu.call("adjustDataset", functions, function (newSession) {
-          dataset.setESSession(Promise.resolve(newSession));
+    var currentSessionPromise = dataset.getESSession();
+    var currentESVariable = dataset.getESVariable();
+
+    dataset.setESSession(new Promise(function (resolve, reject) {
+      currentSessionPromise.then(function (essession) {
+        functions.es = essession;
+        var req = ocpu.call("adjustDataset", functions, function (newSession) {
           dataset.setESVariable("es");
+          resolve(newSession);
+        }, false, "::" + currentESVariable);
 
-        new phantasus.HeatMap({
-          name: heatMap.getName(),
-          dataset: dataset,
-          parent: heatMap,
-          symmetric: project.isSymmetric() && dataset.getColumnCount() === dataset.getRowCount()
+
+        req.fail(function () {
+          reject();
+          throw new Error("adjustDataset call to OpenCPU failed" + req.responseText);
         });
-
-        promise.resolve();
-      }, false, "::" + dataset.getESVariable());
-
-
-      req.fail(function () {
-        promise.reject();
-        throw new Error("adjustDataset call to OpenCPU failed" + req.responseText);
       });
-    });
+    }));
 
-    return promise;
+
+    return new phantasus.HeatMap({
+      name: heatMap.getName(),
+      dataset: dataset,
+      parent: heatMap,
+      symmetric: project.isSymmetric() && dataset.getColumnCount() === dataset.getRowCount()
+    });
   }
 };
 

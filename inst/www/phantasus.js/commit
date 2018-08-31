@@ -1,5 +1,5 @@
-commit a20ce8d2cf52bf4d43dc2e3f15e47aecc15c1a6c
+commit 1da08071cd43afad1e7fd5db8d1c718f46e41b9e
 Author: petrovich <mazahakaforever@ya.ru>
-Date:   Thu Aug 30 08:05:01 2018 +0300
+Date:   Fri Aug 31 04:29:00 2018 +0300
 
-    Small fix for adjust mirroring. (log2\invertLog2 still broken)
+    Need to return heatmap for testing purposes
