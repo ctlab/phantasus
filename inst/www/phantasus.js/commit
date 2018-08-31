@@ -1,5 +1,5 @@
-commit 1da08071cd43afad1e7fd5db8d1c718f46e41b9e
+commit 2e92f6d210e0446d43119bae7fcfcd845d3244e7
 Author: petrovich <mazahakaforever@ya.ru>
-Date:   Fri Aug 31 04:29:00 2018 +0300
+Date:   Fri Aug 31 04:42:22 2018 +0300
 
-    Need to return heatmap for testing purposes
+    Don't call adjustDataset in R if dataset doesn't have any session and esVariable

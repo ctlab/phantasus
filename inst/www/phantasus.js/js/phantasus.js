@@ -13379,21 +13379,23 @@ phantasus.AdjustDataTool.prototype = {
     var currentSessionPromise = dataset.getESSession();
     var currentESVariable = dataset.getESVariable();
 
-    dataset.setESSession(new Promise(function (resolve, reject) {
-      currentSessionPromise.then(function (essession) {
-        functions.es = essession;
-        var req = ocpu.call("adjustDataset", functions, function (newSession) {
-          dataset.setESVariable("es");
-          resolve(newSession);
-        }, false, "::" + currentESVariable);
+    if (currentESVariable && currentSessionPromise) {
+      dataset.setESSession(new Promise(function (resolve, reject) {
+        currentSessionPromise.then(function (essession) {
+          functions.es = essession;
+          var req = ocpu.call("adjustDataset", functions, function (newSession) {
+            dataset.setESVariable("es");
+            resolve(newSession);
+          }, false, "::" + currentESVariable);
 
 
-        req.fail(function () {
-          reject();
-          throw new Error("adjustDataset call to OpenCPU failed" + req.responseText);
+          req.fail(function () {
+            reject();
+            throw new Error("adjustDataset call to OpenCPU failed" + req.responseText);
+          });
         });
-      });
-    }));
+      }));
+    }
 
 
     return new phantasus.HeatMap({
