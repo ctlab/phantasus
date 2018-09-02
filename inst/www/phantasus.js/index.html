@@ -30,6 +30,7 @@
 
 <script type="text/javascript">
   console.log(PHANTASUS_VERSION,'-',PHANTASUS_BUILD);
+  phantasus.DEBUG_ENABLED = phantasus.Util.getURLParameter('debug') !== null;
   phantasus.Util.setLibrary('phantasus');
   phantasus.Util.loadTrackingCode();
   window.onerror = function () {

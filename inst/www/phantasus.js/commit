@@ -1,5 +1,7 @@
-commit 2e92f6d210e0446d43119bae7fcfcd845d3244e7
+commit da42be2bc9730e0803163faf4f66046c84af3156
 Author: petrovich <mazahakaforever@ya.ru>
-Date:   Fri Aug 31 04:42:22 2018 +0300
+Date:   Mon Sep 3 00:08:13 2018 +0300
 
-    Don't call adjustDataset in R if dataset doesn't have any session and esVariable
+    Implemented log2(1+x) adjust.
+    Implemented new Debug feature - expose dataset.
+    Inverselog2 now powering 2 to negative
