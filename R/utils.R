@@ -160,3 +160,11 @@ writeToList <- function(es) {
               rowMetaNames = fvarLabels(es))
   res
 }
+
+safeLog2 <- function (value) {
+    if (value <= 0) {
+        return(0)
+    } else {
+        return(log2(value))
+    }
+}

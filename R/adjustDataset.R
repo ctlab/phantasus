@@ -1,6 +1,6 @@
-adjustDataset <- function (es, scaleColumnSum = NULL, log2 = FALSE, inverseLog2 = FALSE,
-                           quantileNormalize = FALSE, zScore = FALSE, robustZScore = FALSE,
-                           sweep = NULL) {
+adjustDataset <- function (es, scaleColumnSum = NULL, log2 = FALSE, onePlusLog2 = FALSE,
+                           inverseLog2 = FALSE, quantileNormalize = FALSE, zScore = FALSE,
+                           robustZScore = FALSE, sweep = NULL) {
 
     if (length(scaleColumnSum) > 0 && is.numeric(scaleColumnSum)) {
         sum <- apply(exprs(es), 2, sum, na.rm = TRUE)
@@ -10,21 +10,19 @@ adjustDataset <- function (es, scaleColumnSum = NULL, log2 = FALSE, inverseLog2 
 
     if (log2) {
         exprs(es) <- apply(exprs(es), c(1,2), function (value) {
-            if (value <= 0) {
-                return(0)
-            } else {
-                return(log2(value))
-            }
+            safeLog2(value)
+        })
+    }
+
+    if (onePlusLog2) {
+        exprs(es) <- apply(exprs(es), c(1,2), function (value) {
+            safeLog2(value + 1)
         })
     }
 
     if (inverseLog2) {
         exprs(es) <- apply(exprs(es), c(1,2), function (value) {
-            if (value > 0) {
-                return(2^value)
-            } else {
-                return(value)
-            }
+            2^value
         })
     }
 
@@ -58,12 +56,3 @@ adjustDataset <- function (es, scaleColumnSum = NULL, log2 = FALSE, inverseLog2 
     assign("es", es, envir = parent.frame())
 }
 
-playground <- function () {
-    es <- getGSE('GSE53986')[[1]]
-    adjustDataset(es, robustZScore = TRUE)
-    rows <- getIndicesVector(c(), nrow(exprs(es)))
-    columns <- getIndicesVector(c(), ncol(exprs(es)))
-    fData(es)[['Mean']] <- NA
-    fData(es)[['Mean']][rows] <- apply(exprs(es[rows,columns]), 1, mean)
-    adjustDataset(es, sweep = jsonlite::fromJSON("{\"mode\": \"row\", \"name\": \"Mean\", \"op\": \"-\"}"))
-}
