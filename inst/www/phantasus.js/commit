@@ -1,5 +1,6 @@
-commit 436496574826a30641eee744c26dd64d645ed2b7
+commit 51b608a932c513713f0d6e42506a0d0dd6e76849
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Mon Sep 3 13:37:47 2018 +0300
+Date:   Mon Sep 3 17:03:10 2018 +0300
 
-    Optional annotation name re-implemented
+    Column rename implemented and synchronised.
+    Probedataset improved.
