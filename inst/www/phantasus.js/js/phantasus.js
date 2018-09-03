@@ -14547,6 +14547,12 @@ phantasus.CreateAnnotation.prototype = {
         value: 'Rows',
         type: 'radio'
       }, {
+        name: 'annotation_name',
+        value: '',
+        type: 'text',
+        help: 'Optional name. If not specified operation will be used as name',
+        autocomplete: 'off'
+      }, {
         name: 'operation',
         value: _.first(Object.keys(this.operationDict)),
         type: 'select',
@@ -14558,14 +14564,16 @@ phantasus.CreateAnnotation.prototype = {
   },
   execute: function (options) {
     var project = options.project;
-    var name = options.input.operation;
-    var operation = this.operationDict[name];
+    var opName = options.input.operation;
+    var colName = options.input.annotation_name || opName;
+    var operation = this.operationDict[opName];
     var selectedOnly = options.input.use_selected_rows_and_columns_only;
     var isColumns = options.input.annotate === 'Columns';
     var promise = $.Deferred();
     var args = {
-      operation: name,
-      isColumns: isColumns
+      operation: opName,
+      isColumns: isColumns,
+      name: colName
     };
     var dataset = selectedOnly
       ? project.getSelectedDataset({
@@ -14585,7 +14593,7 @@ phantasus.CreateAnnotation.prototype = {
     }
 
     var rowView = new phantasus.DatasetRowView(dataset);
-    var vector = dataset.getRowMetadata().add(name);
+    var vector = dataset.getRowMetadata().add(colName);
 
     var MAD = function () {
       return phantasus.MAD(rowView);

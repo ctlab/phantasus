@@ -1,7 +1,5 @@
-commit da42be2bc9730e0803163faf4f66046c84af3156
-Author: petrovich <mazahakaforever@ya.ru>
-Date:   Mon Sep 3 00:08:13 2018 +0300
+commit 436496574826a30641eee744c26dd64d645ed2b7
+Author: Vladislav Kamenev <mazahakaforever@ya.ru>
+Date:   Mon Sep 3 13:37:47 2018 +0300
 
-    Implemented log2(1+x) adjust.
-    Implemented new Debug feature - expose dataset.
-    Inverselog2 now powering 2 to negative
+    Optional annotation name re-implemented
