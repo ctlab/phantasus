@@ -1,5 +1,5 @@
-commit 61fbb83e765294e49675937b217f95521a3b5a01
-Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Thu Sep 6 12:12:16 2018 +0300
+commit 2d41ef650fab09fe83c172328944e3a96ca47b91
+Author: petrovich <mazahakaforever@ya.ru>
+Date:   Fri Sep 7 02:26:12 2018 +0300
 
-    Instant column rename\deletion
+    TCGA datasets serving from genome.ifmo.ru

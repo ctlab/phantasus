@@ -4789,7 +4789,7 @@ phantasus.TcgaUtil.getDataset = function (options) {
         var mutationDataset = new phantasus.SlicedDatasetView(
           datasetToReturn, sourceToIndices
             .get('mutations_merged.maf'));
-        new phantasus.OpenFileTool()
+        new phantasus.AnnotateDatasetTool()
           .annotate(sigGenesLines, mutationDataset, false,
             null, 'id', 'gene', ['q']);
         var qVector = mutationDataset.getRowMetadata().getByName(
@@ -6178,7 +6178,7 @@ phantasus.DatasetUtil.annotate = function (options) {
   _.each(options.annotations, function (ann, annotationIndex) {
     if (phantasus.Util.isArray(ann.file)) { // already parsed text
       functions[annotationIndex] = function (dataset) {
-        new phantasus.OpenFileTool().annotate(ann.file, dataset,
+        new phantasus.AnnotateDatasetTool().annotate(ann.file, dataset,
           isColumns, null, ann.datasetField, ann.fileField,
           ann.include);
       };
@@ -6194,20 +6194,20 @@ phantasus.DatasetUtil.annotate = function (options) {
         if (phantasus.Util.endsWith(fileName, '.gmt')) {
           var sets = new phantasus.GmtReader().parseLines(lines);
           functions[annotationIndex] = function (dataset) {
-            new phantasus.OpenFileTool().annotate(null, dataset,
+            new phantasus.AnnotateDatasetTool().annotate(null, dataset,
               isColumns, sets, ann.datasetField,
               ann.fileField);
           };
           deferred.resolve();
         } else if (phantasus.Util.endsWith(fileName, '.cls')) {
           functions[annotationIndex] = function (dataset) {
-            new phantasus.OpenFileTool().annotateCls(null, dataset,
+            new phantasus.AnnotateDatasetTool().annotateCls(null, dataset,
               fileName, isColumns, lines);
           };
           deferred.resolve();
         } else {
           functions[annotationIndex] = function (dataset) {
-            new phantasus.OpenFileTool().annotate(lines, dataset,
+            new phantasus.AnnotateDatasetTool().annotate(lines, dataset,
               isColumns, null, ann.datasetField,
               ann.fileField, ann.include, ann.transposed);
           };
@@ -12776,13 +12776,15 @@ phantasus.SampleDatasets = function (options) {
       $button.prop('disabled', isDisabled);
     });
 
-    fetch('https://software.broadinstitute.org/morpheus/preloaded-datasets/tcga/tcga_index.txt').then(function (response) {
-      if (response.ok) {
-        return response.text();
-      }
-    }).then(function (text) {
+    fetch('https://genome.ifmo.ru/files/software/phantasus/tcga/tcga_index.txt')
+      .then(function (response) {
+        if (response.ok) {
+          return response.text();
+        }
+      })
+      .then(function (text) {
         var exampleHtml = [];
-        exampleHtml.push('<table class="table table-condensed table-bordered">');
+        /*exampleHtml.push('<table class="table table-condensed table-bordered">');
         exampleHtml.push('<thead><tr><th>Name</th><th>Gene' +
           ' Expression</th><th>Copy Number By Gene</th><th>Mutations</th><th>Gene' +
           ' Essentiality</th><th></th></tr></thead>');
@@ -12805,7 +12807,7 @@ phantasus.SampleDatasets = function (options) {
         exampleHtml
           .push('<td><button disabled type="button" class="btn btn-link" name="ccle">'
             + options.openText + '</button></td>');
-        exampleHtml.push('</tr></tbody></table>');
+        exampleHtml.push('</tr></tbody></table>');*/
 
       exampleHtml.push(
         '<div>TCGA data <a target="_blank" href="https://confluence.broadinstitute.org/display/GDAC/Dashboard-Stddata">(Broad GDAC 1/28/2016)</a></div><span>Please adhere to the' +
@@ -12935,7 +12937,7 @@ phantasus.SampleDatasets = function (options) {
 };
 
 phantasus.SampleDatasets.getTcgaDataset = function (options) {
-  var baseUrl = 'https://software.broadinstitute.org/morpheus/preloaded-datasets/tcga/'
+  var baseUrl = 'https://genome.ifmo.ru/files/software/phantasus/tcga/'
     + options.type + '/';
   var datasetOptions = {};
   if (options.mrna) {
