@@ -1,6 +1,5 @@
-commit 51b608a932c513713f0d6e42506a0d0dd6e76849
+commit 61fbb83e765294e49675937b217f95521a3b5a01
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Mon Sep 3 17:03:10 2018 +0300
+Date:   Thu Sep 6 12:12:16 2018 +0300
 
-    Column rename implemented and synchronised.
-    Probedataset improved.
+    Instant column rename\deletion
