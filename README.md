@@ -53,7 +53,8 @@ yum install openssl-devel protobuf-compiler R R-Rcpp R-Rcpp-devel libcurl-devel 
 Install `devtools` and `bioclite`:
 ```
 R -e 'install.packages("devtools", repos="https://cloud.r-project.org")'
-R -e 'source("https://bioconductor.org/biocLite.R"); biocLite()'
+R -e 'if (!requireNamespace("BiocManager", quietly=TRUE)); BiocManager::install()'
+     'install.packages("BiocManager"); BiocManager::install()'
 ```
 
 Install `phantasus`:
