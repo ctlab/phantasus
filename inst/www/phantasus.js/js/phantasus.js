@@ -6301,9 +6301,6 @@ phantasus.DatasetUtil.read = function (fileOrUrl, options) {
           // console.log(dataset);
           // console.log('ready to resolve with', dataset);
           deferred.resolve(dataset);
-          if (!options.isGEO && !options.preloaded) {
-            phantasus.DatasetUtil.toESSessionPromise(dataset);
-          }
         }
       });
 
@@ -7203,7 +7200,8 @@ phantasus.DatasetUtil.probeDataset = function (dataset, session) {
     var verifyExprs = function (value, index) {
       var ij = query.exprs[index];
       var testValue = dataset.getValue(ij[0] - 1, ij[1] - 1);
-      return Math.abs(value - testValue) < epsExprs;
+      var rdaValue = parseFloat(value);
+      return (isNaN(rdaValue) && isNaN(testValue)) || Math.abs(rdaValue - testValue) < epsExprs;
     };
 
     var verifyFeature = function (name, backendValues) {
@@ -7221,6 +7219,10 @@ phantasus.DatasetUtil.probeDataset = function (dataset, session) {
       } else {
         backendValues = _.map(backendValues, function (value) { // backend might be numbers, frontend string
           return value === 'NA' ? null : value.toString();
+        });
+
+        frontendValues = _.map(frontendValues, function (value) {
+          return value || '';
         });
 
         return _.isEqual(backendValues,frontendValues);
@@ -14966,7 +14968,6 @@ phantasus.CreateAnnotation.prototype = {
     var operation = this.operationDict[opName];
     var selectedOnly = options.input.use_selected_rows_and_columns_only;
     var isColumns = options.input.annotate === 'Columns';
-    var promise = $.Deferred();
     var args = {
       operation: opName,
       isColumns: isColumns,
@@ -14988,6 +14989,26 @@ phantasus.CreateAnnotation.prototype = {
     if (isColumns) {
       dataset = phantasus.DatasetUtil.transposedView(dataset);
     }
+
+    var fullDataset = project.getFullDataset();
+    var session = fullDataset.getESSession();
+    var esVariable = fullDataset.getESVariable();
+
+    fullDataset.setESSession(new Promise(function (resolve, reject) {
+      session.then(function (esSession) {
+        args.es = esSession;
+
+        ocpu
+          .call("calculatedAnnotation", args, function (newSession) {
+            fullDataset.setESVariable('es');
+            resolve(newSession);
+          }, false, "::" + esVariable)
+          .fail(function () {
+            reject();
+            throw new Error("Calculated annotation failed. See console");
+          });
+      });
+    }));
 
     var rowView = new phantasus.DatasetRowView(dataset);
     var vector = dataset.getRowMetadata().add(colName);
@@ -15018,31 +15039,12 @@ phantasus.CreateAnnotation.prototype = {
       vector.setValue(idx, val.valueOf());
     }
 
-    dataset = project.getFullDataset();
-    dataset.getESSession().then(function (esSession) {
-      args.es = esSession;
-
-      ocpu
-        .call("calculatedAnnotation", args, function (newSession) {
-          dataset.setESSession(new Promise(function (resolve) {resolve(newSession)}));
-          dataset.setESVariable('es');
-          phantasus.VectorUtil.maybeConvertStringToNumber(vector);
-          project.trigger('trackChanged', {
-            vectors: [vector],
-            display: ['text'],
-            columns: isColumns
-          });
-          promise.resolve();
-        }, false, "::" + dataset.getESVariable())
-        .fail(function () {
-          promise.reject();
-          throw new Error("Calculated annotation failed. See console");
-        });
+    phantasus.VectorUtil.maybeConvertStringToNumber(vector);
+    project.trigger('trackChanged', {
+      vectors: [vector],
+      display: ['text'],
+      columns: isColumns
     });
-
-
-
-    return promise;
   }
 };
 
