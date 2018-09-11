@@ -17,6 +17,9 @@
 #' @param openInBrowser Boolean value which states if application will be
 #'     automatically loaded in default browser.
 #'
+#' @param quiet Boolean value which states whether the connection log should
+#'     be hidden (default: TRUE)
+#'
 #' @return Running instance of phantasus application.
 #'
 #' @import opencpu
@@ -36,7 +39,8 @@ servePhantasus <- function(host = '0.0.0.0',
                                                     package = "phantasus"),
                            cacheDir = tempdir(),
                            preloadedDir = NULL,
-                           openInBrowser = TRUE) {
+                           openInBrowser = TRUE,
+                           quiet=TRUE) {
     cacheDir <- normalizePath(cacheDir)
     preloadedDir <- if (is.null(preloadedDir))
         NULL
@@ -157,6 +161,6 @@ servePhantasus <- function(host = '0.0.0.0',
             service()
             Sys.sleep(0.001)
         }
-    })
+    }, split=!quiet)
 
 }
