@@ -1961,6 +1961,18 @@ phantasus.Util.getTrueIndices = function (dataset) {
   return ans;
 };
 
+phantasus.Util.safeTrim = function (string) {
+  if (string && string.trim) {
+    return string.trim();
+  } else {
+    return string;
+  }
+};
+
+phantasus.Util.getURLParameter = function (name) {
+  return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search) || [null, ''])[1].replace(/\+/g, '%20')) || null;
+};
+
 phantasus.BlobFromPath = function () {
 };
 phantasus.BlobFromPath.getFileBlob = function (url, cb) {
@@ -2356,7 +2368,7 @@ phantasus.ParseDatasetFromProtoBin.getDataset = function (session, seriesName, j
     for (i = 0; i < metaNames.length; i++) {
       var curVec = dataset.getColumnMetadata().add(metaNames[i]);
       for (j = 0; j < ncolData; j++) {
-        curVec.setValue(j, flatPdata[j + i * ncolData]);
+        curVec.setValue(j, phantasus.Util.safeTrim(flatPdata[j + i * ncolData]));
       }
     }
   }
@@ -2370,7 +2382,7 @@ phantasus.ParseDatasetFromProtoBin.getDataset = function (session, seriesName, j
   for (i = 0; i < rowMetaNames.length; i++) {
     curVec = dataset.getRowMetadata().add(rowMetaNames[i]);
     for (j = 0; j < nrowData; j++) {
-      curVec.setValue(j, annotation[j + i * nrowData]);
+      curVec.setValue(j, phantasus.Util.safeTrim(annotation[j + i * nrowData]));
       //rowIds.setValue(j, id[j])
     }
   }
@@ -4777,7 +4789,7 @@ phantasus.TcgaUtil.getDataset = function (options) {
         var mutationDataset = new phantasus.SlicedDatasetView(
           datasetToReturn, sourceToIndices
             .get('mutations_merged.maf'));
-        new phantasus.OpenFileTool()
+        new phantasus.AnnotateDatasetTool()
           .annotate(sigGenesLines, mutationDataset, false,
             null, 'id', 'gene', ['q']);
         var qVector = mutationDataset.getRowMetadata().getByName(
@@ -6166,7 +6178,7 @@ phantasus.DatasetUtil.annotate = function (options) {
   _.each(options.annotations, function (ann, annotationIndex) {
     if (phantasus.Util.isArray(ann.file)) { // already parsed text
       functions[annotationIndex] = function (dataset) {
-        new phantasus.OpenFileTool().annotate(ann.file, dataset,
+        new phantasus.AnnotateDatasetTool().annotate(ann.file, dataset,
           isColumns, null, ann.datasetField, ann.fileField,
           ann.include);
       };
@@ -6182,20 +6194,20 @@ phantasus.DatasetUtil.annotate = function (options) {
         if (phantasus.Util.endsWith(fileName, '.gmt')) {
           var sets = new phantasus.GmtReader().parseLines(lines);
           functions[annotationIndex] = function (dataset) {
-            new phantasus.OpenFileTool().annotate(null, dataset,
+            new phantasus.AnnotateDatasetTool().annotate(null, dataset,
               isColumns, sets, ann.datasetField,
               ann.fileField);
           };
           deferred.resolve();
         } else if (phantasus.Util.endsWith(fileName, '.cls')) {
           functions[annotationIndex] = function (dataset) {
-            new phantasus.OpenFileTool().annotateCls(null, dataset,
+            new phantasus.AnnotateDatasetTool().annotateCls(null, dataset,
               fileName, isColumns, lines);
           };
           deferred.resolve();
         } else {
           functions[annotationIndex] = function (dataset) {
-            new phantasus.OpenFileTool().annotate(lines, dataset,
+            new phantasus.AnnotateDatasetTool().annotate(lines, dataset,
               isColumns, null, ann.datasetField,
               ann.fileField, ann.include, ann.transposed);
           };
@@ -6289,9 +6301,6 @@ phantasus.DatasetUtil.read = function (fileOrUrl, options) {
           // console.log(dataset);
           // console.log('ready to resolve with', dataset);
           deferred.resolve(dataset);
-          if (!options.isGEO && !options.preloaded) {
-            phantasus.DatasetUtil.toESSessionPromise(dataset);
-          }
         }
       });
 
@@ -6978,6 +6987,7 @@ phantasus.DatasetUtil.copy = function (dataset) {
   };
   if (dataset.getESSession()) {
     newDataset.setESSession(dataset.getESSession());
+    newDataset.setESVariable(dataset.getESVariable());
   }
   return newDataset;
 };
@@ -7177,35 +7187,93 @@ phantasus.DatasetUtil.probeDataset = function (dataset, session) {
     }
 
     var meta = phantasus.DatasetUtil.getMetadataArray(dataset);
-    var fvarLabels = meta.fvarLabels.map(function (fvarLabel) { return (fvarLabel.isNA)?'NA':fvarLabel.strval});
-    var indices = [];
-    var eps = 0.001;
+    var fData = dataset.getRowMetadata();
 
-    var testArrByEpsilon = function (value, index) {
-      var ij = indices[index];
-      return Math.abs(value - dataset.getValue(ij[0] - 1, ij[1] - 1)) < eps;
+    var fvarLabels = meta.fvarLabels.map(function (fvarLabel) { return (fvarLabel.isNA)?'NA':fvarLabel.strval});
+    var query = {
+      exprs: [],
+      fData: []
+    };
+    var epsExprs = 0.01;
+    var epsFdata = 0.1;
+
+    var verifyExprs = function (value, index) {
+      var ij = query.exprs[index];
+      var testValue = dataset.getValue(ij[0] - 1, ij[1] - 1);
+      var rdaValue = parseFloat(value);
+      return (isNaN(rdaValue) && isNaN(testValue)) || Math.abs(rdaValue - testValue) < epsExprs;
     };
 
-    for(var i = 0;i < 100; i++) {
-      var jIdx = _.random(0, dataset.getColumnCount() - 1);
-      var iIdx = _.random(0, dataset.getRowCount() - 1);
-      indices.push([iIdx + 1, jIdx + 1]);
-    }
+    var verifyFeature = function (name, backendValues) {
+      var indices = _.find(query.fData, {name: name}).indices;
+      var column = fData.getByName(name);
+      var frontendValues = _.map(indices, function (index) {return column.getValue(index - 1)});
+      var type = column.getProperties().get(phantasus.VectorKeys.DATA_TYPE);
+      if (type === 'number' || type === '[number]') {
+        return frontendValues.every(function (value, index) {
+          var backendValue = parseFloat(backendValues[index]);  // backend might be string, frontend number
+
+          return (isNaN(value) && isNaN(backendValue) === isNaN(value)) || // both NaN
+                  Math.abs(value - backendValue) < epsFdata;
+        });
+      } else {
+        backendValues = _.map(backendValues, function (value) { // backend might be numbers, frontend string
+          return value === 'NA' ? null : value.toString();
+        });
+
+        frontendValues = _.map(frontendValues, function (value) {
+          return value || '';
+        });
+
+        return _.isEqual(backendValues,frontendValues);
+      }
+    };
+
+    query.exprs = _.times(100, function () {
+      var jIdx = _.random(0, dataset.getColumnCount() - 1) + 1;
+      var iIdx = _.random(0, dataset.getRowCount() - 1) + 1;
+      return [iIdx, jIdx];
+    });
+
+    query.fData = _.map(fData.vectors, function (fDataVector) {
+      var fDataVectorMeta = {name: fDataVector.getName()};
+      fDataVectorMeta.indices = _.times(20, function () {
+        return _.random(0, fDataVector.size() - 1) + 1;
+      });
+
+      return fDataVectorMeta;
+    });
 
     targetSession.then(function (essession) {
       var request = {
         es: essession,
-        indices: indices
+        query: query
       };
 
       var req = ocpu.call("probeDataset", request, function (newSession) {
         newSession.getObject(function (success) {
           var backendProbe = JSON.parse(success);
 
-          resolve(backendProbe.dims[0] === dataset.getRowCount() &&
-            backendProbe.dims[1] === dataset.getColumnCount() &&
-            backendProbe.probe.every(testArrByEpsilon) &&
-            _.isEqual(fvarLabels, backendProbe.fvarLabels));
+          var isRowCountEqual = backendProbe.dims[0] === dataset.getRowCount();
+          var isColumnCountEqual = backendProbe.dims[1] === dataset.getColumnCount();
+          var exprsEqual = backendProbe.probe.every(verifyExprs);
+          var fDataValuesEqual = true;
+
+          var fDataNamesEqual = fvarLabels.every(function (value) {
+            return backendProbe.fvarLabels.indexOf(value) !== -1;
+          });
+
+          if (fDataNamesEqual) {
+            _.each(backendProbe.fdata, function (values, name) {
+              if (!fDataValuesEqual) {
+                return;
+              }
+
+              fDataValuesEqual = verifyFeature(name, values);
+            });
+          }
+
+          resolve(isRowCountEqual && isColumnCountEqual && exprsEqual && fDataNamesEqual && fDataValuesEqual);
         })
       }, false, "::" + dataset.getESVariable());
 
@@ -12178,14 +12246,13 @@ phantasus.VectorUtil.maybeConvertStringToNumber = function (vector) {
   var found = false;
   for (var i = 0, nrows = vector.size(); i < nrows; i++) {
     var s = vector.getValue(i);
-    if (s != null && s !== '' && s !== 'NA' && s !== 'NaN') {
-      if (!$.isNumeric(s)) {
-        return false;
-      } else {
-        found = true;
-      }
+    var tmp = parseFloat(s);
+    if (!isNaN(tmp) && isFinite(tmp)) {
+      newValues.push(tmp);
+      found = true;
+    } else {
+      return false;
     }
-    newValues.push(parseFloat(s));
   }
   if (!found) {
     return false;
@@ -12711,13 +12778,15 @@ phantasus.SampleDatasets = function (options) {
       $button.prop('disabled', isDisabled);
     });
 
-    fetch('https://software.broadinstitute.org/morpheus/preloaded-datasets/tcga/tcga_index.txt').then(function (response) {
-      if (response.ok) {
-        return response.text();
-      }
-    }).then(function (text) {
+    fetch('https://genome.ifmo.ru/files/software/phantasus/tcga/tcga_index.txt')
+      .then(function (response) {
+        if (response.ok) {
+          return response.text();
+        }
+      })
+      .then(function (text) {
         var exampleHtml = [];
-        exampleHtml.push('<table class="table table-condensed table-bordered">');
+        /*exampleHtml.push('<table class="table table-condensed table-bordered">');
         exampleHtml.push('<thead><tr><th>Name</th><th>Gene' +
           ' Expression</th><th>Copy Number By Gene</th><th>Mutations</th><th>Gene' +
           ' Essentiality</th><th></th></tr></thead>');
@@ -12740,7 +12809,7 @@ phantasus.SampleDatasets = function (options) {
         exampleHtml
           .push('<td><button disabled type="button" class="btn btn-link" name="ccle">'
             + options.openText + '</button></td>');
-        exampleHtml.push('</tr></tbody></table>');
+        exampleHtml.push('</tr></tbody></table>');*/
 
       exampleHtml.push(
         '<div>TCGA data <a target="_blank" href="https://confluence.broadinstitute.org/display/GDAC/Dashboard-Stddata">(Broad GDAC 1/28/2016)</a></div><span>Please adhere to the' +
@@ -12870,7 +12939,7 @@ phantasus.SampleDatasets = function (options) {
 };
 
 phantasus.SampleDatasets.getTcgaDataset = function (options) {
-  var baseUrl = 'https://software.broadinstitute.org/morpheus/preloaded-datasets/tcga/'
+  var baseUrl = 'https://genome.ifmo.ru/files/software/phantasus/tcga/'
     + options.type + '/';
   var datasetOptions = {};
   if (options.mrna) {
@@ -13098,15 +13167,31 @@ phantasus.AdjustDataTool.prototype = {
       });
     });
 
+    this.sweepAction.on('change', function (e) {
+      var action = e.currentTarget.value;
+      form.$form.find('#Sweep-first-divider').text(
+        action === 'Divide' ? 'each' : 'from each'
+      );
+      form.$form.find('#Sweep-second-divider').text(
+        action === 'Divide' ? 'by field:' : 'field:'
+      );
+    });
+
     form.$form.find('[name=scale_column_sum]').on('change', function (e) {
       form.setVisible('column_sum', form.getValue('scale_column_sum'));
     });
+
     form.setVisible('column_sum', false);
     this.sweepTarget.trigger('change');
   },
   gui: function () {
     // z-score, robust z-score, log2, inverse
     return [{
+      name: 'warning',
+      showLabel: false,
+      type: 'custom',
+      value: 'Operations are performed in order listed'
+    }, {
       name: 'scale_column_sum',
       type: 'checkbox',
       help: 'Whether to scale each column sum to a specified value'
@@ -13117,6 +13202,10 @@ phantasus.AdjustDataTool.prototype = {
     }, {
       name: 'log_2',
       type: 'checkbox'
+    }, {
+      name: 'one_plus_log_2',
+      type: 'checkbox',
+      help: 'Take log2(1 + x)'
     }, {
       name: 'inverse_log_2',
       type: 'checkbox'
@@ -13132,11 +13221,8 @@ phantasus.AdjustDataTool.prototype = {
       type: 'checkbox',
       help: 'Subtract median, divide by median absolute deviation'
     }, {
-      name: 'use_selected_rows_and_columns_only',
-      type: 'checkbox'
-    }, {
       name: 'Sweep',
-      type: "triple-select",
+      type: 'triple-select',
       firstName: 'sweep-action',
       firstOptions: ['Divide', 'Subtract'],
       firstDivider: 'each',
@@ -13155,124 +13241,579 @@ phantasus.AdjustDataTool.prototype = {
     var heatMap = options.heatMap;
 
     var sweepBy = (_.size(this.sweepRowColumnSelect) > 0) ? this.sweepRowColumnSelect[0].value : '(None)';
+    if (!options.input.log_2 &&
+        !options.input.inverse_log_2 &&
+        !options.input['z-score'] &&
+        !options.input['robust_z-score'] &&
+        !options.input.quantile_normalize &&
+        !options.input.scale_column_sum &&
+        !options.input.one_plus_log_2 &&
+        sweepBy === '(None)') {
+        // No action selected;
+        return;
+    }
 
-    if (options.input.log_2 || options.input.inverse_log_2
-      || options.input['z-score'] || options.input['robust_z-score'] || options.input.quantile_normalize || options.input.scale_column_sum || sweepBy !== '(None)') {
-      // clone the values 1st
-      var sortedFilteredDataset = phantasus.DatasetUtil.copy(project
-        .getSortedFilteredDataset());
-      var rowIndices = project.getRowSelectionModel()
-        .getViewIndices().values().sort(
-          function (a, b) {
-            return (a === b ? 0 : (a < b ? -1 : 1));
-          });
-      if (rowIndices.length === 0) {
-        rowIndices = null;
-      }
-      var columnIndices = project.getColumnSelectionModel()
-        .getViewIndices().values().sort(
-          function (a, b) {
-            return (a === b ? 0 : (a < b ? -1 : 1));
-          });
-      if (columnIndices.length === 0) {
-        columnIndices = null;
-      }
-      var dataset = options.input.use_selected_rows_and_columns_only ? new phantasus.Slice
-        : sortedFilteredDataset;
-      var rowView = new phantasus.DatasetRowView(dataset);
-      var functions = [];
-      if (options.input.scale_column_sum) {
-        var scaleToValue = parseFloat(options.input.column_sum);
-        if (!isNaN(scaleToValue)) {
-          for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
-            var sum = 0;
-            for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
-              var value = dataset.getValue(i, j);
-              if (!isNaN(value)) {
-                sum += value;
-              }
-            }
-            var ratio = scaleToValue / sum;
-            for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
-              var value = dataset.getValue(i, j);
-              dataset.setValue(i, j, value * ratio);
-            }
-          }
-        }
-      }
-      if (options.input.log_2) {
-        for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
-          for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
-            dataset.setValue(i, j, phantasus.Log2(dataset.getValue(
-              i, j)));
-          }
-        }
-      }
-      if (options.input.inverse_log_2) {
-        for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
-          for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
-            var value = dataset.getValue(i, j);
-            if (value >= 0) {
-              dataset.setValue(i, j, Math.pow(2, value));
-            }
-          }
-        }
-      }
-      if (options.input.quantile_normalize) {
-        phantasus.QNorm.execute(dataset);
-      }
-      if (options.input['z-score']) {
-        for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
-          rowView.setIndex(i);
-          var mean = phantasus.Mean(rowView);
-          var stdev = Math.sqrt(phantasus.Variance(rowView));
-          for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
-            dataset.setValue(i, j, (dataset.getValue(i, j) - mean)
-              / stdev);
-          }
-        }
-      }
-      if (options.input['robust_z-score']) {
-        for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
-          rowView.setIndex(i);
-          var median = phantasus.Median(rowView);
-          var mad = phantasus.MAD(rowView, median);
-          for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
-            dataset.setValue(i, j,
-              (dataset.getValue(i, j) - median) / mad);
-          }
-        }
-      }
+    // clone the values 1st
+    var sortedFilteredDataset = phantasus.DatasetUtil.copy(project
+      .getSortedFilteredDataset());
 
-      if (sweepBy !== '(None)') {
-        var op = this.sweepAction[0].value === 'Subtract' ?
-                  function (a,b) {return a - b; }         :
-                  function (a,b) {return a / b; }         ;
+    var rowIndices = project
+      .getRowSelectionModel()
+      .getViewIndices()
+      .values().sort(
+        function (a, b) {
+          return (a === b ? 0 : (a < b ? -1 : 1));
+        });
 
-        var mode = this.sweepTarget[0].value;
-        var sweepVector = mode === 'row' ?
-          dataset.getRowMetadata().getByName(sweepBy) :
-          dataset.getColumnMetadata().getByName(sweepBy);
+    if (rowIndices.length === 0) {
+      rowIndices = null;
+    }
 
+    var columnIndices = project
+      .getColumnSelectionModel()
+      .getViewIndices()
+      .values()
+      .sort(
+        function (a, b) {
+          return (a === b ? 0 : (a < b ? -1 : 1));
+        });
+
+    if (columnIndices.length === 0) {
+      columnIndices = null;
+    }
+
+    var dataset = sortedFilteredDataset;
+    var rowView = new phantasus.DatasetRowView(dataset);
+    var functions = {};
+
+    if (options.input.scale_column_sum) {
+      var scaleToValue = parseFloat(options.input.column_sum);
+      functions.scaleColumnSum = scaleToValue;
+
+      if (!isNaN(scaleToValue)) {
         for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
+          var sum = 0;
           for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
             var value = dataset.getValue(i, j);
             if (!isNaN(value)) {
-              var operand = sweepVector.getValue(mode === 'row' ? i : j);
-              dataset.setValue(i, j, op(value, operand));
+              sum += value;
+            }
+          }
+          var ratio = scaleToValue / sum;
+          for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
+            var value = dataset.getValue(i, j);
+            dataset.setValue(i, j, value * ratio);
+          }
+        }
+      }
+    }
+
+    if (options.input.log_2) {
+      functions.log2 = true;
+      for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
+        for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
+          dataset.setValue(i, j, phantasus.Log2(dataset.getValue(
+            i, j)));
+        }
+      }
+    }
+
+    if (options.input.one_plus_log_2) {
+      functions.onePlusLog2 = true;
+      for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
+        for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
+          dataset.setValue(i, j, phantasus.Log2(dataset.getValue(
+            i, j) + 1));
+        }
+      }
+    }
+
+    if (options.input.inverse_log_2) {
+      functions.inverseLog2 = true;
+      for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
+        for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
+          dataset.setValue(i, j, Math.pow(2, dataset.getValue(i, j)));
+        }
+      }
+    }
+
+    if (options.input.quantile_normalize) {
+      functions.quantileNormalize = true;
+      phantasus.QNorm.execute(dataset);
+    }
+
+    if (options.input['z-score']) {
+      functions.zScore = true;
+      for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
+        rowView.setIndex(i);
+        var mean = phantasus.Mean(rowView);
+        var stdev = Math.sqrt(phantasus.Variance(rowView));
+        for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
+          dataset.setValue(i, j, (dataset.getValue(i, j) - mean)
+            / stdev);
+        }
+      }
+    }
+
+    if (options.input['robust_z-score']) {
+      functions.robustZScore = true;
+      for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
+        rowView.setIndex(i);
+        var median = phantasus.Median(rowView);
+        var mad = phantasus.MAD(rowView, median);
+        for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
+          dataset.setValue(i, j,
+            (dataset.getValue(i, j) - median) / mad);
+        }
+      }
+    }
+
+    if (sweepBy !== '(None)') {
+      functions.sweep = {};
+
+      var op = this.sweepAction[0].value === 'Subtract' ?
+                function (a,b) {return a - b; }         :
+                function (a,b) {return a / b; }         ;
+
+      var mode = this.sweepTarget[0].value;
+      var sweepVector = mode === 'row' ?
+        dataset.getRowMetadata().getByName(sweepBy) :
+        dataset.getColumnMetadata().getByName(sweepBy);
+
+      functions.sweep.mode = mode;
+      functions.sweep.name = sweepBy;
+      functions.sweep.op = this.sweepAction[0].value === 'Subtract' ? '-':'/';
+
+      for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
+        for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
+          var value = dataset.getValue(i, j);
+          if (!isNaN(value)) {
+            var operand = sweepVector.getValue(mode === 'row' ? i : j);
+            dataset.setValue(i, j, op(value, operand));
+          }
+        }
+      }
+    }
+
+    var currentSessionPromise = dataset.getESSession();
+    var currentESVariable = dataset.getESVariable();
+
+    if (currentESVariable && currentSessionPromise) {
+      dataset.setESSession(new Promise(function (resolve, reject) {
+        currentSessionPromise.then(function (essession) {
+          functions.es = essession;
+          var req = ocpu.call("adjustDataset", functions, function (newSession) {
+            dataset.setESVariable("es");
+            resolve(newSession);
+          }, false, "::" + currentESVariable);
+
+
+          req.fail(function () {
+            reject();
+            throw new Error("adjustDataset call to OpenCPU failed" + req.responseText);
+          });
+        });
+      }));
+    }
+
+
+    return new phantasus.HeatMap({
+      name: heatMap.getName(),
+      dataset: dataset,
+      parent: heatMap,
+      symmetric: project.isSymmetric() && dataset.getColumnCount() === dataset.getRowCount()
+    });
+  }
+};
+
+phantasus.AnnotateDatasetTool = function (options) {
+  this.options = options || {target: 'Rows'};
+};
+phantasus.AnnotateDatasetTool.prototype = {
+  toString: function () {
+    return 'Annotate ' + this.options.target.toString();
+  },
+  gui: function () {
+    var array = [];
+    array.push({
+      name: 'file',
+      showLabel: false,
+      placeholder: 'Open your own file',
+      value: '',
+      type: 'file',
+      required: true,
+      help: phantasus.DatasetUtil.ANNOTATION_FILE_FORMATS
+    });
+    array.options = {
+      ok: this.options.file != null,
+      size: 'modal-lg'
+    };
+    return array;
+  },
+  init: function (project, form) {
+    var _this = this;
+    form.on('change', function (e) {
+      var value = e.value;
+      if (value !== '' && value != null) {
+        form.setValue('file', value);
+        _this.options.file = value;
+        _this.ok();
+      }
+    });
+
+  },
+
+  execute: function (options) {
+    var _this = this;
+    var isInteractive = this.options.file == null;
+    var heatMap = options.heatMap;
+    if (!isInteractive) {
+      options.input.file = this.options.file;
+    }
+    if (options.input.file.isGEO) {
+      options.input.isGEO = options.input.file.isGEO;
+      options.input.file = options.input.file.name;
+    }
+    if (options.input.file.preloaded) {
+      options.input.preloaded = options.input.file.preloaded;
+      options.input.file = options.input.file.name;
+    }
+    var project = options.project;
+    var d = $.Deferred();
+    var isAnnotateColumns = this.options.target !== 'Rows';
+    var fileOrUrl = options.input.file;
+    var dataset = project.getFullDataset();
+    var fileName = phantasus.Util.getFileName(fileOrUrl);
+    if (phantasus.Util.endsWith(fileName, '.cls')) {
+      var result = phantasus.Util.readLines(fileOrUrl);
+      result.always(function () {
+        d.resolve();
+      });
+      result.done(function (lines) {
+        _this.annotateCls(heatMap, dataset, fileName,
+          isAnnotateColumns, lines);
+      });
+    } else if (phantasus.Util.endsWith(fileName, '.gmt')) {
+      phantasus.ArrayBufferReader.getArrayBuffer(fileOrUrl, function (
+        err,
+        buf) {
+        d.resolve();
+        if (err) {
+          throw new Error('Unable to read ' + fileOrUrl);
+        }
+        var sets = new phantasus.GmtReader().read(
+          new phantasus.ArrayBufferReader(new Uint8Array(
+            buf)));
+        _this.promptSets(dataset, heatMap, isAnnotateColumns,
+          sets, phantasus.Util.getBaseFileName(
+            phantasus.Util.getFileName(fileOrUrl)));
+      });
+
+    } else {
+      var result = phantasus.Util.readLines(fileOrUrl);
+      result.done(function (lines) {
+        _this.prompt(lines, dataset, heatMap, isAnnotateColumns);
+      }).always(function () {
+        d.resolve();
+      });
+      return d;
+    }
+  },
+  annotateCls: function (heatMap, dataset, fileName, isColumns, lines) {
+    if (isColumns) {
+      dataset = phantasus.DatasetUtil.transposedView(dataset);
+    }
+    var assignments = new phantasus.ClsReader().read(lines);
+    if (assignments.length !== dataset.getRowCount()) {
+      throw new Error(
+        'Number of samples in cls file does not match dataset.');
+    }
+    var vector = dataset.getRowMetadata().add(
+      phantasus.Util.getBaseFileName(fileName));
+    for (var i = 0; i < assignments.length; i++) {
+      vector.setValue(i, assignments[i]);
+    }
+    if (heatMap) {
+      heatMap.getProject().trigger('trackChanged', {
+        vectors: [vector],
+        display: ['color'],
+        columns: isColumns
+      });
+    }
+  },
+
+  annotateSets: function (dataset, isColumns, sets,
+                          datasetMetadataName, setSourceFileName) {
+    if (isColumns) {
+      dataset = phantasus.DatasetUtil.transposedView(dataset);
+    }
+    var vector = dataset.getRowMetadata().getByName(datasetMetadataName);
+    var idToIndices = phantasus.VectorUtil.createValueToIndicesMap(vector);
+    var setVector = dataset.getRowMetadata().add(setSourceFileName);
+    sets.forEach(function (set) {
+      var name = set.name;
+      var members = set.ids;
+      members.forEach(function (id) {
+        var indices = idToIndices.get(id);
+        if (indices !== undefined) {
+          for (var i = 0, nIndices = indices.length; i < nIndices; i++) {
+            var array = setVector.getValue(indices[i]);
+            if (array === undefined) {
+              array = [];
+            }
+            array.push(name);
+            setVector.setValue(indices[i], array);
+          }
+        }
+      });
+    });
+    return setVector;
+  },
+  /**
+   *
+   * @param lines
+   *            Lines of text in annotation file or null if a gmt file
+   * @param dataset
+   *            Current dataset
+   * @param isColumns
+   *            Whether annotating columns
+   * @param sets
+   *            Sets if a gmt file or null
+   * @param metadataName
+   *            The dataset metadata name to match on
+   * @param fileColumnName
+   *            The metadata file name to match on
+   * @param fileColumnNamesToInclude
+   *            An array of column names to include from the metadata file or
+   *            null to include all
+   * @param tranposed For text/Excel files only. If <code>true</code>, different annotations are on each row.
+   */
+  annotate: function (lines, dataset, isColumns, sets, metadataName,
+                      fileColumnName, fileColumnNamesToInclude, transposed) {
+    if (isColumns) {
+      dataset = phantasus.DatasetUtil.transposedView(dataset);
+    }
+    var vector = dataset.getRowMetadata().getByName(metadataName);
+    if (!vector) {
+      throw new Error('vector ' + metadataName + ' not found.');
+    }
+    var fileColumnNamesToIncludeSet = null;
+    if (fileColumnNamesToInclude) {
+      fileColumnNamesToIncludeSet = new phantasus.Set();
+      fileColumnNamesToInclude.forEach(function (name) {
+        fileColumnNamesToIncludeSet.add(name);
+      });
+    }
+    var vectors = [];
+    var idToIndices = phantasus.VectorUtil.createValueToIndicesMap(vector);
+    if (!lines) {
+      _.each(
+        sets,
+        function (set) {
+          var name = set.name;
+          var members = set.ids;
+
+          var v = dataset.getRowMetadata().add(name);
+          vectors.push(v);
+          _.each(
+            members,
+            function (id) {
+              var indices = idToIndices.get(id);
+              if (indices !== undefined) {
+                for (var i = 0, nIndices = indices.length; i < nIndices; i++) {
+                  v.setValue(
+                    indices[i],
+                    name);
+                }
+              }
+            });
+        });
+    } else {
+      var tab = /\t/;
+      if (!transposed) {
+        var header = lines[0].split(tab);
+        var fileMatchOnColumnIndex = _.indexOf(header, fileColumnName);
+        if (fileMatchOnColumnIndex === -1) {
+          throw new Error(fileColumnName + ' not found in header:'
+            + header);
+        }
+        var columnIndices = [];
+        var nheaders = header.length;
+        for (var j = 0; j < nheaders; j++) {
+          var name = header[j];
+          if (j === fileMatchOnColumnIndex) {
+            continue;
+          }
+          if (fileColumnNamesToIncludeSet
+            && !fileColumnNamesToIncludeSet.has(name)) {
+            continue;
+          }
+          var v = dataset.getRowMetadata().getByName(name);
+          if (!v) {
+            v = dataset.getRowMetadata().add(name);
+          }
+          columnIndices.push(j);
+          vectors.push(v);
+        }
+        var nheaders = columnIndices.length;
+        for (var i = 1, nrows = lines.length; i < nrows; i++) {
+          var line = lines[i].split(tab);
+          var id = line[fileMatchOnColumnIndex];
+          var indices = idToIndices.get(id);
+          if (indices !== undefined) {
+            var nIndices = indices.length;
+            for (var j = 0; j < nheaders; j++) {
+              var token = line[columnIndices[j]];
+              var v = vectors[j];
+              for (var r = 0; r < nIndices; r++) {
+                v.setValue(indices[r], token);
+              }
             }
           }
         }
       }
+      else {
+        // transposed
+        var splitLines = [];
+        var matchOnLine;
+        for (var i = 0, nrows = lines.length; i < nrows; i++) {
+          var line = lines[i].split(tab);
+          var name = line[0];
+          if (fileColumnName === name) {
+            matchOnLine = line;
+          } else {
+            if (fileColumnNamesToIncludeSet
+              && !fileColumnNamesToIncludeSet.has(name)) {
+              continue;
+            }
+            splitLines.push(line);
+            var v = dataset.getRowMetadata().getByName(name);
+            if (!v) {
+              v = dataset.getRowMetadata().add(name);
+            }
+            vectors.push(v);
+          }
+        }
+        if (matchOnLine == null) {
+          throw new Error(fileColumnName + ' not found in header.');
+        }
 
-      dataset.setESSession(null);
-      return new phantasus.HeatMap({
-        name: heatMap.getName(),
-        dataset: dataset,
-        parent: heatMap,
-        symmetric: project.isSymmetric() && dataset.getColumnCount() === dataset.getRowCount()
-      });
+        for (var fileColumnIndex = 1, ncols = matchOnLine.length; fileColumnIndex < ncols; fileColumnIndex++) {
+          var id = matchOnLine[fileColumnIndex];
+          var indices = idToIndices.get(id);
+          if (indices !== undefined) {
+            var nIndices = indices.length;
+            for (var j = 0; j < splitLines.length; j++) {
+              var token = splitLines[j][fileColumnIndex];
+              var v = vectors[j];
+              for (var r = 0; r < nIndices; r++) {
+                v.setValue(indices[r], token);
+              }
+            }
+          }
+
+        }
+      }
     }
+    for (var i = 0; i < vectors.length; i++) {
+      phantasus.VectorUtil.maybeConvertStringToNumber(vectors[i]);
+    }
+    return vectors;
+  },
+  // prompt for metadata field name in dataset
+  promptSets: function (dataset, heatMap, isColumns, sets, setSourceFileName) {
+    var promptTool = {};
+    var _this = this;
+    promptTool.execute = function (options) {
+      var metadataName = options.input.dataset_field_name;
+      var vector = _this.annotateSets(dataset, isColumns, sets,
+        metadataName, setSourceFileName);
+
+      heatMap.getProject().trigger('trackChanged', {
+        vectors: [vector],
+        display: ['text'],
+        columns: isColumns
+      });
+    };
+    promptTool.toString = function () {
+      return 'Select Fields To Match On';
+    };
+    promptTool.gui = function () {
+      return [
+        {
+          name: 'dataset_field_name',
+          options: phantasus.MetadataUtil.getMetadataNames(
+            isColumns ? dataset.getColumnMetadata() : dataset.getRowMetadata()),
+          type: 'select',
+          value: 'id',
+          required: true
+        }];
+
+    };
+    phantasus.HeatMap.showTool(promptTool, heatMap);
+
+  },
+  prompt: function (lines, dataset, heatMap, isColumns) {
+    var promptTool = {};
+    var _this = this;
+    var header = lines != null ? lines[0].split('\t') : null;
+    promptTool.execute = function (options) {
+      var metadataName = options.input.dataset_field_name;
+      var fileColumnName = options.input.file_field_name;
+      var vectors = _this.annotate(lines, dataset, isColumns, null,
+        metadataName, fileColumnName);
+
+      var nameToIndex = new phantasus.Map();
+      var display = [];
+      for (var i = 0; i < vectors.length; i++) {
+        display.push(isColumns ? 'color' : 'text');
+        nameToIndex.set(vectors[i].getName(), i);
+      }
+      if (lines.colors) {
+        var colorModel = isColumns
+          ? heatMap.getProject().getColumnColorModel()
+          : heatMap.getProject().getRowColorModel();
+        lines.colors.forEach(function (item) {
+          var index = nameToIndex.get(item.header);
+          var vector = vectors[index];
+          display[index] = 'color';
+          colorModel.setMappedValue(vector, item.value, item.color);
+        });
+      }
+      heatMap.getProject().trigger('trackChanged', {
+        vectors: vectors,
+        display: display,
+        columns: isColumns
+      });
+    };
+    promptTool.toString = function () {
+      return 'Select Fields To Match On';
+    };
+    promptTool.gui = function () {
+      var items = [
+        {
+          name: 'dataset_field_name',
+          options: phantasus.MetadataUtil.getMetadataNames(
+            isColumns ? dataset.getColumnMetadata() : dataset.getRowMetadata()),
+          type: 'select',
+          required: true
+        }];
+      if (lines) {
+        items.push({
+          name: 'file_field_name',
+          type: 'select',
+          options: _.map(header, function (item) {
+            return {
+              name: item,
+              value: item
+            };
+          }),
+          required: true
+        });
+      }
+      return items;
+    };
+    phantasus.HeatMap.showTool(promptTool, heatMap);
   }
 };
 
@@ -14301,7 +14842,12 @@ phantasus.CollapseDatasetTool.prototype = {
     form.setVisible('percentile', false);
     form.$form.find('[name=collapse_method]').on('change', function (e) {
       form.setVisible('percentile', $(this).val() === phantasus.Percentile.toString());
-      form.setVisible('collapse', !phantasus.CollapseDatasetTool.Functions.fromString($(this).val()).selectOne)
+      var collapsableColumns = !phantasus.CollapseDatasetTool.Functions.fromString($(this).val()).selectOne;
+      form.setVisible('collapse', collapsableColumns);
+
+      if (!collapsableColumns) {
+        setValue('Rows');
+      }
     });
 
 
@@ -14385,92 +14931,117 @@ phantasus.CreateAnnotation.prototype = {
     return 'Create Calculated Annotation';
   },
   gui: function () {
-    return [
-      {
+    this.operationDict = {
+      'Mean': 'MEAN()',
+      'MAD': 'MAD()',
+      'Median': 'MEDIAN()',
+      'Max': 'MAX()',
+      'Min': 'MIN()',
+      'Sum': 'SUM()',
+    };
+
+    return [ {
         name: 'annotate',
         options: ['Columns', 'Rows'],
         value: 'Rows',
         type: 'radio'
-      },
-      {
+      },{
+        name: 'operation',
+        value: _.first(Object.keys(this.operationDict)),
+        type: 'select',
+        options: Object.keys(this.operationDict)
+      }, {
         name: 'annotation_name',
         value: '',
         type: 'text',
-        required: true,
+        help: 'Optional annotation name. If not specified, the operation name will be used.',
         autocomplete: 'off'
-      },
-      {
-        name: 'formula',
-        value: '',
-        type: 'textarea',
-        placeholder: 'e.g MAD()',
-        required: true,
-        help: 'JavaScript formula. Built-in functions (case-sensitive): COUNTIF(expression),' +
-        ' MAD(), MAX(),' +
-        ' MEAN(), MEDIAN(), MIN(), PERCENTILE(p), SUM(), VARIANCE(). Refer to a field using FIELD(name)'
       }, {
         name: 'use_selected_rows_and_columns_only',
         type: 'checkbox'
       }];
   },
   execute: function (options) {
-    var __project = options.project;
-    var isColumns = options.input.annotate == 'Columns';
-    var __formula = options.input.formula;
-    var __dataset = options.input.use_selected_rows_and_columns_only ? __project
-        .getSelectedDataset()
-      : __project.getSortedFilteredDataset();
-    if (isColumns) {
-      __dataset = phantasus.DatasetUtil.transposedView(__dataset);
-    }
-    var __rowView = new phantasus.DatasetRowView(__dataset);
-    var __vector = __dataset.getRowMetadata().add(
-      options.input.annotation_name);
-
-    var COUNTIF = function (val) {
-      return phantasus.CountIf(__rowView, val);
+    var project = options.project;
+    var opName = options.input.operation;
+    var colName = options.input.annotation_name || opName;
+    var operation = this.operationDict[opName];
+    var selectedOnly = options.input.use_selected_rows_and_columns_only;
+    var isColumns = options.input.annotate === 'Columns';
+    var args = {
+      operation: opName,
+      isColumns: isColumns,
+      name: colName
     };
+    var dataset = selectedOnly
+      ? project.getSelectedDataset({
+        selectedRows: true,
+        selectedColumns: true,
+      })
+      : project.getFullDataset();
+
+    if (selectedOnly) {
+      var indices = phantasus.Util.getTrueIndices(dataset);
+      args.columns = indices.columns;
+      args.rows = indices.rows;
+    }
+
+    if (isColumns) {
+      dataset = phantasus.DatasetUtil.transposedView(dataset);
+    }
+
+    var fullDataset = project.getFullDataset();
+    var session = fullDataset.getESSession();
+    var esVariable = fullDataset.getESVariable();
+
+    fullDataset.setESSession(new Promise(function (resolve, reject) {
+      session.then(function (esSession) {
+        args.es = esSession;
+
+        ocpu
+          .call("calculatedAnnotation", args, function (newSession) {
+            fullDataset.setESVariable('es');
+            resolve(newSession);
+          }, false, "::" + esVariable)
+          .fail(function () {
+            reject();
+            throw new Error("Calculated annotation failed. See console");
+          });
+      });
+    }));
+
+    var rowView = new phantasus.DatasetRowView(dataset);
+    var vector = dataset.getRowMetadata().add(colName);
+
     var MAD = function () {
-      return phantasus.MAD(__rowView);
+      return phantasus.MAD(rowView);
     };
     var MAX = function () {
-      return phantasus.Max(__rowView);
+      return phantasus.Max(rowView);
     };
     var MEAN = function () {
-      return phantasus.Mean(__rowView);
+      return phantasus.Mean(rowView);
     };
     var MEDIAN = function (p) {
-      return phantasus.Percentile(__rowView, 50);
+      return phantasus.Percentile(rowView, 50);
     };
     var MIN = function () {
-      return phantasus.Min(__rowView);
-    };
-    var PERCENTILE = function (p) {
-      return phantasus.Percentile(__rowView, p);
+      return phantasus.Min(rowView);
     };
     var SUM = function () {
-      return phantasus.Sum(__rowView);
+      return phantasus.Sum(rowView);
     };
-    var VARIANCE = function () {
-      return phantasus.Variance(__rowView);
-    };
-    var __index = 0;
-    var FIELD = function (field) {
-      var vector = __dataset.getRowMetadata().getByName(field);
-      return vector ? vector.getValue(__index) : undefined;
-    };
+    var idx = 0;
 
-    for (var size = __dataset.getRowCount(); __index < size; __index++) {
-      __rowView.setIndex(__index);
-      var __val = eval(__formula);
-      if (typeof __val === 'function') {
-        __val = '';
-      }
-      __vector.setValue(__index, __val);
+    for (var size = dataset.getRowCount(); idx < size; idx++) {
+      rowView.setIndex(idx);
+      var val = eval(operation);
+      vector.setValue(idx, val.valueOf());
     }
-    phantasus.VectorUtil.maybeConvertStringToNumber(__vector);
-    __project.trigger('trackChanged', {
-      vectors: [__vector],
+
+    phantasus.VectorUtil.maybeConvertStringToNumber(vector);
+    project.trigger('trackChanged', {
+      vectors: [vector],
       display: ['text'],
       columns: isColumns
     });
@@ -16146,7 +16717,7 @@ phantasus.NewHeatMapTool.prototype = {
           dataset.setESVariable('es');
           dataset.esSource = 'original';
           resolve(newSession);
-          console.log('Old dataset session: ', esSession, ', New dataset session: ', newSession);
+          //console.log('Old dataset session: ', esSession, ', New dataset session: ', newSession);
         }, false, "::" + currentESVariable);
 
         req.fail(function () {
@@ -16743,12 +17314,6 @@ phantasus.OpenFileTool.prototype = {
       options: [{
         name: 'Open session',
         value: 'Open session'
-      }, {divider: true}, {
-        name: 'Annotate columns',
-        value: 'Annotate Columns'
-      }, {
-        name: 'Annotate rows',
-        value: 'Annotate Rows'
       }, {
         divider: true
       }, {
@@ -16789,12 +17354,14 @@ phantasus.OpenFileTool.prototype = {
   },
   init: function (project, form, initOptions) {
     var $preloaded = $('<div></div>');
-    form.$form.find('[name=open_file_action]').on(
-      'change',
-      function (e) {
+    form.$form
+      .find('[name=open_file_action]')
+      .on('change', function (e) {
         var action = $(this).val();
-        if (action === 'append columns' || action === 'append'
-          || action === 'open' || action === 'overlay') {
+        if (action === 'append columns' ||
+          action === 'append' ||
+          action === 'open' ||
+          action === 'overlay') {
           form.setHelpText('file',
             phantasus.DatasetUtil.DATASET_FILE_FORMATS);
           $preloaded.show();
@@ -16805,12 +17372,9 @@ phantasus.OpenFileTool.prototype = {
         } else if (action === 'Open session') {
           form.setHelpText('file', phantasus.DatasetUtil.SESSION_FILE_FORMAT);
           $preloaded.hide();
-        } else {
-          form.setHelpText('file',
-            phantasus.DatasetUtil.ANNOTATION_FILE_FORMATS);
-          $preloaded.hide();
         }
       });
+
     if (this.options.file == null) {
       var _this = this;
       var collapseId = _.uniqueId('phantasus');
@@ -16830,6 +17394,7 @@ phantasus.OpenFileTool.prototype = {
       });
       $sampleDatasets.appendTo($preloaded);
     }
+
     form.on('change', function (e) {
       var value = e.value;
       if (value !== '' && value != null) {
@@ -16872,353 +17437,15 @@ phantasus.OpenFileTool.prototype = {
           focus: document.activeElement
         });
       });
-    } else if (options.input.open_file_action === 'append columns'
-      || options.input.open_file_action === 'append'
-      || options.input.open_file_action === 'open'
-      || options.input.open_file_action === 'overlay') {
+    } else if (options.input.open_file_action === 'append columns' ||
+      options.input.open_file_action === 'append' ||
+      options.input.open_file_action === 'open' ||
+      options.input.open_file_action === 'overlay') {
       return new phantasus.OpenDatasetTool().execute(options);
     } else if (options.input.open_file_action === 'Open dendrogram') {
       phantasus.HeatMap.showTool(new phantasus.OpenDendrogramTool(
         options.input.file), options.heatMap);
-    } else { // annotate rows or columns
-      var d = $.Deferred();
-      var isAnnotateColumns = options.input.open_file_action ==
-        'Annotate Columns';
-      var fileOrUrl = options.input.file;
-      var dataset = project.getFullDataset();
-      var fileName = phantasus.Util.getFileName(fileOrUrl);
-      if (phantasus.Util.endsWith(fileName, '.cls')) {
-        var result = phantasus.Util.readLines(fileOrUrl);
-        result.always(function () {
-          d.resolve();
-        });
-        result.done(function (lines) {
-          _this.annotateCls(heatMap, dataset, fileName,
-            isAnnotateColumns, lines);
-        });
-      } else if (phantasus.Util.endsWith(fileName, '.gmt')) {
-        phantasus.ArrayBufferReader.getArrayBuffer(fileOrUrl, function (
-          err,
-          buf) {
-          d.resolve();
-          if (err) {
-            throw new Error('Unable to read ' + fileOrUrl);
-          }
-          var sets = new phantasus.GmtReader().read(
-            new phantasus.ArrayBufferReader(new Uint8Array(
-              buf)));
-          _this.promptSets(dataset, heatMap, isAnnotateColumns,
-            sets, phantasus.Util.getBaseFileName(
-              phantasus.Util.getFileName(fileOrUrl)));
-        });
-
-      } else {
-        var result = phantasus.Util.readLines(fileOrUrl);
-        result.done(function (lines) {
-          _this.prompt(lines, dataset, heatMap, isAnnotateColumns);
-        }).always(function () {
-          d.resolve();
-        });
-        return d;
-      }
-
     }
-  },
-  annotateCls: function (heatMap, dataset, fileName, isColumns, lines) {
-    if (isColumns) {
-      dataset = phantasus.DatasetUtil.transposedView(dataset);
-    }
-    var assignments = new phantasus.ClsReader().read(lines);
-    if (assignments.length !== dataset.getRowCount()) {
-      throw new Error(
-        'Number of samples in cls file does not match dataset.');
-    }
-    var vector = dataset.getRowMetadata().add(
-      phantasus.Util.getBaseFileName(fileName));
-    for (var i = 0; i < assignments.length; i++) {
-      vector.setValue(i, assignments[i]);
-    }
-    if (heatMap) {
-      heatMap.getProject().trigger('trackChanged', {
-        vectors: [vector],
-        display: ['color'],
-        columns: isColumns
-      });
-    }
-  },
-
-  annotateSets: function (dataset, isColumns, sets,
-                          datasetMetadataName, setSourceFileName) {
-    if (isColumns) {
-      dataset = phantasus.DatasetUtil.transposedView(dataset);
-    }
-    var vector = dataset.getRowMetadata().getByName(datasetMetadataName);
-    var idToIndices = phantasus.VectorUtil.createValueToIndicesMap(vector);
-    var setVector = dataset.getRowMetadata().add(setSourceFileName);
-    sets.forEach(function (set) {
-      var name = set.name;
-      var members = set.ids;
-      members.forEach(function (id) {
-        var indices = idToIndices.get(id);
-        if (indices !== undefined) {
-          for (var i = 0, nIndices = indices.length; i < nIndices; i++) {
-            var array = setVector.getValue(indices[i]);
-            if (array === undefined) {
-              array = [];
-            }
-            array.push(name);
-            setVector.setValue(indices[i], array);
-          }
-        }
-      });
-    });
-    return setVector;
-  },
-  /**
-   *
-   * @param lines
-   *            Lines of text in annotation file or null if a gmt file
-   * @param dataset
-   *            Current dataset
-   * @param isColumns
-   *            Whether annotating columns
-   * @param sets
-   *            Sets if a gmt file or null
-   * @param metadataName
-   *            The dataset metadata name to match on
-   * @param fileColumnName
-   *            The metadata file name to match on
-   * @param fileColumnNamesToInclude
-   *            An array of column names to include from the metadata file or
-   *            null to include all
-   * @param tranposed For text/Excel files only. If <code>true</code>, different annotations are on each row.
-   */
-  annotate: function (lines, dataset, isColumns, sets, metadataName,
-                      fileColumnName, fileColumnNamesToInclude, transposed) {
-    if (isColumns) {
-      dataset = phantasus.DatasetUtil.transposedView(dataset);
-    }
-    var vector = dataset.getRowMetadata().getByName(metadataName);
-    if (!vector) {
-      throw new Error('vector ' + metadataName + ' not found.');
-    }
-    var fileColumnNamesToIncludeSet = null;
-    if (fileColumnNamesToInclude) {
-      fileColumnNamesToIncludeSet = new phantasus.Set();
-      fileColumnNamesToInclude.forEach(function (name) {
-        fileColumnNamesToIncludeSet.add(name);
-      });
-    }
-    var vectors = [];
-    var idToIndices = phantasus.VectorUtil.createValueToIndicesMap(vector);
-    if (!lines) {
-      _.each(
-        sets,
-        function (set) {
-          var name = set.name;
-          var members = set.ids;
-
-          var v = dataset.getRowMetadata().add(name);
-          vectors.push(v);
-          _.each(
-            members,
-            function (id) {
-              var indices = idToIndices.get(id);
-              if (indices !== undefined) {
-                for (var i = 0, nIndices = indices.length; i < nIndices; i++) {
-                  v.setValue(
-                    indices[i],
-                    name);
-                }
-              }
-            });
-        });
-    } else {
-      var tab = /\t/;
-      if (!transposed) {
-        var header = lines[0].split(tab);
-        var fileMatchOnColumnIndex = _.indexOf(header, fileColumnName);
-        if (fileMatchOnColumnIndex === -1) {
-          throw new Error(fileColumnName + ' not found in header:'
-            + header);
-        }
-        var columnIndices = [];
-        var nheaders = header.length;
-        for (var j = 0; j < nheaders; j++) {
-          var name = header[j];
-          if (j === fileMatchOnColumnIndex) {
-            continue;
-          }
-          if (fileColumnNamesToIncludeSet
-            && !fileColumnNamesToIncludeSet.has(name)) {
-            continue;
-          }
-          var v = dataset.getRowMetadata().getByName(name);
-          if (!v) {
-            v = dataset.getRowMetadata().add(name);
-          }
-          columnIndices.push(j);
-          vectors.push(v);
-        }
-        var nheaders = columnIndices.length;
-        for (var i = 1, nrows = lines.length; i < nrows; i++) {
-          var line = lines[i].split(tab);
-          var id = line[fileMatchOnColumnIndex];
-          var indices = idToIndices.get(id);
-          if (indices !== undefined) {
-            var nIndices = indices.length;
-            for (var j = 0; j < nheaders; j++) {
-              var token = line[columnIndices[j]];
-              var v = vectors[j];
-              for (var r = 0; r < nIndices; r++) {
-                v.setValue(indices[r], token);
-              }
-            }
-          }
-        }
-      }
-      else {
-        // transposed
-        var splitLines = [];
-        var matchOnLine;
-        for (var i = 0, nrows = lines.length; i < nrows; i++) {
-          var line = lines[i].split(tab);
-          var name = line[0];
-          if (fileColumnName === name) {
-            matchOnLine = line;
-          } else {
-            if (fileColumnNamesToIncludeSet
-              && !fileColumnNamesToIncludeSet.has(name)) {
-              continue;
-            }
-            splitLines.push(line);
-            var v = dataset.getRowMetadata().getByName(name);
-            if (!v) {
-              v = dataset.getRowMetadata().add(name);
-            }
-            vectors.push(v);
-          }
-        }
-        if (matchOnLine == null) {
-          throw new Error(fileColumnName + ' not found in header.');
-        }
-
-        for (var fileColumnIndex = 1, ncols = matchOnLine.length; fileColumnIndex < ncols; fileColumnIndex++) {
-          var id = matchOnLine[fileColumnIndex];
-          var indices = idToIndices.get(id);
-          if (indices !== undefined) {
-            var nIndices = indices.length;
-            for (var j = 0; j < splitLines.length; j++) {
-              var token = splitLines[j][fileColumnIndex];
-              var v = vectors[j];
-              for (var r = 0; r < nIndices; r++) {
-                v.setValue(indices[r], token);
-              }
-            }
-          }
-
-        }
-      }
-    }
-    for (var i = 0; i < vectors.length; i++) {
-      phantasus.VectorUtil.maybeConvertStringToNumber(vectors[i]);
-    }
-    return vectors;
-  },
-  // prompt for metadata field name in dataset
-  promptSets: function (dataset, heatMap, isColumns, sets, setSourceFileName) {
-    var promptTool = {};
-    var _this = this;
-    promptTool.execute = function (options) {
-      var metadataName = options.input.dataset_field_name;
-      var vector = _this.annotateSets(dataset, isColumns, sets,
-        metadataName, setSourceFileName);
-
-      heatMap.getProject().trigger('trackChanged', {
-        vectors: [vector],
-        display: ['text'],
-        columns: isColumns
-      });
-    };
-    promptTool.toString = function () {
-      return 'Select Fields To Match On';
-    };
-    promptTool.gui = function () {
-      return [
-        {
-          name: 'dataset_field_name',
-          options: phantasus.MetadataUtil.getMetadataNames(
-            isColumns ? dataset.getColumnMetadata() : dataset.getRowMetadata()),
-          type: 'select',
-          value: 'id',
-          required: true
-        }];
-
-    };
-    phantasus.HeatMap.showTool(promptTool, heatMap);
-
-  },
-  prompt: function (lines, dataset, heatMap, isColumns) {
-    var promptTool = {};
-    var _this = this;
-    var header = lines != null ? lines[0].split('\t') : null;
-    promptTool.execute = function (options) {
-      var metadataName = options.input.dataset_field_name;
-      var fileColumnName = options.input.file_field_name;
-      var vectors = _this.annotate(lines, dataset, isColumns, null,
-        metadataName, fileColumnName);
-
-      var nameToIndex = new phantasus.Map();
-      var display = [];
-      for (var i = 0; i < vectors.length; i++) {
-        display.push(isColumns ? 'color' : 'text');
-        nameToIndex.set(vectors[i].getName(), i);
-      }
-      if (lines.colors) {
-        var colorModel = isColumns
-          ? heatMap.getProject().getColumnColorModel()
-          : heatMap.getProject().getRowColorModel();
-        lines.colors.forEach(function (item) {
-          var index = nameToIndex.get(item.header);
-          var vector = vectors[index];
-          display[index] = 'color';
-          colorModel.setMappedValue(vector, item.value, item.color);
-        });
-      }
-      heatMap.getProject().trigger('trackChanged', {
-        vectors: vectors,
-        display: display,
-        columns: isColumns
-      });
-    };
-    promptTool.toString = function () {
-      return 'Select Fields To Match On';
-    };
-    promptTool.gui = function () {
-      var items = [
-        {
-          name: 'dataset_field_name',
-          options: phantasus.MetadataUtil.getMetadataNames(
-            isColumns ? dataset.getColumnMetadata() : dataset.getRowMetadata()),
-          type: 'select',
-          required: true
-        }];
-      if (lines) {
-        items.push({
-          name: 'file_field_name',
-          type: 'select',
-          options: _.map(header, function (item) {
-            return {
-              name: item,
-              value: item
-            };
-          }),
-          required: true
-        });
-      }
-      return items;
-    };
-    phantasus.HeatMap.showTool(promptTool, heatMap);
   }
 };
 
@@ -17945,6 +18172,26 @@ phantasus.PcaPlotTool.getPlotlyDefaults = function () {
     layout: layout,
     config: config
   };
+};
+
+phantasus.ProbeDebugTool = function () {
+};
+phantasus.ProbeDebugTool.prototype = {
+  toString: function () {
+    return 'DEBUG: Probe Debug Tool';
+  },
+  execute: function (options) {
+    var project = options.project;
+    var dataset = project.getFullDataset();
+    var promise = $.Deferred();
+
+    phantasus.DatasetUtil.probeDataset(dataset).then(function (status) {
+      alert('Sync status:' + status.toString());
+      promise.resolve();
+    });
+
+    return promise;
+  }
 };
 
 phantasus.SaveDatasetTool = function () {
@@ -19991,6 +20238,23 @@ phantasus.ActionManager = function () {
     icon: 'fa fa-share-square-o'
   });
 
+  if (phantasus.DEBUG_ENABLED) {
+    this.add({
+      name: phantasus.ProbeDebugTool.prototype.toString(),
+      cb: function (options) {
+        phantasus.HeatMap.showTool(new phantasus.ProbeDebugTool(), options.heatMap)
+      }
+    });
+
+    this.add({
+      name: "DEBUG: Expose project",
+      cb: function (options) {
+        window.project = options.heatMap.project;
+        window.dataset = options.heatMap.project.getFullDataset();
+      }
+    })
+  }
+
   this.add({
     name: 'Submit to Enrichr',
     cb: function (options) {
@@ -20032,6 +20296,27 @@ phantasus.ActionManager = function () {
     which: [79],
     commandKey: true,
     icon: 'fa fa-folder-open-o'
+  });
+
+
+  this.add({
+    name: 'Annotate',
+    children: ['Annotate Rows', 'Annotate Columns'],
+    icon: 'fa fa-list'
+  });
+
+  this.add({
+    name: 'Annotate Rows',
+    cb: function (options) {
+      phantasus.HeatMap.showTool(new phantasus.AnnotateDatasetTool({target: 'Rows'}), options.heatMap);
+    }
+  });
+
+  this.add({
+    name: 'Annotate Columns',
+    cb: function (options) {
+      phantasus.HeatMap.showTool(new phantasus.AnnotateDatasetTool({target: 'Columns'}), options.heatMap);
+    }
   });
 
   this.add({
@@ -23305,6 +23590,8 @@ phantasus.FilterUI.prototype = {
       array = array.map(function (item) {
         if (item === '') {
           return {valueOf: function () { return ''; }, toString: function () { return '(None)'; }};
+        } else if (item === null || item === undefined) {
+          return {valueOf: function () { return item }, toString: function () { return '(NULL)'; }};
         }
 
         return item;
@@ -24013,7 +24300,7 @@ phantasus.FormBuilder.prototype = {
       html.push('</select>');
 
       if (field.firstDivider) {
-        html.push('<span>' + field.firstDivider + '</span>');
+        html.push('<span id="' + name +'-first-divider">' + field.firstDivider + '</span>');
       }
 
       html.push('<select style="' + field.comboboxStyle + '" name="' + field.secondName + '" id="' + id
@@ -24032,7 +24319,7 @@ phantasus.FormBuilder.prototype = {
       html.push('</select>');
 
       if (field.secondDivider) {
-        html.push('<span>' + field.secondDivider + '</span>');
+        html.push('<span id="' + name +'-second-divider">' + field.secondDivider + '</span>');
       }
 
       html.push('<select style="' + field.comboboxStyle + '" name="' + field.thirdName + '" id="' + id
@@ -28124,41 +28411,67 @@ phantasus.HeatMapToolBar = function (heatMap) {
     menu.push('</a>');
     menu.push('<ul style="min-width:' + minWidth +
       ';" class="dropdown-menu" aria-labelledby="' + dropdownId + '">');
-    actions.forEach(function (name) {
+
+    var addSimpleAction = function (action) {
+      menu.push('<li>');
+      menu.push(
+        '<a class="phantasus-menu-item" data-action="' + action.name +
+        '" href="#">');
+      menu.push(action.name);
+      if (action.ellipsis) {
+        menu.push('...');
+      }
+      if (action.icon) {
+        menu.push('<span class="' + action.icon +
+          ' phantasus-menu-item-icon"></span> ');
+      }
+      if (action.which) {
+        menu.push('<span class="pull-right">');
+        if (action.commandKey) {
+          menu.push(phantasus.Util.COMMAND_KEY);
+        }
+        if (action.shiftKey) {
+          menu.push('Shift+');
+        }
+        menu.push(phantasus.KeyboardCharMap[action.which[0]]);
+        menu.push('</span>');
+      }
+
+      menu.push('</a>');
+      menu.push('</li>');
+    };
+
+    var addActionWithChildren = function (action) {
+      menu.push('<li class="dropdown-submenu">');
+      menu.push('<a class="phantasus-menu-item dummy" tabindex="-1" href="#">');
+      menu.push(action.name);
+      if (action.icon) {
+        menu.push('<span class="' + action.icon +
+          ' phantasus-menu-item-icon"></span> ');
+      }
+      menu.push('</a>');
+      menu.push('<ul class="dropdown-menu">');
+        action.children.forEach(defaultActionAdder);
+      menu.push('</ul>');
+      menu.push('</li>');
+    };
+
+    var defaultActionAdder = function (name) {
       if (name == null) {
         menu.push('<li role="separator" class="divider"></li>');
       } else {
         var action = heatMap.getActionManager().getAction(name);
-        if (action != null) {
-          menu.push('<li>');
-          menu.push(
-            '<a class="phantasus-menu-item" data-action="' + action.name +
-            '" href="#">');
-          menu.push(action.name);
-          if (action.ellipsis) {
-            menu.push('...');
-          }
-          if (action.icon) {
-            menu.push('<span class="' + action.icon +
-              ' phantasus-menu-item-icon"></span> ');
-          }
-          if (action.which) {
-            menu.push('<span class="pull-right">');
-            if (action.commandKey) {
-              menu.push(phantasus.Util.COMMAND_KEY);
-            }
-            if (action.shiftKey) {
-              menu.push('Shift+');
-            }
-            menu.push(phantasus.KeyboardCharMap[action.which[0]]);
-            menu.push('</span>');
-          }
-
-          menu.push('</a>');
-          menu.push('</li>');
+        if (action == null) {
+          return;
         }
+
+        action.children ?
+          addActionWithChildren(action) :
+          addSimpleAction(action);
       }
-    });
+    };
+
+    actions.forEach(defaultActionAdder);
 
     menu.push('</ul>');
     menu.push('</div>');
@@ -28307,7 +28620,7 @@ phantasus.HeatMapToolBar = function (heatMap) {
       heatMap.focus();
     }
   });
-  $menus.on('click', 'li > a', function (e) {
+  $menus.on('click', 'li > a:not(.dummy)', function (e) {
     e.preventDefault();
     heatMap.getActionManager().execute($(this).data('action'));
   }).on('blur', function (e) {
@@ -30176,7 +30489,7 @@ phantasus.HeatMap = function (options) {
       $loadingImage: phantasus.Util.createLoadingEl(),
       menu: {
         File: [
-          'Open', null, 'Save Image', 'Save Dataset', 'Save Session', null, 'Close Tab', null, 'Rename' +
+          'Open', 'Annotate', null, 'Save Image', 'Save Dataset', 'Save Session', null, 'Close Tab', null, 'Rename' +
           ' Tab'],
         Tools: [
           'New Heat Map',
@@ -30202,7 +30515,9 @@ phantasus.HeatMap = function (options) {
           'PCA Plot',
           'Submit to Enrichr',
           'Submit to Shiny GAM',
-          'GSEA plot'],
+          'GSEA plot',
+          'DEBUG: Probe Debug Tool',
+          'DEBUG: Expose project'],
         View: ['Zoom In', 'Zoom Out', null, 'Fit To Window', 'Fit Rows To Window', 'Fit Columns To Window', null, '100%', null, 'Options'],
         Edit: [
           'Copy Image',
@@ -38809,6 +39124,7 @@ phantasus.VectorTrack.prototype = {
     var CLEAR_SELECTION = 'Clear Selection';
     var HIGHLIGHT_MATCHING_VALUES = 'Highlight Matching Values';
     var FIELDS = 'Choose Fields...';
+    var RENAME = 'Rename...';
     var DELETE = 'Delete...';
     var TOOLTIP = 'Show In Tooltip';
     var HIDE = 'Hide';
@@ -39102,6 +39418,9 @@ phantasus.VectorTrack.prototype = {
       separator: true
     });
     sectionToItems.Display.push({
+      name: RENAME
+    });
+    sectionToItems.Display.push({
       name: DELETE
     });
 
@@ -39326,91 +39645,171 @@ phantasus.VectorTrack.prototype = {
         } else if (item === ANNOTATE_SELECTION) {
           heatmap.getActionManager().execute(isColumns ? 'Annotate Selected Columns' : 'Annotate' +
             ' Selected Rows');
-        } else if (item === DELETE) {
-          phantasus.FormBuilder
-          .showOkCancel({
-            title: 'Delete',
-            content: 'Are you sure you want to delete '
-            + _this.name + '?',
-            okCallback: function () {
-              var metadata = isColumns ? project
-                .getFullDataset()
-                .getColumnMetadata()
-                : project
-                .getFullDataset()
-                .getRowMetadata();
-              metadata
-              .remove(phantasus.MetadataUtil
-              .indexOf(
-                metadata,
-                _this.name));
-              var sortKeys = isColumns ? project
-                .getColumnSortKeys()
-                : project
-                .getRowSortKeys();
-              var sortKeyIndex = _.indexOf(
-                sortKeys.map(function (key) {
-                  return key.field;
-                }), _this.name);
-              if (sortKeyIndex !== -1) {
-                sortKeys.splice(
-                  sortKeyIndex, 1);
-                if (isColumns) {
-                  project
-                  .setColumnSortKeys(
-                    sortKeys,
-                    true);
-                } else {
-                  project.setRowSortKeys(
-                    sortKeys, true);
+        } else if (item === RENAME) {
+          var formBuilder = new phantasus.FormBuilder();
+          formBuilder.append({
+            name: 'Name',
+            type: 'text',
+            value: _this.name,
+            required: true,
+          });
+          phantasus.FormBuilder.showInModal({
+            title: 'Rename...',
+            close: 'Apply',
+            html: formBuilder.$form,
+            focus: heatmap.getFocusEl(),
+            onClose: function () {
+              var oldName = _this.name;
+              var newName = formBuilder.getValue('Name');
+              var dataset = _this.project.getFullDataset();
+
+              if (oldName !== newName) {
+                var target = isColumns ?
+                  dataset.getColumnMetadata() :
+                  dataset.getRowMetadata();
+
+                var currentSessionPromise = dataset.getESSession();
+                var currentESVariable = dataset.getESVariable();
+
+                var v = target.getByName(oldName);
+                v.setName(newName);
+
+
+                if (currentESVariable && currentSessionPromise) {
+
+                  dataset.setESSession(new Promise(function (resolve, reject) {
+                    currentSessionPromise.then(function (essession) {
+                      var args = {
+                        es: essession,
+                        isFeature: !isColumns,
+                        oldName: oldName,
+                        newName: newName
+                      };
+
+                      var req = ocpu.call("renameColumn", args, function (newSession) {
+                        dataset.setESVariable("es");
+                        resolve(newSession);
+                      }, false, "::" + currentESVariable);
+
+
+                      req.fail(function () {
+                        reject();
+                        throw new Error("renameColumn call to OpenCPU failed" + req.responseText);
+                      });
+                    });
+                  }));
                 }
-              }
-              var groupByKeys = isColumns ? project
-                .getGroupColumns()
-                : project
-                .getGroupRows();
-              var groupByKeyIndex = _
-              .indexOf(
-                groupByKeys
-                .map(function (key) {
-                  return key.field;
-                }),
-                _this.name);
-              if (groupByKeyIndex !== -1) {
-                groupByKeys.splice(
-                  groupByKeyIndex, 1);
-                if (isColumns) {
-                  project
-                  .setGroupColumns(
-                    groupByKeys,
-                    true);
-                } else {
-                  project.setGroupRows(
-                    groupByKeys,
-                    true);
-                }
-              }
-              if (!isColumns) {
-                // remove from any group
-                // by or sort by
-                project
-                .trigger(
-                  'rowTrackRemoved',
-                  {
-                    vector: _this
-                    .getFullVector()
-                  });
-              } else {
-                project
-                .trigger(
-                  'columnTrackRemoved',
-                  {
-                    vector: _this
-                    .getFullVector()
-                  });
+
+                _this.project.trigger(isColumns? 'columnTrackRemoved' : 'rowTrackRemoved', {
+                  vector: _this.getFullVector()
+                });
+
+                _this.project.trigger('trackChanged', {
+                  vectors: [v],
+                  display: _this.settings.display,
+                  columns: isColumns
+                });
               }
             }
           });
+        } else if (item === DELETE) {
+          phantasus.FormBuilder
+            .showOkCancel({
+              title: 'Delete',
+              content: 'Are you sure you want to delete '
+              + _this.name + '?',
+              okCallback: function () {
+                var metadata = isColumns ? project
+                    .getFullDataset()
+                    .getColumnMetadata()
+                  : project
+                    .getFullDataset()
+                    .getRowMetadata();
+
+                metadata.remove(phantasus.MetadataUtil.indexOf(metadata, _this.name));
+                var sortKeys = isColumns ?
+                    project.getColumnSortKeys() :
+                    project.getRowSortKeys();
+
+                var sortKeyIndex = _.indexOf(
+                  sortKeys.map(function (key) {
+                    return key.field;
+                  }), _this.name);
+
+                if (sortKeyIndex !== -1) {
+                  sortKeys.splice(
+                    sortKeyIndex, 1);
+                  if (isColumns) {
+                    project
+                      .setColumnSortKeys(
+                        sortKeys,
+                        true);
+                  } else {
+                    project.setRowSortKeys(
+                      sortKeys, true);
+                  }
+                }
+                var groupByKeys = isColumns ?
+                  project.getGroupColumns() :
+                  project.getGroupRows();
+                var groupByKeyIndex = _
+                  .indexOf(
+                    groupByKeys
+                      .map(function (key) {
+                        return key.field;
+                      }),
+                    _this.name);
+                if (groupByKeyIndex !== -1) {
+                  groupByKeys.splice(
+                    groupByKeyIndex, 1);
+                  if (isColumns) {
+                    project
+                      .setGroupColumns(
+                        groupByKeys,
+                        true);
+                  } else {
+                    project.setGroupRows(
+                      groupByKeys,
+                      true);
+                  }
+                }
+
+                var dataset = _this.project.getFullDataset();
+                var currentSessionPromise = dataset.getESSession();
+                var currentESVariable = dataset.getESVariable();
+
+                if (currentESVariable && currentSessionPromise) {
+
+                  dataset.setESSession(new Promise(function (resolve, reject) {
+                    currentSessionPromise.then(function (essession) {
+                      var args = {
+                        es: essession,
+                        isFeature: !isColumns,
+                        oldName: _this.name,
+                        newName: _this.name
+                      };
+
+                      var req = ocpu.call("renameColumn", args, function (newSession) {
+                        dataset.setESVariable("es");
+                        resolve(newSession);
+                      }, false, "::" + currentESVariable);
+
+
+                      req.fail(function () {
+                        reject();
+                        throw new Error("renameColumn call to OpenCPU failed" + req.responseText);
+                      });
+                    });
+                  }));
+
+                }
+
+                _this.project.trigger(isColumns? 'columnTrackRemoved' : 'rowTrackRemoved', {
+                  vector: _this.getFullVector()
+                });
+
+              }
+            });
         } else if (item === CLEAR_SELECTION) {
           heatmap.getActionManager().execute(isColumns ? 'Clear Selected Columns' : 'Clear' +
             ' Selected Rows');

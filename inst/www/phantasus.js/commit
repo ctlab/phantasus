@@ -1,5 +1,5 @@
-commit 771ccbd76c52a964b7b717283b2b6b49703851a1
+commit 4694384ccf0566a453747701cb2d9458a968f7ec
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Mon Aug 6 18:06:55 2018 +0300
+Date:   Mon Sep 10 14:58:10 2018 +0300
 
-    PCA plot sizeBy performance fix
+    Fast&Furious create calculated annotation.

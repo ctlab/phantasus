@@ -167,10 +167,6 @@ will be displayed.
 knitr::include_graphics("images/filter_tool.jpg")
 ```
 
-
-After filtering 12001 genes should be shown. The number is not equal to required 12000 genes due to
-some of the genes having the same *mean_expression* value.
-
 ```{r, out.width = "500px", echo = FALSE}
 knitr::include_graphics("images/filter_tool_result.jpg")
 ```

@@ -271,6 +271,7 @@ filterPhenoAnnotations <- function(es) {
                 }
             }
         }
+        rownames(new.pdata) <- rownames(old.pdata)
         AnnotatedDataFrame(new.pdata)
     }
 
