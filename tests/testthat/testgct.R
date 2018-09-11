@@ -15,3 +15,12 @@ test_that("write.gct and read.gct work for gzip files", {
     es2 <- read.gct(gctFile)
     expect_equal(dim(es2), dim(es))
 })
+
+test_that("read.gct works (simple version)", {
+    es <- read.gct(system.file("testdata/test.gct", package="phantasus"))
+    expect_equal(dim(exprs(es)), c(5, 7))
+    expect_equal(colnames(es)[1], "s1")
+    expect_equal(rownames(es)[1], "1415670_at")
+    expect_true(all(c("Gene symbol", "Gene ID") %in% colnames(fData(es))), setdiff(c("Gene symbol", "Gene ID"), colnames(fData(es))))
+    expect_true(all(c("condition") %in% colnames(pData(es))), setdiff(c("condition"), colnames(pData(es))))
+})
