@@ -76,9 +76,3 @@ collapseDataset <- function (es, isRows = TRUE, selectOne = FALSE, fn, fields) {
 
     assign("es", es, envir = parent.frame())
 }
-
-playground <- function () {
-    es <- getGSE("GSE53986")[[1]]
-    collapseDataset(es,selectOne = FALSE, fn = median, fields = c('Gene ID', 'Gene symbol'))
-    collapseDataset(es, isRows = FALSE, selectOne = FALSE, fn = median, fields = c('treatment'))
-}
