@@ -3,58 +3,60 @@ collapseDatasetImpl <- function (es, isRows = TRUE, selectOne = FALSE, fn, field
     fact <- collectFactor(es, isRows, fields)
     f2 <- factor(fact, levels=unique(fact))
 
-    if (!selectOne) {
-        t <- data.frame(f=f2, i=seq_len(length(f2)))
-        keep <- t[!duplicated(t$f) & !is.na(t$f),]$i
-        keep <- sort(keep)
-        if (isRows) {
-            res <- es[keep, ]
-            splitted <- split(seq_len(length(f2)), fact)
-            zz <- lapply(seq_len(ncol(expr)), function(i) split(expr[,i], f2))
-            zz <- unlist(zz, recursive = FALSE)
-            collapsed <- lapply(seq_len(ncol(expr)),
-                                function (i) sapply(split(expr[,i], f2), fn))
-            collapsed <- do.call(cbind, collapsed)
-            rownames(collapsed) <- rownames(res)
-            colnames(collapsed) <- colnames(res)
-            exprs(res) <- collapsed
-            newFdata <- as.data.frame(fData(res)[, which(colnames(fData(res)) %in% fields)])
-            rownames(newFdata) <- rownames(fData(res))
-            colnames(newFdata) <- fields
-            fData(res) <- newFdata
-            return(res)
-        } else {
-            #not working
-            res <- es[, keep]
-            splitted <- split(seq_len(length(f2)), fact)
-            zz <- lapply(seq_len(nrow(expr)), function(i) split(expr[i,], f2))
-            zz <- unlist(zz, recursive = FALSE)
-            collapsed <- lapply(seq_len(nrow(expr)),
-                                function (i) sapply(split(expr[i,], f2), fn))
-            collapsed <- do.call(cbind, collapsed)
-            collapsed <- t(collapsed)
-            rownames(collapsed) <- rownames(res)
-            colnames(collapsed) <- colnames(res)
-            exprs(res) <- collapsed
-            newPhenoData <- as.data.frame(pData(res)[, which(colnames(pData(res)) %in% fields)])
-            rownames(newPhenoData) <- rownames(phenoData(res))
-            colnames(newPhenoData) <- fields
-            pData(res) <- newPhenoData
-            return(res)
-        }
-    } else {
+    if (selectOne) { #select fittest
         ranks <- apply(expr, 1, fn)
-        t <- data.frame(f=f2, i=seq_along(ranks), r=ranks)
-        t <- t[order(t$r, decreasing=T), ]
-        keep <- t[!duplicated(t$f) & !is.na(t$f),]$i
+        factorFrame <- data.frame(f=f2, i=seq_along(ranks), r=ranks)
+        factorFrame <- factorFrame[order(factorFrame$r, decreasing=T), ]
+        keep <- factorFrame[!duplicated(factorFrame$f) & !is.na(factorFrame$f), ]$i
         keep <- sort(keep)
         res <- es[keep, ]
-        #rownames(res) <- f2[keep]
+        return(res)
+    } else { #merge duplicates
+        factorFrame <- data.frame(f=f2, i=seq_len(length(f2)))
+        keep <- factorFrame[!duplicated(factorFrame$f) & !is.na(factorFrame$f), ]$i
+        keep <- sort(keep)
+
+        if (isRows) {
+            res <- es[keep, ]
+            oldAnnotation <- fData(res)
+        } else {
+            expr <- t(expr)
+            res <- es[, keep]
+            oldAnnotation <- pData(res)
+        }
+
+        splitted <- split(seq_len(length(f2)), fact)
+        zz <- lapply(seq_len(ncol(expr)), function(i) split(expr[, i], f2))
+        zz <- unlist(zz, recursive = FALSE)
+        collapsedExprs <- lapply(seq_len(ncol(expr)),
+                            function (i) sapply(split(expr[, i], f2), fn))
+        collapsedExprs <- do.call(cbind, collapsedExprs)
+
+        if (!isRows) {
+            collapsedExprs <- t(collapsedExprs)
+        }
+
+        rownames(collapsedExprs) <- rownames(res)
+        colnames(collapsedExprs) <- colnames(res)
+        exprs(res) <- collapsedExprs
+        newAnnotaion <- oldAnnotation[, which(colnames(oldAnnotation) %in% fields), drop=F]
+        rownames(newAnnotaion) <- rownames(oldAnnotation)
+        colnames(newAnnotaion) <- fields
+        if (isRows) {
+            fData(res) <- newAnnotaion
+        } else {
+            pData(res) <- newAnnotaion
+        }
+
         return(res)
     }
 }
 
 collectFactor <- function (es, isRows, fields) {
+    if (!length(fields)) {
+        stop('Empty fields given')
+    }
+
     if (isRows) {
         target <- fData(es)
     } else {
