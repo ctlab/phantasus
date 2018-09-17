@@ -1,3 +1,28 @@
+#' Collapse dataset
+#'
+#' \code{collapseDataset} performs a collapse action on expression set
+#'
+#' @param es Expression set
+#' @param isRows Work with rows. False if columns (default True - row mode)
+#' @param selectOne select best match or merge duplicates
+#' @param fn select/merge function
+#' @param fields fields to unique on
+#'
+#' @export
+#' @import ccaPP
+#'
+#' @examples
+#' \dontrun{
+#' es <- getGSE('GSE53986')
+#' collapseDataset(es, isRows = TRUE, selectOne = TRUE, fn = mean, fields = c('Gene ID', 'Gene symbol'))
+#' }
+#'
+collapseDataset <- function (es, isRows = TRUE, selectOne = FALSE, fn, fields) {
+    es <- collapseDatasetImpl(es, isRows, selectOne, fn, fields)
+
+    assign("es", es, envir = parent.frame())
+}
+
 collapseDatasetImpl <- function (es, isRows = TRUE, selectOne = FALSE, fn, fields) {
     expr <- exprs(es)
     fact <- collectFactor(es, isRows, fields)
@@ -6,9 +31,8 @@ collapseDatasetImpl <- function (es, isRows = TRUE, selectOne = FALSE, fn, field
     if (selectOne) { #select fittest
         ranks <- apply(expr, 1, fn)
         factorFrame <- data.frame(f=f2, i=seq_along(ranks), r=ranks)
-        factorFrame <- factorFrame[order(factorFrame$r, decreasing=T), ]
+        factorFrame <- factorFrame[order(factorFrame$f, -factorFrame$r), ]
         keep <- factorFrame[!duplicated(factorFrame$f) & !is.na(factorFrame$f), ]$i
-        keep <- sort(keep)
         res <- es[keep, ]
         return(res)
     } else { #merge duplicates
@@ -71,10 +95,4 @@ collectFactor <- function (es, isRows, fields) {
         }
     }
     return(f)
-}
-
-collapseDataset <- function (es, isRows = TRUE, selectOne = FALSE, fn, fields) {
-    es <- collapseDatasetImpl(es, isRows, selectOne, fn, fields)
-
-    assign("es", es, envir = parent.frame())
 }

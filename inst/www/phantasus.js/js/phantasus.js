@@ -9309,6 +9309,10 @@ phantasus.MaximumMeanProbe.toString = function() {
   return "Maximum Mean Probe";
 };
 
+phantasus.MaximumMeanProbe.rString = function() {
+  return "mean";
+};
+
 phantasus.MaximumMeanProbe.selectOne = true;
 
 phantasus.MaximumMedianProbe = function(probes) {
@@ -9317,6 +9321,10 @@ phantasus.MaximumMedianProbe = function(probes) {
 
 phantasus.MaximumMedianProbe.toString = function() {
   return "Maximum Median Probe";
+};
+
+phantasus.MaximumMedianProbe.rString = function() {
+  return "fastMedian";
 };
 
 phantasus.MaximumMedianProbe.selectOne = true;
@@ -11068,6 +11076,14 @@ phantasus.Median = function (vector) {
 phantasus.Median.toString = function () {
   return 'Median';
 };
+
+/**
+ * @return {string}
+ */
+phantasus.Median.rString = function () {
+  return 'fastMedian';
+};
+
 /**
  * @ignore
  */
@@ -11153,6 +11169,9 @@ phantasus.Mean = function (vector) {
 phantasus.Mean.toString = function () {
   return 'Mean';
 };
+phantasus.Mean.rString = function () {
+  return 'mean.default';
+};
 phantasus.Sum = function (vector) {
   var sum = 0;
   var found = false;
@@ -11167,6 +11186,9 @@ phantasus.Sum = function (vector) {
 };
 phantasus.Sum.toString = function () {
   return 'Sum';
+};
+phantasus.Sum.rString = function () {
+  return 'sum';
 };
 phantasus.CountNonNaN = function (vector) {
   var count = 0;
@@ -11197,6 +11219,9 @@ phantasus.Max = function (vector) {
 phantasus.Max.toString = function () {
   return 'Max';
 };
+phantasus.Max.rString = function () {
+  return 'max';
+};
 phantasus.Min = function (vector) {
   var min = Number.MAX_VALUE;
   var found = false;
@@ -11211,6 +11236,9 @@ phantasus.Min = function (vector) {
 };
 phantasus.Min.toString = function () {
   return 'Min';
+};
+phantasus.Min.rString = function () {
+  return 'min';
 };
 phantasus.Variance = function (list, mean) {
   if (mean == undefined) {
@@ -14813,9 +14841,13 @@ phantasus.ChartTool.getTooltip = function (options) {
 
 phantasus.CollapseDatasetTool = function () {
 };
-phantasus.CollapseDatasetTool.Functions = [phantasus.Mean, phantasus.Median,
-  new phantasus.MaxPercentiles([25, 75]), phantasus.Min, phantasus.Max, phantasus.Percentile, phantasus.Sum,
-  phantasus.MaximumMeanProbe, phantasus.MaximumMedianProbe];
+
+phantasus.CollapseDatasetTool.Functions = [
+  phantasus.Mean, phantasus.Median, phantasus.Min,
+  phantasus.Max, phantasus.Sum, phantasus.MaximumMeanProbe,
+  phantasus.MaximumMedianProbe
+];
+
 phantasus.CollapseDatasetTool.Functions.fromString = function (s) {
   for (var i = 0; i < phantasus.CollapseDatasetTool.Functions.length; i++) {
     if (phantasus.CollapseDatasetTool.Functions[i].toString() === s) {
@@ -14824,22 +14856,29 @@ phantasus.CollapseDatasetTool.Functions.fromString = function (s) {
   }
   throw new Error(s + ' not found');
 };
+
 phantasus.CollapseDatasetTool.prototype = {
   toString: function () {
     return 'Collapse';
   },
+
   init: function (project, form) {
     var setValue = function (val) {
       var isRows = val === 'Rows';
-      var names = phantasus.MetadataUtil.getMetadataNames(isRows ? project
-      .getFullDataset().getRowMetadata() : project
-      .getFullDataset().getColumnMetadata());
+      var names = phantasus
+                  .MetadataUtil
+                  .getMetadataNames(
+                    isRows ?
+                    project.getFullDataset().getRowMetadata() :
+                    project.getFullDataset().getColumnMetadata());
+
       form.setOptions('collapse_to_fields', names);
     };
+
     form.$form.find('[name=collapse]').on('change', function (e) {
       setValue($(this).val());
     });
-    form.setVisible('percentile', false);
+
     form.$form.find('[name=collapse_method]').on('change', function (e) {
       form.setVisible('percentile', $(this).val() === phantasus.Percentile.toString());
       var collapsableColumns = !phantasus.CollapseDatasetTool.Functions.fromString($(this).val()).selectOne;
@@ -14853,16 +14892,13 @@ phantasus.CollapseDatasetTool.prototype = {
 
     setValue('Rows');
   },
+
   gui: function () {
     return [{
       name: 'collapse_method',
       options: phantasus.CollapseDatasetTool.Functions,
-      value: phantasus.CollapseDatasetTool.Functions[1].toString(),
+      value: phantasus.CollapseDatasetTool.Functions[1],
       type: 'select'
-    }, {
-      name: 'percentile',
-      value: 75,
-      type: 'text'
     }, {
       name: 'collapse',
       options: ['Columns', 'Rows'],
@@ -14875,34 +14911,63 @@ phantasus.CollapseDatasetTool.prototype = {
       multiple: true
     }];
   },
+
   execute: function (options) {
     var project = options.project;
     var heatMap = options.heatMap;
-    var f = phantasus.CollapseDatasetTool.Functions
-    .fromString(options.input.collapse_method);
-    if (f.toString() === phantasus.Percentile.toString()) {
-      var p = parseFloat(options.input.percentile);
-      f = function (vector) {
-        return phantasus.Percentile(vector, p);
-      };
-    }
+    var f = phantasus
+            .CollapseDatasetTool
+            .Functions
+            .fromString(options.input.collapse_method);
 
     var collapseToFields = options.input.collapse_to_fields;
     if (!collapseToFields || collapseToFields.length === 0) {
       throw new Error('Please select one or more fields to collapse to');
     }
+
     var dataset = project.getFullDataset();
-    var rows = options.input.collapse == 'Rows';
+    var rows = options.input.collapse === 'Rows';
+
     if (!rows) {
       dataset = new phantasus.TransposedDatasetView(dataset);
     }
-    var allFields = phantasus.MetadataUtil.getMetadataNames(dataset
-      .getRowMetadata());
+
+    var allFields = phantasus.MetadataUtil.getMetadataNames(dataset.getRowMetadata());
     var collapseMethod = f.selectOne ? phantasus.SelectRow : phantasus.CollapseDataset;
     dataset = collapseMethod(dataset, collapseToFields, f, true);
+
     if (!rows) {
       dataset = phantasus.DatasetUtil.copy(new phantasus.TransposedDatasetView(dataset));
     }
+
+    var oldDataset = project.getFullDataset();
+    var oldSession = oldDataset.getESSession();
+    var oldVariable = oldDataset.getESVariable();
+
+    dataset.setESVariable('es');
+    dataset.setESSession(new Promise(function (resolve, reject) {
+      oldSession.then(function (esSession) {
+        var args = {
+          es: esSession,
+          selectOne: Boolean(f.selectOne),
+          isRows: rows,
+          fn: f.rString(),
+          fields: collapseToFields
+        };
+
+        ocpu
+          .call("collapseDataset", args, function (newSession) {
+            resolve(newSession);
+          }, false, "::" + oldVariable)
+          .fail(function () {
+            dataset.setESVariable(undefined);
+            reject();
+            throw new Error("Collapse dataset failed. See console");
+          });
+      });
+    }));
+
+
     var set = new phantasus.Map();
     _.each(allFields, function (field) {
       set.set(field, true);

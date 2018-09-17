@@ -5,7 +5,7 @@
 \title{Create calculated annotation}
 \usage{
 calculatedAnnotation(es, operation, rows = c(), columns = c(),
-  isColumns = FALSE)
+  isColumns = FALSE, name = NULL)
 }
 \arguments{
 \item{es}{ExpressionSet object.}
@@ -17,6 +17,8 @@ calculatedAnnotation(es, operation, rows = c(), columns = c(),
 \item{columns}{List of specified columns' indices (optional), indices start from 0#'}
 
 \item{isColumns}{Apply fn to columns}
+
+\item{name}{Name of the new annotation}
 }
 \description{
 \code{calculatedAnnotation} adds a column calculated by operation

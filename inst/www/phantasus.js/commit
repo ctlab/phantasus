@@ -1,5 +1,5 @@
-commit 4694384ccf0566a453747701cb2d9458a968f7ec
+commit 070a64087675ccf77d7604378aa532cd603dcb94
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Mon Sep 10 14:58:10 2018 +0300
+Date:   Mon Sep 17 13:53:49 2018 +0300
 
-    Fast&Furious create calculated annotation.
+    Min rString fixed
