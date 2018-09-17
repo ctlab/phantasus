@@ -1,5 +1,5 @@
-commit 070a64087675ccf77d7604378aa532cd603dcb94
+commit aaf481e4e142ae4debefc9b35c92cd6f89976961
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Mon Sep 17 13:53:49 2018 +0300
+Date:   Mon Sep 17 16:05:10 2018 +0300
 
-    Min rString fixed
+    Collapse dataset fixed when dataset doesn't have session

@@ -14944,28 +14944,32 @@ phantasus.CollapseDatasetTool.prototype = {
     var oldSession = oldDataset.getESSession();
     var oldVariable = oldDataset.getESVariable();
 
-    dataset.setESVariable('es');
-    dataset.setESSession(new Promise(function (resolve, reject) {
-      oldSession.then(function (esSession) {
-        var args = {
-          es: esSession,
-          selectOne: Boolean(f.selectOne),
-          isRows: rows,
-          fn: f.rString(),
-          fields: collapseToFields
-        };
+    if (oldVariable && oldSession) {
 
-        ocpu
-          .call("collapseDataset", args, function (newSession) {
-            resolve(newSession);
-          }, false, "::" + oldVariable)
-          .fail(function () {
-            dataset.setESVariable(undefined);
-            reject();
-            throw new Error("Collapse dataset failed. See console");
-          });
-      });
-    }));
+      dataset.setESVariable('es');
+      dataset.setESSession(new Promise(function (resolve, reject) {
+        oldSession.then(function (esSession) {
+          var args = {
+            es: esSession,
+            selectOne: Boolean(f.selectOne),
+            isRows: rows,
+            fn: f.rString(),
+            fields: collapseToFields
+          };
+
+          ocpu
+            .call("collapseDataset", args, function (newSession) {
+              resolve(newSession);
+            }, false, "::" + oldVariable)
+            .fail(function () {
+              dataset.setESVariable(undefined);
+              reject();
+              throw new Error("Collapse dataset failed. See console");
+            });
+        });
+      }));
+
+    }
 
 
     var set = new phantasus.Map();

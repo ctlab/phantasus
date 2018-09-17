@@ -39,6 +39,15 @@ test_that("Collapse dataset by rows", {
     expect_true(all(isUnique(paste(fData(newEsMultiple)[['Gene ID']], fData(newEsMultiple)[['Gene symbol']], sep="//r"))))
 })
 
+test_that("Collapse dataset colnames doesn't reoder", {
+    es <- read.gct(system.file("testdata/collapse_dataset_one.gct", package="phantasus"))
+    newEs <- collapseDatasetImpl(es, fn = median, fields = c('Gene ID', 'id', 'Gene symbol'))
+    expect_equal(colnames(fData(newEs)), colnames(fData(es)))
+
+    newEs <- collapseDatasetImpl(es, fn = median, fields = c('Gene ID', 'Gene symbol'))
+    expect_lt(match('Gene symbol', colnames(fData(newEs))), match('Gene ID', colnames(fData(newEs))))
+})
+
 
 test_that("Collapse dataset by columns", {
     es <- read.gct(system.file("testdata/collapse_dataset_one.gct", package="phantasus"))
