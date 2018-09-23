@@ -1,6 +1,5 @@
-commit cfe25dbb13d70eafdafd90b160339739c381a857
-Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Mon Sep 17 17:52:53 2018 +0300
+commit 7885ceff38e50a6a47c56f1dbf05c47985b8588e
+Author: petrovich <mazahakaforever@ya.ru>
+Date:   Sun Sep 23 15:21:47 2018 +0300
 
-    Allowed inputs for file opening.
-    Annotate dataset accepts only local files, url, preloaded
+    PCA plot by fullDataset

@@ -17832,7 +17832,7 @@ phantasus.PcaPlotTool.prototype = {
     var plotlyDefaults = phantasus.PcaPlotTool.getPlotlyDefaults();
     var layout = plotlyDefaults.layout;
     var config = plotlyDefaults.config;
-    var dataset = _this.project.getSortedFilteredDataset();
+    var dataset = _this.project.getFullDataset();
 
     return function () {
       _this.$chart.empty();
@@ -17842,7 +17842,7 @@ phantasus.PcaPlotTool.prototype = {
       var shapeBy = _this.formBuilder.getValue('shape');
 
       var getTrueVector = function (vector) {
-        while (vector && vector.indices.length == 0) {
+        while (vector && vector.indices && vector.indices.length === 0) {
           vector = vector.v;
         }
         return vector;
@@ -17875,22 +17875,16 @@ phantasus.PcaPlotTool.prototype = {
           [minMax.min, minMax.max]).range([6, 19])
           .clamp(true);
 
-        for (var j = 0; j < sizeByVector.indices.length; j++) {
-          var sizeByValue = sizeByVector.getValue(j);
-          size.push(sizeFunction(sizeByValue));
-        }
+
+        size = _.map(phantasus.VectorUtil.toArray(sizeByVector), function (value) {return sizeFunction(value)});
       }
       if (textByVector) {
-        for (var j = 0; j < textByVector.indices.length; j++) {
-          text.push(textByVector.getValue(j));
-        }
+        text = phantasus.VectorUtil.toArray(textByVector);
       }
       if (shapeByVector) {
         var allShapes = ['circle', 'square', 'diamond', 'cross', 'triangle-up', 'star', 'hexagram', 'bowtie', 'diamond-cross', 'hourglass', 'hash-open'];
         var uniqShapes = {};
-        shapes = _.map(shapeByVector.indices, function (index) {
-          var value = shapeByVector.getValue(index);
-
+        shapes = _.map(phantasus.VectorUtil.toArray(shapeByVector), function (value) {
           if (!uniqShapes[value]) {
             uniqShapes[value] = allShapes[_.size(uniqShapes) % _.size(allShapes)];
           }
@@ -17925,9 +17919,7 @@ phantasus.PcaPlotTool.prototype = {
 
       if (colorByVector) {
         var uniqColors = {};
-        color = _.map(colorByVector.indices, function (index) {
-          var value = colorByVector.getValue(index);
-
+        color = _.map(phantasus.VectorUtil.toArray(colorByVector), function (value) {
           if (!uniqColors[value]) {
             uniqColors[value] = phantasus.VectorColorModel.CATEGORY_ALL[_.size(uniqColors) % 60];
           }
