@@ -1,6 +1,5 @@
-commit cfe25dbb13d70eafdafd90b160339739c381a857
+commit 64e426c2cae75a9200335f89bd66842a2069b433
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Mon Sep 17 17:52:53 2018 +0300
+Date:   Fri Sep 28 20:03:20 2018 +0300
 
-    Allowed inputs for file opening.
-    Annotate dataset accepts only local files, url, preloaded
+    Export dataset history WIP

@@ -15392,6 +15392,32 @@ phantasus.enrichrTool.prototype = {
   }
 };
 
+phantasus.ExportDatasetHistory = function () {
+};
+phantasus.ExportDatasetHistory.prototype = {
+  toString: function () {
+    return 'DEBUG: Export Dataset History';
+  },
+  execute: function (options) {
+    var project = options.project;
+    var dataset = project.getFullDataset();
+    var promise = $.Deferred();
+
+    dataset.getESSession().then(function (esSession) {
+      ocpu.call('exportDatasetHistory', {
+        sessionName: esSession.key,
+        esVariable: dataset.getESVariable()
+      }, function (newSession) {
+        newSession.getObject(function (success) {
+          alert(success);
+        });
+      })
+    });
+
+    return promise;
+  }
+};
+
 phantasus.gseaTool = function (project) {
   var self = this;
 
@@ -17832,7 +17858,7 @@ phantasus.PcaPlotTool.prototype = {
     var plotlyDefaults = phantasus.PcaPlotTool.getPlotlyDefaults();
     var layout = plotlyDefaults.layout;
     var config = plotlyDefaults.config;
-    var dataset = _this.project.getSortedFilteredDataset();
+    var dataset = _this.project.getFullDataset();
 
     return function () {
       _this.$chart.empty();
@@ -17842,7 +17868,7 @@ phantasus.PcaPlotTool.prototype = {
       var shapeBy = _this.formBuilder.getValue('shape');
 
       var getTrueVector = function (vector) {
-        while (vector && vector.indices.length == 0) {
+        while (vector && vector.indices && vector.indices.length === 0) {
           vector = vector.v;
         }
         return vector;
@@ -17875,22 +17901,16 @@ phantasus.PcaPlotTool.prototype = {
           [minMax.min, minMax.max]).range([6, 19])
           .clamp(true);
 
-        for (var j = 0; j < sizeByVector.indices.length; j++) {
-          var sizeByValue = sizeByVector.getValue(j);
-          size.push(sizeFunction(sizeByValue));
-        }
+
+        size = _.map(phantasus.VectorUtil.toArray(sizeByVector), function (value) {return sizeFunction(value)});
       }
       if (textByVector) {
-        for (var j = 0; j < textByVector.indices.length; j++) {
-          text.push(textByVector.getValue(j));
-        }
+        text = phantasus.VectorUtil.toArray(textByVector);
       }
       if (shapeByVector) {
         var allShapes = ['circle', 'square', 'diamond', 'cross', 'triangle-up', 'star', 'hexagram', 'bowtie', 'diamond-cross', 'hourglass', 'hash-open'];
         var uniqShapes = {};
-        shapes = _.map(shapeByVector.indices, function (index) {
-          var value = shapeByVector.getValue(index);
-
+        shapes = _.map(phantasus.VectorUtil.toArray(shapeByVector), function (value) {
           if (!uniqShapes[value]) {
             uniqShapes[value] = allShapes[_.size(uniqShapes) % _.size(allShapes)];
           }
@@ -17924,12 +17944,18 @@ phantasus.PcaPlotTool.prototype = {
       }
 
       if (colorByVector) {
+        var colorModel = _this.project.getColumnColorModel();
         var uniqColors = {};
-        color = _.map(colorByVector.indices, function (index) {
-          var value = colorByVector.getValue(index);
-
+        color = _.map(phantasus.VectorUtil.toArray(colorByVector), function (value) {
           if (!uniqColors[value]) {
-            uniqColors[value] = phantasus.VectorColorModel.CATEGORY_ALL[_.size(uniqColors) % 60];
+            if (colorModel.containsDiscreteColor(colorByVector, value)
+              && colorByVector.getProperties().get(phantasus.VectorKeys.DISCRETE)) {
+              uniqColors[value] = colorModel.getMappedValue(colorByVector, value);
+            } else if (colorModel.isContinuous(colorByVector)) {
+              uniqColors[value] = colorModel.getContinuousMappedValue(colorByVector, value);
+            } else {
+              uniqColors[value] = phantasus.VectorColorModel.CATEGORY_ALL[_.size(uniqColors) % 60];
+            }
           }
 
           return uniqColors[value]
@@ -20324,6 +20350,13 @@ phantasus.ActionManager = function () {
       cb: function (options) {
         window.project = options.heatMap.project;
         window.dataset = options.heatMap.project.getFullDataset();
+      }
+    });
+
+    this.add({
+      name: "DEBUG: Export Dataset History",
+      cb: function (options) {
+        phantasus.HeatMap.showTool(new phantasus.ExportDatasetHistory(), options.heatMap)
       }
     })
   }
@@ -30590,7 +30623,8 @@ phantasus.HeatMap = function (options) {
           'Submit to Shiny GAM',
           'GSEA plot',
           'DEBUG: Probe Debug Tool',
-          'DEBUG: Expose project'],
+          'DEBUG: Expose project',
+          'DEBUG: Export Dataset History'],
         View: ['Zoom In', 'Zoom Out', null, 'Fit To Window', 'Fit Rows To Window', 'Fit Columns To Window', null, '100%', null, 'Options'],
         Edit: [
           'Copy Image',
