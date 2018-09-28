@@ -58,16 +58,18 @@ after_script:
 
 after_success:
   - Rscript -e 'covr::codecov()'
+  - DOCKER_TAG="$TRAVIS_BRANCH-$TRAVIS_BUILD_NUMBER"
   - if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$TRAVIS_BRANCH" == "master" ]; then
     docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
-    docker build -t dzenkova/phantasus inst/docker/ ;
-    DOCKER_TAG="travis-$TRAVIS_BUILD_NUMBER" ;
+    docker build -t dzenkova/phantasus --build-arg PHANTASUS_BUILD=$DOCKER_TAG inst/docker/ ;
     docker tag dzenkova/phantasus dzenkova/phantasus:$DOCKER_TAG ;
     docker push dzenkova/phantasus;
     fi
   - if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$TRAVIS_BRANCH" == "develop" ]; then
     docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
-    docker build --build-arg TARGET_BRANCH=develop -t dzenkova/phantasus:develop inst/docker/ ;
+    docker build --build-arg TARGET_BRANCH=develop --build-arg PHANTASUS_BUILD=$DOCKER_TAG -t dzenkova/phantasus:develop inst/docker/ ;
+    docker tag dzenkova/phantasus:develop dzenkova/phantasus:$DOCKER_TAG ;
     docker push dzenkova/phantasus:develop;
+    docker push dzenkova/phantasus:$DOCKER_TAG;
     fi
 

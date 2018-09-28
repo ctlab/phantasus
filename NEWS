@@ -1,3 +1,12 @@
+CHANGES IN VERSION 1.1.4
+* PCA plot uses annotation color scheme
+* Rename annotation column implemented
+* log2(1 + x) adjust tool added
+* Calculated annotation revamped
+* Annotate dataset revamped and moved to file
+* Session syncing improved.
+* Sweep adjustment implemented
+
 CHANGES IN VERSION 1.1.3
 * Option to get vertical GSEA plot
 * Showing heatmap along the GSEA plot

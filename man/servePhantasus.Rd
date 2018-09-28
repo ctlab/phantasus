@@ -6,7 +6,8 @@
 \usage{
 servePhantasus(host = "0.0.0.0", port = 8000,
   staticRoot = system.file("www/phantasus.js", package = "phantasus"),
-  cacheDir = tempdir(), preloadedDir = NULL, openInBrowser = TRUE)
+  cacheDir = tempdir(), preloadedDir = NULL, openInBrowser = TRUE,
+  quiet = TRUE)
 }
 \arguments{
 \item{host}{Host to listen.}
@@ -22,6 +23,9 @@ servePhantasus(host = "0.0.0.0", port = 8000,
 
 \item{openInBrowser}{Boolean value which states if application will be
 automatically loaded in default browser.}
+
+\item{quiet}{Boolean value which states whether the connection log should
+be hidden (default: TRUE)}
 }
 \value{
 Running instance of phantasus application.

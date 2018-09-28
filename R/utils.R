@@ -56,11 +56,11 @@ read.gct <- function(gct, ...) {
 
     exp <- as.matrix(t[, (ann.row + 2):ncol(t)])
 
-    fdata <- makeAnnotated(t[, seq_len(ann.row), drop = FALSE])
+    fdata <- makeAnnotated(t[, seq_len(ann.row + 1), drop = FALSE])
 
 
     if (ann.col > 0) {
-        pdata.raw <- t(read.tsv(gct, skip = 2, nrows = ann.col,
+        pdata.raw <- t(read.tsv(gct, skip = 2, nrows = ann.col + 1,
                                 header = FALSE, row.names=NULL))
         pdata <- data.frame(pdata.raw[seq_len(ncol(exp)) + 1 + ann.row, ,
                                 drop = FALSE])
@@ -159,4 +159,12 @@ writeToList <- function(es) {
               colMetaNames = varLabels(es),
               rowMetaNames = fvarLabels(es))
   res
+}
+
+safeLog2 <- function (value) {
+    if (value <= 0) {
+        return(0)
+    } else {
+        return(log2(value))
+    }
 }

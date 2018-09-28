@@ -63,6 +63,32 @@ describe('adjust_tool_test', function () {
       }), 0.00001);
 
   });
+
+  it('log(1+x)', function () {
+    var heatmap = new phantasus.HeatMap({
+      dataset: new phantasus.Dataset({
+        array: [[1, 2], [3, 4]],
+        rows: 2,
+        columns: 2
+      })
+    });
+
+    var newHeatMap = new phantasus.AdjustDataTool().execute({
+      heatMap: heatmap,
+      project: heatmap.getProject(),
+      input: {
+        one_plus_log_2: true
+      }
+    });
+
+    expect(newHeatMap.getProject().getFullDataset()).toBeDatasetValues(
+      new phantasus.Dataset({
+        array: [[1, 1.584963], [2, 2.3219280]],
+        rows: 2,
+        columns: 2
+      }), 0.00001);
+  });
+
   it('z-score', function () {
     // v = (v-m)/u
     var heatmap = new phantasus.HeatMap({
