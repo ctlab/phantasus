@@ -1,5 +1,8 @@
-commit 7885ceff38e50a6a47c56f1dbf05c47985b8588e
-Author: petrovich <mazahakaforever@ya.ru>
-Date:   Sun Sep 23 15:21:47 2018 +0300
+commit e6e1b7abb3aa5b6ddff0bdab7428fc4f08a4fa8d
+Merge: f8364dc 4b967aa
+Author: Vladislav Kamenev <mazahakaforever@ya.ru>
+Date:   Fri Sep 28 20:09:49 2018 +0300
 
-    PCA plot by fullDataset
+    Merge pull request #51 from ctlab/develop
+    
+    Develop -> master 1.1.4

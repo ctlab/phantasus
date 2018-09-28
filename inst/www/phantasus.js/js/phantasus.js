@@ -17918,10 +17918,18 @@ phantasus.PcaPlotTool.prototype = {
       }
 
       if (colorByVector) {
+        var colorModel = _this.project.getColumnColorModel();
         var uniqColors = {};
         color = _.map(phantasus.VectorUtil.toArray(colorByVector), function (value) {
           if (!uniqColors[value]) {
-            uniqColors[value] = phantasus.VectorColorModel.CATEGORY_ALL[_.size(uniqColors) % 60];
+            if (colorModel.containsDiscreteColor(colorByVector, value)
+              && colorByVector.getProperties().get(phantasus.VectorKeys.DISCRETE)) {
+              uniqColors[value] = colorModel.getMappedValue(colorByVector, value);
+            } else if (colorModel.isContinuous(colorByVector)) {
+              uniqColors[value] = colorModel.getContinuousMappedValue(colorByVector, value);
+            } else {
+              uniqColors[value] = phantasus.VectorColorModel.CATEGORY_ALL[_.size(uniqColors) % 60];
+            }
           }
 
           return uniqColors[value]
