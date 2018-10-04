@@ -129,10 +129,9 @@ getGDS <- function(name, destdir = tempdir(),
     row.names(columnsMeta) <- sampleNames
     pData <- AnnotatedDataFrame(data.frame(columnsMeta, check.names = FALSE))
 
-    fData <- data.frame(matrix(symbol, nrow(exprs), 1))
-    colnames(fData) <- "symbol"
+    fData <- data.frame(id=rownames, symbol=symbol, row.names = rownames, stringsAsFactors = FALSE)
     fData <- AnnotatedDataFrame(fData)
-    featureNames(fData) <- rownames
+
 
     list(ExpressionSet(assayData = exprs,
                         phenoData = pData,
