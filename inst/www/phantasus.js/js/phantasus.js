@@ -2318,7 +2318,6 @@ phantasus.ParseDatasetFromProtoBin.parse = function (session, callback, options)
                                                                       Object.keys(jsondata)[k],
                                                                       jsondata[Object.keys(jsondata)[k]],
                                                                       options);
-          dataset.setESVariable('es_' + (k + 1).toString());
           datasets.push(dataset);
         }
         callback(null, datasets);
@@ -5780,7 +5779,6 @@ phantasus.DatasetAdapter = function (dataset, rowMetadata, columnMetadata) {
   this.rowMetadata = rowMetadata || dataset.getRowMetadata();
   this.columnMetadata = columnMetadata || dataset.getColumnMetadata();
   this.esSession = dataset.esSession;
-  this.esVariable = dataset.esVariable;
   this.esSource = 'copied';
 };
 phantasus.DatasetAdapter.prototype = {
@@ -5831,12 +5829,6 @@ phantasus.DatasetAdapter.prototype = {
   },
   setESSession: function (esSession) {
     this.esSession = esSession;
-  },
-  getESVariable: function () {
-    return this.esVariable;
-  },
-  setESVariable: function (variable) {
-    this.esVariable = variable;
   }
 };
 
@@ -6987,7 +6979,6 @@ phantasus.DatasetUtil.copy = function (dataset) {
   };
   if (dataset.getESSession()) {
     newDataset.setESSession(dataset.getESSession());
-    newDataset.setESVariable(dataset.getESVariable());
   }
   return newDataset;
 };
@@ -7166,7 +7157,6 @@ phantasus.DatasetUtil.toESSessionPromise = function (dataset) {
 
         var proto = new REXP(messageJSON);
         var req = ocpu.call('createES', proto, function (session) {
-          dataset.setESVariable('es');
           dataset.esSource = 'original';
           resolve(session);
         }, true);
@@ -7182,7 +7172,7 @@ phantasus.DatasetUtil.probeDataset = function (dataset, session) {
   var targetSession = session || dataset.getESSession();
 
   return new Promise(function (resolve) {
-    if (!targetSession || !dataset.getESVariable()) {
+    if (!targetSession) {
       return resolve(false);
     }
 
@@ -7275,7 +7265,7 @@ phantasus.DatasetUtil.probeDataset = function (dataset, session) {
 
           resolve(isRowCountEqual && isColumnCountEqual && exprsEqual && fDataNamesEqual && fDataValuesEqual);
         })
-      }, false, "::" + dataset.getESVariable());
+      }, false, "::es");
 
 
       req.fail(function () {
@@ -7307,9 +7297,6 @@ phantasus.Dataset = function (options) {
 
   if (options.esSession) {
     this.esSession = options.esSession;
-  }
-  if (options.esVariable) {
-    this.esVariable = options.esVariable;
   }
   this.isGEO = options.isGEO; // geo and preloaded datasets doesn't need to renew essession, they already have valid one
   this.preloaded = options.preloaded;
@@ -7554,16 +7541,7 @@ phantasus.Dataset.prototype = {
   getESSession: function () {
     //// console.log("phantasus.Dataset.prototype.getESSession ::", this);
     return this.esSession;
-  },
-
-  getESVariable: function () {
-    return this.esVariable;
-  },
-
-  setESVariable: function(variable) {
-    this.esVariable = variable;
   }
-
 };
 phantasus.Util.extend(phantasus.Dataset, phantasus.AbstractDataset);
 
@@ -13424,16 +13402,14 @@ phantasus.AdjustDataTool.prototype = {
     }
 
     var currentSessionPromise = dataset.getESSession();
-    var currentESVariable = dataset.getESVariable();
 
-    if (currentESVariable && currentSessionPromise) {
+    if (currentSessionPromise) {
       dataset.setESSession(new Promise(function (resolve, reject) {
         currentSessionPromise.then(function (essession) {
           functions.es = essession;
           var req = ocpu.call("adjustDataset", functions, function (newSession) {
-            dataset.setESVariable("es");
             resolve(newSession);
-          }, false, "::" + currentESVariable);
+          }, false, "::es");
 
 
           req.fail(function () {
@@ -14946,11 +14922,8 @@ phantasus.CollapseDatasetTool.prototype = {
 
     var oldDataset = project.getFullDataset();
     var oldSession = oldDataset.getESSession();
-    var oldVariable = oldDataset.getESVariable();
 
-    if (oldVariable && oldSession) {
-
-      dataset.setESVariable('es');
+    if (oldSession) {
       dataset.setESSession(new Promise(function (resolve, reject) {
         oldSession.then(function (esSession) {
           var args = {
@@ -14964,9 +14937,8 @@ phantasus.CollapseDatasetTool.prototype = {
           ocpu
             .call("collapseDataset", args, function (newSession) {
               resolve(newSession);
-            }, false, "::" + oldVariable)
+            }, false, "::es")
             .fail(function () {
-              dataset.setESVariable(undefined);
               reject();
               throw new Error("Collapse dataset failed. See console");
             });
@@ -15065,7 +15037,6 @@ phantasus.CreateAnnotation.prototype = {
 
     var fullDataset = project.getFullDataset();
     var session = fullDataset.getESSession();
-    var esVariable = fullDataset.getESVariable();
 
     fullDataset.setESSession(new Promise(function (resolve, reject) {
       session.then(function (esSession) {
@@ -15073,9 +15044,8 @@ phantasus.CreateAnnotation.prototype = {
 
         ocpu
           .call("calculatedAnnotation", args, function (newSession) {
-            fullDataset.setESVariable('es');
             resolve(newSession);
-          }, false, "::" + esVariable)
+          }, false, "::es")
           .fail(function () {
             reject();
             throw new Error("Calculated annotation failed. See console");
@@ -15410,7 +15380,7 @@ phantasus.gseaTool = function (project) {
 
   var annotations = ['(None)'].concat(phantasus.MetadataUtil.getMetadataNames(fullDataset.getColumnMetadata()))
 
-  this.$dialog = $('<div style="background:white;" title="gsea plot tool"><h4>Please select rows.</h4></div>');
+  this.$dialog = $('<div style="background:white;" title="' + this.toString() + '"><h4>Please select rows.</h4></div>');
   this.$el = $('<div class="container-fluid" style="height: 100%">'
     + '<div class="row" style="height: 100%">'
     + '<div data-name="configPane" class="col-xs-2"></div>'
@@ -15504,7 +15474,7 @@ phantasus.gseaTool = function (project) {
 
 phantasus.gseaTool.prototype = {
   toString: function () {
-    return 'gsea Plot';
+    return 'GSEA Plot';
   },
   request: function (project) {
     this.$chart.empty();
@@ -15565,7 +15535,7 @@ phantasus.gseaTool.prototype = {
             self.promise.resolve(self.imageURL);
           });
         });
-      }, false, "::" + fullDataset.getESVariable())
+      }, false, "::es")
         .fail(function () {
           self.promise.reject();
         });
@@ -15889,7 +15859,6 @@ phantasus.KmeansTool.prototype = {
           v.getProperties().set("phantasus.dataType", "string");
 
           dataset.setESSession(Promise.resolve(newSession));
-          dataset.setESVariable("es");
           promise.resolve();
 
           project.trigger("trackChanged", {
@@ -15897,7 +15866,7 @@ phantasus.KmeansTool.prototype = {
             display: ["color"]
           });
         })
-      }, false, "::" + dataset.getESVariable());
+      }, false, "::es");
       req.fail(function () {
         promise.reject();
         throw new Error("Kmeans call to OpenCPU failed" + req.responseText);
@@ -16071,7 +16040,6 @@ phantasus.LimmaTool.prototype = {
               });
               // alert("Limma finished successfully");
               dataset.setESSession(Promise.resolve(session));
-              dataset.setESVariable("es");
               promise.resolve();
 
               project.trigger("trackChanged", {
@@ -16084,7 +16052,7 @@ phantasus.LimmaTool.prototype = {
             r.readAsArrayBuffer(file);
           });
         })
-      }, false, "::" + dataset.getESVariable());
+      }, false, "::es");
       req.fail(function () {
         promise.reject();
         throw new Error("Limma call failed" + req.responseText);
@@ -16776,7 +16744,6 @@ phantasus.NewHeatMapTool.prototype = {
     phantasus.DatasetUtil.shallowCopy(dataset);
     var indices = phantasus.Util.getTrueIndices(dataset);
     var currentSessionPromise = dataset.getESSession();
-    var currentESVariable = dataset.getESVariable();
 
     dataset.setESSession(new Promise(function (resolve, reject) {
       currentSessionPromise.then(function (esSession) {
@@ -16787,11 +16754,10 @@ phantasus.NewHeatMapTool.prototype = {
         };
 
         var req = ocpu.call("subsetES", args, function (newSession) {
-          dataset.setESVariable('es');
           dataset.esSource = 'original';
           resolve(newSession);
           //console.log('Old dataset session: ', esSession, ', New dataset session: ', newSession);
-        }, false, "::" + currentESVariable);
+        }, false, "::es");
 
         req.fail(function () {
           reject();
@@ -17829,17 +17795,23 @@ phantasus.PcaPlotTool.prototype = {
   },
   init: function () {
     var _this = this;
-    var plotlyDefaults = phantasus.PcaPlotTool.getPlotlyDefaults();
-    var layout = plotlyDefaults.layout;
-    var config = plotlyDefaults.config;
     var dataset = _this.project.getFullDataset();
 
     return function () {
       _this.$chart.empty();
 
+      var plotlyDefaults = phantasus.PcaPlotTool.getPlotlyDefaults();
+      var data = [];
+      var layout = plotlyDefaults.layout;
+      var config = plotlyDefaults.config;
+
       var colorBy = _this.formBuilder.getValue('color');
       var sizeBy = _this.formBuilder.getValue('size');
       var shapeBy = _this.formBuilder.getValue('shape');
+      var pc1 = _this.formBuilder.getValue('x-axis');
+      var pc2 = _this.formBuilder.getValue('y-axis');
+      var label = _this.formBuilder.getValue('label');
+      var drawLabels = _this.formBuilder.getValue('visible_labels') === 'On';
 
       var getTrueVector = function (vector) {
         while (vector && vector.indices && vector.indices.length === 0) {
@@ -17848,39 +17820,34 @@ phantasus.PcaPlotTool.prototype = {
         return vector;
       };
 
-      _this.colorByVector = getTrueVector(dataset.getColumnMetadata().getByName(colorBy));
-      var colorByVector = _this.colorByVector;
+      var colorByVector = getTrueVector(dataset.getColumnMetadata().getByName(colorBy));
       var sizeByVector = getTrueVector(dataset.getColumnMetadata().getByName(sizeBy));
       var shapeByVector = getTrueVector(dataset.getColumnMetadata().getByName(shapeBy));
-
-      var pc1 = _this.formBuilder.getValue('x-axis');
-      var pc2 = _this.formBuilder.getValue('y-axis');
-
-      var label = _this.formBuilder.getValue('label');
       var textByVector = getTrueVector(dataset.getColumnMetadata().getByName(label));
+
+      _this.colorByVector = colorByVector;
 
       var na = 'mean';
       var color = colorByVector ? [] : null;
       var size = sizeByVector ? [] : 12;
       var shapes = shapeByVector ? [] : null;
-      var text = [];
-      var sizeFunction = null;
-      var drawLabels = _this.formBuilder.getValue('visible_labels') === 'On';
+      var text = null;
 
 
-      var data = [];
       if (sizeByVector) {
         var minMax = phantasus.VectorUtil.getMinMax(sizeByVector);
-        sizeFunction = d3.scale.linear().domain(
-          [minMax.min, minMax.max]).range([6, 19])
+        var sizeFunction = d3.scale.linear()
+          .domain([minMax.min, minMax.max])
+          .range([6, 19])
           .clamp(true);
 
-
-        size = _.map(phantasus.VectorUtil.toArray(sizeByVector), function (value) {return sizeFunction(value)});
+        size = _.map(phantasus.VectorUtil.toArray(sizeByVector), sizeFunction);
       }
-      if (textByVector) {
+
+      if (textByVector && drawLabels) {
         text = phantasus.VectorUtil.toArray(textByVector);
       }
+
       if (shapeByVector) {
         var allShapes = ['circle', 'square', 'diamond', 'cross', 'triangle-up', 'star', 'hexagram', 'bowtie', 'diamond-cross', 'hourglass', 'hash-open'];
         var uniqShapes = {};
@@ -17910,7 +17877,6 @@ phantasus.PcaPlotTool.prototype = {
             name: categoryName,
             legendgroup: 'shapes',
             mode: "markers",
-            text: text,
             type: "scatter",
             showlegend: true
           });
@@ -17958,9 +17924,13 @@ phantasus.PcaPlotTool.prototype = {
           size: size,
           symbol: shapes
         },
-        name: " ",
-        mode: "markers",
+        name: "",
+        mode: "markers+text",
         text: text,
+        textfont: {
+          size: 11
+        },
+        textposition: "top right",
         type: "scatter",
         showlegend: false
       });
@@ -17968,141 +17938,9 @@ phantasus.PcaPlotTool.prototype = {
       var expressionSetPromise = dataset.getESSession();
 
       expressionSetPromise.then(function (essession) {
-        var label_array = [];
-        var anchor_array = [];
-        var links, labels;
-
         var args = {
           es: essession,
           replacena: na
-        };
-
-        var prepareLabelData = function () {
-          if (!label) {
-            return;
-          }
-
-          var labelData = data.map(function (type) {
-            if (!type.text) {
-              return [];
-            }
-
-            var labels = type.x.map(function (x, idx) {
-              var size = (Array.isArray(type.marker.size)) ? type.marker.size[idx] : type.marker.size;
-
-              return {
-                x: x,
-                y: type.y[idx],
-                name: type.text[idx],
-                r: size
-              };
-            });
-            type.text = null;
-            return labels;
-          });
-
-          label_array = [].concat.apply([], labelData);
-          anchor_array = [].concat.apply([], labelData);
-        };
-
-        var putLabels = function () {
-          if (!label) {
-            return;
-          }
-
-          var plot = _this.$chart.children()[0];
-          var xrange = plot._fullLayout.xaxis.range;
-          var yrange = plot._fullLayout.yaxis.range;
-          var svg = d3.select(plot).select('.cartesianlayer .subplot .gridlayer');
-          svg.selectAll(".label").data([]).exit().remove();
-          svg.selectAll(".link").data([]).exit().remove();
-
-          var tempLabels = label_array.filter(function (label) {
-            return label.x >= xrange[0] && label.x <= xrange[1] && label.y >= yrange[0] && label.y <= yrange[1];
-          }).map(function (label) {
-            return {x: plot._fullLayout.xaxis.l2p(label.x), y: plot._fullLayout.yaxis.l2p(label.y), name: label.name};
-          });
-
-          var tempAnchors = anchor_array.filter(function (anchor) {
-            return anchor.x >= xrange[0] && anchor.x <= xrange[1] && anchor.y >= yrange[0] && anchor.y <= yrange[1];
-          }).map(function (anchor) {
-            return {x: plot._fullLayout.xaxis.l2p(anchor.x), y: plot._fullLayout.yaxis.l2p(anchor.y), r: anchor.r};
-          });
-
-          // Draw labels
-          labels = svg.selectAll(".label")
-            .data(tempLabels)
-            .enter()
-            .append("text")
-            .attr("class", "label")
-            .attr('text-anchor', 'start')
-            .text(function (d) {
-              return d.name;
-            })
-            .attr("x", function (d) {
-              return (d.x);
-            })
-            .attr("y", function (d) {
-              return (d.y);
-            })
-            .attr("fill", "black");
-
-          // Size of each label
-          var index = 0;
-          labels.each(function () {
-            tempLabels[index].width = this.getBBox().width;
-            tempLabels[index].height = this.getBBox().height;
-            index += 1;
-          });
-
-          // Draw links
-          links = svg.selectAll(".link")
-            .data(tempLabels)
-            .enter()
-            .append("line")
-            .attr("class", "link")
-            .attr("x1", function (d) {
-              return (d.x);
-            })
-            .attr("y1", function (d) {
-              return (d.y);
-            })
-            .attr("x2", function (d) {
-              return (d.x);
-            })
-            .attr("y2", function (d) {
-              return (d.y);
-            })
-            .attr("stroke-width", 0.6)
-            .attr("stroke", "gray");
-
-          d3.labeler()
-            .label(tempLabels)
-            .anchor(tempAnchors)
-            .width(plot._fullLayout._size.w)
-            .height(plot._fullLayout._size.h)
-            .force_bounds(true)
-            .start(1000);
-
-          labels
-            .transition()
-            .duration(800)
-            .attr("x", function (d) {
-              return (d.x);
-            })
-            .attr("y", function (d) {
-              return (d.y);
-            });
-
-          links
-            .transition()
-            .duration(800)
-            .attr("x2", function (d) {
-              return (d.x);
-            })
-            .attr("y2", function (d) {
-              return (d.y);
-            });
         };
 
         var drawResult = function () {
@@ -18122,30 +17960,21 @@ phantasus.PcaPlotTool.prototype = {
 
           layout.xaxis = {
             title: _this.pca.xlabs[pc1],
-            range: [xmin - (xmax - xmin) * 0.1, xmax + (xmax - xmin) * 0.1],
+            range: [xmin - (xmax - xmin) * 0.15, xmax + (xmax - xmin) * 0.15],
             zeroline: false
           };
           layout.yaxis = {
             title: _this.pca.xlabs[pc2],
-            range: [ymin - (ymax - ymin) * 0.1, ymax + (ymax - ymin) * 0.1],
+            range: [ymin - (ymax - ymin) * 0.15, ymax + (ymax - ymin) * 0.15],
             zeroline: false
           };
           layout.showlegend = true;
-          layout.config = config;
-          layout.data = data;
           var $chart = $('<div></div>');
-          var myPlot = $chart[0];
+          var plot = $chart[0];
           $chart.appendTo(_this.$chart);
 
-
-          if (drawLabels) {
-            prepareLabelData();
-          }
-
-          Plotly.newPlot(myPlot, data, layout, config).then(putLabels);
-          myPlot.on('plotly_afterplot', putLabels);
+          Plotly.newPlot(plot, data, layout, config).then(Plotly.annotate);
         };
-
 
         if (!_this.pca) {
           var req = ocpu.call("calcPCA", args, function (session) {
@@ -18154,17 +17983,14 @@ phantasus.PcaPlotTool.prototype = {
               drawResult();
             });
 
-          }, false, "::" + dataset.getESVariable());
+          }, false, "::es");
           req.fail(function () {
             new Error("PcaPlot call failed" + req.responseText);
           });
         } else {
           drawResult();
         }
-      });
-
-
-      expressionSetPromise.catch(function (reason) {
+      }).catch(function (reason) {
         alert("Problems occured during transforming dataset to ExpressionSet\n" + reason);
       });
 
@@ -18216,22 +18042,6 @@ phantasus.PcaPlotTool.getPlotlyDefaults = function () {
     }
   };
 
-  // var toImage = {
-  //   name: 'toImage',
-  //   title: 'Download plot as a svg',
-  //   icon: Icons.camera,
-  //   click: function (gd) {
-  //     var format = 'svg';
-  //     Lib.notifier('Taking snapshot - this may take a few seconds', 'long');
-  //     downloadImage(gd, {'format': format})
-  //     .then(function (filename) {
-  //       Lib.notifier('Snapshot succeeded - ' + filename, 'long');
-  //     })
-  //     .catch(function () {
-  //       Lib.notifier('Sorry there was a problem downloading your snapshot!', 'long');
-  //     });
-  //   }
-  // };
   var config = {
     modeBarButtonsToAdd: [],
     showLink: false,
@@ -18239,7 +18049,7 @@ phantasus.PcaPlotTool.getPlotlyDefaults = function () {
     displaylogo: false,
     staticPlot: false,
     showHints: true,
-    modeBarButtonsToRemove: ['sendDataToCloud', 'zoomIn2d', 'zoomOut2d', 'hoverCompareCartesian', 'hoverClosestCartesian']
+    modeBarButtonsToRemove: ['sendDataToCloud', 'zoomIn2d', 'zoomOut2d', 'hoverCompareCartesian', 'hoverClosestCartesian', 'autoScale2d']
   };
   return {
     layout: layout,
@@ -18488,8 +18298,8 @@ phantasus.shinyGamTool.prototype = {
           window.open(link.split('"')[1], '_blank');
         });
         promise.resolve();
-      }, false, '::' + dataset.getESVariable()).fail(function () {
-        console.error('Failed to submit to shiny GAM analysis. Reason: ' + req.responseText);
+      }, false, '::es').fail(function () {
+        console.error('Failed to submit to shiny GAM analysis');
         promise.reject();
       });
     });
@@ -20339,7 +20149,7 @@ phantasus.ActionManager = function () {
   });
 
   this.add({
-    name: 'GSEA plot',
+    name: phantasus.gseaTool.prototype.toString(),
     cb: function (options) {
       new phantasus.gseaTool(
         options.heatMap.getProject()
@@ -30588,7 +30398,7 @@ phantasus.HeatMap = function (options) {
           'PCA Plot',
           'Submit to Enrichr',
           'Submit to Shiny GAM',
-          'GSEA plot',
+          phantasus.gseaTool.prototype.toString(),
           'DEBUG: Probe Debug Tool',
           'DEBUG: Expose project'],
         View: ['Zoom In', 'Zoom Out', null, 'Fit To Window', 'Fit Rows To Window', 'Fit Columns To Window', null, '100%', null, 'Options'],
@@ -39742,13 +39552,12 @@ phantasus.VectorTrack.prototype = {
                   dataset.getRowMetadata();
 
                 var currentSessionPromise = dataset.getESSession();
-                var currentESVariable = dataset.getESVariable();
 
                 var v = target.getByName(oldName);
                 v.setName(newName);
 
 
-                if (currentESVariable && currentSessionPromise) {
+                if (currentSessionPromise) {
 
                   dataset.setESSession(new Promise(function (resolve, reject) {
                     currentSessionPromise.then(function (essession) {
@@ -39760,9 +39569,8 @@ phantasus.VectorTrack.prototype = {
                       };
 
                       var req = ocpu.call("renameColumn", args, function (newSession) {
-                        dataset.setESVariable("es");
                         resolve(newSession);
-                      }, false, "::" + currentESVariable);
+                      }, false, "::es");
 
 
                       req.fail(function () {
@@ -39849,9 +39657,7 @@ phantasus.VectorTrack.prototype = {
 
                 var dataset = _this.project.getFullDataset();
                 var currentSessionPromise = dataset.getESSession();
-                var currentESVariable = dataset.getESVariable();
-
-                if (currentESVariable && currentSessionPromise) {
+                if (currentSessionPromise) {
 
                   dataset.setESSession(new Promise(function (resolve, reject) {
                     currentSessionPromise.then(function (essession) {
@@ -39863,9 +39669,8 @@ phantasus.VectorTrack.prototype = {
                       };
 
                       var req = ocpu.call("renameColumn", args, function (newSession) {
-                        dataset.setESVariable("es");
                         resolve(newSession);
-                      }, false, "::" + currentESVariable);
+                      }, false, "::es");
 
 
                       req.fail(function () {

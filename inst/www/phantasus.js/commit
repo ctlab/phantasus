@@ -1,8 +1,8 @@
-commit e6e1b7abb3aa5b6ddff0bdab7428fc4f08a4fa8d
-Merge: f8364dc 4b967aa
+commit f60a2913632db9a184dc4801944ba5e00c6bf53e
+Merge: e6e1b7a 5fb7637
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Fri Sep 28 20:09:49 2018 +0300
+Date:   Fri Oct 5 17:47:17 2018 +0300
 
-    Merge pull request #51 from ctlab/develop
+    Merge pull request #53 from ctlab/develop
     
-    Develop -> master 1.1.4
+    Develop -> Master 1.1.4 RC2
