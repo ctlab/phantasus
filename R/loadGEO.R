@@ -42,7 +42,7 @@ loadGEO <- function(name, type = NA) {
 
     files <- list()
     for (i in seq_along(ess)) {
-        assign(paste0("es_", i), ess[[i]], envir = parent.frame())
+        assign("es", ess[[i]], envir = parent.frame())
         seriesName <- if (!grepl(pattern = "-", name) && length(ess) > 1)
             paste0(name, "-", annotation(ess[[i]])) else name
         files[[seriesName]] <- writeToList(ess[[i]])

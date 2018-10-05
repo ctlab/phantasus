@@ -67,7 +67,7 @@ loadPreloaded <- function(name, exactName = NULL) {
       if (class(ess[[i]]) != "ExpressionSet") {
         stop(wrongFormat)
       }
-      assign(paste0("es_", i), ess[[i]], envir = parent.frame())
+      assign("es", ess[[i]], envir = parent.frame())
 
       files[[seriesNames[[i]]]] <- writeToList(ess[[i]])
     }
