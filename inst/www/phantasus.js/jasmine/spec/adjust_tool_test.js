@@ -154,7 +154,8 @@ describe('adjust_tool_test', function () {
       dataset = new phantasus.Dataset({
         array: [[1, 2], [3, 4]],
         rows: 2,
-        columns: 2
+        columns: 2,
+        esSession: new Promise(function () {})
       });
       var vecRow = dataset.getRowMetadata().add(TEST_ROW_NAME); vecRow.setArray([10,20]);
       vecRow.getProperties().set(phantasus.VectorKeys.DATA_TYPE, 'number');

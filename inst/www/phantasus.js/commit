@@ -1,8 +1,5 @@
-commit f60a2913632db9a184dc4801944ba5e00c6bf53e
-Merge: e6e1b7a 5fb7637
-Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Fri Oct 5 17:47:17 2018 +0300
+commit 90eebac8f27921cae881df4dbf6aaa1bfbd22bcf
+Author: petrovich <mazahakaforever@ya.ru>
+Date:   Sat Oct 6 16:01:43 2018 +0300
 
-    Merge pull request #53 from ctlab/develop
-    
-    Develop -> Master 1.1.4 RC2
+    Sweep test sync-disabled
