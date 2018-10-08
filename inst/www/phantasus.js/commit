@@ -1,5 +1,5 @@
-commit 64e426c2cae75a9200335f89bd66842a2069b433
+commit f7e66ae1916318a8c60a98d4fc51ca45082f7506
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Fri Sep 28 20:03:20 2018 +0300
+Date:   Mon Oct 8 15:45:48 2018 +0300
 
-    Export dataset history WIP
+    Export dataset history environment save
