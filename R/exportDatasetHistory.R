@@ -1,6 +1,22 @@
 rootFn <- c('loadGEO', 'loadPreloaded', 'createES')
-ignoredArgs <- c('es')
+complexArgumentLimitBytes <- 400
 
+#' Export dataset history to R code
+#'
+#' @param sessionName String, OCPU session name
+#' @param esVariable String, variable to lookup expression set in
+#' @param leaf Boolean, is it leaf (default = F)
+#' @param step Integer, step of recursion (default = 0)
+#' @param savedEnv Environment, where to store complex arguments (default = new.env())
+#'
+#' @return JSON with R code
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#'   setwd(tempdir())
+#'   exportDatasetHistory('x039f1672026678');
+#' }
 exportDatasetHistory <- function (sessionName, esVariable="es", leaf = T, step = 0, savedEnv = new.env()) {
     ocpuRoot <- strsplit(getwd(), 'ocpu-temp')[[1]][1]
     sessionPath <- paste(ocpuRoot, 'ocpu-store', sessionName, sep=.Platform$file.sep)
@@ -16,7 +32,7 @@ exportDatasetHistory <- function (sessionName, esVariable="es", leaf = T, step =
         argumentName <- toString(parsed[[1]][[i]])
         if (argumentName %in% loadedVariables) {
             argumentValue <- env[[argumentName]]
-            if (object.size(argumentValue) > 100) {
+            if (object.size(argumentValue) > complexArgumentLimitBytes) {
                 rawArgument <- paste(argumentName, '_', step, sep='')
                 savedEnv[[rawArgument]] <- argumentValue
             } else {
@@ -50,7 +66,4 @@ exportDatasetHistory <- function (sessionName, esVariable="es", leaf = T, step =
         return(jsonlite::toJSON(myHistory))
     }
     myHistory
-}
-playground <- function () {
-    exportDatasetHistory('x039f1672026678');
 }
