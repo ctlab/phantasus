@@ -1,7 +1,7 @@
 rootFn <- c('loadGEO', 'loadPreloaded', 'createES')
 ignoredArgs <- c('es')
 
-exportDatasetHistory <- function (sessionName, esVariable="es", leaf = T) {
+exportDatasetHistory <- function (sessionName, esVariable="es", leaf = T, step = 0, savedEnv = new.env()) {
     ocpuRoot <- strsplit(getwd(), 'ocpu-temp')[[1]][1]
     sessionPath <- paste(ocpuRoot, 'ocpu-store', sessionName, sep=.Platform$file.sep)
     RDataPath <- paste(sessionPath, '.RData', sep=.Platform$file.sep)
@@ -15,7 +15,14 @@ exportDatasetHistory <- function (sessionName, esVariable="es", leaf = T) {
     for(i in 2:length(parsed[[1]])) {
         argumentName <- toString(parsed[[1]][[i]])
         if (argumentName %in% loadedVariables) {
-            rawArgument <- paste(deparse(env[[argumentName]]), collapse = '\n')
+            argumentValue <- env[[argumentName]]
+            if (object.size(argumentValue) > 100) {
+                rawArgument <- paste(argumentName, '_', step, sep='')
+                savedEnv[[rawArgument]] <- argumentValue
+            } else {
+                rawArgument <- paste(deparse(argumentValue), collapse = '\n')
+            }
+
             complexArgument <- paste(argumentName, ' <- ', rawArgument)
             complexArguments <- paste(complexArguments, complexArgument, sep='\n')
         }
@@ -33,16 +40,17 @@ exportDatasetHistory <- function (sessionName, esVariable="es", leaf = T) {
     if (!is.element(toString(fn), rootFn)) {
         parent <- parsed[[1]]$es[[2]]
         parentVar <- parsed[[1]]$es[[3]]
-        parentHistory <- exportDatasetHistory(parent, parentVar, leaf = F)
+        parentHistory <- exportDatasetHistory(parent, parentVar, leaf = F, step = step + 1, savedEnv = savedEnv)
         myHistory <- paste(parentHistory, myHistory, sep='\n')
     }
 
     if (leaf) {
-        myHistory <- paste('library(phantasus)', myHistory, sep = '\n')
+        assign('env', savedEnv, envir = parent.frame())
+        myHistory <- paste('library(phantasus)', 'load(\'~/Downloads/env.rda\') # Please note', myHistory, sep = '\n')
         return(jsonlite::toJSON(myHistory))
     }
     myHistory
 }
 playground <- function () {
-    exportDatasetHistory('x0e04ac0ccc566d');
+    exportDatasetHistory('x039f1672026678');
 }
