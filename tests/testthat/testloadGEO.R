@@ -28,6 +28,11 @@ test_that("loadGEO finishes with result", {
     options(phantasusMirrorPath = NULL)
 })
 
+test_that("getGDS adds id field for GDS datasets", {
+    a <- getGDS("GDS4885")[[1]]
+    expect_true("id" %in% tolower(fvarLabels(a)))
+})
+
 test_that("filterPhenoAnnotations saves colnames", {
     cacheDir <- tempdir()
     es <- getES("GSE53986", destdir = cacheDir)[[1]]

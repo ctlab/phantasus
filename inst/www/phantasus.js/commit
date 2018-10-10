@@ -1,8 +1,5 @@
-commit e6e1b7abb3aa5b6ddff0bdab7428fc4f08a4fa8d
-Merge: f8364dc 4b967aa
+commit 2244ba5a44b6e812d7a92dc2d752d81d7442a09b
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Fri Sep 28 20:09:49 2018 +0300
+Date:   Wed Oct 10 14:12:59 2018 +0300
 
-    Merge pull request #51 from ctlab/develop
-    
-    Develop -> master 1.1.4
+    Filters fix.

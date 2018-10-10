@@ -42,7 +42,7 @@ loadGEO <- function(name, type = NA) {
 
     files <- list()
     for (i in seq_along(ess)) {
-        assign(paste0("es_", i), ess[[i]], envir = parent.frame())
+        assign("es", ess[[i]], envir = parent.frame())
         seriesName <- if (!grepl(pattern = "-", name) && length(ess) > 1)
             paste0(name, "-", annotation(ess[[i]])) else name
         files[[seriesName]] <- writeToList(ess[[i]])
@@ -129,10 +129,9 @@ getGDS <- function(name, destdir = tempdir(),
     row.names(columnsMeta) <- sampleNames
     pData <- AnnotatedDataFrame(data.frame(columnsMeta, check.names = FALSE))
 
-    fData <- data.frame(matrix(symbol, nrow(exprs), 1))
-    colnames(fData) <- "symbol"
+    fData <- data.frame(id=rownames, symbol=symbol, row.names = rownames, stringsAsFactors = FALSE)
     fData <- AnnotatedDataFrame(fData)
-    featureNames(fData) <- rownames
+
 
     list(ExpressionSet(assayData = exprs,
                         phenoData = pData,
