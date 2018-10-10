@@ -1,5 +1,5 @@
-commit 90eebac8f27921cae881df4dbf6aaa1bfbd22bcf
-Author: petrovich <mazahakaforever@ya.ru>
-Date:   Sat Oct 6 16:01:43 2018 +0300
+commit 2244ba5a44b6e812d7a92dc2d752d81d7442a09b
+Author: Vladislav Kamenev <mazahakaforever@ya.ru>
+Date:   Wed Oct 10 14:12:59 2018 +0300
 
-    Sweep test sync-disabled
+    Filters fix.
