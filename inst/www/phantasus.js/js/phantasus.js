@@ -18052,6 +18052,7 @@ phantasus.PcaPlotTool.getPlotlyDefaults = function () {
     displaylogo: false,
     staticPlot: false,
     showHints: true,
+    doubleClick: "reset",
     modeBarButtonsToRemove: ['sendDataToCloud', 'zoomIn2d', 'zoomOut2d', 'hoverCompareCartesian', 'hoverClosestCartesian', 'autoScale2d']
   };
   return {
