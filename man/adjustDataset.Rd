@@ -22,11 +22,16 @@ adjustDataset(es, scaleColumnSum = NULL, log2 = FALSE,
 
 \item{quantileNormalize}{perform quantile normalization (default FALSE)}
 
-\item{zScore}{perform zScore adjustment: subtract mean, divide by std (default FALSE)}
+\item{zScore}{perform zScore adjustment:
+subtract mean, divide by std (default FALSE)}
 
-\item{robustZScore}{perform robustZScore adjustment: subtract median, divide by MAD (default FALSE)}
+\item{robustZScore}{perform robustZScore adjustment:
+subtract median, divide by MAD (default FALSE)}
 
 \item{sweep}{perform sweep adjustment on rows/columns (default FALSE)}
+}
+\value{
+Nothing. Adjusted dataset will be assigned as ES in global environment
 }
 \description{
 Adjust dataset
@@ -36,4 +41,5 @@ Adjust dataset
 es <- gseGSE('GSE53986')[[1]]
 adjustDataset(es, log2 = T, quantileNormalize = T)
 }
+
 }

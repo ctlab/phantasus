@@ -17,6 +17,9 @@ collapseDataset(es, isRows = TRUE, selectOne = FALSE, fn, fields)
 
 \item{fields}{fields to unique on}
 }
+\value{
+Nothing. Collapsed dataset will be assigned to es in environment
+}
 \description{
 \code{collapseDataset} performs a collapse action on expression set
 }

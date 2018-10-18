@@ -1,16 +1,27 @@
 #' Adjust dataset
 #'
 #' @param es Expression set to perform adjustment on
+#'
 #' @param scaleColumnSum perform sum scaling of columns (default FALSE)
+#'
 #' @param log2 perform logarithm2 adjustment (default FALSE)
+#'
 #' @param onePlusLog2 perform log2(1+x) adjustment (default FALSE)
+#'
 #' @param inverseLog2 perform 2^x adjustment (default FALSE)
+#'
 #' @param quantileNormalize perform quantile normalization (default FALSE)
-#' @param zScore perform zScore adjustment: subtract mean, divide by std (default FALSE)
-#' @param robustZScore perform robustZScore adjustment: subtract median, divide by MAD (default FALSE)
+#'
+#' @param zScore perform zScore adjustment:
+#'  subtract mean, divide by std (default FALSE)
+#'
+#' @param robustZScore perform robustZScore adjustment:
+#'  subtract median, divide by MAD (default FALSE)
+#'
 #' @param sweep perform sweep adjustment on rows/columns (default FALSE)
 #'
-#' @export
+#' @return Nothing. Adjusted dataset will be assigned as ES in global environment
+#'
 #' @import stats
 #'
 #' @examples
@@ -18,10 +29,12 @@
 #' es <- gseGSE('GSE53986')[[1]]
 #' adjustDataset(es, log2 = T, quantileNormalize = T)
 #' }
+#'
 
-adjustDataset <- function (es, scaleColumnSum = NULL, log2 = FALSE, onePlusLog2 = FALSE,
-                           inverseLog2 = FALSE, quantileNormalize = FALSE, zScore = FALSE,
-                           robustZScore = FALSE, sweep = NULL) {
+adjustDataset <- function (es, scaleColumnSum = NULL,
+                           log2 = FALSE, onePlusLog2 = FALSE,
+                           inverseLog2 = FALSE, quantileNormalize = FALSE,
+                           zScore = FALSE, robustZScore = FALSE, sweep = NULL) {
 
     if (length(scaleColumnSum) > 0 && is.numeric(scaleColumnSum)) {
         sum <- apply(exprs(es), 2, sum, na.rm = TRUE)
