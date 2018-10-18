@@ -15,6 +15,7 @@
 #' @import grid
 #' @import gtable
 #' @import svglite
+#' @import stats
 gseaPlot <- function(es, rankBy, selectedGenes, width, height,
                      vertical=FALSE,
                      addHeatmap=FALSE,
