@@ -1,8 +1,8 @@
-commit eedd55e3c21bebb2ab9d4b7c958a2c5d2e623686
-Merge: 2244ba5 007ae7d
+commit 095fd9b15d0cf3abeee01da21e9413e44704b63e
+Merge: eedd55e 11dea03
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Wed Oct 17 04:26:43 2018 +0300
+Date:   Thu Oct 18 14:22:50 2018 +0300
 
-    Merge pull request #54 from egormkn/develop
+    Merge pull request #55 from egormkn/develop
     
-    Updated arrows for Plotly.annotations
+    Fixed Plotly tooltips

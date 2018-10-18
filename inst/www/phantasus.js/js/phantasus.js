@@ -17847,7 +17847,7 @@ phantasus.PcaPlotTool.prototype = {
         size = _.map(phantasus.VectorUtil.toArray(sizeByVector), sizeFunction);
       }
 
-      if (textByVector && drawLabels) {
+      if (textByVector) {
         text = phantasus.VectorUtil.toArray(textByVector);
       }
 
@@ -17928,7 +17928,7 @@ phantasus.PcaPlotTool.prototype = {
           symbol: shapes
         },
         name: "",
-        mode: "markers+text",
+        mode: drawLabels ? "markers+text" : "markers",
         text: text,
         textfont: {
           size: 11
