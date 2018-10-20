@@ -17847,7 +17847,7 @@ phantasus.PcaPlotTool.prototype = {
         size = _.map(phantasus.VectorUtil.toArray(sizeByVector), sizeFunction);
       }
 
-      if (textByVector && drawLabels) {
+      if (textByVector) {
         text = phantasus.VectorUtil.toArray(textByVector);
       }
 
@@ -17928,7 +17928,7 @@ phantasus.PcaPlotTool.prototype = {
           symbol: shapes
         },
         name: "",
-        mode: "markers+text",
+        mode: drawLabels ? "markers+text" : "markers",
         text: text,
         textfont: {
           size: 11
@@ -18052,6 +18052,7 @@ phantasus.PcaPlotTool.getPlotlyDefaults = function () {
     displaylogo: false,
     staticPlot: false,
     showHints: true,
+    doubleClick: "reset",
     modeBarButtonsToRemove: ['sendDataToCloud', 'zoomIn2d', 'zoomOut2d', 'hoverCompareCartesian', 'hoverClosestCartesian', 'autoScale2d']
   };
   return {

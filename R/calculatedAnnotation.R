@@ -3,16 +3,25 @@
 #' \code{calculatedAnnotation} adds a column calculated by operation
 #'
 #' @param es ExpressionSet object.
+#'
 #' @param operation Name of the operation to perform calculation
-#' @param columns List of specified columns' indices (optional), indices start from 0#'
+#'
+#' @param columns List of specified columns' indices (optional),
+#' indices start from 0#'
+#'
 #' @param rows List of specified rows' indices (optional), indices start from 0
+#'
 #' @param name Name of the new annotation
+#'
 #' @param isColumns Apply fn to columns
+#'
+#' @return Nothing. Annotated dataset will be assigned to es in environment
 #'
 #' @import Biobase
 #'
 
-calculatedAnnotation <- function (es, operation, rows = c(), columns = c(), isColumns = FALSE, name = NULL) {
+calculatedAnnotation <- function (es, operation, rows = c(),
+                                  columns = c(), isColumns = FALSE, name = NULL) {
     rows <- getIndicesVector(rows, nrow(exprs(es)))
     columns <- getIndicesVector(columns, ncol(exprs(es)))
 

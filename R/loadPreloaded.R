@@ -73,7 +73,7 @@ loadPreloaded <- function(name, exactName = NULL) {
     }
     f <- tempfile(pattern = "gse", tmpdir = getwd(), fileext = ".bin")
     writeBin(protolite::serialize_pb(files), f)
-    jsonlite::toJSON(f)
+    jsonlite::toJSON(basename(f))
   } else {
     stop("No such file")
   }

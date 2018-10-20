@@ -7,7 +7,7 @@ probeDataset <- function (es, query) {
     response[['fvarLabels']] <- colnames(fData(es))
     response[['probe']] <- exprs(es)[exprsIndices]
     response[['fdata']] <- list()
-    for(i in 1:nrow(fDataQuery)) {
+    for(i in seq_len(nrow(fDataQuery))) {
         row <- fDataQuery[i,]
         response[['fdata']][[row$name]] <- fData(es)[[row$name]][row$indices[[1]]]
     }

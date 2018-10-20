@@ -8,13 +8,15 @@
 #' @param fn select/merge function
 #' @param fields fields to unique on
 #'
-#' @export
+#' @return Nothing. Collapsed dataset will be assigned to es in environment
+#'
 #' @import ccaPP
 #'
 #' @examples
 #' \dontrun{
-#' es <- getGSE('GSE53986')
-#' collapseDataset(es, isRows = TRUE, selectOne = TRUE, fn = mean, fields = c('Gene ID', 'Gene symbol'))
+#' es <- getGSE('GSE53986')[[1]]
+#' collapseDataset(es, isRows = TRUE, selectOne = TRUE,
+#' fn = mean, fields = c('Gene ID', 'Gene symbol'))
 #' }
 #'
 collapseDataset <- function (es, isRows = TRUE, selectOne = FALSE, fn, fields) {
@@ -64,7 +66,7 @@ collapseDatasetImpl <- function (es, isRows = TRUE, selectOne = FALSE, fn, field
         colnames(collapsedExprs) <- colnames(res)
         exprs(res) <- collapsedExprs
         fields <- colnames(oldAnnotation)[which(colnames(oldAnnotation) %in% fields)]
-        newAnnotaion <- oldAnnotation[, which(colnames(oldAnnotation) %in% fields), drop=F]
+        newAnnotaion <- oldAnnotation[, which(colnames(oldAnnotation) %in% fields), drop=FALSE]
         rownames(newAnnotaion) <- rownames(oldAnnotation)
         colnames(newAnnotaion) <- fields
         if (isRows) {

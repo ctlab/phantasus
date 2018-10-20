@@ -17,13 +17,17 @@ collapseDataset(es, isRows = TRUE, selectOne = FALSE, fn, fields)
 
 \item{fields}{fields to unique on}
 }
+\value{
+Nothing. Collapsed dataset will be assigned to es in environment
+}
 \description{
 \code{collapseDataset} performs a collapse action on expression set
 }
 \examples{
 \dontrun{
-es <- getGSE('GSE53986')
-collapseDataset(es, isRows = TRUE, selectOne = TRUE, fn = mean, fields = c('Gene ID', 'Gene symbol'))
+es <- getGSE('GSE53986')[[1]]
+collapseDataset(es, isRows = TRUE, selectOne = TRUE,
+fn = mean, fields = c('Gene ID', 'Gene symbol'))
 }
 
 }

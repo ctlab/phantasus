@@ -1,5 +1,8 @@
-commit 2244ba5a44b6e812d7a92dc2d752d81d7442a09b
+commit 095fd9b15d0cf3abeee01da21e9413e44704b63e
+Merge: eedd55e 11dea03
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Wed Oct 10 14:12:59 2018 +0300
+Date:   Thu Oct 18 14:22:50 2018 +0300
 
-    Filters fix.
+    Merge pull request #55 from egormkn/develop
+    
+    Fixed Plotly tooltips

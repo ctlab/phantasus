@@ -49,7 +49,7 @@ loadGEO <- function(name, type = NA) {
     }
     f <- tempfile(pattern = "gse", tmpdir = getwd(), fileext = ".bin")
     writeBin(protolite::serialize_pb(files), f)
-    jsonlite::toJSON(f)
+    jsonlite::toJSON(basename(f))
 }
 
 #' Load ExpressionSet from GEO Datasets

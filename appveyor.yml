@@ -33,7 +33,7 @@ test_script:
   # Output useful info for debugging.
   - node --version
   - npm --version
-  # - inst/test_js.sh
+  - bash.exe inst/test_js.sh
 
 on_failure:
   - 7z a failure.zip *.Rcheck\*

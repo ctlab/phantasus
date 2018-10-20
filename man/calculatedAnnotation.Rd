@@ -14,11 +14,15 @@ calculatedAnnotation(es, operation, rows = c(), columns = c(),
 
 \item{rows}{List of specified rows' indices (optional), indices start from 0}
 
-\item{columns}{List of specified columns' indices (optional), indices start from 0#'}
+\item{columns}{List of specified columns' indices (optional),
+indices start from 0#'}
 
 \item{isColumns}{Apply fn to columns}
 
 \item{name}{Name of the new annotation}
+}
+\value{
+Nothing. Annotated dataset will be assigned to es in environment
 }
 \description{
 \code{calculatedAnnotation} adds a column calculated by operation
