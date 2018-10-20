@@ -17,12 +17,6 @@ A warning could appear that the repository contain submodules. This warning
 can be safely ignored.
 
 
-To install `phantasus` on R 3.4, use r-3.4 branch:
-
-```{r}
-devtools::install_github("ctlab/phantasus", ref="r-3.4")
-```
-
 ## Running
 
 In R:
@@ -36,36 +30,20 @@ Open `http://localhost:8000` in your browser.
 
 ## System dependencies
 
-There are several system packages that have to be installed on the system. The names of these packages will be displayed during installation. On Ubuntu can install them beforehand and alltogether using command:
+There are several system packages that have to be installed on the system. The
+names of these packages will be displayed during installation. On Ubuntu can
+install them beforehand and all together using command:
 
 ```{bash}
 sudo apt-get install libapparmor-dev libprotobuf-dev protobuf-compiler libcurl4-openssl-dev libssl-dev libxml2-dev
 ```
 
-## Installation example (CentOS 7)
+## Docker 
 
-Update packages and install `R` and dependencies:
-```
-yum update
-yum install openssl-devel protobuf-compiler R R-Rcpp R-Rcpp-devel libcurl-devel libxml2-devel protobuf-devel git screen
-```
+To simplify deployment phantasus Docker image can be used. It is build regularly and is available at https://hub.docker.com/r/dzenkova/phantasus 
+and can be run with the following commands:
 
-Install `devtools` and `bioclite`:
+```{bash}
+docker pull dzenkova/phantasus
+docker run -t -d dzenkova/phantasus
 ```
-R -e 'install.packages("devtools", repos="https://cloud.r-project.org")'
-R -e 'if (!requireNamespace("BiocManager", quietly=TRUE)); BiocManager::install()'
-     'install.packages("BiocManager"); BiocManager::install()'
-```
-
-Install `phantasus`:
-```
-R -e 'devtools::install_github("ctlab/phantasus", ref="r-3.4")'
-```
-
-Run `phantasus` at 80 port in screen:
-```
-screen -S phantasus-server
-R -e 'library(phantasus); servePhantasus("0.0.0.0", 80, cacheDir="/var/phantasus/cache")'
-```
-
-Check `http://0.0.0.0`
