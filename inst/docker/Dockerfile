@@ -19,6 +19,10 @@ RUN apt-get -y update && \
         libxml2-dev \
         locales
 
+
+RUN add-apt-repository -y 'deb http://cloud.r-project.org/bin/linux/ubuntu xenial-cran35/' && apt-get -y update
+RUN apt-get install -y --allow-unauthenticated r-base r-base-dev
+
 RUN apt-add-repository -y 'deb http://ppa.launchpad.net/maarten-fonville/protobuf/ubuntu zesty main' && \
     apt-get -y update
 
@@ -26,28 +30,18 @@ RUN apt-get -y --allow-unauthenticated install \
     libprotobuf-dev \
     protobuf-compiler
 
-
-#RUN apt-add-repository -y ppa:marutter/rrutter3.5 && \
-#    apt-get update
-
-RUN apt-add-repository -y ppa:marutter/rrutter && \
-    apt-get update
-
-RUN apt-get install -y r-base
-
 RUN R -e 'install.packages("protolite", repo = "https://cran.rstudio.com/")'
 
-RUN apt-add-repository -y ppa:opencpu/opencpu-2.0 && \
-    apt-get update && \
-    apt-get install -y --allow-unauthenticated \
-        opencpu-lib
-
-
+#RUN apt-add-repository -y ppa:opencpu/opencpu-2.0 && \
+#    apt-get update && \
+#    apt-get install -y --allow-unauthenticated \
+#        opencpu-lib
 #RUN R -e 'install.packages("opencpu", repo = "https://cran.rstudio.com/")'
-#
-#
+
 RUN touch /etc/apache2/sites-available/opencpu2.conf
 RUN printf "ProxyPass /ocpu/ http://localhost:8001/ocpu/\nProxyPassReverse /ocpu/ http://localhost:8001/ocpu\n" >> /etc/apache2/sites-available/opencpu2.conf
+RUN sed -i 's/DocumentRoot \/var\/www\/html/RedirectMatch ^\/$ \/phantasus\//g' /etc/apache2/sites-available/000-default.conf
+RUN cat /etc/apache2/sites-available/000-default.conf
 RUN a2ensite opencpu2
 
 #RUN sh -c 'echo "deb http://cran.rstudio.com/bin/linux/ubuntu xenial/" >> /etc/apt/sources.list'

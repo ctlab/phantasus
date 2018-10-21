@@ -45,5 +45,5 @@ and can be run with the following commands:
 
 ```{bash}
 docker pull dzenkova/phantasus
-docker run -t -d dzenkova/phantasus
+docker run -t -d -p 80:80 dzenkova/phantasus
 ```
