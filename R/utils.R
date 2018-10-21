@@ -162,7 +162,7 @@ writeToList <- function(es) {
 }
 
 safeLog2 <- function (value) {
-    if (value <= 0) {
+    if (!is.na(value) && value <= 0) {
         return(0)
     } else {
         return(log2(value))
