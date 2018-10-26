@@ -17,7 +17,8 @@ RUN apt-get -y update && \
         apache2 \
         libapparmor-dev \
         libxml2-dev \
-        locales
+        locales \
+        wget
 
 
 RUN add-apt-repository -y 'deb http://cloud.r-project.org/bin/linux/ubuntu xenial-cran35/' && apt-get -y update
@@ -74,5 +75,5 @@ RUN mkdir -p /var/phantasus/preloaded
 RUN mkdir -p /var/phantasus/ocpu-root
 
 CMD service apache2 start && \
-   R -e 'library(phantasus); servePhantasus("0.0.0.0", 8001, cacheDir="/var/phantasus/cache", preloadedDir="/var/phantasus/preloaded")'
+   R -e 'library(phantasus); servePhantasus("0.0.0.0", 8001, openInBrowser = F, cacheDir="/var/phantasus/cache", preloadedDir="/var/phantasus/preloaded")'
 

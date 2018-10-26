@@ -1,0 +1,12 @@
+version: "2"
+services:
+    phantasus:
+        image: dzenkova/phantasus:latest
+        ports:
+            - "80:80"
+        expose:
+            - 80
+        volumes: # Specify folder before ":" if needed
+            - ./archs4:/var/phantasus/cache/archs4
+            - ./phantasus-runtime:/var/phantasus
+
