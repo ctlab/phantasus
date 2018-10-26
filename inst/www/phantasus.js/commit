@@ -1,8 +1,8 @@
-commit 095fd9b15d0cf3abeee01da21e9413e44704b63e
-Merge: eedd55e 11dea03
+commit 44cb58d233a0eea51d15a1ee723f5c4aba1da5fc
+Merge: f60a291 095fd9b
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Thu Oct 18 14:22:50 2018 +0300
+Date:   Thu Oct 25 18:19:40 2018 +0300
 
-    Merge pull request #55 from egormkn/develop
+    Merge pull request #56 from ctlab/develop
     
-    Fixed Plotly tooltips
+    Develop

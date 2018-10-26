@@ -1,3 +1,7 @@
+CHANGES IN VERSION 1.2.0
+* Bioconductor release
+* Minor bug fixes
+
 CHANGES IN VERSION 1.1.4
 * PCA plot uses annotation color scheme
 * Rename annotation column implemented
