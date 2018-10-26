@@ -15485,6 +15485,8 @@ phantasus.gseaTool.prototype = {
     this.promise = $.Deferred();
 
     var selectedDataset = project.getSelectedDataset();
+    var parentDataset = selectedDataset.dataset;
+
     var fullDataset = project.getFullDataset();
 
     if (selectedDataset.getRowCount() === fullDataset.getRowCount()) {
@@ -15494,7 +15496,8 @@ phantasus.gseaTool.prototype = {
     }
 
     var idxs = selectedDataset.rowIndices.map(function (idx) {
-      return idx + 1; // #' @param selectedGenes indexes of selected genes (starting from one, in the order of fData)
+      return parentDataset.rowIndices[idx] + 1;
+      //return idx + 1; // #' @param selectedGenes indexes of selected genes (starting from one, in the order of fData)
     });
 
     var self = this;
@@ -18762,7 +18765,9 @@ phantasus.AbstractCanvas.prototype = {
         oc.clearRect(0, 0, width, height);
         this.draw(clip, oc);
       }
-      context.drawImage(this.offscreenCanvas, 0, 0, width, height);
+      if (width > 0 && height > 0) {
+        context.drawImage(this.offscreenCanvas, 0, 0, width, height);
+      }
     } else {
       this.draw(clip, context);
     }

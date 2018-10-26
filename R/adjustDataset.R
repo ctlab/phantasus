@@ -43,21 +43,20 @@ adjustDataset <- function (es, scaleColumnSum = NULL,
     }
 
     if (log2) {
-        exprs(es) <- apply(exprs(es), c(1,2), function (value) {
-            safeLog2(value)
-        })
+        m <- exprs(es)
+        # ignore warning for log x when x < 0
+        exprs(es) <- ifelse(m < 0 | is.na(m), 0, suppressWarnings(log2(m)))
     }
 
     if (onePlusLog2) {
-        exprs(es) <- apply(exprs(es), c(1,2), function (value) {
-            safeLog2(value + 1)
-        })
+        m <- exprs(es)
+        # ignore warning for log x when x < 0
+        exprs(es) <- ifelse(m < 0 | is.na(m), 0, suppressWarnings(log2(m + 1)))
     }
 
     if (inverseLog2) {
-        exprs(es) <- apply(exprs(es), c(1,2), function (value) {
-            2^value
-        })
+        m <- exprs(es)
+        exprs(es) <- 2^m
     }
 
     if (quantileNormalize) {

@@ -1,4 +1,7 @@
-CHANGES IN VERSION 1.1.4
+CHANGES IN VERSION 1.1.6
+* Minor bug fixes
+
+CHANGES IN VERSION 1.1.5
 * PCA plot uses annotation color scheme
 * Rename annotation column implemented
 * log2(1 + x) adjust tool added
