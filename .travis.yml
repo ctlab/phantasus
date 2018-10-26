@@ -4,6 +4,7 @@ r:
   - bioc-release
 # warnings_are_errors: true
 sudo: false
+fortran: false
 cache: packages
 
 services:
