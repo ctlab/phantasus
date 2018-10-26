@@ -41,9 +41,34 @@ sudo apt-get install libapparmor-dev libprotobuf-dev protobuf-compiler libcurl4-
 ## Docker 
 
 To simplify deployment phantasus Docker image can be used. It is build regularly and is available at https://hub.docker.com/r/dzenkova/phantasus 
-and can be run with the following commands:
+You can run with the following commands:
 
 ```{bash}
 docker pull dzenkova/phantasus
 docker run -t -d -p 80:80 dzenkova/phantasus
 ```
+
+Phantasus will be available at http://localhost
+
+## Docker compose
+
+Docker compose is available [here](docker-compose.yml) 
+You can run with the following command:
+
+```{bash}
+docker-compose up -d
+```
+
+Phantasus will be available at http://localhost
+
+## ARCHS4 
+
+Phantasus tries to find ARCHS4 .h5 files at cacheDir/archs4
+If you are running phantasus using our docker-compose then you can easily download ARCHS4 (~10GB) using with the following commands:
+
+```{bash}
+docker-compose run phantasus wget -P /var/phantasus/cache/archs4 https://s3.amazonaws.com/mssm-seq-matrix/human_matrix.h5
+docker-compose run phantasus wget -P /var/phantasus/cache/archs4 https://s3.amazonaws.com/mssm-seq-matrix/mouse_matrix.h5
+```
+
+Beware that downloading ARCHS4 without volumes makes no sense.
