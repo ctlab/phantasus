@@ -143,7 +143,7 @@ getGDS <- function(name, destdir = tempdir(),
 #' @param cacheDir base directory for cache
 #' @return list of .h5 files
 getArchs4Files <- function(cacheDir) {
-    list.files(file.path(cacheDir), '*.h5', full.names = TRUE)
+    list.files(paste(file.path(cacheDir), 'archs4', sep = .Platform$file.sep), '*.h5', full.names = TRUE)
 }
 
 
@@ -170,13 +170,10 @@ loadFromARCHS4 <- function(es, archs4_files) {
         }
 
         genes <- as.character(h5read(destfile, "meta/genes"))
-        geneIndexes <- which(genes != "NA") # happens in ARCHS4 version from Jun 2018
-        genes <- genes[geneIndexes]
-
 
         expression <- h5read(destfile,
                              "data/expression",
-                             index=list(geneIndexes,
+                             index=list(seq_len(length(genes)),
                                         stats::na.omit(sampleIndexes)))
         rownames(expression) <- genes
         colnames(expression) <- colnames(es)[!is.na(sampleIndexes)]
