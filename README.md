@@ -63,12 +63,33 @@ Phantasus will be available at http://localhost
 
 ## ARCHS4 
 
-Phantasus tries to find ARCHS4 .h5 files at cacheDir/archs4
-If you are running phantasus using our docker-compose then you can easily download ARCHS4 (~10GB) using with the following commands:
+Phantasus tries to find ARCHS4 .h5 files at cacheDir/archs4  
+
+There are three different ways to obtain ARCHS4 files depending on how you are running Phantasus:
+
+### Bare install
+
+You can download ARCHS4 (~10GB) with the following command:
+```{bash}
+R -e 'library(phantasus); updateARCHS4("path/to/cacheDir/archs4")'
+```
+Don't forget to specify the path to cacheDir/arcsh4.
+
+### Docker-compose (preferred way)
+
+If you are running phantasus using our docker-compose then you can easily download ARCHS4 (~10GB) with the following command:
 
 ```{bash}
-docker-compose run phantasus wget -P /var/phantasus/cache/archs4 https://s3.amazonaws.com/mssm-seq-matrix/human_matrix.h5
-docker-compose run phantasus wget -P /var/phantasus/cache/archs4 https://s3.amazonaws.com/mssm-seq-matrix/mouse_matrix.h5
+docker-compose run phantasus R -e 'library(phantasus); updateARCHS4();'
 ```
+If you happen to have ARCHS4 already downloaded on your PC then you can just sepcify path to folder in archs4 volume at docker-compose.yml
 
-Beware that downloading ARCHS4 without volumes makes no sense.
+### Docker
+
+If you are running phantasus in docker then you can download ARCHS4 (~10GB) with the following command:
+```{bash}
+docker exec -it phantasus_container R -e 'library(phantasus); updateARCHS4();'
+```
+Where "phantasus_container" is the name or hash of running container with phantasus.
+
+Beware that downloading ARCHS4 without volumes makes no sense (see docker-compose.yml).

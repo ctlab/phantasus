@@ -161,10 +161,12 @@ writeToList <- function(es) {
   res
 }
 
-safeLog2 <- function (value) {
-    if (!is.na(value) && value <= 0) {
-        return(0)
-    } else {
-        return(log2(value))
-    }
+updateARCHS4 <- function (cacheDir = "/var/phantasus/cache/archs4") {
+    download.file(url = "https://s3.amazonaws.com/mssm-seq-matrix/human_matrix.h5",
+                  destfile = paste(cacheDir, "human_matrix.h5", sep=.Platform$file.sep),
+                  mode = "wb")
+
+    download.file(url = "https://s3.amazonaws.com/mssm-seq-matrix/mouse_matrix.h5",
+                  destfile = paste(cacheDir, "mouse_matrix.h5", sep=.Platform$file.sep),
+                  mode = "wb")
 }
