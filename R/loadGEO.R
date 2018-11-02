@@ -312,8 +312,11 @@ getGSE <- function(name, destdir = tempdir(),
     stub <- gsub("\\d{1,3}$", "nnn", GEO, perl = TRUE)
     filename <- sprintf("%s_series_matrix.txt.gz", name)
     gdsurl <- "%s/geo/series/%s/%s/matrix/%s"
+    gdsDirPath <- "%s/geo/series/%s/%s/matrix"
 
-    destfile <- file.path(destdir, filename)
+    destfile <- file.path(sprintf(gdsurl, destdir, stub, GEO, filename))
+    fullGEODirPath <- file.path(sprintf(gdsDirPath, destdir, stub, GEO))
+    dir.create(fullGEODirPath, showWarnings = FALSE, recursive = T)
 
     infile <- file.exists(destfile)
 
@@ -338,9 +341,10 @@ getGSE <- function(name, destdir = tempdir(),
     }
 
     if (infile && file.size(destfile) > 0) {
-        ess <- list(suppressWarnings(getGEO(filename = destfile,
-                                                destdir = destdir,
-                                                AnnotGPL = TRUE)))
+        ess <- list(suppressWarnings(getGEO(filename = destfile,destdir = fullGEODirPath, getGPL = FALSE, AnnotGPL = FALSE)))
+        for (i in seq_len(length(ess))) {
+            ess[[i]] <- annotateFeatureData(ess[[i]])
+        }
     } else {
         gpls <- fromJSON(checkGPLs(name))
         if (length(gpls) == 0) {
@@ -646,5 +650,48 @@ inferCondition <- function(es) {
         pData(es)$condition <- newAnnot$condition
         pData(es)$replicate <- newAnnot$replicate
     }
+    es
+}
+
+
+getGPLAnnotation <- function (GPL, destdir = tempdir(), mirrorPath) {
+    GPL <- toupper(GPL)
+    stub = gsub('\\d{1,3}$','nnn',GPL,perl=TRUE)
+    GPLDirPath <- '%s/geo/platforms/%s/%s/annot'
+    fullGPLDirPath <- file.path(sprintf(GPLDirPath, destdir, stub, GPL))
+
+    dir.create(fullGPLDirPath, showWarnings = FALSE, recursive = T)
+
+    return(suppressWarnings(getGEO(GPL, destdir = fullGPLDirPath, AnnotGPL = TRUE)))
+}
+
+annotateFeatureData <- function (es) {
+    platform <- levels(es$platform_id)[1]
+    platformParsed <- getGPLAnnotation(platform)
+
+    #https://github.com/seandavi/GEOquery/blob/master/R/parseGEO.R#L569
+    #############################
+    vmd <- Columns(platformParsed)
+    dat <- Table(platformParsed)
+    ## GEO uses "TAG" instead of "ID" for SAGE GSE/GPL entries, but it is apparently
+    ##     always the first column, so use dat[,1] instead of dat$ID
+    ## The next line deals with the empty GSE
+    tmpnames=character(0)
+    if(ncol(dat)>0) {
+        tmpnames=as.character(dat[,1])
+    }
+    ## Fixed bug caused by an ID being "NA" in GSE15197, for example
+    tmpnames[is.na(tmpnames)]="NA"
+    rownames(dat) <- make.unique(tmpnames)
+    ## Apparently, NCBI GEO uses case-insensitive matching
+    ## between platform IDs and series ID Refs ???
+    dat <- dat[match(tolower(rownames(es)),tolower(rownames(dat))),]
+    # Fix possibility of duplicate column names in the
+    # GPL files; this is prevalent in the Annotation GPLs
+    rownames(vmd) <- make.unique(colnames(Table(platformParsed)))
+    colnames(dat) <- rownames(vmd)
+    ##############################
+
+    featureData(es) <- new('AnnotatedDataFrame',data=dat,varMetadata=vmd)
     es
 }
