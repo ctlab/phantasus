@@ -87,7 +87,7 @@ getGDS <- function(name, destdir = tempdir(),
     infile <- file.exists(destfile)
 
     if (!file.exists(destfile)) {
-        tempDestFile <- tempfile(paste0(filename, ".load"), tmpdir=destdir)
+        tempDestFile <- tempfile(paste0(filename, ".load"), tmpdir=fullGEODirPath)
         tryCatch({
             utils::download.file(sprintf(gdsurl, mirrorPath,
                                          stub, name, filename),
@@ -106,7 +106,7 @@ getGDS <- function(name, destdir = tempdir(),
         message(paste("Loading from locally found file", destfile))
     }
 
-    l <- suppressWarnings(getGEO(GEO = name, destdir = destdir))
+    l <- suppressWarnings(getGEO(GEO = name, destdir = fullGEODirPath))
     # extracting all useful information on dataset
     table <- methods::slot(l, "dataTable")
 
@@ -306,19 +306,19 @@ getGSE <- function(name, destdir = tempdir(),
 
     stub <- gsub("\\d{1,3}$", "nnn", GEO, perl = TRUE)
     filename <- sprintf("%s_series_matrix.txt.gz", name)
-    gdsurl <- "%s/geo/series/%s/%s/matrix/%s"
-    gdsDirPath <- "%s/geo/series/%s/%s/matrix"
+    gseurl <- "%s/geo/series/%s/%s/matrix/%s"
+    gseDirPath <- "%s/geo/series/%s/%s/matrix"
 
-    destfile <- file.path(sprintf(gdsurl, destdir, stub, GEO, filename))
-    fullGEODirPath <- file.path(sprintf(gdsDirPath, destdir, stub, GEO))
+    destfile <- file.path(sprintf(gseurl, destdir, stub, GEO, filename))
+    fullGEODirPath <- file.path(sprintf(gseDirPath, destdir, stub, GEO))
     dir.create(fullGEODirPath, showWarnings = FALSE, recursive = T)
 
     infile <- file.exists(destfile)
 
     if (!file.exists(destfile)) {
-        tempDestFile <- tempfile(paste0(filename, ".load"), tmpdir=destdir)
+        tempDestFile <- tempfile(paste0(filename, ".load"), tmpdir=fullGEODirPath)
         tryCatch({
-            utils::download.file(sprintf(gdsurl, mirrorPath,
+            utils::download.file(sprintf(gseurl, mirrorPath,
                                          stub, GEO, filename),
                                     destfile = tempDestFile,
                                  method="libcurl")
@@ -338,7 +338,7 @@ getGSE <- function(name, destdir = tempdir(),
     if (infile && file.size(destfile) > 0) {
         ess <- list(suppressWarnings(getGEO(filename = destfile,destdir = fullGEODirPath, getGPL = FALSE, AnnotGPL = FALSE)))
         for (i in seq_len(length(ess))) {
-            ess[[i]] <- annotateFeatureData(ess[[i]])
+            ess[[i]] <- annotateFeatureData(ess[[i]], destdir)
         }
     } else {
         gpls <- fromJSON(checkGPLs(name))
@@ -649,7 +649,7 @@ inferCondition <- function(es) {
 }
 
 
-getGPLAnnotation <- function (GPL, destdir = tempdir(), mirrorPath) {
+getGPLAnnotation <- function (GPL, destdir = tempdir()) {
     GPL <- toupper(GPL)
     stub = gsub('\\d{1,3}$','nnn',GPL,perl=TRUE)
     GPLDirPath <- '%s/geo/platforms/%s/%s/annot'
@@ -660,9 +660,9 @@ getGPLAnnotation <- function (GPL, destdir = tempdir(), mirrorPath) {
     return(suppressWarnings(getGEO(GPL, destdir = fullGPLDirPath, AnnotGPL = TRUE)))
 }
 
-annotateFeatureData <- function (es) {
+annotateFeatureData <- function (es, destdir = tempdir()) {
     platform <- levels(es$platform_id)[1]
-    platformParsed <- getGPLAnnotation(platform)
+    platformParsed <- getGPLAnnotation(platform, destdir)
 
     #https://github.com/seandavi/GEOquery/blob/master/R/parseGEO.R#L569
     #############################
