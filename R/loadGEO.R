@@ -78,10 +78,14 @@ getGDS <- function(name, destdir = tempdir(),
     stub <- gsub("\\d{1,3}$", "nnn", name, perl = TRUE)
     filename <- sprintf("%s.soft.gz", name)
     gdsurl <- "%s/geo/datasets/%s/%s/soft/%s"
+    gdsDirPath <- "%s/geo/datasets/%s/%s/soft"
 
-    destfile <- file.path(destdir, filename)
+    destfile <- file.path(sprintf(gdsurl, destdir, stub, name, filename))
+    fullGEODirPath <- file.path(sprintf(gdsDirPath, destdir, stub, name))
+    dir.create(fullGEODirPath, showWarnings = FALSE, recursive = T)
 
-    infile <- FALSE
+    infile <- file.exists(destfile)
+
     if (!file.exists(destfile)) {
         tempDestFile <- tempfile(paste0(filename, ".load"), tmpdir=destdir)
         tryCatch({
@@ -102,16 +106,7 @@ getGDS <- function(name, destdir = tempdir(),
         message(paste("Loading from locally found file", destfile))
     }
 
-    if (infile && file.size(destfile) > 0) {
-        l <- suppressWarnings(getGEO(filename = destfile,
-                                        destdir = destdir,
-                                        AnnotGPL = TRUE))
-    } else {
-        l <- suppressWarnings(getGEO(GEO = name,
-                                    destdir = destdir,
-                                    AnnotGPL = TRUE))
-    }
-
+    l <- suppressWarnings(getGEO(GEO = name, destdir = destdir))
     # extracting all useful information on dataset
     table <- methods::slot(l, "dataTable")
 
