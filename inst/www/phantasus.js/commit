@@ -1,8 +1,5 @@
-commit 6a14912d7f0431a2c1a82974c79d46b830b1cd64
-Merge: 44cb58d 2c713b6
+commit 110e502eff36a8101a2b994118e4e28d8a94f5f8
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Mon Oct 29 12:28:02 2018 +0300
+Date:   Fri Nov 9 17:12:05 2018 +0300
 
-    Merge pull request #57 from ctlab/develop
-    
-    Hotfixes
+    Dataset history implemented
