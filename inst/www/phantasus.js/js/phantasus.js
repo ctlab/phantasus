@@ -12483,6 +12483,7 @@ phantasus.LandingPage = function (pageOptions) {
 
   html.push('<h4>Open your own file</h4>');
   html.push('<div data-name="formRow" class="center-block"></div>');
+  html.push('<div data-name="historyRow" class="center-block"></div>');
   html.push('<div style="display: none;" data-name="preloadedDataset"><h4>Or select a preloaded' +
     ' dataset</h4></div>');
   html.push('</div>');
@@ -12528,6 +12529,20 @@ phantasus.LandingPage = function (pageOptions) {
     this.tabManager.$tabContent.appendTo($(this.pageOptions.el));
   }
 
+  this.$historyDatsetsEl = $el.find('[data-name=historyRow]');
+  this.datasetHistory = new phantasus.DatasetHistory();
+
+  this.datasetHistory.on('open', function (evt) {
+    var dataset = evt.dataset;
+
+    _this.open({dataset: dataset});
+  });
+
+  this.datasetHistory.on('changed', function () {
+    _this.datasetHistory.render(_this.$historyDatsetsEl);
+  });
+
+  this.datasetHistory.render(this.$historyDatsetsEl);
 }
 ;
 
@@ -12601,6 +12616,7 @@ phantasus.LandingPage.prototype = {
 
     // console.log(optionsArray);
     for (var i = 0; i < optionsArray.length; i++) {
+      var originalOptions = _.clone(optionsArray[i]);
       var options = optionsArray[i];
       options.tabManager = _this.tabManager;
       options.focus = i === 0;
@@ -12609,8 +12625,10 @@ phantasus.LandingPage.prototype = {
 
       if (options.dataset.options && options.dataset.options.isGEO) {
         createGEOHeatMap(options);
+        _this.datasetHistory.store(originalOptions)
       } else if (options.dataset.options && options.dataset.options.preloaded) {
         createPreloadedHeatMap(options);
+        _this.datasetHistory.store(originalOptions)
       }
       else {
         // console.log("before loading heatmap from landing_page", options);
@@ -22080,6 +22098,76 @@ phantasus.ConditionalRenderingUI.prototype = {
   }
 };
 
+
+phantasus.DatasetHistory = function () {};
+
+phantasus.DatasetHistory.prototype = {
+  STORAGE_KEY: 'dataset_history',
+  STORAGE_LIMIT: 5,
+
+  render: function ($parent) {
+    var _this = this;
+
+    $parent.empty();
+    $('<h4>Or select dataset from your history </h4>').appendTo($parent);
+
+    var currentHistory = this.get();
+
+    if (!_.size(currentHistory)) {
+      $('<h5>But apparently there is no datasets in your history. Great time to start new journey</h5>').appendTo($parent);
+    } else {
+      var ul = $('<ul></ul>');
+      _.each(currentHistory, function (elem, idx) {
+        var li = $('<li><a href="#" data-idx="' + idx + '">' + elem.name + _this.datasetTypeToString(elem.options.dataset) +'</a></li>');
+        li.appendTo(ul);
+      });
+      ul.appendTo($parent);
+
+      ul.on('click', 'a', function (evt) {
+        evt.preventDefault();
+        evt.stopPropagation();
+
+        var clickedIndex = $(evt.target).data('idx');
+
+        _this.remove(clickedIndex);
+        _this.trigger('open', currentHistory[clickedIndex].options);
+      });
+    }
+  },
+
+  store: function (datasetOpenOptions) {
+    var current = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '[]');
+    current.unshift({name: datasetOpenOptions.dataset.file, options: datasetOpenOptions});
+    current.length = Math.min(current.length, this.STORAGE_LIMIT);
+
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(current));
+
+    this.trigger('changed');
+  },
+
+  remove: function (idx) {
+    var current = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '[]');
+    current.splice(idx, 1);
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(current));
+  },
+
+  get: function () {
+    return JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '[]');
+  },
+
+  datasetTypeToString: function (dataset) {
+    if (dataset.options.isGEO) {
+      return " - GEO dataset";
+    } else if (dataset.options.preloaded) {
+      return " - preloaded dataset";
+    } else {
+      return " - unknown dataset";
+    }
+  }
+};
+
+phantasus.Util.extend(phantasus.DatasetHistory, phantasus.Events);
+
 phantasus.DendrogramUtil = {};
 phantasus.DendrogramUtil.setIndices = function (root, counter) {
   counter = counter || 0;
@@ -24473,22 +24561,24 @@ phantasus.FormBuilder.prototype = {
           }
 
           _this.$form.find('#' + name + '_url')
-          .css('display',
-            showUrlInput ? '' : 'none');
+              .css('display', showUrlInput ? 'block' : 'none');
+
           _this.$form.find('[name=' + name + '_text]')
-          .css('display',
-            showTextInput ? '' : 'none');
+              .css('display', showTextInput ? 'block' : 'none');
+
           _this.$form.find('#' + name + '_geo')
-              .css('display',
-                showGSEInput ? '' : 'none');
+              .css('display', showGSEInput ? 'block' : 'none');
+
           _this.$form.find('#' + name + '_pre')
-              .css('display',
-                showPreInput ? '' : 'none');
+              .css('display', showPreInput ? 'block' : 'none');
         });
 
       // URL
       var URL_dispatcher = function (form) {
-        var text = $.trim(form.find('[name=' + name + '_url]').val());;
+        var $div = form.find('#' + name + '_url');
+        var $input = form.find('[name=' + name + '_url]');
+
+        var text = $.trim($input.val());
         if (isMultiple) {
           text = text.split(',').filter(function (t) {
             t = $.trim(t);
@@ -24499,6 +24589,9 @@ phantasus.FormBuilder.prototype = {
           name: name,
           value: text
         });
+
+        $input.val('');
+        $div.css('display', 'none');
       };
 
       //??
@@ -24514,7 +24607,10 @@ phantasus.FormBuilder.prototype = {
       });
       // GEO
       var geo_dispatcher = function (form) {
-        var text = $.trim(form.find('[name=' + name + '_geo]').val());
+        var $div = form.find('#' + name + '_geo');
+        var $input = form.find('[name=' + name + '_geo]');
+
+        var text = $.trim($input.val());
           // console.log('environment', evt);
           // console.log('object to trigger with result', _this, 'name', name, 'text', text);
         _this.trigger('change', {
@@ -24523,12 +24619,18 @@ phantasus.FormBuilder.prototype = {
             name: text.toUpperCase(),
             isGEO: true
           }
-        })
+        });
+
+        $input.val('');
+        $div.css('display', 'none');
       };
 
       // Preloaded
       var PRE_dispatcher = function (form) {
-        var text = $.trim(form.find('[name=' + name + '_pre]').val());
+        var $div = form.find('#' + name + '_pre');
+        var $input = form.find('[name=' + name + '_pre]');
+
+        var text = $.trim($input.val());
         // console.log('environment', evt);
         //console.log('object to trigger with result', _this, 'name', name, 'text', text);
         _this.trigger('change', {
@@ -24537,7 +24639,10 @@ phantasus.FormBuilder.prototype = {
             name: text,
             preloaded: true
           }
-        })
+        });
+
+        $input.val('');
+        $div.css('display', 'none');
       };
       // browse file selected
       _this.$form.on('change', '[name=' + name + '_file]', function (evt) {
@@ -24552,7 +24657,9 @@ phantasus.FormBuilder.prototype = {
 
       //SUBMIT
       _this.$form.on('submit', function () {
-        var val = $(this).find('[name=' + name + '_picker]').val(); //many
+        var typePicker = $(this).find('[name=' + name + '_picker]');
+
+        var val = typePicker.val(); //many
         var showUrlInput = val === 'URL';
         var showGSEInput = val === 'GEO Datasets';
         var showPreInput = val === 'Saved on server datasets';
