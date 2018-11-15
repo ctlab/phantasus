@@ -154,10 +154,16 @@ writeToList <- function(es) {
   colnames(fdata) <- NULL
   row.names(fdata) <- NULL
 
+  ed <- experimentData(es)
+  experimentList <- as.list(expinfo(ed))
+  experimentList$other <- as.list(ed@other)
+  experimentList$pubMedIds <- pubMedIds(ed)
+
   res <- list(data = data, pdata = pdata, fdata = fdata,
               rownames = rownames,
               colMetaNames = varLabels(es),
-              rowMetaNames = fvarLabels(es))
+              rowMetaNames = fvarLabels(es),
+              experimentData = experimentList) #TODO: lol json
   res
 }
 
