@@ -108,29 +108,8 @@ getGDS <- function(name, destdir = tempdir(),
 
     l <- suppressWarnings(getGEO(GEO = name, destdir = fullGEODirPath))
     # extracting all useful information on dataset
-    table <- methods::slot(l, "dataTable")
 
-    # extracting table ID_REF | IDENTIFIER/SAMPLE | SAMPLE1 | ...
-    data <- Table(table)
-    columnsMeta <- Columns(table)  # phenoData
-    sampleNames <- as.vector(columnsMeta[["sample"]])
-    rownames <- as.vector(data[["ID_REF"]])
-    symbol <- as.vector(data[["IDENTIFIER"]])
-
-    data <- data[, sampleNames]  # expression data
-    exprs <- as.matrix(data)
-    row.names(exprs) <- rownames
-
-    row.names(columnsMeta) <- sampleNames
-    pData <- AnnotatedDataFrame(data.frame(columnsMeta, check.names = FALSE))
-
-    fData <- data.frame(id=rownames, symbol=symbol, row.names = rownames, stringsAsFactors = FALSE)
-    fData <- AnnotatedDataFrame(fData)
-
-
-    list(ExpressionSet(assayData = exprs,
-                        phenoData = pData,
-                        featureData = fData))
+    list(GDS2eSet(l, AnnotGPL = FALSE, getGPL = FALSE))
 }
 
 
