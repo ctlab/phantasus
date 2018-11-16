@@ -163,7 +163,7 @@ writeToList <- function(es) {
               rownames = rownames,
               colMetaNames = varLabels(es),
               rowMetaNames = fvarLabels(es),
-              experimentData = experimentList) #TODO: lol json
+              experimentData = experimentList)
   res
 }
 

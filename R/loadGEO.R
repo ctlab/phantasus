@@ -106,10 +106,41 @@ getGDS <- function(name, destdir = tempdir(),
         message(paste("Loading from locally found file", destfile))
     }
 
-    l <- suppressWarnings(getGEO(GEO = name, destdir = fullGEODirPath))
-    # extracting all useful information on dataset
+    l <- suppressWarnings(getGEO(GEO = name, destdir = fullGEODirPath, AnnotGPL = TRUE))
 
-    list(GDS2eSet(l, AnnotGPL = FALSE, getGPL = FALSE))
+    # extracting all useful information on dataset
+    table <- methods::slot(l, "dataTable")
+
+
+    # extracting table ID_REF | IDENTIFIER/SAMPLE | SAMPLE1 | ...
+    data <- Table(table)
+    columnsMeta <- Columns(table)  # phenoData
+    sampleNames <- as.vector(columnsMeta[["sample"]])
+    rownames <- as.vector(data[["ID_REF"]])
+    symbol <- as.vector(data[["IDENTIFIER"]])
+
+    data <- data[, sampleNames]  # expression data
+    exprs <- as.matrix(data)
+    row.names(exprs) <- rownames
+
+    row.names(columnsMeta) <- sampleNames
+    pData <- AnnotatedDataFrame(data.frame(columnsMeta, check.names = FALSE))
+
+    fData <- data.frame(id=rownames, symbol=symbol, row.names = rownames, stringsAsFactors = FALSE)
+    fData <- AnnotatedDataFrame(fData)
+
+    mabstract=ifelse(is.null(Meta(l)$description),"",Meta(l)$description)
+    mpubmedids=ifelse(is.null(Meta(l)$pubmed_id),"",Meta(l)$pubmed_id)
+    mtitle=ifelse(is.null(Meta(l)$title),"",Meta(l)$title)
+
+    list(ExpressionSet(assayData = exprs,
+                       phenoData = pData,
+                       featureData = fData,
+                       experimentData=new("MIAME",
+                                          abstract=mabstract,
+                                          title=mtitle,
+                                          pubMedIds=mpubmedids,
+                                          other=Meta(l))))
 }
 
 
