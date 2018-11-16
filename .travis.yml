@@ -17,6 +17,7 @@ addons:
       - libapparmor-dev
       - protobuf-compiler
       - libcurl4-openssl-dev
+      - gfortran
 
 r_packages:
   - covr
