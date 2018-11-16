@@ -13,6 +13,8 @@
 #'
 #' @param fvarLabels Names of featureData columns.
 #'
+#' @param eData List with experimentData
+#'
 #' @return produced ExpressionSet object
 #'
 #' @import Biobase
@@ -24,19 +26,30 @@
 #' varLabels <- "cat"
 #' fData <- c("p", "r", "s", "t", "u")
 #' fvarLabels <- "id"
-#' createES(data, pData, varLabels, fData, fvarLabels)
+#' eData <- list(name="", lab="", contact="", title="", url="", other=list(), pubMedIds="")
+#' createES(data, pData, varLabels, fData, fvarLabels, eData)
 #' }
 #'
-createES <- function(data, pData, varLabels, fData, fvarLabels) {
+createES <- function(data, pData, varLabels, fData, fvarLabels, eData) {
     phenoData <- AnnotatedDataFrame(data.frame(pData, stringsAsFactors = FALSE))
     varLabels(phenoData) <- varLabels
 
     featureData <- AnnotatedDataFrame(data.frame(fData, stringsAsFactors = FALSE))
     varLabels(featureData) <- fvarLabels
 
+    ed = new ("MIAME",
+              name=eData$name,
+              lab=eData$lab,
+              title=eData$title,
+              contact=eData$contact,
+              pubMedIds=eData$pubMedIds,
+              url=eData$url,
+              other=eData$other)
+
     es <- ExpressionSet(assayData = data,
                         phenoData = phenoData,
-                        featureData = featureData)
+                        featureData = featureData,
+                        experimentData = ed)
     assign("es", es, envir = parent.frame())
     es
 }
