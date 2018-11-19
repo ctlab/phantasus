@@ -57,6 +57,7 @@ RUN git clone -b ${TARGET_BRANCH} --recursive https://github.com/ctlab/phantasus
 
 RUN R -e 'source("https://bioconductor.org/biocLite.R")'
 RUN R -e 'devtools::install("/root/phantasus", build_vignettes=T)'
+RUN R -e 'devtools::install_github("vlakam/geoquery", ref="experimentData")'
 
 RUN printf "window.PHANTASUS_BUILD='$PHANTASUS_BUILD';" >> /root/phantasus/inst/www/phantasus.js/RELEASE.js
 RUN cp -r /root/phantasus/inst/www/phantasus.js /var/www/html/phantasus
