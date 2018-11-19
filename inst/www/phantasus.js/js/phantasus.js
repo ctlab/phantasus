@@ -1804,6 +1804,10 @@ phantasus.Util.NotPredicate.prototype = {
 
 
 phantasus.Util.getFieldNames = function (rexp) {
+  if (_.size(rexp.attrValue) === 0) {
+    return [];
+  }
+
   var strValues = rexp.attrValue[0].stringValue;
   var res = [];
   strValues.forEach(function (v) {
@@ -2339,6 +2343,7 @@ phantasus.ParseDatasetFromProtoBin.getDataset = function (session, seriesName, j
   //var id = jsondata.rownames.values;
   var metaNames = jsondata.colMetaNames.values;
   var rowMetaNames = jsondata.rowMetaNames.values;
+  var experimentData = jsondata.experimentData;
 
   // console.log(seriesName, jsondata);
 
@@ -2358,7 +2363,8 @@ phantasus.ParseDatasetFromProtoBin.getDataset = function (session, seriesName, j
     dataType: 'Float32',
     esSession: session,
     isGEO: options.isGEO,
-    preloaded: options.preloaded
+    preloaded: options.preloaded,
+    experimentData: experimentData
   });
 
   // console.log(seriesName, dataset);
@@ -3645,11 +3651,35 @@ phantasus.GeoReader = function () {
 phantasus.GeoReader.prototype = {
   read: function (name, callback) {
     // console.log("read", name);
+    var afterLoaded = function (err, dataset) {
+      if (!err) {
+        var datasetTitle = "GEO dataset";
+        var experimentData = dataset[0].getExperimentData();
+        if (experimentData) datasetTitle = experimentData.title.values.toString() || datasetTitle;
+        var geoAccesion = name.split('-')[0];
+
+        phantasus.datasetHistory.store({
+          name: geoAccesion,
+          description: datasetTitle,
+          openParameters: {
+            file: geoAccesion,
+            options: {
+              interactive: true,
+              isGEO: true
+            }
+          }
+        });
+      }
+
+      callback(err, dataset);
+    };
+
+
     var req = ocpu.call('loadGEO', { name: name }, function (session) {
       session.getMessages(function (success) {
         console.log('loadGEO messages', '::', success);
       });
-      phantasus.ParseDatasetFromProtoBin.parse(session, callback, { isGEO : true });
+      phantasus.ParseDatasetFromProtoBin.parse(session, afterLoaded, { isGEO : true });
     });
     req.fail(function () {
       callback(req.responseText);
@@ -4258,14 +4288,38 @@ phantasus.PreloadedReader.prototype = {
   read: function(name, callback) {
     console.log("preloaded read", name);
     name = typeof name === "string" ? { name : name } : name;
+
+    var afterLoaded = function (err, dataset) {
+      if (!err) {
+        var datasetTitle = "preloaded dataset";
+        var experimentData = dataset[0].getExperimentData();
+        if (experimentData) datasetTitle = experimentData.title.values.toString() || datasetTitle;
+
+        phantasus.datasetHistory.store({
+          name: name.name,
+          description: datasetTitle,
+          openParameters: {
+            file: name.name,
+            options: {
+              interactive: true,
+              preloaded: true
+            }
+          }
+        });
+      }
+
+      callback(err, dataset);
+    };
+
     var req = ocpu.call('loadPreloaded', name, function(session) {
-      phantasus.ParseDatasetFromProtoBin.parse(session, callback, { preloaded : true });
+      phantasus.ParseDatasetFromProtoBin.parse(session, afterLoaded, { preloaded : true });
     });
     req.fail(function () {
       callback(req.responseText);
     })
   }
 };
+
 phantasus.SegTabReader = function () {
   this.regions = null;
 };
@@ -5829,6 +5883,9 @@ phantasus.DatasetAdapter.prototype = {
   },
   setESSession: function (esSession) {
     this.esSession = esSession;
+  },
+  getExperimentData: function () {
+    return this.dataset.getExperimentData();
   }
 };
 
@@ -7090,6 +7147,16 @@ phantasus.DatasetUtil.toESSessionPromise = function (dataset) {
       var array = phantasus.DatasetUtil.getContentArray(dataset);
       var meta = phantasus.DatasetUtil.getMetadataArray(dataset);
 
+      var expData = dataset.getExperimentData() || {
+        name: { values: "" },
+        lab: { values: "" },
+        contact: { values: "" },
+        title: { values: "" },
+        url: { values: "" },
+        other: { empty: { values: "" } },
+        pubMedIds: { values: "" },
+      };
+
       var messageJSON = {
         rclass: "LIST",
         rexpValue: [{
@@ -7141,9 +7208,82 @@ phantasus.DatasetUtil.toESSessionPromise = function (dataset) {
           }, {
             strval: "fvarLabels",
             isNA: false
+          }, {
+            strval: "eData",
+            isNA: false
           }]
         }
       };
+
+      messageJSON.rexpValue.push({
+        rclass: "LIST",
+        attrName: "names",
+        attrValue: {
+          rclass: "STRING",
+          stringValue: Object.keys(expData).map(function (name) {
+            return {
+              strval: name,
+              isNA: false
+            }
+          })
+        },
+        rexpValue: [{
+          rclass: "STRING",
+          stringValue: [{
+            strval: expData.name.values.toString(),
+            isNA: false
+          }]
+        }, {
+          rclass: "STRING",
+          stringValue: [{
+            strval: expData.lab.values.toString(),
+            isNA: false
+          }]
+        }, {
+          rclass: "STRING",
+          stringValue: [{
+            strval: expData.contact.values.toString(),
+            isNA: false
+          }]
+        }, {
+          rclass: "STRING",
+          stringValue: [{
+            strval: expData.title.values.toString(),
+            isNA: false
+          }]
+        }, {
+          rclass: "STRING",
+          stringValue: [{
+            strval: expData.url.values.toString(),
+            isNA: false
+          }]
+        }, {
+          rclass: "LIST",
+          attrName: "names",
+          attrValue: {
+            rclass: "STRING",
+            stringValue: Object.keys(expData.other).map(function (name) {
+              return {
+                strval: name,
+                isNA: false
+              }
+            })
+          },
+          rexpValue: _.map(expData.other, function (value) {
+            return {
+              rclass: "STRING",
+              stringValue: [{strval: value.values.toString(), isNA: false}]
+            }
+          })
+        }, {
+          rclass: "STRING",
+          stringValue: [{
+            strval: expData.pubMedIds.values.toString(),
+            isNA: false
+          }]
+        }]
+      });
+
       var ProtoBuf = dcodeIO.ProtoBuf;
       ProtoBuf.protoFromFile('./message.proto', function (error, success) {
         if (error) {
@@ -7307,6 +7447,7 @@ phantasus.Dataset = function (options) {
   this.seriesArrays.push(options.array ? options.array : phantasus.Dataset
     .createArray(options));
   this.seriesDataTypes.push(options.dataType);
+  this.experimentData = options.experimentData;
   //// console.log(this);
 };
 /**
@@ -7544,6 +7685,9 @@ phantasus.Dataset.prototype = {
   getESSession: function () {
     //// console.log("phantasus.Dataset.prototype.getESSession ::", this);
     return this.esSession;
+  },
+  getExperimentData: function () {
+    return this.experimentData;
   }
 };
 phantasus.Util.extend(phantasus.Dataset, phantasus.AbstractDataset);
@@ -12530,19 +12674,16 @@ phantasus.LandingPage = function (pageOptions) {
   }
 
   this.$historyDatsetsEl = $el.find('[data-name=historyRow]');
-  this.datasetHistory = new phantasus.DatasetHistory();
 
-  this.datasetHistory.on('open', function (evt) {
-    var dataset = evt.dataset;
-
-    _this.open({dataset: dataset});
+  phantasus.datasetHistory.on('open', function (evt) {
+    _this.open({dataset: evt});
   });
 
-  this.datasetHistory.on('changed', function () {
-    _this.datasetHistory.render(_this.$historyDatsetsEl);
+  phantasus.datasetHistory.on('changed', function () {
+    phantasus.datasetHistory.render(_this.$historyDatsetsEl);
   });
 
-  this.datasetHistory.render(this.$historyDatsetsEl);
+  phantasus.datasetHistory.render(this.$historyDatsetsEl);
 }
 ;
 
@@ -12625,10 +12766,9 @@ phantasus.LandingPage.prototype = {
 
       if (options.dataset.options && options.dataset.options.isGEO) {
         createGEOHeatMap(options);
-        _this.datasetHistory.store(originalOptions)
       } else if (options.dataset.options && options.dataset.options.preloaded) {
         createPreloadedHeatMap(options);
-        _this.datasetHistory.store(originalOptions)
+
       }
       else {
         // console.log("before loading heatmap from landing_page", options);
@@ -22103,7 +22243,7 @@ phantasus.DatasetHistory = function () {};
 
 phantasus.DatasetHistory.prototype = {
   STORAGE_KEY: 'dataset_history',
-  STORAGE_LIMIT: 5,
+  STORAGE_LIMIT: 10,
 
   render: function ($parent) {
     var _this = this;
@@ -22114,11 +22254,11 @@ phantasus.DatasetHistory.prototype = {
     var currentHistory = this.get();
 
     if (!_.size(currentHistory)) {
-      $('<h5>But apparently there is no datasets in your history. Great time to start new journey</h5>').appendTo($parent);
+      $('<h5>But apparently there is no datasets in your history.</h5>').appendTo($parent);
     } else {
       var ul = $('<ul></ul>');
       _.each(currentHistory, function (elem, idx) {
-        var li = $('<li><a href="#" data-idx="' + idx + '">' + elem.name + _this.datasetTypeToString(elem.options.dataset) +'</a></li>');
+        var li = $('<li title="' + elem.name + _this.datasetTypeToString(elem) +'"><a href="#" data-idx="' + idx + '">' + elem.name + _this.datasetTypeToString(elem) +'</a></li>');
         li.appendTo(ul);
       });
       ul.appendTo($parent);
@@ -22130,15 +22270,16 @@ phantasus.DatasetHistory.prototype = {
         var clickedIndex = $(evt.target).data('idx');
 
         _this.remove(clickedIndex);
-        _this.trigger('open', currentHistory[clickedIndex].options);
+        _this.trigger('open', currentHistory[clickedIndex].openParameters);
       });
     }
   },
 
-  store: function (datasetOpenOptions) {
+  store: function (options) {
     var current = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '[]');
-    current.unshift({name: datasetOpenOptions.dataset.file, options: datasetOpenOptions});
+    current.unshift({name: options.name, openParameters: options.openParameters, description: options.description});
     current.length = Math.min(current.length, this.STORAGE_LIMIT);
+    current = _.uniq(current, function (elem) { return elem.name; });
 
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(current));
 
@@ -22155,11 +22296,9 @@ phantasus.DatasetHistory.prototype = {
     return JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '[]');
   },
 
-  datasetTypeToString: function (dataset) {
-    if (dataset.options.isGEO) {
-      return " - GEO dataset";
-    } else if (dataset.options.preloaded) {
-      return " - preloaded dataset";
+  datasetTypeToString: function (datasetHistory) {
+    if (datasetHistory.description) {
+      return " - " + datasetHistory.description;
     } else {
       return " - unknown dataset";
     }
@@ -22167,6 +22306,8 @@ phantasus.DatasetHistory.prototype = {
 };
 
 phantasus.Util.extend(phantasus.DatasetHistory, phantasus.Events);
+
+phantasus.datasetHistory = new phantasus.DatasetHistory();
 
 phantasus.DendrogramUtil = {};
 phantasus.DendrogramUtil.setIndices = function (root, counter) {
