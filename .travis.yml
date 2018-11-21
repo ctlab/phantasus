@@ -4,7 +4,7 @@ r:
   - bioc-release
 # warnings_are_errors: true
 sudo: false
-fortran: false
+fortran: true
 cache: packages
 
 services:
@@ -17,7 +17,6 @@ addons:
       - libapparmor-dev
       - protobuf-compiler
       - libcurl4-openssl-dev
-      - gfortran
 
 r_packages:
   - covr
@@ -63,13 +62,13 @@ after_success:
   - DOCKER_TAG="$TRAVIS_BRANCH-$TRAVIS_BUILD_NUMBER"
   - if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$TRAVIS_BRANCH" == "master" ]; then
     docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
-    docker build -t dzenkova/phantasus --build-arg PHANTASUS_BUILD=$DOCKER_TAG inst/docker/ ;
+    docker build -t dzenkova/phantasus --build-arg PHANTASUS_BUILD=$DOCKER_TAG . ;
     docker tag dzenkova/phantasus dzenkova/phantasus:$DOCKER_TAG ;
     docker push dzenkova/phantasus;
     fi
   - if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$TRAVIS_BRANCH" == "develop" ]; then
     docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
-    docker build --build-arg TARGET_BRANCH=develop --build-arg PHANTASUS_BUILD=$DOCKER_TAG -t dzenkova/phantasus:develop inst/docker/ ;
+    docker build --build-arg PHANTASUS_BUILD=$DOCKER_TAG -t dzenkova/phantasus:develop . ;
     docker tag dzenkova/phantasus:develop dzenkova/phantasus:$DOCKER_TAG ;
     docker push dzenkova/phantasus:develop;
     docker push dzenkova/phantasus:$DOCKER_TAG;
