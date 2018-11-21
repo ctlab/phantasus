@@ -52,15 +52,16 @@ RUN gpg -a --export E084DAB9 | apt-key add -
 
 RUN R -e 'install.packages("devtools", repo = "https://cran.rstudio.com/")'
 
-
-RUN git clone -b ${TARGET_BRANCH} --recursive https://github.com/ctlab/phantasus /root/phantasus
+#RUN git clone -b ${TARGET_BRANCH} --recursive https://github.com/ctlab/phantasus /root/phantasus
+COPY . /root/phantasus
 
 RUN R -e 'source("https://bioconductor.org/biocLite.R")'
-RUN R -e 'devtools::install("/root/phantasus", build_vignettes=T)'
 RUN R -e 'devtools::install_github("vlakam/geoquery", ref="experimentData")'
+RUN R -e 'devtools::install("/root/phantasus", build_vignettes=T)'
 
 RUN printf "window.PHANTASUS_BUILD='$PHANTASUS_BUILD';" >> /root/phantasus/inst/www/phantasus.js/RELEASE.js
 RUN cp -r /root/phantasus/inst/www/phantasus.js /var/www/html/phantasus
+RUN rm -rf /root/phantasus/inst
 
 RUN a2enmod proxy_http
 
