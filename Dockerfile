@@ -58,7 +58,7 @@ COPY . /root/phantasus
 RUN R -e 'source("https://bioconductor.org/biocLite.R")'
 #RUN R -e 'devtools::install_github("vlakam/geoquery", ref="experimentData")'
 RUN git clone -b experimentData https://github.com/vlakam/geoquery /root/geoquery
-RUN R -e 'devtools::install("/root/geoquery", quick=T, keep_source=F)
+RUN R -e 'devtools::install("/root/geoquery", quick=T, keep_source=F)'
 RUN R -e 'devtools::install("/root/phantasus", build_vignettes=T)'
 
 RUN printf "window.PHANTASUS_BUILD='$PHANTASUS_BUILD';" >> /root/phantasus/inst/www/phantasus.js/RELEASE.js
