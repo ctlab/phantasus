@@ -347,7 +347,7 @@ into an RData file with `.rda` extension into a directory as specified in `serve
 
 Let us preprocess and save `GSE14308` dataset:
 
-```{r, message=FALSE, cache=TRUE}
+```{r, message=FALSE, cache=TRUE, eval=FALSE}
 library(GEOquery)
 library(limma)
 gse14308 <- getGEO("GSE14308", AnnotGPL = TRUE)[[1]]
