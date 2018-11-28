@@ -19,7 +19,7 @@ describe('geo_reader_test', function () {
 
       var dataset = result[0];
 
-      expect(dataset.getRowCount() === 45101 || dataset.getRowCount() === 45100).toEqual(true);
+      expect(dataset.getRowCount()).toEqual(45101);
       expect(dataset.getColumnCount()).toEqual(16);
     });
   });
