@@ -186,7 +186,9 @@ loadFromARCHS4 <- function(es, archs4_files) {
 
         es2 <- ExpressionSet(assayData = expression,
                              phenoData = phenoData(es[, !is.na(sampleIndexes)]),
-                             annotation = annotation(es))
+                             annotation = annotation(es),
+                             experimentData = experimentData(es)
+                            )
         fData(es2) <- cbind(fData(es2), "Gene symbol"=rownames(es2))
         return(es2)
     }
