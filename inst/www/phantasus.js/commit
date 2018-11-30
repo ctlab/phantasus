@@ -1,5 +1,5 @@
-commit 7c17e6e0536cc458df90a26d5e01dbf9c6ac8e34
+commit 47ab9e85c77d4934f1ef15ce915bec5431c3027b
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Fri Nov 16 18:40:40 2018 +0300
+Date:   Fri Nov 30 19:56:41 2018 +0300
 
-    Experiment data to createES
+    AnnotationDB converter implemented

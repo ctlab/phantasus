@@ -5,8 +5,9 @@
 \title{Adjust dataset}
 \usage{
 adjustDataset(es, scaleColumnSum = NULL, log2 = FALSE,
-  onePlusLog2 = FALSE, inverseLog2 = FALSE, quantileNormalize = FALSE,
-  zScore = FALSE, robustZScore = FALSE, sweep = NULL)
+  onePlusLog2 = FALSE, inverseLog2 = FALSE,
+  quantileNormalize = FALSE, zScore = FALSE, robustZScore = FALSE,
+  sweep = NULL)
 }
 \arguments{
 \item{es}{Expression set to perform adjustment on}

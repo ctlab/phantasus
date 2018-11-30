@@ -4,7 +4,7 @@
 \alias{createES}
 \title{Create ExpressionSet.}
 \usage{
-createES(data, pData, varLabels, fData, fvarLabels)
+createES(data, pData, varLabels, fData, fvarLabels, eData)
 }
 \arguments{
 \item{data}{Gene expression matrix.}
@@ -16,6 +16,8 @@ createES(data, pData, varLabels, fData, fvarLabels)
 \item{fData}{Matrix with feature data.}
 
 \item{fvarLabels}{Names of featureData columns.}
+
+\item{eData}{List with experimentData}
 }
 \value{
 produced ExpressionSet object
@@ -31,7 +33,8 @@ pData <- c("A", "B", "C")
 varLabels <- "cat"
 fData <- c("p", "r", "s", "t", "u")
 fvarLabels <- "id"
-createES(data, pData, varLabels, fData, fvarLabels)
+eData <- list(name="", lab="", contact="", title="", url="", other=list(), pubMedIds="")
+createES(data, pData, varLabels, fData, fvarLabels, eData)
 }
 
 }
