@@ -84,6 +84,10 @@ queryAnnotationDBMeta <- function () {
 #'
 annotationDBMeta <- function (cacheDir) {
     annotDir <- paste(cacheDir, "annotationdb", sep = .Platform$file.sep)
+    if (!dir.exists(annotDir)) {
+        message('No annotationdb files provided')
+        return()
+    }
 
     metaList <- list()
     dbFiles <- list.files(annotDir, '*.sqlite', full.names = TRUE)
