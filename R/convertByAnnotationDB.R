@@ -63,7 +63,12 @@ convertByAnnotationDB <- function (es, dbName, columnName, columnType, keyType) 
 queryAnnotationDBMeta <- function () {
     cacheDir <- getOption("phantasusCacheDir")
     annotDir <- paste(cacheDir, "annotationdb", sep = .Platform$file.sep)
-    metaList <- readRDS(paste(annotDir, "meta.rds", sep=.Platform$file.sep))
+    metaFile <- file.path(annotDir, "meta.rds")
+    if (!file.exists(metaFile)) {
+        return("[]")
+    }
+
+    metaList <- readRDS(metaFile)
 
     return(jsonlite::toJSON(metaList))
 }
@@ -83,18 +88,31 @@ queryAnnotationDBMeta <- function () {
 #' }
 #'
 annotationDBMeta <- function (cacheDir) {
-    annotDir <- paste(cacheDir, "annotationdb", sep = .Platform$file.sep)
+    annotDir <- file.path(cacheDir, "annotationdb")
     if (!dir.exists(annotDir)) {
         message('No annotationdb files provided')
         return()
     }
 
     metaList <- list()
-    dbFiles <- list.files(annotDir, '*.sqlite', full.names = TRUE)
+    dbFiles <- list.files(annotDir, '*.sqlite$', full.names = TRUE)
     for (dbFile in dbFiles) {
         db <- loadDb(dbFile)
-        metaList[[basename(dbFile)]] <- list(species=species(db), columns=columns(db))
+        columnFile <- paste(dbFile, ".selected_fields.txt", sep = "")
+        if (file.exists(columnFile)) {
+            columnsTSV <- read.table(file = columnFile, sep = '\t', header = TRUE)
+            columns <- apply(columnsTSV, 1, paste, collapse = " - ")
+            metaList[[basename(dbFile)]] <- list(species=species(db), columns=columns)
+        } else {
+            columnsDB <- columns(db)
+            columns <- sapply(columnsDB, function (column) {
+                hint <- paste(head(keys(db, keytype=column), n = 2), collapse=";")
+                return(paste(column, hint, sep=" - "))
+            })
+
+            metaList[[basename(dbFile)]] <- list(species=species(db), columns=columns)
+        }
     }
 
-    saveRDS(metaList, file = paste(annotDir, "meta.rds", sep=.Platform$file.sep))
+    saveRDS(metaList, file = file.path(annotDir, "meta.rds"))
 }
