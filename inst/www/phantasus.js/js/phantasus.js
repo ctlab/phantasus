@@ -14100,7 +14100,7 @@ phantasus.initAnnotationConvertTool = function (options) {
 
     req.fail(function () {
       $el.dialog('destroy').remove();
-      throw new Error("Couldn't load Annotation DB meta information" + req.responseText);
+      throw new Error("Couldn't load Annotation DB meta information. Please try again in a moment. Error:" + req.responseText);
     });
   } else {
     phantasus.HeatMap.showTool(new phantasus.AnnotationConvertTool(), options.heatMap);
@@ -14111,7 +14111,7 @@ phantasus.AnnotationConvertTool = function () {
 };
 phantasus.AnnotationConvertTool.prototype = {
   toString: function () {
-    return "AnnotationDB convert";
+    return "Annotate from AnnotationDB";
   },
   init: function (project, form) {
     form.$form.find('[name=specimen_DB]').on('change', function (e) {
@@ -14119,22 +14119,28 @@ phantasus.AnnotationConvertTool.prototype = {
       var newDb = newVal.split(' - ')[0];
       var newColumns = phantasus.annotationDBMeta.dbs[newDb].columns;
 
-      form.setOptions('source_column_type', newColumns);
-      form.setOptions('result_column_type', newColumns);
+      form.setOptions('source_column_type', newColumns, true);
+      form.setOptions('result_column_type', newColumns, true);
     });
   },
   gui: function (project) {
     if (phantasus.annotationDBMeta.init && !_.size(phantasus.annotationDBMeta.dbs)) {
-      throw new Error('There is no AnnotationDB on server. Ask administator to put AnnotationDB sqlite databases in cacheDir/annotationdb folder');
+      throw new Error('There is no AnnotationDB on server. Ask administrator to put AnnotationDB sqlite databases in cacheDir/annotationdb folder');
     }
 
     var names = _.map(phantasus.annotationDBMeta.dbs, function (value, dbName) {
       return dbName + ' - ' + value.species.toString();
     });
 
+    var rowMetadata = project.getFullDataset().getRowMetadata();
+
     var featureColumns = phantasus
       .MetadataUtil
-      .getMetadataNames(project.getFullDataset().getRowMetadata());
+      .getMetadataNames(rowMetadata)
+      .map(function (name) {
+        var vector = rowMetadata.getByName(name);
+        return name + " - " + vector.getValue(0).toString() + "," + vector.getValue(1).toString();
+      });
 
     if (!_.size(featureColumns)) {
       throw new Error('There is no columns in feature data');
@@ -14170,9 +14176,9 @@ phantasus.AnnotationConvertTool.prototype = {
     var promise = $.Deferred();
 
     var selectedDB = options.input.specimen_DB.split(' - ')[0];
-    var selectedFeatureName = options.input.source_column;
-    var columnType = options.input.source_column_type;
-    var keyType = options.input.result_column_type;
+    var selectedFeatureName = options.input.source_column.split(' - ')[0];
+    var columnType = options.input.source_column_type.split(' - ')[0];
+    var keyType = options.input.result_column_type.split(' - ')[0];
 
     if (columnType === keyType) {
       throw new Error('Converting column from ' + columnType + ' to ' + keyType + ' is invalid');
@@ -14209,7 +14215,7 @@ phantasus.AnnotationConvertTool.prototype = {
 
       req.fail(function () {
         promise.reject();
-        throw new Error("convertByAnnotationDB call to OpenCPU failed " + req.responseText);
+        throw new Error("Could not annotate dataset. Please double check your parameters or contact administrator. Error: " + req.responseText);
       });
 
     });
@@ -20471,13 +20477,6 @@ phantasus.ActionManager = function () {
   });
 
   this.add({
-    name: phantasus.AnnotationConvertTool.prototype.toString(),
-    cb: function (options) {
-      phantasus.initAnnotationConvertTool(options);
-    }
-  });
-
-  this.add({
     which: [67], // C
     commandKey: true,
     name: 'Copy'
@@ -20504,21 +20503,38 @@ phantasus.ActionManager = function () {
 
   this.add({
     name: 'Annotate',
-    children: ['Annotate Rows', 'Annotate Columns'],
+    children: [
+      'Annotate rows',
+      'Annotate columns'],
     icon: 'fa fa-list'
   });
 
   this.add({
-    name: 'Annotate Rows',
+    name: 'Annotate rows',
+    children: [
+      'From file', 'From database']
+  });
+
+
+
+  this.add({
+    name: 'Annotate columns',
+    cb: function (options) {
+      phantasus.HeatMap.showTool(new phantasus.AnnotateDatasetTool({target: 'Columns'}), options.heatMap);
+    }
+  });
+
+  this.add({
+    name: 'From file',
     cb: function (options) {
       phantasus.HeatMap.showTool(new phantasus.AnnotateDatasetTool({target: 'Rows'}), options.heatMap);
     }
   });
 
   this.add({
-    name: 'Annotate Columns',
+    name: 'From database',
     cb: function (options) {
-      phantasus.HeatMap.showTool(new phantasus.AnnotateDatasetTool({target: 'Columns'}), options.heatMap);
+      phantasus.initAnnotationConvertTool(options);
     }
   });
 
@@ -30809,7 +30825,6 @@ phantasus.HeatMap = function (options) {
           'Submit to Enrichr',
           'Submit to Shiny GAM',
           phantasus.gseaTool.prototype.toString(),
-          phantasus.AnnotationConvertTool.prototype.toString(),
           'DEBUG: Probe Debug Tool',
           'DEBUG: Expose project'],
         View: ['Zoom In', 'Zoom Out', null, 'Fit To Window', 'Fit Rows To Window', 'Fit Columns To Window', null, '100%', null, 'Options'],
