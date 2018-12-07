@@ -1,6 +1,5 @@
-commit 082d0056d3f23e5c422f61b86d379a49ebbd9509
+commit c7ec30a370703fd7cca81fa54d14e69160c7b5f5
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Wed Dec 5 18:40:13 2018 +0300
+Date:   Fri Dec 7 16:35:32 2018 +0300
 
-    AnnotationDB query moved to annotate menu.
-    Implemented hints in AnnotationDB tool
+    AnnotationDB converter is now draggable and promiseable
