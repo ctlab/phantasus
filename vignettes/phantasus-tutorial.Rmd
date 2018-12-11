@@ -1,10 +1,5 @@
 ---
 title: "Using Phantasus application"
-author: 
-- "Daria Zenkova"
-- "Vladislav Kamenev"
-- "Maxim N. Artyomov"
-- "Alexey A. Sergushichev"
 date: "`r Sys.Date()`"
 output:  
     BiocStyle::html_document:
