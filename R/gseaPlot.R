@@ -54,7 +54,7 @@ gseaPlot <- function(es, rankBy, selectedGenes, width, height,
     p <- p + theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"))
     enrichmentGrob <- ggplotGrob(p)
 
-    if (addHeatmap) {
+    if (addHeatmap && ncol(es) > 1) {
         # preparing heatmap
         mat <- exprs(es)[order(ranks, decreasing = TRUE), ]
         mat <- t(apply(mat, 1, scales::rescale))
