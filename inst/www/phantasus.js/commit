@@ -1,5 +1,5 @@
-commit c7ec30a370703fd7cca81fa54d14e69160c7b5f5
+commit 57c34d78c1dfd9bf9c801c70ba4cc6da9cbd3a89
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Fri Dec 7 16:35:32 2018 +0300
+Date:   Wed Dec 12 19:26:07 2018 +0300
 
-    AnnotationDB converter is now draggable and promiseable
+    Send heatmap pallete to R
