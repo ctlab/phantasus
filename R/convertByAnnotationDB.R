@@ -113,6 +113,9 @@ annotationDBMeta <- function (cacheDir) {
             })
 
             metaList[[basename(dbFile)]] <- list(species=species(db), columns=columns)
+
+            humanMeta <- t(data.frame(strsplit(columns, " - ", fixed=TRUE)))
+            write.table(humanMeta, file=columnFile, quote=FALSE, sep='\t',  row.names=F, col.names=c('FIELD', 'HINT'))
         }
     }
 
