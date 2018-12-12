@@ -7,6 +7,7 @@
 #' @param vertical whether to use vertical orientation (default: FALSE)
 #' @param addHeatmap whether to add an expression heatmap, sorted by rankBy (default: FALSE)
 #' @param showAnnotation a name of column annotation to add to the heatmap, default: NULL (no annotation)
+#' @param pallete a vector of colors to draw heatmap
 #' @return path to an svg file
 #' @importFrom fgsea plotEnrichment fgsea
 #' @importFrom ggplot2 ggtitle
@@ -19,7 +20,8 @@
 gseaPlot <- function(es, rankBy, selectedGenes, width, height,
                      vertical=FALSE,
                      addHeatmap=FALSE,
-                     showAnnotation=NULL) {
+                     showAnnotation=NULL,
+                     pallete=c("blue", "white", "red")) {
     featureData <- fData(es)
     colnames(featureData) <- fvarLabels(es)
 
@@ -84,7 +86,7 @@ gseaPlot <- function(es, rankBy, selectedGenes, width, height,
             ph <- pheatmap::pheatmap(aggr,
                                      cluster_rows = FALSE, cluster_cols = FALSE,
                                      show_rownames = FALSE, show_colnames = FALSE,
-                                     color=colorRampPalette(c("blue", "white", "red"))(50),
+                                     color=colorRampPalette(pallete)(50),
                                      annotation_col = annotation_col,
                                      legend = FALSE,
                                      silent = TRUE)
@@ -119,7 +121,7 @@ gseaPlot <- function(es, rankBy, selectedGenes, width, height,
             ph <- pheatmap::pheatmap(Matrix::t(aggr),
                                      cluster_rows = FALSE, cluster_cols = FALSE,
                                      show_rownames = FALSE, show_colnames = FALSE,
-                                     color=colorRampPalette(c("blue", "white", "red"))(50),
+                                     color=colorRampPalette(pallete)(50),
                                      annotation_row = annotation_col,
                                      legend = FALSE,
                                      silent = TRUE)
