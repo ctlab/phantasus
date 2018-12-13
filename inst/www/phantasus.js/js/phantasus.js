@@ -15902,11 +15902,30 @@ phantasus.gseaTool.prototype = {
     };
 
     var annotateBy = this.formBuilder.getValue('annotate_by');
-    (annotateBy === "(None)") ?
-      request.width = width - 1 :
+
+    if (annotateBy === "(None)") {
+      request.width = width - 1;
+    } else {
       request.showAnnotation = annotateBy;
 
+      var colorByVector = fullDataset.getColumnMetadata().getByName(annotateBy) ;
+      var colorModel = project.getColumnColorModel();
+      var uniqColors = {};
+      _.each(phantasus.VectorUtil.getValues(colorByVector), function (value) {
+        if (!uniqColors[value]) {
+          if (colorModel.containsDiscreteColor(colorByVector, value)
+            && colorByVector.getProperties().get(phantasus.VectorKeys.DISCRETE)) {
+            uniqColors[value] = colorModel.getMappedValue(colorByVector, value);
+          } else if (colorModel.isContinuous(colorByVector)) {
+            uniqColors[value] = colorModel.getContinuousMappedValue(colorByVector, value);
+          } else {
+            uniqColors[value] = phantasus.VectorColorModel.CATEGORY_ALL[_.size(uniqColors) % 60];
+          }
+        }
+      });
 
+      request.annotationColors = uniqColors;
+    }
 
     fullDataset.getESSession().then(function (esSession) {
       request.es = esSession;
