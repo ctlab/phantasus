@@ -5,7 +5,8 @@
 \title{Returns path to an svg file with enrichment plot}
 \usage{
 gseaPlot(es, rankBy, selectedGenes, width, height, vertical = FALSE,
-  addHeatmap = FALSE, showAnnotation = NULL)
+  addHeatmap = FALSE, showAnnotation = NULL, annotationColors = NULL,
+  pallete = c("blue", "white", "red"))
 }
 \arguments{
 \item{es}{ExpressionSet object.}
@@ -23,6 +24,10 @@ gseaPlot(es, rankBy, selectedGenes, width, height, vertical = FALSE,
 \item{addHeatmap}{whether to add an expression heatmap, sorted by rankBy (default: FALSE)}
 
 \item{showAnnotation}{a name of column annotation to add to the heatmap, default: NULL (no annotation)}
+
+\item{annotationColors}{a list of colors to use in annotation}
+
+\item{pallete}{a vector of colors to draw heatmap}
 }
 \value{
 path to an svg file

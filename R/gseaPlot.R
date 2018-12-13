@@ -8,6 +8,7 @@
 #' @param addHeatmap whether to add an expression heatmap, sorted by rankBy (default: FALSE)
 #' @param showAnnotation a name of column annotation to add to the heatmap, default: NULL (no annotation)
 #' @param pallete a vector of colors to draw heatmap
+#' @param annotationColors a list of colors to use in annotation
 #' @return path to an svg file
 #' @importFrom fgsea plotEnrichment fgsea
 #' @importFrom ggplot2 ggtitle
@@ -21,6 +22,7 @@ gseaPlot <- function(es, rankBy, selectedGenes, width, height,
                      vertical=FALSE,
                      addHeatmap=FALSE,
                      showAnnotation=NULL,
+                     annotationColors=NULL,
                      pallete=c("blue", "white", "red")) {
     featureData <- fData(es)
     colnames(featureData) <- fvarLabels(es)
@@ -64,12 +66,19 @@ gseaPlot <- function(es, rankBy, selectedGenes, width, height,
         aggr <- Matrix.utils::aggregate.Matrix(mat, groupings=grouping, fun="mean")
 
         annotation_col <- NULL
+        annotation_colors <- NULL
         if (!is.null(showAnnotation)) {
             values <- es[[showAnnotation]]
             annotation_col <- data.frame(row.names=colnames(es),
                                     setNames(list(factor(values,
                                                             levels=unique(values))),
                                              showAnnotation))
+
+            if (!is.null(annotationColors)) {
+                annotation_colors <- list()
+                annotation_colors[[showAnnotation]] <- as.character(annotationColors)
+                names(annotation_colors[[showAnnotation]]) <- names(annotationColors)
+            }
         }
 
 
@@ -88,6 +97,7 @@ gseaPlot <- function(es, rankBy, selectedGenes, width, height,
                                      show_rownames = FALSE, show_colnames = FALSE,
                                      color=colorRampPalette(pallete)(50),
                                      annotation_col = annotation_col,
+                                     annotation_colors = annotation_colors,
                                      legend = FALSE,
                                      silent = TRUE)
 
@@ -123,6 +133,7 @@ gseaPlot <- function(es, rankBy, selectedGenes, width, height,
                                      show_rownames = FALSE, show_colnames = FALSE,
                                      color=colorRampPalette(pallete)(50),
                                      annotation_row = annotation_col,
+                                     annotation_colors = annotation_colors,
                                      legend = FALSE,
                                      silent = TRUE)
 
