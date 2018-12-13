@@ -1,5 +1,5 @@
-commit 57c34d78c1dfd9bf9c801c70ba4cc6da9cbd3a89
-Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Wed Dec 12 19:26:07 2018 +0300
+commit fd9c3a27ab190c1c070516ac7c92534bd1be7c14
+Author: petrovich <mazahakaforever@ya.ru>
+Date:   Thu Dec 13 22:03:43 2018 +0300
 
-    Send heatmap pallete to R
+    Supply annotation colors in GSEA plot
