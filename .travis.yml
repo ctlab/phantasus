@@ -75,3 +75,7 @@ after_success:
     docker push dzenkova/phantasus:$DOCKER_TAG;
     fi
 
+notifications:
+  slack:
+    rooms:
+      - sysbio1:Kt2QCRqnbzJpNE8TvOvgwEMz#phantasus
