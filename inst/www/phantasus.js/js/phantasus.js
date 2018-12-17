@@ -1977,6 +1977,27 @@ phantasus.Util.getURLParameter = function (name) {
   return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search) || [null, ''])[1].replace(/\+/g, '%20')) || null;
 };
 
+phantasus.Util.saveAsSVG = function (svgEl, name) {
+  svgEl.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  var svgData = svgEl.outerHTML;
+  var preface = '<?xml version="1.0" standalone="no"?>\r\n';
+  var svgBlob = new Blob([preface, svgData], {type:"image/svg+xml;charset=utf-8"});
+  var svgUrl = URL.createObjectURL(svgBlob);
+  phantasus.Util.promptBLOBdownload(svgUrl, name);
+};
+
+phantasus.Util.promptBLOBdownload = function (url, name) {
+  var a = document.createElement("a");
+  document.body.appendChild(a);
+  a.style = "display: none";
+  a.href = url;
+  a.download = name;
+  a.click();
+  setTimeout(function () {
+    document.body.removeChild(a);
+  }, 0)
+};
+
 phantasus.BlobFromPath = function () {
 };
 phantasus.BlobFromPath.getFileBlob = function (url, cb) {
@@ -14093,8 +14114,8 @@ phantasus.initAnnotationConvertTool = function (options) {
         phantasus.annotationDBMeta.init = true;
 
         phantasus.annotationDBMeta.dbs = result;
-        new phantasus.AnnotationConvertTool(options.heatMap);
         $el.dialog('destroy').remove();
+        new phantasus.AnnotationConvertTool(options.heatMap);
       })
     });
 
@@ -15726,7 +15747,7 @@ phantasus.gseaTool = function (heatmap, project) {
     .getRowMetadata());
 
   if (numberFields.length === 0) {
-    throw new Error('No number fields available. Cannot rank by');
+    throw new Error('No fields in row annotation appropriate for ranking.');
   }
 
   var rows = numberFields.map(function (field) {
@@ -15839,15 +15860,7 @@ phantasus.gseaTool = function (heatmap, project) {
   });
 
   this.$configPane.find('button').on('click', function () {
-    var a = document.createElement("a");
-    document.body.appendChild(a);
-    a.style = "display: none";
-    a.href = self.url;
-    a.download = "gsea-plot.svg";
-    a.click();
-    setTimeout(function () {
-      document.body.removeChild(a);
-    }, 0)
+    phantasus.Util.promptBLOBdownload(self.url, "gsea-plot.svg");
   });
 
   onChange();
@@ -18053,6 +18066,10 @@ phantasus.PcaPlotTool = function (chartOptions) {
     options: ['On', 'Off'],
     value: 'On'
   });
+  formBuilder.append({
+    name: 'export_to_SVG',
+    type: 'button'
+  })
 
 
   function setVisibility() {
@@ -18084,6 +18101,22 @@ phantasus.PcaPlotTool = function (chartOptions) {
   var $configPane = this.$el.find('[data-name=configPane]');
   formBuilder.$form.appendTo($configPane);
   this.$el.appendTo($dialog);
+
+  this.exportButton = this.$el.find('button[name=export_to_SVG]');
+  this.exportButton.toggle(false);
+  this.exportButton.on('click', function () {
+    var svgs = _this.$el.find(".main-svg");
+    var svgx = svgs[0].cloneNode(true);
+    svgs[1].childNodes.forEach(function (x) {
+      svgx.appendChild(x.cloneNode(true));
+    });
+    var drags = svgx.getElementsByClassName("drag");
+    while (drags.length > 0) {
+      drags[0].remove()
+    }
+    phantasus.Util.saveAsSVG(svgx, "pca-plot.svg");
+  });
+
   $dialog.dialog({
     close: function (event, ui) {
       project.off('trackChanged.chart', trackChanged);
@@ -18379,6 +18412,7 @@ phantasus.PcaPlotTool.prototype = {
           $chart.appendTo(_this.$chart);
 
           Plotly.newPlot(plot, data, layout, config).then(Plotly.annotate);
+          _this.exportButton.toggle(true);
         };
 
         if (!_this.pca) {
@@ -18396,7 +18430,7 @@ phantasus.PcaPlotTool.prototype = {
           drawResult();
         }
       }).catch(function (reason) {
-        alert("Problems occured during transforming dataset to ExpressionSet\n" + reason);
+        alert("Problems occurred during transforming dataset to ExpressionSet\n" + reason);
       });
 
     };

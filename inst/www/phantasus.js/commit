@@ -1,5 +1,7 @@
-commit fd9c3a27ab190c1c070516ac7c92534bd1be7c14
+commit 1f9c0a277bf011927dc86abd181a0dd97e902158
 Author: petrovich <mazahakaforever@ya.ru>
-Date:   Thu Dec 13 22:03:43 2018 +0300
+Date:   Mon Dec 17 16:48:35 2018 +0300
 
-    Supply annotation colors in GSEA plot
+    PCA plot export to SVG.
+    Unified GSEA\PCA export.
+    GSEA plot exception rethought.
