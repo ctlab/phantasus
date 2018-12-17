@@ -65,7 +65,7 @@ queryAnnotationDBMeta <- function () {
     annotDir <- paste(cacheDir, "annotationdb", sep = .Platform$file.sep)
     metaFile <- file.path(annotDir, "meta.rds")
     if (!file.exists(metaFile)) {
-        return("[]")
+        return(jsonlite::toJSON(NULL))
     }
 
     metaList <- readRDS(metaFile)
