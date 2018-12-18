@@ -1,7 +1,6 @@
-commit 1f9c0a277bf011927dc86abd181a0dd97e902158
-Author: petrovich <mazahakaforever@ya.ru>
-Date:   Mon Dec 17 16:48:35 2018 +0300
+commit d9f0ded7440d39dbc35c4c299a82f22b1f88f2e4
+Author: Vladislav Kamenev <mazahakaforever@ya.ru>
+Date:   Tue Dec 18 17:17:03 2018 +0300
 
-    PCA plot export to SVG.
-    Unified GSEA\PCA export.
-    GSEA plot exception rethought.
+    Echarts update.
+    Chart export to SVG implemented.
