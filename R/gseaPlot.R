@@ -1,3 +1,24 @@
+rasterizeHeatmap <- function(m, palette=palette, maxDimensions=c(2500, 1000)) {
+    mr <- round((m - min(m))/(max(m)-min(m)) * (length(palette) - 1) + 1)
+    cap <- matrix(palette[as.matrix(mr)], nrow=nrow(m))
+
+    repN <- floor(maxDimensions/dim(m))
+
+
+    cap1 <- matrix(rep(t(cap), each=repN[2]), nrow=nrow(cap), byrow = TRUE)
+    cap2 <- matrix(rep(cap1, each=repN[1]), ncol=ncol(cap1), byrow = FALSE)
+
+    # cap2[repN[1], repN[2]] == cap[1,1]
+    # cap2[repN[1]+1, repN[2]] == cap[2,1]
+    # cap2[repN[1], repN[2]+1] == cap[1,2]
+    # cap2[repN[1]+1, repN[2]+1] == cap[2,2]
+
+    res <- rasterGrob(cap2,
+                      width=unit(1, "npc"), height=unit(1, "npc"),
+                      interpolate = FALSE)
+    res
+}
+
 #' Returns path to an svg file with enrichment plot
 #' @param es ExpressionSet object.
 #' @param rankBy name of the numeric column used for gene ranking
@@ -24,6 +45,7 @@ gseaPlot <- function(es, rankBy, selectedGenes, width, height,
                      showAnnotation=NULL,
                      annotationColors=NULL,
                      pallete=c("blue", "white", "red")) {
+    fullPalette <- colorRampPalette(pallete)(50)
     featureData <- fData(es)
     colnames(featureData) <- fvarLabels(es)
 
@@ -95,14 +117,16 @@ gseaPlot <- function(es, rankBy, selectedGenes, width, height,
             ph <- pheatmap::pheatmap(aggr,
                                      cluster_rows = FALSE, cluster_cols = FALSE,
                                      show_rownames = FALSE, show_colnames = FALSE,
-                                     color=colorRampPalette(pallete)(50),
+                                     color=fullPalette,
                                      annotation_col = annotation_col,
                                      annotation_colors = annotation_colors,
                                      legend = FALSE,
                                      silent = TRUE)
 
             heatmapGrobs <- ph$gtable
-            hgMatrix <- heatmapGrobs$grobs[[head(which(heatmapGrobs$layout$name == "matrix"), 1)]]
+            hgMatrix <- rasterizeHeatmap(aggr,
+                                         palette=fullPalette,
+                                         maxDimensions=c(2500, 1000))
 
             panel_id <- enrichmentGrob$layout[enrichmentGrob$layout$name == "panel",c("t","l")]
 
@@ -131,14 +155,16 @@ gseaPlot <- function(es, rankBy, selectedGenes, width, height,
             ph <- pheatmap::pheatmap(Matrix::t(aggr),
                                      cluster_rows = FALSE, cluster_cols = FALSE,
                                      show_rownames = FALSE, show_colnames = FALSE,
-                                     color=colorRampPalette(pallete)(50),
+                                     color=fullPalette,
                                      annotation_row = annotation_col,
                                      annotation_colors = annotation_colors,
                                      legend = FALSE,
                                      silent = TRUE)
 
             heatmapGrobs <- ph$gtable
-            hgMatrix <- heatmapGrobs$grobs[[head(which(heatmapGrobs$layout$name == "matrix"), 1)]]
+            hgMatrix <- rasterizeHeatmap(Matrix::t(aggr),
+                                         palette=fullPalette,
+                                         maxDimensions=c(1000, 2500))
 
             panel_id <- enrichmentGrob$layout[enrichmentGrob$layout$name == "panel",c("t","l")]
 
