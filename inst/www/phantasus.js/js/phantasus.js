@@ -14312,8 +14312,7 @@ phantasus.ChartTool = function (chartOptions) {
     name: 'chart_type',
     type: 'bootstrap-select',
     options: [
-      'row profile', 'column profile', 'boxplot', 'row scatter matrix', 'column scatter' +
-      ' matrix']
+      'row profile', 'column profile', 'boxplot']
   });
   var rowOptions = [];
   var columnOptions = [];
@@ -14468,16 +14467,6 @@ phantasus.ChartTool = function (chartOptions) {
       tooltip: 'rows',
       color: 'columns'
     },
-    'row scatter matrix': {
-      axis_label: 'rows',
-      color: 'columns',
-      tooltip: 'columns'
-    },
-    'column scatter matrix': {
-      axis_label: 'columns',
-      color: 'rows',
-      tooltip: 'rows'
-    },
     boxplot: {
       group_by: true,
       show_outliers: true,
@@ -14557,9 +14546,7 @@ phantasus.ChartTool = function (chartOptions) {
     }
 
     var svgx = svgs[0].cloneNode(true);
-    svgs[0].childNodes.forEach(function (x) {
-      svgx.appendChild(x.cloneNode(true));
-    });
+    $(svgx).find('[fill="rgba(0,0,0,0)"]').attr('fill-opacity', '0');
     phantasus.Util.saveAsSVG(svgx, "chart.svg");
   });
 
@@ -14592,182 +14579,7 @@ phantasus.ChartTool.getVectorInfo = function (value) {
   };
 };
 phantasus.ChartTool.prototype = {
-  /**
-   *
-   * @param options.dataset
-   * @param options.colorByVector
-   * @param options.colorModel
-   * @param options.transpose
-   * @param options.chartWidth
-   * @param options.chartHeight
-   * @param options.axisLabelVector
-   * @private
-   */
-  _createScatter: function (options) {
-    var _this = this;
-    var dataset = options.dataset;
-    var colorByVector = options.colorByVector;
-    var colorModel = options.colorModel;
-    var heatmap = this.heatmap;
-    var chartWidth = options.chartWidth;
-    var chartHeight = options.chartHeight;
-    var axisLabelVector = options.axisLabelVector; // for row scatter, row vector
-    var transpose = options.transpose;
-    var chart = {
-      animation: false,
-      toolbox: {
-        feature: {
-          brush: {
-            title: {
-              rect: 'Rectangle selection',
-              polygon: 'Polygon selection',
-              clear: 'Clear Selection',
-              keep: 'Keep previous selection'
-            }
-          }
-        }
-      },
-      brush: {
-        brushLink: 'all',
-        xAxisIndex: [],
-        yAxisIndex: [],
-        inBrush: {
-          opacity: 1
-        }
-      },
-      tooltip: {
-        trigger: 'item'
-      },
-      grid: [],
-      xAxis: [],
-      yAxis: [],
-      series: []
-    };
-    var index = 0;
-    var GAP = 20;
-    var BASE_LEFT = 40;
-    var BASE_TOP = 40;
-    // rowIndexOne on x, rowIndexTwo on y
-    for (var rowIndexOne = 1, nrows = dataset.getRowCount(); rowIndexOne < nrows; rowIndexOne++) {
-      for (var rowIndexTwo = 0; rowIndexTwo < rowIndexOne; rowIndexTwo++) {
-        (function () {
-          var data = [];
-          var color = [];
-          for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
-            data.push([dataset.getValue(rowIndexOne, j), dataset.getValue(rowIndexTwo, j), j]);
-          }
-
-          if (colorByVector) {
-            for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
-              var colorByValue = colorByVector.getValue(j);
-              color.push(colorModel.getMappedValue(colorByVector,
-                colorByValue));
-            }
-          }
-          chart.grid.push({
-            left: GAP + (rowIndexOne - 1) * (chartWidth + GAP),
-            top: BASE_TOP + rowIndexTwo * (chartHeight + GAP),
-            width: chartWidth,
-            height: chartHeight
-          });
-
-          chart.brush.xAxisIndex && chart.brush.xAxisIndex.push(index);
-          chart.brush.yAxisIndex && chart.brush.yAxisIndex.push(index);
-          chart.xAxis.push({
-            splitNumber: 3,
-            position: 'top',
-            name: axisLabelVector != null && rowIndexTwo === 0 ? axisLabelVector.getValue(rowIndexOne) : '',
-            nameGap: 25,
-            nameLocation: 'middle',
-            axisLine: {
-              show: false,
-              onZero: false
-            },
-            axisTick: {
-              show: rowIndexTwo === 0,
-              inside: true
-            },
-            axisLabel: {
-              show: rowIndexTwo === 0
-            },
-            type: 'value',
-            gridIndex: index,
-            scale: true
-          });
-
-          chart.yAxis.push({
-            splitNumber: 3,
-            nameGap: 50,
-            name: axisLabelVector != null && rowIndexOne === nrows - 1 ? axisLabelVector.getValue(rowIndexTwo) : '',
-            nameLocation: 'middle',
-            position: 'right',
-            axisLine: {
-              show: false,
-              onZero: false
-            },
-            axisTick: {
-              show: rowIndexOne === nrows - 1,
-              inside: true
-            },
-            axisLabel: {
-              show: rowIndexOne === nrows - 1
-            },
-            type: 'value',
-            gridIndex: index,
-            scale: true
-          });
-
-          chart.series.push({
-            symbolSize: 4,
-            tooltip: {
-              formatter: function (obj) {
-                var value = obj.value;
-                var s = [];
-                s.push('x: ' + _this.heatmap.getHeatMapElementComponent().getDrawValuesFormat()(value[0]));
-                s.push('<br>');
-                s.push('y ' + _this.heatmap.getHeatMapElementComponent().getDrawValuesFormat()(value[1]));
-                if (transpose) {
-                  phantasus.ChartTool.getTooltip({
-                    text: s,
-                    tooltip: _this.tooltip,
-                    dataset: new phantasus.TransposedDatasetView(dataset),
-                    rowIndex: value[2],
-                    columnIndex: -1
-                  });
-                } else {
-                  phantasus.ChartTool.getTooltip({
-                    text: s,
-                    tooltip: _this.tooltip,
-                    dataset: dataset,
-                    rowIndex: -1,
-                    columnIndex: value[2]
-                  });
-                }
-                return s.join('');
-              }
-            },
-            itemStyle: {
-              normal: {
-                color: function (param) {
-                  return color.length === 0 ? '#1f78b4' : color[param.dataIndex];
-                }
-              }
-            },
-            type: 'scatter',
-            xAxisIndex: index,
-            yAxisIndex: index,
-            data: data
-          });
-          index++;
-        })();
-
-      }
-    }
-    var myChart = echarts.init(options.el, null, {renderer: 'svg'});
-    myChart.setOption(chart);
-
-  },
-  /**
+   /**
    *
    * @param options.dataset
    * @param options.colorByVector
@@ -15080,30 +14892,6 @@ phantasus.ChartTool.prototype = {
       $chart.appendTo(this.$chart);
       this._createProfile({
         width: gridWidth,
-        el: $chart[0],
-        dataset: dataset,
-        chartWidth: gridWidth,
-        chartHeight: gridHeight,
-        transpose: transpose,
-        colorModel: colorModel,
-        colorByVector: colorByVector,
-        axisLabelVector: axisLabelVector
-      });
-    } else if (chartType === 'row scatter matrix' || chartType === 'column scatter matrix') {
-      var transpose = chartType === 'column scatter matrix';
-
-      if (transpose) {
-        dataset = new phantasus.TransposedDatasetView(dataset);
-      }
-      if (dataset.getRowCount() > 20) {
-        $('<h4>Maximum chart size exceeded.</h4>')
-          .appendTo(this.$chart);
-        return;
-      }
-      var $chart = $('<div style="width:' + (80 + (dataset.getRowCount() - 1) * (gridWidth + 20)) + 'px;height:' + (80 + dataset.getRowCount() * (gridHeight + 20)) +
-        'px;"></div>');
-      $chart.appendTo(this.$chart);
-      this._createScatter({
         el: $chart[0],
         dataset: dataset,
         chartWidth: gridWidth,

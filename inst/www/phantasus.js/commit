@@ -1,6 +1,6 @@
-commit d9f0ded7440d39dbc35c4c299a82f22b1f88f2e4
+commit e149c9f551e588c7d18c0e2e51a0d8a0f0adc142
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Tue Dec 18 17:17:03 2018 +0300
+Date:   Wed Dec 19 15:28:56 2018 +0300
 
-    Echarts update.
-    Chart export to SVG implemented.
+    Removed unused charts from charts.
+    Fixed black rectangles in SVGs
