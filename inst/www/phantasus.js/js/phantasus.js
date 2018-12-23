@@ -11613,10 +11613,10 @@ phantasus.VectorColorModel.TABLEAU10 = [
 phantasus.VectorColorModel.STANDARD_COLORS = {
   'na': '#c0c0c0',
   'nan': '#c0c0c0',
-  '': '#ffffff',
-  'wt': '#ffffff',
-  'n': '#ffffff',
-  '0': '#ffffff',
+  '': '#c0c0c0',
+  'wt': '#c0c0c0',
+  'n': '#c0c0c0',
+  '0': '#c0c0c0',
   'y': phantasus.VectorColorModel.YES_COLOR,
   '1': phantasus.VectorColorModel.YES_COLOR,
   'male': phantasus.VectorColorModel.MALE,
@@ -11647,7 +11647,7 @@ phantasus.VectorColorModel.STANDARD_COLORS = {
 };
 phantasus.VectorColorModel.getStandardColor = function (value) {
   if (value == null) {
-    return '#ffffff';
+    return '#c0c0c0';
   }
   var stringValue = value.toString().toLowerCase();
   return phantasus.VectorColorModel.STANDARD_COLORS[stringValue];

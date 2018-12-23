@@ -1,5 +1,5 @@
-commit 7cc453a4554697d927028114e975f4809ea98abb
+commit 7f929d1df38308fed6d150423fb85d5cf5a29b53
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Sun Dec 23 05:20:40 2018 +0300
+Date:   Sun Dec 23 07:08:31 2018 +0300
 
-    Group by columns\rows
+    White in annotations replaced by gray. #106
