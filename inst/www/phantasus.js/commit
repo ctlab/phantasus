@@ -1,6 +1,5 @@
-commit e149c9f551e588c7d18c0e2e51a0d8a0f0adc142
+commit 7cc453a4554697d927028114e975f4809ea98abb
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Wed Dec 19 15:28:56 2018 +0300
+Date:   Sun Dec 23 05:20:40 2018 +0300
 
-    Removed unused charts from charts.
-    Fixed black rectangles in SVGs
+    Group by columns\rows

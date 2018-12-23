@@ -20381,6 +20381,7 @@ phantasus.ActionManager = function () {
       cb: function (options) {
         window.project = options.heatMap.project;
         window.dataset = options.heatMap.project.getFullDataset();
+        window.heatmap = options.heatMap;
       }
     })
   }
@@ -22109,6 +22110,110 @@ phantasus.ColumnDendrogram.prototype = {
   }
 };
 phantasus.Util.extend(phantasus.ColumnDendrogram, phantasus.AbstractDendrogram);
+
+phantasus.ColumnOrderGui = function () {
+
+};
+phantasus.lol = function (array) {
+  var root = {
+    id: 0,
+    height: 0.50,
+    index: array.length / 2,
+    minIndex: 0,
+    maxIndex: array.length,
+    depth: 0,
+    children: []
+  };
+
+  var tree = {
+    maxHeight: 0.50,
+    rootNode: root,
+    leafNodes: [],
+    nLeafNodes: array.length
+  };
+
+  var indexCounter = array.length;
+  var curValue = array[0];
+  var startIdx = 0;
+  var curChildren = [];
+
+  var processSubgroup = function (i) {
+    var curIndex = (i - startIdx) / 2 + startIdx;
+    if (curChildren.length > 2) {
+      while(curChildren.length > 2) {
+        var tmp = curChildren.splice(0,2);
+        curChildren.unshift({
+          children: tmp,
+          minIndex: Math.min(tmp[0].minIndex, tmp[1].minIndex),
+          maxIndex: Math.max(tmp[0].maxIndex, tmp[1].maxIndex),
+          index: (Math.min(tmp[0].minIndex, tmp[1].minIndex) + Math.max(tmp[0].maxIndex, tmp[1].maxIndex)) / 2,
+          id: indexCounter++
+        });
+      }
+
+      tree.rootNode.children.push({
+        children: curChildren,
+        minIndex: startIdx,
+        maxIndex: i - 1,
+        index: curIndex,
+        id: indexCounter++,
+        cool: true
+      });
+    } else if (curChildren.length === 2) {
+      tree.rootNode.children.push({
+        children: curChildren,
+        minIndex: startIdx,
+        maxIndex: i - 1,
+        index: curIndex,
+        id: indexCounter++,
+        cool: true
+      });
+    } else {
+      tree.rootNode.children.push(curChildren[0]);
+    }
+    curChildren = [];
+    curValue = array[i];
+    startIdx = i;
+  };
+
+  for(var i = 0; i < array.length; i++) {
+    var child = {
+      depth: 2,
+      height: 0.00,
+      id: i,
+      minIndex: i,
+      index: i,
+      maxIndex: i
+    };
+    tree.leafNodes.push(child);
+
+    if (array[i] !== curValue) {
+      processSubgroup(i);
+    }
+
+    curChildren.push(child);
+  }
+  processSubgroup(array.length);
+
+  var fixDepths = function (node, depth) {
+    node.depth = depth;
+    if (node.children) {
+      _.each(node.children, function (nodex) {
+        nodex.parent = node;
+        nodex.height = node.height / 2;
+        fixDepths(nodex, depth + 1);
+      });
+    }
+  };
+
+
+
+  fixDepths(tree.rootNode, 0);
+
+  tree.rootNode.id = indexCounter++;
+
+  return tree;
+};
 
 phantasus.ConditionalRenderingUI = function (heatmap) {
   var _this = this;
@@ -39389,6 +39494,12 @@ phantasus.VectorTrack.prototype = {
     var DISPLAY_CONTINUOUS = 'Continuous';
     var VIEW_STRING = "View as string";
     var VIEW_NUMBER = "View as number";
+    var COPY_VALUES = "Copy selected values from " + this.name;
+
+    var isGrouped = isColumns ?
+      _.size(project.getGroupColumns()) > 0 && _.first(project.getGroupColumns()).name === this.name :
+      _.size(project.getGroupRows()) > 0 && _.first(project.getGroupRows()).name === this.name;
+    var GROUP_BY_VALUES = "Group by this " + (this.isColumns ? "column" : "row");
 
     var positions = this.positions;
     var heatmap = this.heatmap;
@@ -39422,7 +39533,7 @@ phantasus.VectorTrack.prototype = {
       });
     }
     sectionToItems.Selection.push({
-      name: 'Copy',
+      name: COPY_VALUES,
       class: 'copy'
     });
 
@@ -39668,6 +39779,11 @@ phantasus.VectorTrack.prototype = {
     }
 
     sectionToItems.Display.push({
+      name: GROUP_BY_VALUES,
+      checked: isGrouped
+    });
+
+    sectionToItems.Display.push({
       separator: true
     });
     sectionToItems.Display.push({
@@ -39753,7 +39869,7 @@ phantasus.VectorTrack.prototype = {
             html: formBuilder.$form,
             focus: heatmap.getFocusEl()
           });
-        } else if (item === 'Copy') {
+        } else if (item === COPY_VALUES) {
           heatmap.getActionManager().execute(isColumns ? 'Copy Selected Columns' : 'Copy' +
             ' Selected Rows');
         } else if (item === FIELDS) {
@@ -39910,6 +40026,12 @@ phantasus.VectorTrack.prototype = {
         } else if (item === ANNOTATE_SELECTION) {
           heatmap.getActionManager().execute(isColumns ? 'Annotate Selected Columns' : 'Annotate' +
             ' Selected Rows');
+        } else if (item === GROUP_BY_VALUES) {
+          if (isColumns) {
+            _this.project.setGroupColumns(isGrouped ? [] : [new phantasus.SortKey(_this.name, phantasus.SortKey.SortOrder.UNSORTED)], true);
+          } else {
+            _this.project.setGroupRows(isGrouped ? [] : [new phantasus.SortKey(_this.name, phantasus.SortKey.SortOrder.UNSORTED)], true);
+          }
         } else if (item === RENAME) {
           var formBuilder = new phantasus.FormBuilder();
           formBuilder.append({
