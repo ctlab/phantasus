@@ -1,3 +1,12 @@
+CHANGES IN VERSION 1.3.2
+* PCA plot, GSEA plot and Chart tool can be exported to SVG
+* Group by in column context menu
+* Dataset open history
+* Annotate dataset by AnnotateDB
+* Switch column datatype in context menu
+* GSEA plot uses general palette to color heatmap\annotation
+* Minor bug fixes
+
 CHANGES IN VERSION 1.1.6
 * Minor bug fixes
 

@@ -1,2 +1,2 @@
-window.PHANTASUS_VERSION='1.3.0';
-window.PHANTASUS_BUILD='none-6bb2f98033';
+window.PHANTASUS_VERSION='1.3.2';
+window.PHANTASUS_BUILD='none-6543934db6';
