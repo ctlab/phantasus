@@ -1,5 +1,5 @@
-commit 7f929d1df38308fed6d150423fb85d5cf5a29b53
+commit f4059d6ac04bee931a96fcf4261cab72485c4f66
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Sun Dec 23 07:08:31 2018 +0300
+Date:   Thu Dec 27 20:58:01 2018 +0300
 
-    White in annotations replaced by gray. #106
+    Factorize vector. Forgotten file
