@@ -1,5 +1,6 @@
-commit 7f929d1df38308fed6d150423fb85d5cf5a29b53
+commit 0946e7d4861e50833b01ab4b58a965d59775e2ad
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Sun Dec 23 07:08:31 2018 +0300
+Date:   Fri Dec 28 18:31:09 2018 +0300
 
-    White in annotations replaced by gray. #106
+    Fixed factorization of sliced and joined vectors.
+    Fixed factorise GUI layout.

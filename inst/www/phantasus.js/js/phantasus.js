@@ -5102,6 +5102,18 @@ phantasus.VectorAdapter.prototype = {
   },
   setName: function (name) {
     this.v.setName(name);
+  },
+  isFactorized: function () {
+    return this.v.isFactorized();
+  },
+  getFactorLevels: function () {
+    return this.v.getFactorLevels();
+  },
+  factorize: function (levels) {
+    return this.v.factorize(levels);
+  },
+  defactorize: function () {
+    return this.v.defactorize();
   }
 };
 
@@ -8609,6 +8621,7 @@ phantasus.JoinedVector = function (v1, v2) {
   this.v2 = v2;
   phantasus.VectorAdapter.call(this, v1);
   this.properties = new phantasus.Map();
+  this.levels = null;
 };
 phantasus.JoinedVector.prototype = {
   setValue: function (i, value) {
@@ -8624,6 +8637,47 @@ phantasus.JoinedVector.prototype = {
   },
   getProperties: function () {
     return this.properties;
+  },
+
+  factorize: function (levels) {
+    if (!levels || _.size(levels) === 0 || !_.isArray(levels)) {
+      return this.defactorize();
+    }
+
+    if (this.isFactorized()) {
+      this.defactorize();
+    }
+
+    var uniqueValuesInVector = _.uniq(phantasus.VectorUtil.getSet(this).values());
+
+    var allLevelsArePresent = levels.every(function (value) {
+      return _.indexOf(uniqueValuesInVector, value) !== -1; // all levels are present in current array
+    }) && uniqueValuesInVector.every(function (value) {
+      return _.indexOf(levels, value) !== -1; // all current values present in levels
+    });
+
+
+    if (!allLevelsArePresent) {
+      throw Error('Cannot factorize vector. Invalid levels');
+    }
+
+    this.levels = levels;
+  },
+
+  defactorize: function () {
+    if (!this.isFactorized()) {
+      return;
+    }
+
+    this.levels = null;
+  },
+
+  isFactorized: function () {
+    return _.size(this.levels)  > 0;
+  },
+
+  getFactorLevels: function () {
+    return this.levels;
   }
 };
 phantasus.Util.extend(phantasus.JoinedVector, phantasus.VectorAdapter);
@@ -10214,6 +10268,7 @@ phantasus.Util.extend(phantasus.SlicedDatasetView, phantasus.DatasetAdapter);
 phantasus.SlicedVector = function (v, indices) {
   phantasus.VectorAdapter.call(this, v);
   this.indices = indices;
+  this.levels = null;
 };
 phantasus.SlicedVector.prototype = {
   setValue: function (i, value) {
@@ -10224,6 +10279,47 @@ phantasus.SlicedVector.prototype = {
   },
   size: function () {
     return this.indices.length;
+  },
+
+  factorize: function (levels) {
+    if (!levels || _.size(levels) === 0 || !_.isArray(levels)) {
+      return this.defactorize();
+    }
+
+    if (this.isFactorized()) {
+      this.defactorize();
+    }
+
+    var uniqueValuesInVector = _.uniq(phantasus.VectorUtil.getSet(this).values());
+
+    var allLevelsArePresent = levels.every(function (value) {
+      return _.indexOf(uniqueValuesInVector, value) !== -1; // all levels are present in current array
+    }) && uniqueValuesInVector.every(function (value) {
+      return _.indexOf(levels, value) !== -1; // all current values present in levels
+    });
+
+
+    if (!allLevelsArePresent) {
+      throw Error('Cannot factorize vector. Invalid levels');
+    }
+
+    this.levels = levels;
+  },
+
+  defactorize: function () {
+    if (!this.isFactorized()) {
+      return;
+    }
+
+    this.levels = null;
+  },
+
+  isFactorized: function () {
+    return _.size(this.levels)  > 0;
+  },
+
+  getFactorLevels: function () {
+    return this.levels;
   }
 };
 phantasus.Util.extend(phantasus.SlicedVector, phantasus.VectorAdapter);
@@ -10353,34 +10449,43 @@ phantasus.SortKey.prototype = {
       this.c = this.sortOrder === phantasus.SortKey.SortOrder.ASCENDING ? phantasus.SortKey.ASCENDING_COMPARATOR
         : phantasus.SortKey.DESCENDING_COMPARATOR;
     } else {
-      var dataType = phantasus.VectorUtil.getDataType(this.v);
-      if (dataType === 'number') {
-        this.c = this.sortOrder === phantasus.SortKey.SortOrder.ASCENDING ? phantasus.SortKey.NUMBER_ASCENDING_COMPARATOR
-          : phantasus.SortKey.NUMBER_DESCENDING_COMPARATOR;
-      } else if (dataType === '[number]') {
-        var summary = this.v.getProperties().get(
-          phantasus.VectorKeys.ARRAY_SUMMARY_FUNCTION)
-          || phantasus.SortKey.ARRAY_MAX_SUMMARY_FUNCTION;
-        this.c = this.sortOrder === phantasus.SortKey.SortOrder.ASCENDING ? phantasus.SortKey
-            .ARRAY_ASCENDING_COMPARATOR(summary)
-          : phantasus.SortKey.ARRAY_DESCENDING_COMPARATOR(summary);
-      } else {
-        this.c = this.sortOrder === phantasus.SortKey.SortOrder.ASCENDING ? phantasus.SortKey.ASCENDING_COMPARATOR
-          : phantasus.SortKey.DESCENDING_COMPARATOR;
-      }
-      if (this.customComparator != null) {
-        var oldC = this.c;
-        var customComparator = this.customComparator;
+      if (this.v.isFactorized()) {
+        var levels = this.v.getFactorLevels();
         if (this.sortOrder === phantasus.SortKey.SortOrder.ASCENDING) {
-          this.c = function (a, b) {
-            var val = customComparator(a, b);
-            return val === 0 ? oldC(a, b) : val;
-          };
+          this.c = function (a,b) { return _.indexOf(levels, a) - _.indexOf(levels, b); }
         } else {
-          this.c = function (a, b) {
-            var val = customComparator(b, a);
-            return val === 0 ? oldC(a, b) : val;
-          };
+          this.c = function (a,b) { return _.indexOf(levels, b) - _.indexOf(levels, a); }
+        }
+      } else {
+        var dataType = phantasus.VectorUtil.getDataType(this.v);
+        if (dataType === 'number') {
+          this.c = this.sortOrder === phantasus.SortKey.SortOrder.ASCENDING ? phantasus.SortKey.NUMBER_ASCENDING_COMPARATOR
+            : phantasus.SortKey.NUMBER_DESCENDING_COMPARATOR;
+        } else if (dataType === '[number]') {
+          var summary = this.v.getProperties().get(
+            phantasus.VectorKeys.ARRAY_SUMMARY_FUNCTION)
+            || phantasus.SortKey.ARRAY_MAX_SUMMARY_FUNCTION;
+          this.c = this.sortOrder === phantasus.SortKey.SortOrder.ASCENDING ? phantasus.SortKey
+              .ARRAY_ASCENDING_COMPARATOR(summary)
+            : phantasus.SortKey.ARRAY_DESCENDING_COMPARATOR(summary);
+        } else {
+          this.c = this.sortOrder === phantasus.SortKey.SortOrder.ASCENDING ? phantasus.SortKey.ASCENDING_COMPARATOR
+            : phantasus.SortKey.DESCENDING_COMPARATOR;
+        }
+        if (this.customComparator != null) {
+          var oldC = this.c;
+          var customComparator = this.customComparator;
+          if (this.sortOrder === phantasus.SortKey.SortOrder.ASCENDING) {
+            this.c = function (a, b) {
+              var val = customComparator(a, b);
+              return val === 0 ? oldC(a, b) : val;
+            };
+          } else {
+            this.c = function (a, b) {
+              var val = customComparator(b, a);
+              return val === 0 ? oldC(a, b) : val;
+            };
+          }
         }
       }
     }
@@ -12048,6 +12153,8 @@ phantasus.VectorKeys.JSON_WHITELIST.add(phantasus.VectorKeys.FORMATTER);
 phantasus.VectorKeys.JSON_WHITELIST.add(phantasus.VectorKeys.DATA_TYPE);
 phantasus.VectorKeys.JSON_WHITELIST.add(phantasus.VectorKeys.TITLE);
 
+phantasus.VectorKeys.LEVELS = 'phantasus.levels';
+
 phantasus.VectorShapeModel = function () {
   this.shapes = phantasus.VectorShapeModel.SHAPES;
   this.vectorNameToMappedValue = new phantasus.Map();
@@ -12576,6 +12683,7 @@ phantasus.VectorUtil.isNumber = function (vector) {
  */
 phantasus.Vector = function (name, size) {
   this.array = [];
+  this.levels = null;
   phantasus.AbstractVector.call(this, name, size);
 };
 /**
@@ -12603,6 +12711,8 @@ phantasus.Vector.prototype = {
    *            the value
    */
   setValue: function (index, value) {
+    this.defactorize();
+
     this.array[index] = value;
   },
   getValue: function (index) {
@@ -12621,8 +12731,52 @@ phantasus.Vector.prototype = {
    * @returns {phantasus.Vector}
    */
   setArray: function (array) {
+    this.defactorize();
+
     this.array = array;
     return this;
+  },
+
+
+  factorize: function (levels) {
+    if (!levels || _.size(levels) === 0 || !_.isArray(levels)) {
+      return this.defactorize();
+    }
+
+    if (this.isFactorized()) {
+      this.defactorize();
+    }
+
+    var uniqueValuesInVector = _.uniq(this.array);
+
+    var allLevelsArePresent = levels.every(function (value) {
+      return _.indexOf(uniqueValuesInVector, value) !== -1; // all levels are present in current array
+    }) && uniqueValuesInVector.every(function (value) {
+      return _.indexOf(levels, value) !== -1; // all current values present in levels
+    });
+
+
+    if (!allLevelsArePresent) {
+      throw Error('Cannot factorize vector. Invalid levels');
+    }
+
+    this.levels = levels;
+  },
+
+  defactorize: function () {
+    if (!this.isFactorized()) {
+      return;
+    }
+
+    this.levels = null;
+  },
+
+  isFactorized: function () {
+    return _.size(this.levels)  > 0;
+  },
+
+  getFactorLevels: function () {
+    return this.levels;
   }
 };
 phantasus.Util.extend(phantasus.Vector, phantasus.AbstractVector);
@@ -22111,110 +22265,6 @@ phantasus.ColumnDendrogram.prototype = {
 };
 phantasus.Util.extend(phantasus.ColumnDendrogram, phantasus.AbstractDendrogram);
 
-phantasus.ColumnOrderGui = function () {
-
-};
-phantasus.lol = function (array) {
-  var root = {
-    id: 0,
-    height: 0.50,
-    index: array.length / 2,
-    minIndex: 0,
-    maxIndex: array.length,
-    depth: 0,
-    children: []
-  };
-
-  var tree = {
-    maxHeight: 0.50,
-    rootNode: root,
-    leafNodes: [],
-    nLeafNodes: array.length
-  };
-
-  var indexCounter = array.length;
-  var curValue = array[0];
-  var startIdx = 0;
-  var curChildren = [];
-
-  var processSubgroup = function (i) {
-    var curIndex = (i - startIdx) / 2 + startIdx;
-    if (curChildren.length > 2) {
-      while(curChildren.length > 2) {
-        var tmp = curChildren.splice(0,2);
-        curChildren.unshift({
-          children: tmp,
-          minIndex: Math.min(tmp[0].minIndex, tmp[1].minIndex),
-          maxIndex: Math.max(tmp[0].maxIndex, tmp[1].maxIndex),
-          index: (Math.min(tmp[0].minIndex, tmp[1].minIndex) + Math.max(tmp[0].maxIndex, tmp[1].maxIndex)) / 2,
-          id: indexCounter++
-        });
-      }
-
-      tree.rootNode.children.push({
-        children: curChildren,
-        minIndex: startIdx,
-        maxIndex: i - 1,
-        index: curIndex,
-        id: indexCounter++,
-        cool: true
-      });
-    } else if (curChildren.length === 2) {
-      tree.rootNode.children.push({
-        children: curChildren,
-        minIndex: startIdx,
-        maxIndex: i - 1,
-        index: curIndex,
-        id: indexCounter++,
-        cool: true
-      });
-    } else {
-      tree.rootNode.children.push(curChildren[0]);
-    }
-    curChildren = [];
-    curValue = array[i];
-    startIdx = i;
-  };
-
-  for(var i = 0; i < array.length; i++) {
-    var child = {
-      depth: 2,
-      height: 0.00,
-      id: i,
-      minIndex: i,
-      index: i,
-      maxIndex: i
-    };
-    tree.leafNodes.push(child);
-
-    if (array[i] !== curValue) {
-      processSubgroup(i);
-    }
-
-    curChildren.push(child);
-  }
-  processSubgroup(array.length);
-
-  var fixDepths = function (node, depth) {
-    node.depth = depth;
-    if (node.children) {
-      _.each(node.children, function (nodex) {
-        nodex.parent = node;
-        nodex.height = node.height / 2;
-        fixDepths(nodex, depth + 1);
-      });
-    }
-  };
-
-
-
-  fixDepths(tree.rootNode, 0);
-
-  tree.rootNode.id = indexCounter++;
-
-  return tree;
-};
-
 phantasus.ConditionalRenderingUI = function (heatmap) {
   var _this = this;
   this.heatmap = heatmap;
@@ -23340,6 +23390,124 @@ phantasus.DualList.prototype = {
       right.options[sel + 1] = new Option(optHTML, optVal);
       right.options.selectedIndex = sel + 1;
     }
+  }
+};
+
+phantasus.factorizeColumn = function (vector) {
+  var self = this;
+
+  this.v = vector;
+  if (vector.isFactorized()) {
+    this.values = vector.getFactorLevels();
+  } else {
+    this.values = phantasus.VectorUtil.getSet(vector).values();
+  }
+
+  this.$dialog = $('<div style="background:white;" title="' + phantasus.factorizeColumn.prototype.toString() + '"></div>');
+  this.$el = $([
+    '<div class="container-fluid" style="height: 100%">',
+    ' <div class="row" style="height: 100%">',
+    '   <div data-name="configPane" class="col-xs-4">',
+    '         <div class="form-group"><button name="move_up" type="button" class="btn btn-default btn-sm">Move selected up ↑</button></div>',
+    '         <div class="form-group"><button name="move_down" type="button" class="btn btn-default btn-sm">Move selected down ↓</button></div>',
+    '   </div>',
+    '   <div class="col-xs-8 single-form-column" data-name="selector" style="height: 100%"></div>',
+    ' </div>',
+    '</div>',
+    '</div>'].join('')
+  );
+
+
+  this.formBuilder = new phantasus.FormBuilder({
+    formStyle: 'vertical'
+  });
+
+  [{
+    name: 'values',
+    options: this.values,
+    value: null,
+    multiple: true,
+    type: 'select',
+    style: 'height: 90%'
+  }].forEach(function (a) {
+    self.formBuilder.append(a);
+  });
+
+  var move_list = function (direction) {
+    var $field = self.formBuilder.$form.find("[name=values]");
+    var values = $field.val();
+
+    if (direction === 'down') {
+      var indexes = _.map(values, function (val) {
+        return _.indexOf(self.values, val);
+      }).sort(function (a,b) { return b - a; });
+
+      _.each(indexes, function (index) {
+        var a = self.values[index];
+        var indexB = Math.min(index + 1, self.values.length - 1);
+        var b = self.values[indexB];
+
+        self.values[index] = b;
+        self.values[indexB] = a;
+      });
+    } else {
+      var indexes = _.map(values, function (val) {
+        return _.indexOf(self.values, val);
+      }).sort(function (a,b) { return a-b; });
+
+      _.each(indexes, function (index) {
+        var a = self.values[index];
+        var indexB = Math.max(index - 1, 0);
+        var b = self.values[indexB];
+
+        self.values[index] = b;
+        self.values[indexB] = a;
+      });
+    }
+
+    self.formBuilder.setOptions('values', self.values);
+  };
+
+  var $button_up = this.$el.find('[name=move_up]');
+  var $button_down = this.$el.find('[name=move_down]');
+
+  $button_up.on('click', function () { move_list('up') });
+  $button_down.on('click', function () { move_list('down') });
+
+  this.selector = this.$el.find('[data-name=selector]');
+  this.formBuilder.$form.appendTo(this.selector);
+  this.$el.appendTo(this.$dialog);
+  this.$dialog.dialog({
+    open: function (event, ui) {
+      $(this).css('overflow', 'hidden'); //this line does the actual hiding
+    },
+    close: function (event, ui) {
+      self.$dialog.dialog('destroy').remove();
+      event.stopPropagation();
+    },
+    buttons: {
+      'Apply': function () {
+        vector.factorize(self.values);
+        self.$dialog.dialog('destroy').remove();
+      },
+      'Remove factor': function () {
+        vector.defactorize();
+        self.$dialog.dialog('destroy').remove();
+      },
+      'Cancel': function () {
+        self.$dialog.dialog('destroy').remove();
+      }
+    },
+
+    resizable: false,
+    height: 400,
+    width: 600
+  });
+};
+
+phantasus.factorizeColumn.prototype = {
+  toString: function () {
+    return "Factorise";
   }
 };
 
@@ -39495,6 +39663,7 @@ phantasus.VectorTrack.prototype = {
     var VIEW_STRING = "View as string";
     var VIEW_NUMBER = "View as number";
     var COPY_VALUES = "Copy selected values from " + this.name;
+    var CUSTOM_ORDER = "Set custom order (factors)";
 
     var isGrouped = isColumns ?
       _.size(project.getGroupColumns()) > 0 && _.first(project.getGroupColumns()).name === this.name :
@@ -39689,6 +39858,15 @@ phantasus.VectorTrack.prototype = {
         name: 'Custom Range...'
       });
     }
+
+    if (isColumns) {
+      sectionToItems.Display.push({
+        name: CUSTOM_ORDER,
+        checked: this.getFullVector().isFactorized()
+      });
+
+    }
+
     if (this.isRenderAs(phantasus.VectorTrack.RENDER.COLOR)
       || this.isRenderAs(phantasus.VectorTrack.RENDER.TEXT_AND_COLOR) || this.isRenderAs(phantasus.VectorTrack.RENDER.TEXT_AND_FONT)
       || this.isRenderAs(phantasus.VectorTrack.RENDER.BAR)
@@ -39711,6 +39889,7 @@ phantasus.VectorTrack.prototype = {
         });
 
       }
+
       if (this.isRenderAs(phantasus.VectorTrack.RENDER.SHAPE)) {
         sectionToItems.Display.push({
           name: 'Edit Shapes...'
@@ -40097,6 +40276,8 @@ phantasus.VectorTrack.prototype = {
               }
             }
           });
+        } else if (item === CUSTOM_ORDER) {
+          phantasus.factorizeColumn(_this.getFullVector());
         } else if (item === DELETE) {
           phantasus.FormBuilder
             .showOkCancel({
