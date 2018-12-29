@@ -1,6 +1,5 @@
-commit 0946e7d4861e50833b01ab4b58a965d59775e2ad
+commit 35b5e3d948e0fa59ae696772a466da8328e656da
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Fri Dec 28 18:31:09 2018 +0300
+Date:   Sat Dec 29 17:45:35 2018 +0300
 
-    Fixed factorization of sliced and joined vectors.
-    Fixed factorise GUI layout.
+    Custom order small fixes.
