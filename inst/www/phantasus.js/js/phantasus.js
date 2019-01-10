@@ -23412,83 +23412,37 @@ phantasus.factorizeColumn = function (vector) {
     this.values = phantasus.VectorUtil.getSet(vector).values();
   }
 
+  var tooltipHelp = 'Drag items. Use Ctrl+Click or Shift+Click to select multiple items';
+
+  var valuesHTML = this.values.map(function (value) {
+    return '<li >' + value + '</li>'
+  }).join('');
+
   this.$dialog = $('<div style="background:white;" title="' + phantasus.factorizeColumn.prototype.toString() + '"></div>');
   this.$el = $([
     '<div class="container-fluid" style="height: 100%">',
     ' <div class="row" style="height: 100%">',
-    '   <div data-name="configPane" class="col-xs-4">',
-    '         <div class="form-group"><button name="move_up" type="button" class="btn btn-default btn-sm">Move selected up ↑</button></div>',
-    '         <div class="form-group"><button name="move_down" type="button" class="btn btn-default btn-sm">Move selected down ↓</button></div>',
+    '   <div class="col-xs-12" data-name="selector" style="height: 100%">',
+    '     <div class="form-group">',
+    '        <label>Values<div style="padding-left: 5px;" class="fa fa-question-circle" data-toggle="tooltip" title="' + tooltipHelp + '"></div></label>',
+    '        <ul class="sortable-list">' + valuesHTML + '</ul>',
+    '     </div>',
     '   </div>',
-    '   <div class="col-xs-8 single-form-column" data-name="selector" style="height: 100%"></div>',
     ' </div>',
     '</div>',
     '</div>'].join('')
   );
 
-
-  this.formBuilder = new phantasus.FormBuilder({
-    formStyle: 'vertical'
+  this.selector = this.$el.find('.sortable-list');
+  this.selector.multisortable({
+    delay: 150
   });
-
-  [{
-    name: 'values',
-    options: this.values,
-    value: null,
-    multiple: true,
-    type: 'select',
-    style: 'height: 90%'
-  }].forEach(function (a) {
-    self.formBuilder.append(a);
-  });
-
-  var move_list = function (direction) {
-    var $field = self.formBuilder.$form.find("[name=values]");
-    var values = $field.val();
-
-    if (direction === 'down') {
-      var indexes = _.map(values, function (val) {
-        return _.indexOf(self.values, val);
-      }).sort(function (a,b) { return b - a; });
-
-      _.each(indexes, function (index) {
-        var a = self.values[index];
-        var indexB = Math.min(index + 1, self.values.length - 1);
-        var b = self.values[indexB];
-
-        self.values[index] = b;
-        self.values[indexB] = a;
-      });
-    } else {
-      var indexes = _.map(values, function (val) {
-        return _.indexOf(self.values, val);
-      }).sort(function (a,b) { return a-b; });
-
-      _.each(indexes, function (index) {
-        var a = self.values[index];
-        var indexB = Math.max(index - 1, 0);
-        var b = self.values[indexB];
-
-        self.values[index] = b;
-        self.values[indexB] = a;
-      });
-    }
-
-    self.formBuilder.setOptions('values', self.values);
-  };
-
-  var $button_up = this.$el.find('[name=move_up]');
-  var $button_down = this.$el.find('[name=move_down]');
-
-  $button_up.on('click', function () { move_list('up') });
-  $button_down.on('click', function () { move_list('down') });
-
-  this.selector = this.$el.find('[data-name=selector]');
-  this.formBuilder.$form.appendTo(this.selector);
   this.$el.appendTo(this.$dialog);
+  this.$el.find('[data-toggle="tooltip"]').tooltip({});
+
   this.$dialog.dialog({
     open: function (event, ui) {
-      $(this).css('overflow', 'hidden'); //this line does the actual hiding
+      $(this).css('overflow', 'visible');
     },
     close: function (event, ui) {
       self.$dialog.dialog('destroy').remove();
@@ -23496,7 +23450,11 @@ phantasus.factorizeColumn = function (vector) {
     },
     buttons: {
       'Apply': function () {
-        vector.factorize(self.values);
+        var newValues = self.selector.find('li').map(function(){
+                          return $(this).text();
+                        }).get();
+
+        vector.factorize(newValues);
         self.$dialog.dialog('destroy').remove();
       },
       'Reset': function () {
