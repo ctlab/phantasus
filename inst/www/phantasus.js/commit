@@ -1,5 +1,5 @@
-commit 9cd9209ac0a167577d8d36cb5b969ea896cca814
+commit 6b3f9dbf0a39a4c52bab494400cf0e02efa44b0c
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Thu Jan 10 17:46:25 2019 +0300
+Date:   Mon Jan 14 15:37:23 2019 +0300
 
-    Tooltip fix
+    Custom sort revamp

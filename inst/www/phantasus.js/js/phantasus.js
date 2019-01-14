@@ -23423,7 +23423,7 @@ phantasus.factorizeColumn = function (vector) {
     '<div class="container-fluid" style="height: 100%">',
     ' <div class="row" style="height: 100%">',
     '   <div class="col-xs-12" data-name="selector" style="height: 100%">',
-    '     <div class="form-group">',
+    '     <div class="form-group" style="height: 100%">',
     '        <label>Values<div style="padding-left: 5px;" class="fa fa-question-circle" data-toggle="tooltip" title="' + tooltipHelp + '"></div></label>',
     '        <ul class="sortable-list">' + valuesHTML + '</ul>',
     '     </div>',
