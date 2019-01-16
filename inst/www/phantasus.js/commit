@@ -1,5 +1,5 @@
-commit 85240ab6e2e9227b44865879469539aeda6c0cdf
+commit 7ef8a2878f72d4ad74c7c3047c34b1bfd32f7d56
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Wed Jan 16 14:48:42 2019 +0300
+Date:   Wed Jan 16 17:05:33 2019 +0300
 
-    Removed debug log
+    Hotfix. Options is undefined
