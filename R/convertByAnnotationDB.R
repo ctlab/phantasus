@@ -63,12 +63,16 @@ convertByAnnotationDB <- function (es, dbName, columnName, columnType, keyType) 
 queryAnnotationDBMeta <- function () {
     cacheDir <- getOption("phantasusCacheDir")
     annotDir <- paste(cacheDir, "annotationdb", sep = .Platform$file.sep)
-    metaFile <- file.path(annotDir, "meta.rds")
-    if (!file.exists(metaFile)) {
-        return(jsonlite::toJSON(NULL))
-    }
+    columnFiles <- list.files(annotDir, '.selected_fields.txt', full.names = TRUE)
+    metaList <- list()
+    for(columnFile in columnFiles) {
+        columnsTSV <- read.table(file = columnFile, sep = '\t', header = TRUE, skip = 1)
+        columns <- apply(columnsTSV, 1, paste, collapse = " - ")
 
-    metaList <- readRDS(metaFile)
+        orgName = unlist(strsplit(basename(columnFile), ".selected_fields.txt"))[1]
+
+        metaList[[orgName]] = list(species = readLines(columnFile, n = 1), columns = columns)
+    }
 
     return(jsonlite::toJSON(metaList))
 }
@@ -95,29 +99,20 @@ annotationDBMeta <- function (cacheDir) {
     }
 
     message('Populating AnnotationDB cache')
-
-    metaList <- list()
     dbFiles <- list.files(annotDir, '*.sqlite$', full.names = TRUE)
     for (dbFile in dbFiles) {
         db <- loadDb(dbFile)
         columnFile <- paste(dbFile, ".selected_fields.txt", sep = "")
-        if (file.exists(columnFile)) {
-            columnsTSV <- read.table(file = columnFile, sep = '\t', header = TRUE)
-            columns <- apply(columnsTSV, 1, paste, collapse = " - ")
-            metaList[[basename(dbFile)]] <- list(species=species(db), columns=columns)
-        } else {
+        if (!file.exists(columnFile)) {
             columnsDB <- columns(db)
             columns <- sapply(columnsDB, function (column) {
                 hint <- paste(head(keys(db, keytype=column), n = 2), collapse=";")
                 return(paste(column, hint, sep=" - "))
             })
 
-            metaList[[basename(dbFile)]] <- list(species=species(db), columns=columns)
-
             humanMeta <- t(data.frame(strsplit(columns, " - ", fixed=TRUE)))
-            write.table(humanMeta, file=columnFile, quote=FALSE, sep='\t',  row.names=F, col.names=c('FIELD', 'HINT'))
+            cat(species(db), "\n", file=columnFile)
+            suppressWarnings(write.table(humanMeta, file=columnFile, quote=FALSE, sep='\t',  row.names=FALSE, col.names=c('FIELD', 'HINT'), append=TRUE))
         }
     }
-
-    saveRDS(metaList, file = file.path(annotDir, "meta.rds"))
 }
