@@ -2,6 +2,7 @@ describe('adjust_tool_test', function () {
 
   it('log_then_inverse_log', function () {
     var heatmap = new phantasus.HeatMap({
+      dummy: true,
       dataset: new phantasus.Dataset({
         array: [[1, 2], [3, 4]],
         rows: 2,
@@ -41,6 +42,7 @@ describe('adjust_tool_test', function () {
   });
   it('log', function () {
     var heatmap = new phantasus.HeatMap({
+      dummy: true,
       dataset: new phantasus.Dataset({
         array: [[1, 2], [3, 4]],
         rows: 2,
@@ -66,6 +68,7 @@ describe('adjust_tool_test', function () {
 
   it('log(1+x)', function () {
     var heatmap = new phantasus.HeatMap({
+      dummy: true,
       dataset: new phantasus.Dataset({
         array: [[1, 2], [3, 4]],
         rows: 2,
@@ -92,6 +95,7 @@ describe('adjust_tool_test', function () {
   it('z-score', function () {
     // v = (v-m)/u
     var heatmap = new phantasus.HeatMap({
+      dummy: true,
       dataset: new phantasus.Dataset({
         array: [[1, 2, 10], [3, 4, 15]],
         rows: 2,
@@ -120,6 +124,7 @@ describe('adjust_tool_test', function () {
   it('robust z-score', function () {
     // v = (v-m)/u
     var heatmap = new phantasus.HeatMap({
+      dummy: true,
       dataset: new phantasus.Dataset({
         array: [[1, 2, 10], [3, 4, 15]],
         rows: 2,
@@ -164,6 +169,7 @@ describe('adjust_tool_test', function () {
       vecColumn.getProperties().set(phantasus.VectorKeys.DATA_TYPE, 'number');
 
       heatmap = new phantasus.HeatMap({
+        dummy: true,
         dataset: dataset
       });
     });

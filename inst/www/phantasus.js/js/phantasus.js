@@ -13765,6 +13765,9 @@ phantasus.AdjustDataTool.prototype = {
       }));
     }
 
+    if (options.rawDataset) {
+      return dataset;
+    }
 
     return new phantasus.HeatMap({
       name: heatMap.getName(),
@@ -14452,14 +14455,15 @@ phantasus.AnnotationConvertTool.prototype = {
 };
 
 /**
- * @param chartOptions.heatmap phantasus.HeatMap
  * @param chartOptions.project
  *            phantasus.Project
+ * @param chartOptions.getVisibleTrackNames
+ *            {Function}
  */
 phantasus.ChartTool = function (chartOptions) {
   var _this = this;
+  this.getVisibleTrackNames = chartOptions.getVisibleTrackNames;
   this.project = chartOptions.project;
-  this.heatmap = chartOptions.heatmap;
   var project = this.project;
   this.$el = $('<div class="container-fluid">'
     + '<div class="row">'
@@ -14474,47 +14478,43 @@ phantasus.ChartTool = function (chartOptions) {
   formBuilder.append({
     name: 'chart_type',
     type: 'bootstrap-select',
-    options: [
-      'row profile', 'column profile', 'boxplot']
+    options: ['row' +
+    ' profile', 'column' +
+    ' profile']
   });
   var rowOptions = [];
   var columnOptions = [];
   var numericRowOptions = [];
   var numericColumnOptions = [];
+  var unitedColumnsRowsOptions = [];
   var options = [];
   var numericOptions = [];
   var updateOptions = function () {
     var dataset = project.getFullDataset();
-    rowOptions = [
-      {
-        name: '(None)',
-        value: ''
-      }];
-    columnOptions = [
-      {
-        name: '(None)',
-        value: ''
-      }];
-    numericRowOptions = [
-      {
-        name: '(None)',
-        value: ''
-      }];
-    numericColumnOptions = [
-      {
-        name: '(None)',
-        value: ''
-      }];
-    options = [
-      {
-        name: '(None)',
-        value: ''
-      }];
-    numericOptions = [
-      {
-        name: '(None)',
-        value: ''
-      }];
+    rowOptions = [{
+      name: '(None)',
+      value: ''
+    }];
+    columnOptions = [{
+      name: '(None)',
+      value: ''
+    }];
+    numericRowOptions = [{
+      name: '(None)',
+      value: ''
+    }];
+    numericColumnOptions = [{
+      name: '(None)',
+      value: ''
+    }];
+    options = [{
+      name: '(None)',
+      value: ''
+    }];
+    numericOptions = [{
+      name: '(None)',
+      value: ''
+    }];
 
     phantasus.MetadataUtil.getMetadataNames(dataset.getRowMetadata())
       .forEach(
@@ -14559,14 +14559,12 @@ phantasus.ChartTool = function (chartOptions) {
 
     numericOptions = numericOptions.concat(numericRowOptions.slice(1));
     numericOptions = numericOptions.concat(numericColumnOptions.slice(1));
+
+    unitedColumnsRowsOptions = columnOptions.concat(rowOptions.slice(1));
   };
 
+
   updateOptions();
-  formBuilder.append({
-    name: 'group_by',
-    type: 'bootstrap-select',
-    options: options
-  });
 
   formBuilder.append({
     name: 'axis_label',
@@ -14574,9 +14572,23 @@ phantasus.ChartTool = function (chartOptions) {
     options: rowOptions
   });
   formBuilder.append({
-    name: 'show_outliers',
+    name: 'show_points',
     type: 'checkbox',
     value: true
+  });
+  formBuilder.append({
+    name: 'add_profile',
+    type: 'bootstrap-select',
+    options: [{
+      name: "(None)",
+      value: ""
+    },{
+      name: "mean",
+      value: "mean"
+    }, {
+      name: "median",
+      value: "median"
+    }]
   });
 
   formBuilder.append({
@@ -14585,11 +14597,11 @@ phantasus.ChartTool = function (chartOptions) {
     options: options
   });
 
-  // formBuilder.append({
-  //   name: 'size',
-  //   type: 'bootstrap-select',
-  //   options: numericOptions
-  // });
+  formBuilder.append({
+    name: 'size',
+    type: 'bootstrap-select',
+    options: numericOptions
+  });
   formBuilder.append({
     name: 'tooltip',
     type: 'bootstrap-select',
@@ -14599,89 +14611,43 @@ phantasus.ChartTool = function (chartOptions) {
   });
 
   formBuilder.append({
-    name: 'chart_width',
-    type: 'range',
-    value: 400,
-    min: 60,
-    max: 800,
-    step: 10
+    name: "adjust_data",
+    title: "Adjust Data",
+    options: [{
+      name: 'log2',
+      value: 'log2'
+    }, {
+      name: 'Z-Score',
+      value: 'z-score',
+    }],
+    type: 'bootstrap-select',
+    multiple: true,
+    search: true
   });
-  formBuilder.append({
-    name: 'chart_height',
-    type: 'range',
-    value: 400,
-    min: 20,
-    max: 800,
-    step: 10
-  });
+
   formBuilder.append({
     name: 'export_to_SVG',
     type: 'button'
   });
 
-  var chartTypeToParameter = {
-    'row profile': {
-      axis_label: 'columns',
-      tooltip: 'columns',
-      color: 'rows'
-    },
-    'column profile': {
-      axis_label: 'rows',
-      tooltip: 'rows',
-      color: 'columns'
-    },
-    boxplot: {
-      group_by: true,
-      show_outliers: true,
-      tooltip: 'both'
-    }
-  };
 
   function setVisibility() {
     var chartType = formBuilder.getValue('chart_type');
-    var chartOptions = chartTypeToParameter[chartType];
-    if (chartOptions.axis_label != null) {
-      formBuilder.setOptions('axis_label',
-        chartOptions.axis_label === 'rows' ? rowOptions : columnOptions,
-        true);
-
-    }
-    formBuilder.setVisible('color', chartOptions.color != null);
-    formBuilder.setVisible('axis_label', chartOptions.axis_label != null);
-    formBuilder.setVisible('group_by', chartOptions.group_by);
-    formBuilder.setVisible('show_outliers', chartOptions.show_outliers);
-    formBuilder.setOptions('tooltip', chartOptions.tooltip === 'rows' ? rowOptions.slice(1) : (chartOptions.tooltip === 'columns' ? columnOptions.slice(1) : options));
-    formBuilder.setOptions('color', chartOptions.color === 'rows' ? rowOptions : (chartOptions.color === 'columns' ? columnOptions : options));
+    formBuilder.setOptions('axis_label', chartType === 'column profile' ? rowOptions : columnOptions,
+      true);
+    formBuilder.setOptions('color', chartType === 'column profile' ? columnOptions : rowOptions, true);
+    formBuilder.setOptions('size', chartType === 'row profile' ? numericColumnOptions : numericRowOptions, true);
   }
 
   this.tooltip = [];
-  var draw = function () {
-    _.debounce(_this.draw(), 100);
-  };
-  formBuilder.$form.on('change', 'select,input[type=range]', function (e) {
-    if ($(this).attr('name') === 'tooltip') {
-      var tooltipVal = _this.formBuilder.getValue('tooltip');
-      _this.tooltip.length = 0; // clear array
-      if (tooltipVal != null) {
-        tooltipVal.forEach(function (tip) {
-          _this.tooltip.push(phantasus.ChartTool.getVectorInfo(tip));
-        });
-      }
-    } else {
+  var draw = _.debounce(this.draw.bind(this), 100);
+  formBuilder.$form.on('change', 'select', function (e) {
       setVisibility();
       draw();
-    }
-
   });
 
   formBuilder.$form.on('click', 'input[type=checkbox]', function (e) {
     draw();
-
-  });
-  formBuilder.$form.on('keypress', 'input[type=text]', function (e) {
-    if (e.which === 13) {
-      draw();
-    }
   });
 
   setVisibility();
@@ -14689,15 +14655,17 @@ phantasus.ChartTool = function (chartOptions) {
   var trackChanged = function () {
     updateOptions();
     setVisibility();
-    formBuilder.setOptions('group_by', options, true);
+    formBuilder.setOptions('group_columns_by', options, true);
+    formBuilder.setOptions('group_rows_by', options, true);
   };
 
   project.getColumnSelectionModel().on('selectionChanged.chart', draw);
   project.getRowSelectionModel().on('selectionChanged.chart', draw);
   project.on('trackChanged.chart', trackChanged);
-  this.$chart = this.$el.find('[data-name=chartDiv]');
+
   var $dialog = $('<div style="background:white;" title="Chart"></div>');
   var $configPane = this.$el.find('[data-name=configPane]');
+  this.$chart = this.$el.find('[data-name=chartDiv]');
   formBuilder.$form.appendTo($configPane);
   this.$el.appendTo($dialog);
 
@@ -14709,10 +14677,12 @@ phantasus.ChartTool = function (chartOptions) {
     }
 
     var svgx = svgs[0].cloneNode(true);
-    $(svgx).find('[fill="rgba(0,0,0,0)"]').attr('fill-opacity', '0');
+    svgs[1].childNodes.forEach(function (x) {
+      svgx.appendChild(x.cloneNode(true));
+    });
+    $(svgx).find('.drag').remove();
     phantasus.Util.saveAsSVG(svgx, "chart.svg");
   });
-
 
   $dialog.dialog({
     dialogClass: 'phantasus',
@@ -14721,16 +14691,75 @@ phantasus.ChartTool = function (chartOptions) {
       project.getRowSelectionModel().off('selectionChanged.chart', draw);
       project.getColumnSelectionModel().off('selectionChanged.chart',
         draw);
-      $dialog.dialog('destroy').remove();
-      event.stopPropagation();
+      _this.$el.empty();
     },
 
     resizable: true,
-    height: 600,
+    height: 800,
     width: 900
   });
   this.$dialog = $dialog;
   this.draw();
+};
+
+phantasus.ChartTool.BUTTONS_TO_REMOVE_FOR_STATIC_CHART = ['select2d', 'lasso2d']; // ['zoom2d', 'pan2d', 'select2d', 'lasso2d', 'autoScale2d', 'resetScale2d'];
+phantasus.ChartTool.getPlotlyDefaults = function () {
+  var layout = {
+    hovermode: 'closest',
+    autosize: true,
+    // paper_bgcolor: 'rgb(255,255,255)',
+    // plot_bgcolor: 'rgb(229,229,229)',
+    showlegend: false,
+    margin: {
+      b: 40,
+      l: 60,
+      t: 25,
+      r: 10,
+      autoexpand: true
+    },
+    titlefont: {
+      size: 12
+    },
+    xaxis: {
+      zeroline: false,
+      titlefont: {
+        size: 12
+      },
+      // gridcolor: 'rgb(255,255,255)',
+      showgrid: true,
+      //   showline: true,
+      showticklabels: true,
+      tickcolor: 'rgb(127,127,127)',
+      ticks: 'outside'
+    },
+    yaxis: {
+      zeroline: false,
+      titlefont: {
+        size: 12
+      },
+      // gridcolor: 'rgb(255,255,255)',
+      showgrid: true,
+      //   showline: true,
+      showticklabels: true,
+      tickcolor: 'rgb(127,127,127)',
+      ticks: 'outside'
+    }
+  };
+
+  var config = {
+    modeBarButtonsToAdd: [],
+    showLink: false,
+    displayModeBar: true, // always show modebar
+    displaylogo: false,
+    staticPlot: false,
+    showHints: true,
+    doubleClick: "reset",
+    modeBarButtonsToRemove: ['sendDataToCloud', 'zoomIn2d', 'zoomOut2d', 'hoverCompareCartesian', 'hoverClosestCartesian', 'autoScale2d']
+  };
+  return {
+    layout: layout,
+    config: config
+  };
 };
 
 phantasus.ChartTool.getVectorInfo = function (value) {
@@ -14741,265 +14770,254 @@ phantasus.ChartTool.getVectorInfo = function (value) {
     isColumns: isColumns
   };
 };
+
+phantasus.ChartTool.specialProfilers = {
+  mean: function (rowView) {
+    return phantasus.Mean(rowView);
+  },
+  median: function (rowView) {
+    return phantasus.Percentile(rowView, 50);
+  }
+};
+
 phantasus.ChartTool.prototype = {
-   /**
-   *
-   * @param options.dataset
-   * @param options.colorByVector
-   * @param options.colorModel
-   * @param options.transpose
-   * @param options.chartWidth
-   * @param options.chartHeight
-   * @param options.axisLabelVector
-   * @private
-   */
+
   _createProfile: function (options) {
-    var _this = this;
     var dataset = options.dataset;
+    var _this = this;
+    // only allow coloring by row
+
     var colorByVector = options.colorByVector;
     var colorModel = options.colorModel;
+    var sizeByVector = options.sizeByVector;
+    var sizeFunction = options.sizeFunction;
+    var axisLabelVector = options.axisLabelVector;
+    var addProfile = options.addProfile;
+    var isColumnChart = options.isColumnChart;
+    var colorByInfo = options.colorByInfo;
     var heatmap = this.heatmap;
-    var chartWidth = options.chartWidth;
-    var chartHeight = options.chartHeight;
-    var axisLabelVector = options.axisLabelVector; // for row scatter, row vector
-    var transpose = options.transpose;
-    var axisLabel = [];
-    var rotateXAxis = 0;
-    var bottomPadding = 60;
-    for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
-      axisLabel.push(axisLabelVector != null ? axisLabelVector.getValue(j) : '' + j);
-    }
+    var uniqColors = {};
+    var myPlot = options.myPlot;
+    var xmin = 0,
+      xmax = 0,
+      ymin = 0,
+      ymax = 0;
 
-    if (dataset.getColumnCount() >= 5 &&
-        axisLabel.every(function (val) { return val.length >= 2;}) ||
-        axisLabel.some(function (val) { return val.length >= 7;})) {
-      rotateXAxis = 45;
-      bottomPadding = 150;
-    }
+    var traces = [];
+    var ticktext = [];
+    var tickvals = [];
 
-    var series = [];
-    var colorMap = phantasus.VectorColorModel.getColorMapForNumber(dataset.getRowCount());
-    for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
-      // each row is a new trace
-      var colorByValue = colorByVector != null ? colorByVector.getValue(i) : '' + i;
-      var color = colorByVector != null ? colorModel.getMappedValue(colorByVector, colorByValue) : colorMap[i % colorMap.length];
-      var data = [];
-      for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
-        data.push([j, dataset.getValue(i, j), i]);
-      }
-      series.push({
-        name: colorByValue,
-        type: 'line',
-        data: data,
-        tooltip: {
-          formatter: function (obj) {
-            var value = obj.value;
-            var s = [];
-            s.push(_this.heatmap.getHeatMapElementComponent().getDrawValuesFormat()(value[1]));
-            phantasus.ChartTool.getTooltip({
-              text: s,
-              tooltip: _this.tooltip,
-              dataset: dataset,
-              rowIndex: value[2],
-              columnIndex: value[0]
-            });
-            return s.join('');
+    if (colorByVector) {
+      color = _.map(phantasus.VectorUtil.toArray(colorByVector), function (value) {
+        if (!uniqColors[value]) {
+          if (colorModel.containsDiscreteColor(colorByVector, value)
+            && colorByVector.getProperties().get(phantasus.VectorKeys.DISCRETE)) {
+            uniqColors[value] = colorModel.getMappedValue(colorByVector, value);
+          } else if (colorModel.isContinuous(colorByVector)) {
+            uniqColors[value] = colorModel.getContinuousMappedValue(colorByVector, value);
+          } else {
+            uniqColors[value] = phantasus.VectorColorModel.CATEGORY_ALL[_.size(uniqColors) % 60];
           }
         }
+
+        return uniqColors[value]
+      });
+
+      _.each(uniqColors, function (color, categoryName) {
+        traces.push({
+          x: [1000000], y: [1000000],
+          marker: {
+            fillcolor: color,
+            color: color,
+            size: 10
+          },
+          name: categoryName,
+          legendgroup: 'colors',
+          mode: "markers",
+          type: "scatter",
+          showlegend: true
+        });
       });
     }
 
-    var chart = {
-      legend: {
-        orient: 'vertical',
-        left: 'right',
-        top: 2,
-        itemWidth: 14,
-        height: dataset.getRowCount() * 25,
-        data: series.map(function (s) {
-          return s.name;
-        })
-      },
-      animation: false,
-      tooltip: {
-        trigger: 'item'
-      },
-      xAxis: {
-        type: 'category',
-        data: axisLabel,
-        axisLabel: {
-          rotate: rotateXAxis,
-          interval: 0
-        },
-        axisTick: {
-          alignWithLabel: true
-        }
-      },
-      yAxis: {
-        axisLine: {
-          show: true,
-          onZero: false
-        },
-        type: 'value',
-        name: ''
-      },
-      grid: {right: 120, bottom: bottomPadding},
-      series: series
-    };
-
-    var myChart = echarts.init(options.el, null, {renderer: 'svg'});
-    myChart.setOption(chart);
-  },
-  /**
-   *
-   * @param options.datasets 1-d array of datasets
-   * @param options.ids 1-d array of grouping values
-   * @param options.showOutliers
-   * @param options.el
-   * @private
-   */
-  _createBoxPlot: function (options) {
-    var _this = this;
-    var showPoints = options.showPoints;
-    var datasets = options.datasets;
-    var ids = options.ids;
-    var heatmap = this.heatmap;
-    var size = 6;
-    var boxData = [];
-    var outliers = [];
-
-    for (var k = 0, ndatasets = datasets.length; k < ndatasets; k++) {
-      var dataset = datasets[k];
-      var id = ids[k];
-      var values = new Float32Array(dataset.getRowCount() * dataset.getColumnCount());
-      var counter = 0;
-      for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
-        for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
-          var value = dataset.getValue(i, j);
-          if (!isNaN(value)) {
-            values[counter] = value;
-            counter++;
-          }
-        }
-      }
-      if (counter !== values.length) {
-        values = values.slice(0, counter);
-      }
-      values.sort();
-      // [min,  Q1,  median,  Q3,  max]
-      var item = phantasus.BoxPlotArrayItem(values);
-      boxData.push([item.lowerAdjacentValue, item.q1, item.median, item.q3, item.upperAdjacentValue]);
-      if (options.showOutliers) {
-        var w = 1.5;
-        var upperOutlier = item.q3 + w * (item.q3 - item.q1);
-        var lowerOutlier = item.q1 - w * (item.q3 - item.q1);
-        for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
-          for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
-            var value = dataset.getValue(i, j);
-            if (value > upperOutlier || value < lowerOutlier) {
-              outliers.push([id, value, i, j]);
-            }
-          }
-        }
-      }
+    for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
+      ticktext.push(axisLabelVector != null ? axisLabelVector.getValue(j) : '' + j);
+      tickvals.push(j);
     }
-    var chart = {
-      animation: false,
-      tooltip: {
-        trigger: 'item'
-      },
-      xAxis: {
-        type: 'category',
-        data: ids
-      },
-      yAxis: {
-        axisLine: {
-          show: true,
-          onZero: false
-        },
-        type: 'value',
-        name: ''
-      },
-      series: [
-        {
-          animationDuration: 0,
-          hoverAnimation: false,
-          name: 'boxplot',
-          type: 'boxplot',
-          data: boxData,
-          tooltip: {
-            formatter: function (param) {
-              var text = [];
-              if (param.name !== '') {
-                text.push(param.name);
-              }
 
-              text = text.concat([
-                'upper: ' + _this.heatmap.getHeatMapElementComponent().getDrawValuesFormat()(param.data[4]),
-                'Q3: ' + _this.heatmap.getHeatMapElementComponent().getDrawValuesFormat()(param.data[3]),
-                'median: ' + _this.heatmap.getHeatMapElementComponent().getDrawValuesFormat()(param.data[2]),
-                'Q1: ' + _this.heatmap.getHeatMapElementComponent().getDrawValuesFormat()(param.data[1]),
-                'lower: ' + _this.heatmap.getHeatMapElementComponent().getDrawValuesFormat()(param.data[0])
-              ]);
-              return text.join('<br/>');
-            }
-          }
-        },
-        {
-          name: 'outlier',
-          type: 'scatter',
-          data: outliers,
-          symbolSize: 5,
-          itemStyle: {
-            normal: {
-              borderWidth: 1,
-              borderColor: 'black',
-              opacity: 0.8
-            }
-          },
-          tooltip: {
-            formatter: function (obj) {
-              var value = obj.value;
-              var s = [];
-              if (value[0] !== '') {
-                s.push(value[0]); // name
-                s.push('<br>');
-              }
-              s.push(_this.heatmap.getHeatMapElementComponent().getDrawValuesFormat()(value[1]));
-              phantasus.ChartTool.getTooltip({
-                text: s,
-                tooltip: _this.tooltip,
-                dataset: dataset,
-                rowIndex: value[2],
-                columnIndex: value[3]
-              });
-              return s.join('');
-            }
-          }
+    for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
+      // each row is a new trace
+      var x = [];
+      var y = [];
+      var text = [];
+      var size = sizeByVector ? [] : 6;
+      var color = colorByVector ? uniqColors[colorByVector.getValue(i)] : undefined;
+
+      for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
+        x.push(j);
+        y.push(dataset.getValue(i, j));
+
+        if (sizeByVector) {
+          var sizeByValue = sizeByVector.getValue(j);
+          size.push(sizeFunction(sizeByValue));
         }
-      ]
-    };
+        var obj = {
+          i: i,
+          j: j
+        };
+        obj.toString = function () {
+          var s = [];
+          for (var tipIndex = 0; tipIndex < _this.tooltip.length; tipIndex++) {
+            var tip = _this.tooltip[tipIndex];
+            if (tip.isColumns) {
+              phantasus.HeatMapTooltipProvider.vectorToString(dataset.getColumnMetadata().getByName(tip.field),
+                this.j, s, '<br>');
+            } else {
+              phantasus.HeatMapTooltipProvider.vectorToString(dataset.getRowMetadata().getByName(tip.field),
+                this.i, s, '<br>');
+            }
+          }
 
-    var myChart = echarts.init(options.el, null, {renderer: 'svg'});
-    myChart.setOption(chart);
+          return s.join('');
+
+        };
+
+        text.push(obj);
+      }
+
+      xmin = Math.min(xmin, _.min(x));
+      xmax = Math.max(xmax, _.max(x));
+      ymin = Math.min(ymin, _.min(y));
+      ymax = Math.max(ymax, _.max(y));
+      var trace = {
+          x: x,
+          y: y,
+          name: colorByVector ? colorByVector.getValue(i) : '',
+          tickmode: 'array',
+          marker: {
+            size: size,
+            symbol: 'circle',
+            color: color
+          },
+          text: text,
+          mode: 'lines' + (options.showPoints ? '+markers' : ''
+          ),
+          type: 'scatter',
+          showlegend: false
+      };
+      traces.push(trace);
+    }
+
+    if (addProfile) {
+      var moddedX = [];
+      var moddedY = [];
+      var rowView = new phantasus.DatasetColumnView(dataset);
+
+      for (var idx = 0, size = dataset.getColumnCount(); idx < size; idx++) {
+        rowView.setIndex(idx);
+        var val = phantasus.ChartTool.specialProfilers[addProfile](rowView);
+        moddedY.push(val);
+        moddedX.push(idx);
+      }
+
+      _.each(traces, function (trace) {
+        trace.opacity = 0.5;
+      });
+
+      traces.push({
+        x: moddedX,
+        y: moddedY,
+        name: addProfile,
+        tickmode: 'array',
+        marker: {
+          color: '#0571b0',
+          shape: 'cross'
+        },
+        line: {
+          width: 4
+        },
+        mode: 'lines+marker',
+        type: 'scatter',
+        showlegend: true
+      });
+    }
+
+    options.layout.xaxis.tickvals = tickvals;
+    options.layout.xaxis.ticktext = ticktext;
+    options.layout.xaxis.range = [xmin - (xmax - xmin) * 0.15, xmax + (xmax - xmin) * 0.15];
+    options.layout.xaxis.tickmode = 'array';
+    options.layout.yaxis.range = [ymin - (ymax - ymin) * 0.15, ymax + (ymax - ymin) * 0.15];
+    var $parent = $(myPlot).parent();
+    options.layout.width = $parent.width();
+    options.layout.height = this.$dialog.height() - 30;
+    phantasus.ChartTool.newPlot(myPlot, traces, options.layout, options.config);
+    // myPlot.on('plotly_selected', function (eventData) {
+    //   selection = eventData;
+    // });
+    myPlot.on('plotly_legendclick', function () {
+      return false;
+    });
+
+    myPlot.on('plotly_legenddoubleclick', function () {
+      return false;
+    });
+
+    function resize() {
+      var width = $parent.width();
+      var height = _this.$dialog.height() - 30;
+      Plotly.relayout(myPlot, {
+        width: width,
+        height: height
+      });
+    }
+
+    this.$dialog.on('dialogresize', resize);
+    $(myPlot).on('remove', function () {
+      _this.$dialog.off('dialogresize');
+    });
+
   },
   draw: function () {
     var _this = this;
     this.$chart.empty();
-    // 140 to 800
-    var gridWidth = parseInt(this.formBuilder.getValue('chart_width'));
-    var gridHeight = parseInt(this.formBuilder.getValue('chart_height'));
-    var showOutliers = this.formBuilder.getValue('show_outliers');
+    var plotlyDefaults = phantasus.ChartTool.getPlotlyDefaults();
+    var layout = plotlyDefaults.layout;
+    var config = plotlyDefaults.config;
+    var showPoints = this.formBuilder.getValue('show_points');
+    var addProfile = this.formBuilder.getValue('add_profile');
+    var adjustData = this.formBuilder.getValue('adjust_data');
 
-    var groupBy = this.formBuilder.getValue('group_by');
     var axisLabel = this.formBuilder.getValue('axis_label');
-
-    // var sizeBy = this.formBuilder.getValue('size');
+    var colorBy = this.formBuilder.getValue('color');
+    var sizeBy = this.formBuilder.getValue('size');
     var chartType = this.formBuilder.getValue('chart_type');
 
-    var dataset = this.project.getSelectedDataset({
-      emptyToAll: false
-    });
+    var dataset;
+    if (_.size(adjustData)) {
+      var log2 = adjustData.indexOf('log2') !== -1;
+      var zScore = adjustData.indexOf('z-score') !== -1;
+
+      var tempheatmap = new phantasus.HeatMap({
+        dummy: true,
+        dataset: this.project.getSelectedDataset({
+          emptyToAll: false
+        })
+      });
+
+      dataset = new phantasus.AdjustDataTool().execute({
+        heatMap: tempheatmap,
+        project: tempheatmap.getProject(),
+        rawDataset: true,
+        input: {
+          log_2: log2,
+          'z-score': zScore
+        }
+      });
+    } else {
+      dataset = this.project.getSelectedDataset({
+        emptyToAll: false
+      });
+    }
 
     this.dataset = dataset;
     if (dataset.getRowCount() === 0 && dataset.getColumnCount() === 0) {
@@ -15017,155 +15035,74 @@ phantasus.ChartTool.prototype = {
       return;
     }
 
-    var heatmap = this.heatmap;
-    // var sizeByInfo = phantasus.ChartTool.getVectorInfo(sizeBy);
-
-    // var sizeByVector = sizeByInfo.isColumns ? dataset.getColumnMetadata().getByName(sizeByInfo.field) : dataset.getRowMetadata().getByName(
-    //   sizeByInfo.field);
-
+    var colorByInfo = phantasus.ChartTool.getVectorInfo(colorBy);
+    var sizeByInfo = phantasus.ChartTool.getVectorInfo(sizeBy);
+    var colorModel = !colorByInfo.isColumns ? this.project.getRowColorModel()
+      : this.project.getColumnColorModel();
     var axisLabelInfo = phantasus.ChartTool.getVectorInfo(axisLabel);
-    var axisLabelVector = axisLabelInfo.isColumns ? dataset.getColumnMetadata().getByName(axisLabelInfo.field) : dataset.getRowMetadata().getByName(
-      axisLabelInfo.field);
+    var axisLabelVector = axisLabelInfo.isColumns ?
+      dataset.getColumnMetadata().getByName(axisLabelInfo.field) :
+      dataset.getRowMetadata().getByName(axisLabelInfo.field);
 
-    var rowIds = [undefined];
-    var columnIds = [undefined];
-    var colorBy = this.formBuilder.getValue('color');
-    var colorByVector = null;
-    var colorModel = null;
-    if (colorBy != null) {
-      var colorByInfo = phantasus.ChartTool.getVectorInfo(colorBy);
-      colorModel = !colorByInfo.isColumns ? this.project.getRowColorModel()
-        : this.project.getColumnColorModel();
-      colorByVector = colorByInfo.isColumns ? dataset.getColumnMetadata().getByName(colorByInfo.field) : dataset.getRowMetadata().getByName(
-        colorByInfo.field);
+    var sizeByVector = sizeByInfo.isColumns ?
+      dataset.getColumnMetadata().getByName(sizeByInfo.field) :
+      dataset.getRowMetadata().getByName(sizeByInfo.field);
+
+    var colorByVector = colorByInfo.isColumns ?
+      dataset.getColumnMetadata().getByName(colorByInfo.field) :
+      dataset.getRowMetadata().getByName(colorByInfo.field);
+
+    var sizeByScale = null;
+    if (sizeByVector) {
+      var minMax = phantasus.VectorUtil.getMinMax(sizeByVector);
+      sizeByScale = d3.scale.linear().domain(
+        [minMax.min, minMax.max]).range([3, 16])
+        .clamp(true);
     }
 
     if (chartType === 'row profile' || chartType === 'column profile') {
-      var transpose = chartType === 'column profile';
-      if (transpose) {
+      showPoints = showPoints && (dataset.getRowCount() * dataset.getColumnCount()) <= 100000;
+      var $chart = $('<div></div>');
+      var myPlot = $chart[0];
+      $chart.appendTo(this.$chart);
+      if (chartType === 'column profile') {
         dataset = new phantasus.TransposedDatasetView(dataset);
       }
-      if (dataset.getRowCount() > 100) {
-        $('<h4>Maximum chart size exceeded.</h4>')
-          .appendTo(this.$chart);
-        return;
-      }
-      // add horizontal space for legend
-      var $chart = $('<div style="width: ' + (gridWidth + 120) + 'px;height:' + gridHeight + 'px;"></div>');
-      $chart.appendTo(this.$chart);
-      this._createProfile({
-        width: gridWidth,
-        el: $chart[0],
-        dataset: dataset,
-        chartWidth: gridWidth,
-        chartHeight: gridHeight,
-        transpose: transpose,
-        colorModel: colorModel,
-        colorByVector: colorByVector,
-        axisLabelVector: axisLabelVector
-      });
-    } else if (chartType === 'boxplot') {
-      var datasets = [];//1-d array of datasets
-      var ids = []; // 1-d array of grouping values
-      if (groupBy) {
-        var groupByInfo = phantasus.ChartTool
-          .getVectorInfo(groupBy);
-        var vector = groupByInfo.isColumns ? dataset
-            .getColumnMetadata().getByName(groupByInfo.field)
-          : dataset.getRowMetadata().getByName(
-            groupByInfo.field);
-        var isArray = phantasus.VectorUtil.getDataType(vector)[0] === '[';
-        var valueToIndices = phantasus.VectorUtil.createValueToIndicesMap(vector, true);
-        valueToIndices.forEach(function (indices, value) {
-          datasets.push(new phantasus.SlicedDatasetView(dataset, groupByInfo.isColumns ? null : indices, groupByInfo.isColumns ? indices : null));
-          ids.push(value);
+      this
+        ._createProfile({
+          showPoints: showPoints,
+          isColumnChart: chartType === 'column profile',
+          axisLabelVector: axisLabelVector,
+          colorByVector: colorByVector,
+          colorByInfo: colorByInfo,
+          colorModel: colorModel,
+          sizeByVector: sizeByVector,
+          sizeFunction: sizeByScale,
+          addProfile: addProfile,
+          myPlot: myPlot,
+          dataset: dataset,
+          config: config,
+          layout: $
+            .extend(
+              true,
+              {},
+              layout,
+              {
+                showlegend: true,
+                margin: {
+                  b: 80
+                },
+                yaxis: {},
+                xaxis: {}
+              })
         });
-      } else {
-        datasets.push(dataset);
-        ids.push('');
-      }
-      // sort rows and columns by median
-      // if (gridRowCount > 1) {
-      //   var summary = [];
-      //   for (var i = 0; i < gridRowCount; i++) {
-      //     summary[i] = [];
-      //     var gridRow = grid[i];
-      //     for (var j = 0; j < gridColumnCount; j++) {
-      //       var array = gridRow[j];
-      //       var values = [];
-      //       if (array) {
-      //         for (var k = 0, nitems = array.length; k < nitems; k++) {
-      //           var item = array[k];
-      //           var value = dataset.getValue(item.row, item.column);
-      //           if (!isNaN(value)) {
-      //             values.push(value);
-      //           }
-      //
-      //         }
-      //       }
-      //       summary[i][j] = phantasus.Median(phantasus.VectorUtil.arrayAsVector(values));
-      //     }
-      //   }
-      //   // sort rows
-      //   var rowMedians = [];
-      //   for (var i = 0; i < gridRowCount; i++) {
-      //     var values = [];
-      //     for (var j = 0; j < gridColumnCount; j++) {
-      //       values.push(summary[i][j]);
-      //     }
-      //     rowMedians.push(phantasus.Median(phantasus.VectorUtil.arrayAsVector(values)));
-      //   }
-      //
-      //   var newRowOrder = phantasus.Util.indexSort(rowMedians, false);
-      //   var newRowIds = [];
-      //   var newGrid = [];
-      //   for (var i = 0; i < gridRowCount; i++) {
-      //     newGrid.push(grid[newRowOrder[i]]);
-      //     newRowIds.push(rowIds[newRowOrder[i]]);
-      //   }
-      //   grid = newGrid;
-      //   rowIds = newRowIds;
-      // }
-
-      var $chartEl = $('<div style="width: ' + gridWidth + 'px;height:' + gridHeight + 'px;"></div>');
-      $chartEl.appendTo(this.$chart);
-      this._createBoxPlot({
-        showOutliers: showOutliers,
-        el: $chartEl[0],
-        datasets: datasets,
-        ids: ids
-      });
     }
   }
 };
 
-/**
- *
- * @param options.dataset
- * @param options.text
- * @param options.rowIndex
- * @param options.columnIndex
- */
-phantasus.ChartTool.getTooltip = function (options) {
-  for (var tipIndex = 0; tipIndex < options.tooltip.length; tipIndex++) {
-    var tip = options.tooltip[tipIndex];
-    var metadata;
-    var index;
-    if (tip.isColumns) {
-      metadata = options.dataset.getColumnMetadata();
-      index = options.columnIndex;
-    } else {
-      metadata = options.dataset.getRowMetadata();
-      index = options.rowIndex;
-    }
-    if (index !== -1) {
-      var v = metadata.getByName(tip.field);
-      phantasus.HeatMapTooltipProvider.vectorToString(v,
-        index, options.text, '<br>');
-    }
-  }
+phantasus.ChartTool.newPlot = function (myPlot, traces, layout, config) {
+  return Plotly.newPlot(myPlot, traces, layout, config);
 };
-
 
 phantasus.CollapseDatasetTool = function () {
 };
@@ -20676,7 +20613,7 @@ phantasus.ActionManager = function () {
     icon: 'fa fa-anchor'
   });
 
-  if (typeof echarts !== 'undefined') {
+  if (typeof Plotly !== 'undefined') {
     this.add({
       name: 'Chart',
       cb: function (options) {
@@ -20689,8 +20626,7 @@ phantasus.ActionManager = function () {
       },
       icon: 'fa fa-line-chart'
     });
-  }
-  if (typeof Plotly !== 'undefined') {
+
     this.add({
       name: 'PCA Plot',
       cb: function (options) {
@@ -30960,6 +30896,7 @@ phantasus.HeatMap = function (options) {
       popupEnabled: true,
       symmetric: false,
       keyboard: true,
+      dummy: false,
       inlineTooltip: true,
       // Prevent mousewheel default (stops accidental page back on Mac), but also prevents page
       // scrolling
@@ -31253,7 +31190,9 @@ phantasus.HeatMap = function (options) {
   }
   var heatMapLoaded = function () {
     // console.log('heatMapLoaded', _this.options.name);
-    phantasus.DatasetUtil.toESSessionPromise(options.dataset);
+    if (!options.dummy) {
+      phantasus.DatasetUtil.toESSessionPromise(options.dataset);
+    }
     if (typeof window !== 'undefined') {
       $(window).on('orientationchange.phantasus resize.phantasus', _this.resizeListener = function () {
         _this.revalidate();
@@ -32829,7 +32768,9 @@ phantasus.HeatMap.prototype = {
         });
     this.getProject().on('trackChanged', function (e) {
       //console.log('Track changed');
-      phantasus.DatasetUtil.toESSessionPromise(dataset);
+      if (!options.dummy) {
+        phantasus.DatasetUtil.toESSessionPromise(dataset);
+      }
     });
     this.getProject().on('trackChanged', function (e) {
       var columns = e.columns;
