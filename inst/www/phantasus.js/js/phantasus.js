@@ -13483,6 +13483,7 @@ phantasus.SampleDatasets.TCGA_DISEASE_TYPES_INFO = [
     type: 'methylation'
   }];
 
+  
 
 phantasus.AdjustDataTool = function () {
 };
@@ -14469,7 +14470,7 @@ phantasus.ChartTool = function (chartOptions) {
   this.$el = $('<div class="container-fluid">'
     + '<div class="row" style="height: 100%">'
     + '<div data-name="configPane" class="col-xs-2"></div>'
-    + '<div class="col-xs-10" style="height: 100%"><div style="position:relative; height: 100%" data-name="chartDiv"></div></div>'
+    + '<div class="col-xs-10" style="height: 90%"><div style="position:relative; height: 100%" data-name="chartDiv"></div></div>'
     + '</div></div>');
 
   var formBuilder = new phantasus.FormBuilder({
@@ -14606,7 +14607,7 @@ phantasus.ChartTool = function (chartOptions) {
   formBuilder.append({
     name: 'color',
     type: 'bootstrap-select',
-    options: options
+    options: unitedColumnsRowsOptions
   });
 
   formBuilder.append({
@@ -14625,17 +14626,14 @@ phantasus.ChartTool = function (chartOptions) {
   formBuilder.append({
     name: "adjust_data",
     title: "Adjust Data",
-    options: [{
-      name: 'log2',
-      value: 'log2'
+    type: 'collapsed-checkboxes',
+    showLabel: false,
+    checkboxes: [{
+      name: 'log2'
     }, {
-      name: 'Z-Score',
-      value: 'z-score',
-    }],
-    type: 'bootstrap-select',
-    multiple: true,
-    search: true,
-    selectedFormat: 'count > 2'
+      name: 'z-score',
+      title: 'Z-Score'
+    }]
   });
 
   formBuilder.append({
@@ -14658,7 +14656,6 @@ phantasus.ChartTool = function (chartOptions) {
     if (chartType === 'column profile' || chartType === 'row profile') {
       formBuilder.setOptions('axis_label', chartType === 'column profile' ? rowOptions : columnOptions,
         true);
-      formBuilder.setOptions('color', chartType === 'column profile' ? columnOptions : rowOptions, true);
       formBuilder.setOptions('size', chartType === 'row profile' ? numericColumnOptions : numericRowOptions, true);
     }
 
@@ -14844,9 +14841,10 @@ phantasus.ChartTool.prototype = {
     var traces = [];
     var ticktext = [];
     var tickvals = [];
+    var color = undefined;
 
     if (colorByVector) {
-      color = _.map(phantasus.VectorUtil.toArray(colorByVector), function (value) {
+      _.each(phantasus.VectorUtil.toArray(colorByVector), function (value) {
         if (!uniqColors[value]) {
           if (colorModel.containsDiscreteColor(colorByVector, value)
             && colorByVector.getProperties().get(phantasus.VectorKeys.DISCRETE)) {
@@ -14889,7 +14887,18 @@ phantasus.ChartTool.prototype = {
       var y = [];
       var text = [];
       var size = sizeByVector ? [] : 6;
-      var color = colorByVector ? uniqColors[colorByVector.getValue(i)] : undefined;
+
+      if (colorByVector) {
+        if (colorByInfo.isColumns === isColumnChart) {
+          color = uniqColors[colorByVector.getValue(i)];
+        } else {
+          color = [];
+          for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
+            color.push(uniqColors[colorByVector.getValue(j)])
+          }
+        }
+      }
+
 
       for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
         x.push(j);
@@ -14927,6 +14936,7 @@ phantasus.ChartTool.prototype = {
       xmax = Math.max(xmax, _.max(x));
       ymin = Math.min(ymin, _.min(y));
       ymax = Math.max(ymax, _.max(y));
+
       var trace = {
           x: x,
           y: y,
@@ -14943,6 +14953,14 @@ phantasus.ChartTool.prototype = {
           type: 'scatter',
           showlegend: false
       };
+
+      if (colorByVector && colorByInfo.isColumns !== isColumnChart) {
+        trace.marker.size = sizeByVector ? trace.marker.size : 10;
+        trace.line = {
+          color: 'rgba(125,125,125,0.35)',
+        }
+      }
+
       traces.push(trace);
     }
 
@@ -14959,7 +14977,10 @@ phantasus.ChartTool.prototype = {
       }
 
       _.each(traces, function (trace) {
+        if (trace.showlegend) return;
         trace.opacity = 0.3;
+        trace.line = trace.line || {};
+        trace.line.color = colorByInfo.isColumns !== isColumnChart ? 'rgb(125,125,125);' : trace.line.color;
       });
 
       traces.push({
@@ -14968,15 +14989,18 @@ phantasus.ChartTool.prototype = {
         name: addProfile,
         tickmode: 'array',
         marker: {
-          color: '#0571b0',
-          shape: 'cross'
+          color: _.isArray(color) && _.size(color) > 1 ? color : 'rgb(100,100,100)',
+          shape: 'cross',
+          size: 10
         },
         line: {
+          color: 'rgb(100,100,100)',
           width: 4
         },
-        mode: 'lines+marker',
+        mode: 'lines+markers',
         type: 'scatter',
-        showlegend: true
+        showlegend: true,
+        legendgroup: 'added_profile'
       });
     }
 
@@ -15020,6 +15044,7 @@ phantasus.ChartTool.prototype = {
     var showPoints = options.showPoints;
     var myPlot = options.myPlot;
     var datasets = options.datasets;
+    var colors = options.colors;
     var ids = options.ids;
     var size = 6;
     var boxData = [];
@@ -15055,7 +15080,10 @@ phantasus.ChartTool.prototype = {
         type: 'box',
         hoverinfo: 'y+text',
         boxpoints: showPoints,
-        name: ids[index]
+        name: ids[index],
+        marker: {
+          color: colors[index]
+        }
       };
 
       if (showPoints === 'all') {
@@ -15147,8 +15175,11 @@ phantasus.ChartTool.prototype = {
     var groupBy = this.formBuilder.getValue('group_by');
     var colorByInfo = phantasus.ChartTool.getVectorInfo(colorBy);
     var sizeByInfo = phantasus.ChartTool.getVectorInfo(sizeBy);
-    var colorModel = !colorByInfo.isColumns ? this.project.getRowColorModel()
-      : this.project.getColumnColorModel();
+
+    var colorModel = !colorByInfo.isColumns ?
+      this.project.getRowColorModel() :
+      this.project.getColumnColorModel();
+
     var axisLabelInfo = phantasus.ChartTool.getVectorInfo(axisLabel);
     var axisLabelVector = axisLabelInfo.isColumns ?
       dataset.getColumnMetadata().getByName(axisLabelInfo.field) :
@@ -15166,7 +15197,7 @@ phantasus.ChartTool.prototype = {
     if (sizeByVector) {
       var minMax = phantasus.VectorUtil.getMinMax(sizeByVector);
       sizeByScale = d3.scale.linear().domain(
-        [minMax.min, minMax.max]).range([3, 16])
+        [minMax.min, minMax.max]).range([10, 25])
         .clamp(true);
     }
 
@@ -15208,12 +15239,34 @@ phantasus.ChartTool.prototype = {
 
       var datasets = [];//1-d array of datasets
       var ids = []; // 1-d array of grouping values
+      var colors = [undefined];
 
       if (groupBy) {
         var groupByInfo = phantasus.ChartTool.getVectorInfo(groupBy);
         var vector = groupByInfo.isColumns ?
           dataset.getColumnMetadata().getByName(groupByInfo.field) :
           dataset.getRowMetadata().getByName(groupByInfo.field);
+
+        var boxColorModel = !groupByInfo.isColumns ?
+          this.project.getRowColorModel() :
+          this.project.getColumnColorModel();
+
+        var uniqColors = {};
+        colors = [];
+        _.each(phantasus.VectorUtil.toArray(vector), function (value) {
+          if (!uniqColors[value]) {
+            if (boxColorModel.containsDiscreteColor(vector, value)
+              && vector.getProperties().get(phantasus.VectorKeys.DISCRETE)) {
+              uniqColors[value] = boxColorModel.getMappedValue(vector, value);
+            } else if (boxColorModel.isContinuous(vector)) {
+              uniqColors[value] = boxColorModel.getContinuousMappedValue(vector, value);
+            } else {
+              uniqColors[value] = phantasus.VectorColorModel.CATEGORY_ALL[_.size(uniqColors) % 60];
+            }
+          }
+
+          return uniqColors[value]
+        });
 
         var valueToIndices = phantasus.VectorUtil.createValueToIndicesMap(vector, true);
         valueToIndices.forEach(function (indices, value) {
@@ -15222,6 +15275,7 @@ phantasus.ChartTool.prototype = {
             groupByInfo.isColumns ? indices : null)
           );
           ids.push(value);
+          colors.push(uniqColors[value]);
         });
       } else {
         datasets.push(dataset);
@@ -15232,6 +15286,7 @@ phantasus.ChartTool.prototype = {
         showPoints: boxShowPoints,
         myPlot: myPlot,
         datasets: datasets,
+        colors: colors,
         ids: ids,
         layout: layout,
         config: config
@@ -24686,6 +24741,18 @@ phantasus.FormBuilder.getValue = function ($element) {
   if ($element.data('type') === 'file') {
     return $element.data('files');
   }
+  if ($element.data('type') === 'collapsed-checkboxes') {
+    var result = [];
+    $element.find('input').each(function (a, checkbox) {
+      var $checkbox = $(checkbox);
+
+      if ($checkbox.prop('checked')) {
+        result.push($checkbox.prop('name'));
+      }
+    });
+
+    return result;
+  }
   return $element.attr('type') === 'checkbox' ? $element.prop('checked') : $element.val();
 };
 
@@ -24803,6 +24870,42 @@ phantasus.FormBuilder.prototype = {
         html.push(value[0].toUpperCase() + value.substring(1));
         html.push('</label></div>');
       }
+    } else if ('collapsed-checkboxes' === type) {
+      var checkboxes = field.checkboxes;
+      html.push('<div id="' + id + '" data-name="' + name + '" data-type="collapsed-checkboxes">');
+      html.push('<button style="' + style + '" type="button" class="btn btn-default btn-sm" data-toggle="collapse" data-target="#' + id + '_collapse">');
+      if (field.icon) {
+        html.push('<span class="' + field.icon + '"></span> ');
+      }
+      html.push(value ? value : title);
+      html.push('</button>');
+
+      html.push('<div class="collapse" id="' + id + '_collapse">' +
+        '  <div class="well">');
+
+      checkboxes.forEach(function (checkbox) {
+        var name = checkbox.name;
+        var checkboxId = id + name;
+        var value = checkbox.value;
+        var disabled = checkbox.disabled;
+        var title = checkbox.title || name;
+
+        html.push('<div class="checkbox"><label>');
+        html.push('<input style="' + style + '" name="' + name + '" id="' + checkboxId
+          + '" type="checkbox"');
+        if (value) {
+          html.push(' checked');
+        }
+        if (disabled) {
+          html.push(' disabled');
+        }
+        html.push('> ');
+        html.push(title);
+        html.push('</label></div>');
+      });
+
+      html.push('</div></div>');
+      html.push('</div>');
     } else if ('checkbox' === type) {
       html.push('<div class="checkbox"><label>');
       html.push('<input style="' + style + '" name="' + name + '" id="' + id
@@ -25319,6 +25422,9 @@ phantasus.FormBuilder.prototype = {
     var $v = this.$form.find('[name=' + name + ']');
     if ($v.length === 0) {
       $v = this.$form.find('[name=' + name + '_picker]');
+    }
+    if ($v.length === 0) {
+      $v = this.$form.find('[data-name=' + name + ']');
     }
     return phantasus.FormBuilder.getValue($v);
   },
