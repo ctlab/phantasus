@@ -13483,6 +13483,7 @@ phantasus.SampleDatasets.TCGA_DISEASE_TYPES_INFO = [
     type: 'methylation'
   }];
 
+
 phantasus.AdjustDataTool = function () {
 };
 phantasus.AdjustDataTool.prototype = {
@@ -14466,9 +14467,9 @@ phantasus.ChartTool = function (chartOptions) {
   this.project = chartOptions.project;
   var project = this.project;
   this.$el = $('<div class="container-fluid">'
-    + '<div class="row">'
+    + '<div class="row" style="height: 100%">'
     + '<div data-name="configPane" class="col-xs-2"></div>'
-    + '<div class="col-xs-10"><div style="position:relative;" data-name="chartDiv"></div></div>'
+    + '<div class="col-xs-10" style="height: 100%"><div style="position:relative; height: 100%" data-name="chartDiv"></div></div>'
     + '</div></div>');
 
   var formBuilder = new phantasus.FormBuilder({
@@ -14478,9 +14479,7 @@ phantasus.ChartTool = function (chartOptions) {
   formBuilder.append({
     name: 'chart_type',
     type: 'bootstrap-select',
-    options: ['row' +
-    ' profile', 'column' +
-    ' profile']
+    options: ["row profile", "column profile", 'boxplot']
   });
   var rowOptions = [];
   var columnOptions = [];
@@ -14567,6 +14566,19 @@ phantasus.ChartTool = function (chartOptions) {
   updateOptions();
 
   formBuilder.append({
+    name: 'group_by',
+    type: 'bootstrap-select',
+    options: unitedColumnsRowsOptions
+  });
+
+  formBuilder.append({
+    name: 'box_show_points',
+    type: 'bootstrap-select',
+    options: [{name: '(None)', value: ""}, 'all', 'outliers'],
+    title: 'Show points'
+  });
+
+  formBuilder.append({
     name: 'axis_label',
     type: 'bootstrap-select',
     options: rowOptions
@@ -14622,7 +14634,8 @@ phantasus.ChartTool = function (chartOptions) {
     }],
     type: 'bootstrap-select',
     multiple: true,
-    search: true
+    search: true,
+    selectedFormat: 'count > 2'
   });
 
   formBuilder.append({
@@ -14633,17 +14646,40 @@ phantasus.ChartTool = function (chartOptions) {
 
   function setVisibility() {
     var chartType = formBuilder.getValue('chart_type');
-    formBuilder.setOptions('axis_label', chartType === 'column profile' ? rowOptions : columnOptions,
-      true);
-    formBuilder.setOptions('color', chartType === 'column profile' ? columnOptions : rowOptions, true);
-    formBuilder.setOptions('size', chartType === 'row profile' ? numericColumnOptions : numericRowOptions, true);
+    formBuilder.setVisible('axis_label', chartType !== 'boxplot');
+    formBuilder.setVisible('color', chartType !== 'boxplot');
+    formBuilder.setVisible('size', chartType !== 'boxplot');
+    formBuilder.setVisible('tooltip', chartType !== 'boxplot');
+    formBuilder.setVisible('add_profile', chartType !== 'boxplot');
+    formBuilder.setVisible('show_points', chartType !== 'boxplot');
+    formBuilder.setVisible('group_by', chartType === 'boxplot');
+    formBuilder.setVisible('box_show_points', chartType === 'boxplot');
+
+    if (chartType === 'column profile' || chartType === 'row profile') {
+      formBuilder.setOptions('axis_label', chartType === 'column profile' ? rowOptions : columnOptions,
+        true);
+      formBuilder.setOptions('color', chartType === 'column profile' ? columnOptions : rowOptions, true);
+      formBuilder.setOptions('size', chartType === 'row profile' ? numericColumnOptions : numericRowOptions, true);
+    }
+
+
   }
 
   this.tooltip = [];
   var draw = _.debounce(this.draw.bind(this), 100);
   formBuilder.$form.on('change', 'select', function (e) {
+    if ($(this).attr('name') === 'tooltip') {
+      var tooltipVal = _this.formBuilder.getValue('tooltip');
+      _this.tooltip.length = 0; // clear array
+      if (tooltipVal != null) {
+        tooltipVal.forEach(function (tip) {
+          _this.tooltip.push(phantasus.ChartTool.getVectorInfo(tip));
+        });
+      }
+    } else {
       setVisibility();
       draw();
+    }
   });
 
   formBuilder.$form.on('click', 'input[type=checkbox]', function (e) {
@@ -14666,6 +14702,8 @@ phantasus.ChartTool = function (chartOptions) {
   var $dialog = $('<div style="background:white;" title="Chart"></div>');
   var $configPane = this.$el.find('[data-name=configPane]');
   this.$chart = this.$el.find('[data-name=chartDiv]');
+  var $chart = $('<div></div>');
+  $chart.appendTo(this.$chart);
   formBuilder.$form.appendTo($configPane);
   this.$el.appendTo($dialog);
 
@@ -14921,7 +14959,7 @@ phantasus.ChartTool.prototype = {
       }
 
       _.each(traces, function (trace) {
-        trace.opacity = 0.5;
+        trace.opacity = 0.3;
       });
 
       traces.push({
@@ -14977,13 +15015,84 @@ phantasus.ChartTool.prototype = {
     });
 
   },
+  _createBoxPlot: function (options) {
+    var _this = this;
+    var showPoints = options.showPoints;
+    var myPlot = options.myPlot;
+    var datasets = options.datasets;
+    var ids = options.ids;
+    var size = 6;
+    var boxData = [];
+
+    for (var k = 0, ndatasets = datasets.length; k < ndatasets; k++) {
+      var dataset = datasets[k];
+      var id = ids[k];
+      var values = new Float32Array(dataset.getRowCount() * dataset.getColumnCount());
+      var counter = 0;
+      for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
+        for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
+          var value = dataset.getValue(i, j);
+          if (!isNaN(value)) {
+            values[counter] = value;
+            counter++;
+          }
+        }
+      }
+      if (counter !== values.length) {
+        values = values.slice(0, counter);
+      }
+      values.sort();
+      boxData.push(values);
+    }
+
+    var $parent = $(myPlot).parent();
+    options.layout.width = $parent.width();
+    options.layout.height = this.$dialog.height() - 30;
+
+    var traces = boxData.map(function (box, index) {
+      var trace = {
+        y: box,
+        type: 'box',
+        hoverinfo: 'y+text',
+        boxpoints: showPoints,
+        name: ids[index]
+      };
+
+      if (showPoints === 'all') {
+        trace.pointpos = -1.8;
+        trace.jitter = 0.3;
+      }
+
+      return trace;
+    });
+
+    phantasus.ChartTool.newPlot(myPlot, traces, options.layout, options.config);
+
+    function resize() {
+      var width = $parent.width();
+      var height = _this.$dialog.height() - 30;
+      Plotly.relayout(myPlot, {
+        width: width,
+        height: height
+      });
+    }
+
+    this.$dialog.on('dialogresize', resize);
+    $(myPlot).on('remove', function () {
+      _this.$dialog.off('dialogresize');
+    });
+  },
   draw: function () {
     var _this = this;
     this.$chart.empty();
+    var myPlot = this.$chart[0];
     var plotlyDefaults = phantasus.ChartTool.getPlotlyDefaults();
     var layout = plotlyDefaults.layout;
     var config = plotlyDefaults.config;
+    var boxShowPoints = this.formBuilder.getValue('box_show_points');
+
     var showPoints = this.formBuilder.getValue('show_points');
+    var showOutliers = this.formBuilder.getValue('show_outliers');
     var addProfile = this.formBuilder.getValue('add_profile');
     var adjustData = this.formBuilder.getValue('adjust_data');
 
@@ -15035,6 +15144,7 @@ phantasus.ChartTool.prototype = {
       return;
     }
 
+    var groupBy = this.formBuilder.getValue('group_by');
     var colorByInfo = phantasus.ChartTool.getVectorInfo(colorBy);
     var sizeByInfo = phantasus.ChartTool.getVectorInfo(sizeBy);
     var colorModel = !colorByInfo.isColumns ? this.project.getRowColorModel()
@@ -15062,9 +15172,6 @@ phantasus.ChartTool.prototype = {
 
     if (chartType === 'row profile' || chartType === 'column profile') {
       showPoints = showPoints && (dataset.getRowCount() * dataset.getColumnCount()) <= 100000;
-      var $chart = $('<div></div>');
-      var myPlot = $chart[0];
-      $chart.appendTo(this.$chart);
       if (chartType === 'column profile') {
         dataset = new phantasus.TransposedDatasetView(dataset);
       }
@@ -15096,6 +15203,39 @@ phantasus.ChartTool.prototype = {
                 xaxis: {}
               })
         });
+    } else {
+      if (boxShowPoints === '') boxShowPoints = false;
+
+      var datasets = [];//1-d array of datasets
+      var ids = []; // 1-d array of grouping values
+
+      if (groupBy) {
+        var groupByInfo = phantasus.ChartTool.getVectorInfo(groupBy);
+        var vector = groupByInfo.isColumns ?
+          dataset.getColumnMetadata().getByName(groupByInfo.field) :
+          dataset.getRowMetadata().getByName(groupByInfo.field);
+
+        var valueToIndices = phantasus.VectorUtil.createValueToIndicesMap(vector, true);
+        valueToIndices.forEach(function (indices, value) {
+          datasets.push(new phantasus.SlicedDatasetView(dataset,
+            groupByInfo.isColumns ? null : indices,
+            groupByInfo.isColumns ? indices : null)
+          );
+          ids.push(value);
+        });
+      } else {
+        datasets.push(dataset);
+        ids.push('');
+      }
+
+      this._createBoxPlot({
+        showPoints: boxShowPoints,
+        myPlot: myPlot,
+        datasets: datasets,
+        ids: ids,
+        layout: layout,
+        config: config
+      });
     }
   }
 };
@@ -24588,6 +24728,7 @@ phantasus.FormBuilder.prototype = {
     var value = field.value;
     var showLabel = field.showLabel;
     var tooltipHelp = field.tooltipHelp;
+    var selectedFormat = field.selectedFormat || 'count';
     var style = field.style || '';
     var col = '';
     var labelColumn = '';
@@ -24737,7 +24878,7 @@ phantasus.FormBuilder.prototype = {
       // type = 'bootstrap-select';
       // }
       if (type == 'bootstrap-select') {
-        html.push('<select style="' + style + '" data-size="5" data-live-search="' + (field.search ? true : false) + '" data-selected-text-format="count" name="'
+        html.push('<select style="' + style + '" data-size="5" data-live-search="' + (field.search ? true : false) + '" data-selected-text-format="' + selectedFormat + '" name="'
           + name + '" id="' + id
           + '" data-actions-box="' + (field.selectAll ? true : false) + '" class="selectpicker' + (this.formStyle !== 'inline' ? ' form-control' : '') + '"');
       } else {

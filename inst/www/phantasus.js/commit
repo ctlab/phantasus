@@ -1,5 +1,5 @@
-commit 7ef8a2878f72d4ad74c7c3047c34b1bfd32f7d56
+commit 54d0b36c2552f3d9b64d1c000307322fb7fd62ac
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Wed Jan 16 17:05:33 2019 +0300
+Date:   Thu Jan 17 20:37:59 2019 +0300
 
-    Hotfix. Options is undefined
+    Chart profile tooltips fixed
