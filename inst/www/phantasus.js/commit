@@ -1,8 +1,5 @@
-commit fcdf49a83e076c09f52521b73f388d3e4d473d59
+commit 73cd144cf28054aa1e009147e6534d05cef4bfa4
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Fri Jan 25 12:17:32 2019 +0300
+Date:   Fri Jan 25 13:58:43 2019 +0300
 
-    Chart enchanced:
-    - Removed sizeByVector
-    - Improved performance when resizing
-    - Fixed legend overlapping when too long name
+    Chart fixes

@@ -1979,7 +1979,7 @@ phantasus.Util.getURLParameter = function (name) {
 
 phantasus.Util.saveAsSVG = function (svgEl, name) {
   svgEl.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-  var svgData = svgEl.outerHTML;
+  var svgData = svgEl.outerHTML.split('<br>').join('\n');
   var preface = '<?xml version="1.0" standalone="no"?>\r\n';
   var svgBlob = new Blob([preface, svgData], {type:"image/svg+xml;charset=utf-8"});
   var svgUrl = URL.createObjectURL(svgBlob);
@@ -14725,15 +14725,16 @@ phantasus.ChartTool = function (chartOptions) {
   $dialog.dialog({
     dialogClass: 'phantasus',
     close: function (event, ui) {
+      event.stopPropagation();
+      $(this).dialog('destroy');
       project.off('trackChanged.chart', trackChanged);
       project.getRowSelectionModel().off('selectionChanged.chart', draw);
       project.getColumnSelectionModel().off('selectionChanged.chart',
         draw);
-      _this.$el.empty();
     },
 
     resizable: true,
-    height: 800,
+    height: 580,
     width: 900
   });
   this.$dialog = $dialog;
