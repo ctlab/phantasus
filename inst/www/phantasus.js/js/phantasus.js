@@ -1998,6 +1998,16 @@ phantasus.Util.promptBLOBdownload = function (url, name) {
   }, 0)
 };
 
+_.chunk = function(array, count) {
+  if (count == null || count < 1) return [];
+  var result = [];
+  var i = 0, length = array.length;
+  while (i < length) {
+    result.push(array.slice(i, i += count));
+  }
+  return result;
+};
+
 phantasus.BlobFromPath = function () {
 };
 phantasus.BlobFromPath.getFileBlob = function (url, cb) {
@@ -13483,7 +13493,7 @@ phantasus.SampleDatasets.TCGA_DISEASE_TYPES_INFO = [
     type: 'methylation'
   }];
 
-  
+
 
 phantasus.AdjustDataTool = function () {
 };
@@ -14611,11 +14621,6 @@ phantasus.ChartTool = function (chartOptions) {
   });
 
   formBuilder.append({
-    name: 'size',
-    type: 'bootstrap-select',
-    options: numericOptions
-  });
-  formBuilder.append({
     name: 'tooltip',
     type: 'bootstrap-select',
     multiple: true,
@@ -14646,7 +14651,6 @@ phantasus.ChartTool = function (chartOptions) {
     var chartType = formBuilder.getValue('chart_type');
     formBuilder.setVisible('axis_label', chartType !== 'boxplot');
     formBuilder.setVisible('color', chartType !== 'boxplot');
-    formBuilder.setVisible('size', chartType !== 'boxplot');
     formBuilder.setVisible('tooltip', chartType !== 'boxplot');
     formBuilder.setVisible('add_profile', chartType !== 'boxplot');
     formBuilder.setVisible('show_points', chartType !== 'boxplot');
@@ -14656,7 +14660,6 @@ phantasus.ChartTool = function (chartOptions) {
     if (chartType === 'column profile' || chartType === 'row profile') {
       formBuilder.setOptions('axis_label', chartType === 'column profile' ? rowOptions : columnOptions,
         true);
-      formBuilder.setOptions('size', chartType === 'row profile' ? numericColumnOptions : numericRowOptions, true);
     }
 
 
@@ -14824,8 +14827,6 @@ phantasus.ChartTool.prototype = {
 
     var colorByVector = options.colorByVector;
     var colorModel = options.colorModel;
-    var sizeByVector = options.sizeByVector;
-    var sizeFunction = options.sizeFunction;
     var axisLabelVector = options.axisLabelVector;
     var addProfile = options.addProfile;
     var isColumnChart = options.isColumnChart;
@@ -14860,6 +14861,7 @@ phantasus.ChartTool.prototype = {
       });
 
       _.each(uniqColors, function (color, categoryName) {
+        categoryName = _.chunk(categoryName, 10).join('<br>');
         traces.push({
           x: [1000000], y: [1000000],
           marker: {
@@ -14886,7 +14888,7 @@ phantasus.ChartTool.prototype = {
       var x = [];
       var y = [];
       var text = [];
-      var size = sizeByVector ? [] : 6;
+      var size = 6;
 
       if (colorByVector) {
         if (colorByInfo.isColumns === isColumnChart) {
@@ -14904,10 +14906,6 @@ phantasus.ChartTool.prototype = {
         x.push(j);
         y.push(dataset.getValue(i, j));
 
-        if (sizeByVector) {
-          var sizeByValue = sizeByVector.getValue(j);
-          size.push(sizeFunction(sizeByValue));
-        }
         var obj = {
           i: i,
           j: j
@@ -14955,7 +14953,7 @@ phantasus.ChartTool.prototype = {
       };
 
       if (colorByVector && colorByInfo.isColumns !== isColumnChart) {
-        trace.marker.size = sizeByVector ? trace.marker.size : 10;
+        trace.marker.size = 10;
         trace.line = {
           color: 'rgba(125,125,125,0.35)',
         }
@@ -14997,7 +14995,7 @@ phantasus.ChartTool.prototype = {
           color: 'rgb(100,100,100)',
           width: 4
         },
-        mode: 'lines+markers',
+        mode: 'lines',
         type: 'scatter',
         showlegend: true,
         legendgroup: 'added_profile'
@@ -15024,14 +15022,14 @@ phantasus.ChartTool.prototype = {
       return false;
     });
 
-    function resize() {
+    var resize = _.debounce(function () {
       var width = $parent.width();
       var height = _this.$dialog.height() - 30;
       Plotly.relayout(myPlot, {
         width: width,
         height: height
       });
-    }
+    }, 500);
 
     this.$dialog.on('dialogresize', resize);
     $(myPlot).on('remove', function () {
@@ -15046,7 +15044,6 @@ phantasus.ChartTool.prototype = {
     var datasets = options.datasets;
     var colors = options.colors;
     var ids = options.ids;
-    var size = 6;
     var boxData = [];
 
     for (var k = 0, ndatasets = datasets.length; k < ndatasets; k++) {
@@ -15096,14 +15093,14 @@ phantasus.ChartTool.prototype = {
 
     phantasus.ChartTool.newPlot(myPlot, traces, options.layout, options.config);
 
-    function resize() {
+    var resize = _.debounce(function () {
       var width = $parent.width();
       var height = _this.$dialog.height() - 30;
       Plotly.relayout(myPlot, {
         width: width,
         height: height
       });
-    }
+    }, 500);
 
     this.$dialog.on('dialogresize', resize);
     $(myPlot).on('remove', function () {
@@ -15126,7 +15123,6 @@ phantasus.ChartTool.prototype = {
 
     var axisLabel = this.formBuilder.getValue('axis_label');
     var colorBy = this.formBuilder.getValue('color');
-    var sizeBy = this.formBuilder.getValue('size');
     var chartType = this.formBuilder.getValue('chart_type');
 
     var dataset;
@@ -15174,7 +15170,6 @@ phantasus.ChartTool.prototype = {
 
     var groupBy = this.formBuilder.getValue('group_by');
     var colorByInfo = phantasus.ChartTool.getVectorInfo(colorBy);
-    var sizeByInfo = phantasus.ChartTool.getVectorInfo(sizeBy);
 
     var colorModel = !colorByInfo.isColumns ?
       this.project.getRowColorModel() :
@@ -15185,21 +15180,11 @@ phantasus.ChartTool.prototype = {
       dataset.getColumnMetadata().getByName(axisLabelInfo.field) :
       dataset.getRowMetadata().getByName(axisLabelInfo.field);
 
-    var sizeByVector = sizeByInfo.isColumns ?
-      dataset.getColumnMetadata().getByName(sizeByInfo.field) :
-      dataset.getRowMetadata().getByName(sizeByInfo.field);
 
     var colorByVector = colorByInfo.isColumns ?
       dataset.getColumnMetadata().getByName(colorByInfo.field) :
       dataset.getRowMetadata().getByName(colorByInfo.field);
 
-    var sizeByScale = null;
-    if (sizeByVector) {
-      var minMax = phantasus.VectorUtil.getMinMax(sizeByVector);
-      sizeByScale = d3.scale.linear().domain(
-        [minMax.min, minMax.max]).range([10, 25])
-        .clamp(true);
-    }
 
     if (chartType === 'row profile' || chartType === 'column profile') {
       showPoints = showPoints && (dataset.getRowCount() * dataset.getColumnCount()) <= 100000;
@@ -15214,8 +15199,6 @@ phantasus.ChartTool.prototype = {
           colorByVector: colorByVector,
           colorByInfo: colorByInfo,
           colorModel: colorModel,
-          sizeByVector: sizeByVector,
-          sizeFunction: sizeByScale,
           addProfile: addProfile,
           myPlot: myPlot,
           dataset: dataset,

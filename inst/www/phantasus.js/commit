@@ -1,5 +1,8 @@
-commit 61245d8f4f53c2cbd34045acf99a91feac7ebeed
+commit fcdf49a83e076c09f52521b73f388d3e4d473d59
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Fri Jan 18 19:12:01 2019 +0300
+Date:   Fri Jan 25 12:17:32 2019 +0300
 
-    Chart finale: colorization.
+    Chart enchanced:
+    - Removed sizeByVector
+    - Improved performance when resizing
+    - Fixed legend overlapping when too long name
