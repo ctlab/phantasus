@@ -13493,8 +13493,6 @@ phantasus.SampleDatasets.TCGA_DISEASE_TYPES_INFO = [
     type: 'methylation'
   }];
 
-
-
 phantasus.AdjustDataTool = function () {
 };
 phantasus.AdjustDataTool.prototype = {

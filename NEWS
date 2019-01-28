@@ -1,3 +1,8 @@
+CHANGES IN VERSION 1.3.3
+* Custom order for annotation
+* Revamped Charts tool
+* AnnotationDB optimization
+
 CHANGES IN VERSION 1.3.2
 * PCA plot, GSEA plot and Chart tool can be exported to SVG
 * Group by in column context menu
