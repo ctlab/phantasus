@@ -82,7 +82,7 @@ getGDS <- function(name, destdir = tempdir(),
 
     destfile <- file.path(sprintf(gdsurl, destdir, stub, name, filename))
     fullGEODirPath <- file.path(sprintf(gdsDirPath, destdir, stub, name))
-    dir.create(fullGEODirPath, showWarnings = FALSE, recursive = T)
+    dir.create(fullGEODirPath, showWarnings = FALSE, recursive = TRUE)
 
     infile <- file.exists(destfile)
 
@@ -323,7 +323,7 @@ getGSE <- function(name, destdir = tempdir(),
 
     destfile <- file.path(sprintf(gseurl, destdir, stub, GEO, filename))
     fullGEODirPath <- file.path(sprintf(gseDirPath, destdir, stub, GEO))
-    dir.create(fullGEODirPath, showWarnings = FALSE, recursive = T)
+    dir.create(fullGEODirPath, showWarnings = FALSE, recursive = TRUE)
 
     infile <- file.exists(destfile)
 
@@ -667,7 +667,7 @@ getGPLAnnotation <- function (GPL, destdir = tempdir()) {
     GPLDirPath <- '%s/geo/platforms/%s/%s/annot'
     fullGPLDirPath <- file.path(sprintf(GPLDirPath, destdir, stub, GPL))
 
-    dir.create(fullGPLDirPath, showWarnings = FALSE, recursive = T)
+    dir.create(fullGPLDirPath, showWarnings = FALSE, recursive = TRUE)
 
     return(suppressWarnings(getGEO(GPL, destdir = fullGPLDirPath, AnnotGPL = TRUE)))
 }

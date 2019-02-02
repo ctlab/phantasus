@@ -18,6 +18,7 @@
 #' @return produced ExpressionSet object
 #'
 #' @import Biobase
+#' @importFrom methods new
 #'
 #' @examples
 #' \dontrun{
@@ -37,7 +38,7 @@ createES <- function(data, pData, varLabels, fData, fvarLabels, eData) {
     featureData <- AnnotatedDataFrame(data.frame(fData, stringsAsFactors = FALSE))
     varLabels(featureData) <- fvarLabels
 
-    ed = new ("MIAME",
+    ed <- new ("MIAME",
               name=eData$name,
               lab=eData$lab,
               title=eData$title,

@@ -15,7 +15,7 @@ sqlite files for AnnotationDB
 }
 \examples{
 \dontrun{
-queryAnnotationDBMeta
+queryAnnotationDBMeta()
 }
 
 }

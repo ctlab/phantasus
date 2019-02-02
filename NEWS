@@ -1,3 +1,6 @@
+CHANGES IN VERSION 1.3.4
+* Switch to fgseaMultilevel
+
 CHANGES IN VERSION 1.3.3
 * Custom order for annotation
 * Revamped Charts tool

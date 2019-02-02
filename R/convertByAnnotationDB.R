@@ -54,10 +54,10 @@ convertByAnnotationDB <- function (es, dbName, columnName, columnType, keyType) 
 #' sqlite files for AnnotationDB
 #'
 #' @return meta info in JSON
-#'
+#' @importFrom utils read.table
 #' @examples
 #' \dontrun{
-#' queryAnnotationDBMeta
+#' queryAnnotationDBMeta()
 #' }
 #'
 queryAnnotationDBMeta <- function () {
