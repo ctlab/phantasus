@@ -46,7 +46,7 @@ before_install:
   - if [ ${TRAVIS_OS_NAME} = 'osx' ]; then brew unlink python; brew install protobuf; fi
   - R -e 'install.packages("devtools")'
   - R -e 'source("https://bioconductor.org/biocLite.R"); biocLite()'
-  - R -e 'devtools::install_github("ctlab/fgsea", ref="1.9.4")'
+  - R -e 'devtools::install_github("ctlab/fgsea", tag="1.9.4")'
 
 script:
   - R CMD build .
