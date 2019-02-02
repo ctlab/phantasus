@@ -31,7 +31,7 @@ rasterizeHeatmap <- function(m, palette=palette, maxDimensions=c(2500, 1000)) {
 #' @param pallete a vector of colors to draw heatmap
 #' @param annotationColors a list of colors to use in annotation
 #' @return path to an svg file
-#' @importFrom fgsea plotEnrichment fgsea
+#' @importFrom fgsea plotEnrichment fgseaMultilevel
 #' @importFrom ggplot2 ggtitle
 #' @importFrom grDevices colorRampPalette dev.off svg
 #' @importFrom utils head
@@ -48,6 +48,7 @@ gseaPlot <- function(es, rankBy, selectedGenes, width, height,
     fullPalette <- colorRampPalette(pallete)(50)
     featureData <- fData(es)
     colnames(featureData) <- fvarLabels(es)
+    absEps <- 1e-10
 
     ranks <- featureData[, rankBy]
     if (!is.numeric(ranks)) {
@@ -57,12 +58,15 @@ gseaPlot <- function(es, rankBy, selectedGenes, width, height,
 
     pathway <- as.character(selectedGenes)
 
-    fgseaRes <- fgsea(list(pathway), ranks, nperm=2000, nproc=1)
+    system.time(
 
-    pvalString <- if (fgseaRes$nMoreExtreme == 0) {
-        "<1e-3"
+    fgseaRes <- fgseaMultilevel(list(p=pathway), ranks, sampleSize = 101, nproc=1, absEps = absEps/2)
+    )
+
+    pvalString <- if (fgseaRes$pval < absEps) {
+        sprintf("<%.2g", absEps)
     } else {
-        sprintf("=%.2g", fgseaRes$pval)
+        sprintf("≈%.2g", fgseaRes$pval)
     }
 
     labelString <- sprintf("p-value%s, NES=%.2f", pvalString, fgseaRes$NES)

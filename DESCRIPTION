@@ -1,6 +1,6 @@
 Package: phantasus
 Title: Visual and interactive gene expression analysis
-Version: 1.3.3
+Version: 1.3.3.9000
 Authors@R: c(person("Daria", "Zenkova", email = "daria.zenkova.cs@gmail.com", role = "aut"),
              person("Vladislav", "Kamenev", role = "aut"),        
              person("Rita", "Sablina", role = "ctb"),        
@@ -22,7 +22,7 @@ biocViews: GeneExpression, GUI, Visualization, DataRepresentation, Transcriptomi
             PrincipalComponent, ImmunoOncology
 Imports: ggplot2, protolite, Biobase, GEOquery, Rook, htmltools,
         httpuv, jsonlite, limma, opencpu, assertthat, methods, httr, rhdf5,
-        utils, parallel, stringr, fgsea, svglite, gtable, stats,
+        utils, parallel, stringr, fgsea (>= 1.9.4), svglite, gtable, stats,
         Matrix, Matrix.utils, pheatmap, scales, ccaPP, grid, grDevices,
         AnnotationDbi
 License: MIT + file LICENSE

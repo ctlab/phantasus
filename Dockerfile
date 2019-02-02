@@ -56,8 +56,9 @@ RUN R -e 'install.packages("devtools", repo = "https://cran.rstudio.com/")'
 COPY . /root/phantasus
 
 RUN R -e 'source("https://bioconductor.org/biocLite.R")'
-RUN R -e 'devtools::install("/root/phantasus", build_vignettes=T)'
 
+RUN R -e 'devtools::install("/root/phantasus", build_vignettes=T)'
+RUN R -e 'devtools::install_github("ctlab/fgsea", ref="1.9.4")'
 RUN printf "window.PHANTASUS_BUILD='$PHANTASUS_BUILD';" >> /root/phantasus/inst/www/phantasus.js/RELEASE.js
 RUN cp -r /root/phantasus/inst/www/phantasus.js /var/www/html/phantasus
 RUN rm -rf /root/phantasus/inst
