@@ -2,6 +2,7 @@ FROM ubuntu:16.04
 
 ARG TARGET_BRANCH=master
 ARG PHANTASUS_BUILD
+ARG GITHUB_PAT
 ENV OCPU_MASTER_HOME=/var/phantasus/ocpu-root
 
 RUN apt-get -y update && \
