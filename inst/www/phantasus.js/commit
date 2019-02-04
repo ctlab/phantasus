@@ -1,5 +1,5 @@
-commit 73cd144cf28054aa1e009147e6534d05cef4bfa4
+commit 8c8efd87e764fd87ebb266e94f05c8122a66fb47
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Fri Jan 25 13:58:43 2019 +0300
+Date:   Mon Feb 4 16:26:59 2019 +0300
 
-    Chart fixes
+    Hierarchical clustering (and other "worker-based" tools) fixed

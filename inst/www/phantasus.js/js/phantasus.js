@@ -1998,7 +1998,7 @@ phantasus.Util.promptBLOBdownload = function (url, name) {
   }, 0)
 };
 
-_.chunk = function(array, count) {
+phantasus.Util.chunk = function(array, count) {
   if (count == null || count < 1) return [];
   var result = [];
   var i = 0, length = array.length;
@@ -14860,7 +14860,7 @@ phantasus.ChartTool.prototype = {
       });
 
       _.each(uniqColors, function (color, categoryName) {
-        categoryName = _.chunk(categoryName, 10).join('<br>');
+        categoryName = phantasus.Util.chunk(categoryName, 10).join('<br>');
         traces.push({
           x: [1000000], y: [1000000],
           marker: {
