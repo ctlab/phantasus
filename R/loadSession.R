@@ -33,7 +33,7 @@ publishSession <- function (sessionName) {
     return (jsonlite::toJSON(list(result=FALSE), auto_unbox = TRUE))
 }
 
-loadSesssion <- function (sessionName) {
+loadSession <- function (sessionName) {
     ocpuRoot <- strsplit(getwd(), 'ocpu-temp')[[1]][1]
     sessionPath <- paste(ocpuRoot, 'ocpu-store', sessionName, sep=.Platform$file.sep)
 
@@ -41,8 +41,8 @@ loadSesssion <- function (sessionName) {
     if (file.exists(RDataPath)) {
         savedEnv <- load(RDataPath)
 
-        if (!("es" %in% savedEnv) || is.null(attr(es, 'publised'))) {
-            return (jsonlite::toJSON(NULL))
+        if (!("es" %in% savedEnv) || is.null(attr(es, 'published'))) {
+            stop('Invalid session key')
         }
 
         result <- list(es=writeToList(es))
@@ -51,5 +51,5 @@ loadSesssion <- function (sessionName) {
         return (jsonlite::toJSON(basename(f)))
     }
 
-    return(jsonlite::toJSON(NULL))
+    stop('Invalid session key')
 }
