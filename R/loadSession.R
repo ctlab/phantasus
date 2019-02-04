@@ -41,7 +41,7 @@ loadSesssion <- function (sessionName) {
     if (file.exists(RDataPath)) {
         savedEnv <- load(RDataPath)
 
-        if (!("es" %in% savedEnv)) {
+        if (!("es" %in% savedEnv) || is.null(attr(es, 'publised'))) {
             return (jsonlite::toJSON(NULL))
         }
 
