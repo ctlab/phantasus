@@ -2008,6 +2008,20 @@ phantasus.Util.chunk = function(array, count) {
   return result;
 };
 
+phantasus.Util.customToolWaiter = function (promise, toolName, heatMap) {
+  var $dialogContent = $('<div><span>' + toolName + '...</span></div>');
+
+  var $dialog = phantasus.FormBuilder.showInDraggableDiv({
+    $content: $dialogContent,
+    appendTo: heatMap.getContentEl(),
+    width: 'auto'
+  });
+
+  promise.always(function () {
+    $dialog.remove();
+  });
+};
+
 phantasus.BlobFromPath = function () {
 };
 phantasus.BlobFromPath.getFileBlob = function (url, cb) {
@@ -4359,6 +4373,7 @@ phantasus.SavedSessionReader.prototype = {
     console.log("saved session read", name);
     name = typeof name === "string" ? { sessionName : name } : name;
 
+    var sessionWithLoadedMeta;
     var afterLoaded = function (err, dataset) {
       if (!err) {
         var datasetTitle = "permanent linked dataset";
@@ -4378,19 +4393,24 @@ phantasus.SavedSessionReader.prototype = {
         });
       }
 
+
+      sessionWithLoadedMeta.loc = sessionWithLoadedMeta.loc.split(sessionWithLoadedMeta.key).join(name.sessionName);
+      sessionWithLoadedMeta.key = name.sessionName;
+      sessionWithLoadedMeta.getLoc = function () {
+        return sessionWithLoadedMeta.loc;
+      };
+
+      sessionWithLoadedMeta.getKey = function () {
+        return sessionWithLoadedMeta.key;
+      };
+
+      dataset[0].setESSession(new Promise(function (rs) { rs(sessionWithLoadedMeta); }));
+
       callback(err, dataset);
     };
 
-    var req = ocpu.call('loadSesssion', name, function(session) {
-      session.loc = session.loc.split(session.key).join(name.sessionName);
-      session.key = name.sessionName;
-      session.getLoc = function () {
-        return session.loc;
-      };
-
-      session.getKey = function () {
-        return session.key;
-      };
+    var req = ocpu.call('loadSession', name, function(session) {
+      sessionWithLoadedMeta = session;
 
       phantasus.ParseDatasetFromProtoBin.parse(session, afterLoaded, { preloaded : true });
     });
@@ -16069,8 +16089,9 @@ phantasus.fgseaTool = function (heatMap) {
     },
     buttons: {
       "Submit": function () {
-        self.execute(heatMap);
+        var promise = self.execute(heatMap);
         self.$dialog.dialog('close');
+        phantasus.Util.customToolWaiter(promise, phantasus.fgseaTool.prototype.toString(), heatMap);
       },
       "Cancel": function () {
         self.$dialog.dialog('close');
@@ -16091,6 +16112,7 @@ phantasus.fgseaTool.prototype = {
   },
   execute: function (heatMap) {
     var self = this;
+    var promise = $.Deferred();
     this.parentHeatmap = heatMap;
 
     var dataset = heatMap.getProject().getSelectedDataset();
@@ -16113,21 +16135,43 @@ phantasus.fgseaTool.prototype = {
       session.getObject(function (result) {
         self.fgsea = JSON.parse(result);
         if (_.size(self.fgsea) === 0) {
+          promise.reject();
           throw new Error("FGSEA returned 0 rows. Nothing to show");
         }
 
+
+        promise.resolve();
         self.openTab();
       });
     }, false, "::es")
       .fail(function () {
+        promise.reject();
         throw new Error("Failed to perform FGSEA. Error:" + req.responseText);
       });
+
+    return promise;
   },
   openTab: function () {
     var self = this;
     var template = [
-      '<div><button class="button">Save as TSV</button></div>',
-      '<div>' + this.generateTableHTML() + '</div>'
+      '<div class="container-fluid">',
+        '<div class="row">',
+          '<div class="col-sm-12">',
+            '<label class="control-label">Actions:</label>',
+            '<div><button class="btn btn-default">Save as TSV</button></div>',
+          '</div>',
+        '</div>',
+        '<div class="row">',
+          '<div class="col-sm-9">',
+            '<label class="control-label">FGSEA:</label>',
+            '<div>' + this.generateTableHTML() + '</div>',
+          '</div>',
+          '<div class="col-sm-3">',
+            '<label class="control-label">Pathway detail:</label>',
+            '<div id="pathway-detail" style="word-break: break-all">Hint: Click on pathway name to get list of genes in it</div>',
+          '</div>',
+        '</div>',
+      '</div>'
     ].join('');
 
     this.$el = $(template);
@@ -16135,6 +16179,40 @@ phantasus.fgseaTool.prototype = {
     this.$saveButton.on('click', function () {
       var blob = new Blob([self.generateTSV()], {type: "text/plain;charset=utf-8"});
       saveAs(blob, self.parentHeatmap.getName() + "_FGSEA.txt");
+    });
+
+    this.$pathwayDetail = this.$el.find('#pathway-detail');
+
+    this.$table = this.$el.find('table');
+    this.$table.on('click', 'tbody tr', function (e) {
+      var pathway = $(e.currentTarget).children().first().text();
+      var request = {
+        dbName: self.dbName,
+        pathwayName: pathway
+      };
+
+      self.$pathwayDetail.empty();
+      phantasus.Util.createLoadingEl().appendTo(self.$pathwayDetail);
+
+      var req = ocpu.call('queryPathway', request, function (session) {
+        session.getObject(function (success) {
+          var pathwayGenes = JSON.parse(success);
+          self.$pathwayDetail.empty();
+
+          var pathwayDetail = $([
+            '<div>',
+              '<strong>Pathway name:</strong>' + pathway + '<br>',
+              '<strong>Pathway genes:</strong>' + pathwayGenes.join(','),
+            '</div>'
+          ].join(''));
+
+          pathwayDetail.appendTo(self.$pathwayDetail);
+        });
+      });
+
+      req.fail(function () {
+        throw new Error('Failed to get pathway details: ' + req.responseText);
+      });
     });
 
     this.tab = this.parentHeatmap.tabManager.add({
@@ -16150,7 +16228,7 @@ phantasus.fgseaTool.prototype = {
   },
   generateTSV: function () {
     var headerNames = Object.keys(_.first(this.fgsea));
-    var result = headerNames.join(',') + '\n';
+    var result = headerNames.join('\t') + '\n';
 
     result += this.fgsea.map(function (pathway) {
       return Object.values(pathway).map(function (value) {
@@ -16178,7 +16256,7 @@ phantasus.fgseaTool.prototype = {
           return result;
         }).join('');
 
-        return '<tr>' + tableRow + '</tr>';
+        return '<tr class="c-pointer">' + tableRow + '</tr>';
       })
       .join('');
 
@@ -21227,28 +21305,42 @@ phantasus.ActionManager = function () {
         var location = window.location;
         var newLocation = location.origin + location.pathname + '?session=' + key;
 
-        var formBuilder = new phantasus.FormBuilder();
-        formBuilder.append({
-          name: 'Link',
-          readonly: true,
-          value: newLocation
+        var publishReq = ocpu.call('publishSession', { sessionName: key }, function (tempSession) {
+          tempSession.getObject(function (json) {
+            var parsedJSON = JSON.parse(json);
+            if (!parsedJSON.result) {
+              throw new Error('Failed to make session accessible');
+            }
+
+
+            var formBuilder = new phantasus.FormBuilder();
+            formBuilder.append({
+              name: 'Link',
+              readonly: true,
+              value: newLocation
+            });
+
+            formBuilder.append({
+              name: 'copy',
+              type: 'button'
+            });
+
+            formBuilder.$form.find('button').on('click', function () {
+              formBuilder.$form.find('input')[0].select();
+              document.execCommand('copy');
+            });
+
+            phantasus.FormBuilder.showInModal({
+              title: 'Get permanent link to a dataset',
+              close: 'Close',
+              html: formBuilder.$form,
+              focus: options.heatMap.getFocusEl()
+            });
+          });
         });
 
-        formBuilder.append({
-          name: 'copy',
-          type: 'button'
-        });
-
-        formBuilder.$form.find('button').on('click', function () {
-          formBuilder.$form.find('input')[0].select();
-          document.execCommand('copy');
-        });
-
-        phantasus.FormBuilder.showInModal({
-          title: 'Get permanent link to a dataset',
-          close: 'Close',
-          html: formBuilder.$form,
-          focus: options.heatMap.getFocusEl()
+        publishReq.fail(function () {
+          throw new Error('Failed to make session accessible: ' + publishReq.responseText);
         });
       })
     }
