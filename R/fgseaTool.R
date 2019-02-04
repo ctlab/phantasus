@@ -19,7 +19,7 @@ performFGSEA <- function (dbName, ranks) {
 
     assign('db', db, envir = parent.frame())
 
-    return (jsonlite::toJSON(fgsea(pathways, rranks, nperm = 1000)))
+    return (jsonlite::toJSON(fgseaMultilevel(pathways, rranks, sampleSize = 101, absEps = 1e-4)))
 }
 
 queryPathway <- function (dbName, pathwayName) {
