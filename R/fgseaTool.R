@@ -19,7 +19,13 @@ performFGSEA <- function (dbName, ranks) {
 
     assign('db', db, envir = parent.frame())
 
-    return (jsonlite::toJSON(fgseaMultilevel(pathways, rranks, sampleSize = 101, absEps = 1e-4)))
+    return (jsonlite::toJSON(fgseaMultilevel(pathways,
+                                             rranks,
+                                             sampleSize = 101,
+                                             absEps = 0.5e-10,
+                                             minSize = 15,
+                                             maxSize = 500,
+                                             nproc = 1)))
 }
 
 queryPathway <- function (dbName, pathwayName) {
@@ -29,5 +35,5 @@ queryPathway <- function (dbName, pathwayName) {
     db <- readRDS(file.path(dbDir, paste(dbName, '.rds', sep='')))
     filteredDb <- db[db$pathName == pathwayName,]
 
-    jsonlite::toJSON(filteredDb$geneID)
+    jsonlite::toJSON(list(geneID = filteredDb$geneID, geneSymbol = filteredDb$geneSymbol))
 }
