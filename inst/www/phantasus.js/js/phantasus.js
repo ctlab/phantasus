@@ -16057,7 +16057,6 @@ phantasus.fgseaTool = function (heatMap) {
   this.formBuilder = new phantasus.FormBuilder({
     formStyle: 'vertical'
   });
-  this.formBuilder.appendContent('<h4>Please select rows.</h4>');
 
   [{
     name: 'pathway_database',
@@ -16074,12 +16073,33 @@ phantasus.fgseaTool = function (heatMap) {
     options: rows,
     value: _.first(rows),
     type: 'select'
+  }, {
+    name: 'omit_ambigious_genes',
+    type: 'checkbox',
+    tooltipHelp: 'Current column contains cells with multiple values separated by \'///\'.',
+    value: false
   }].forEach(function (a) {
     self.formBuilder.append(a);
   });
 
-  var $notifyRow = this.$dialog.find('h4');
   this.formBuilder.$form.appendTo(this.$dialog);
+  this.formBuilder.$form.find('[data-toggle="tooltip"]').tooltip();
+
+  var columnSelect = this.formBuilder.$form.find("[name=column_with_gene_ID]");
+
+  var onSelect = function () {
+    var geneIDColumn = self.formBuilder.getValue('column_with_gene_ID');
+    var values = phantasus.VectorUtil.toArray(fullDataset.getRowMetadata().getByName(geneIDColumn));
+    var show = values.some(function (value) {
+      return _.isString(value) && value.indexOf('///') !== -1;
+    });
+
+    self.formBuilder.setVisible('omit_ambigious_genes', show);
+  };
+
+  columnSelect.on('change', onSelect);
+  onSelect();
+
   this.$dialog.dialog({
     open: function (event, ui) {
     },
@@ -16115,21 +16135,54 @@ phantasus.fgseaTool.prototype = {
     var promise = $.Deferred();
     this.parentHeatmap = heatMap;
 
-    var dataset = heatMap.getProject().getSelectedDataset();
+    var dataset = heatMap.getProject().getFullDataset();
     var rankBy = this.formBuilder.getValue('rank_by');
     var geneIDColumn = this.formBuilder.getValue('column_with_gene_ID');
+    var omitAmbigious = this.formBuilder.getValue('omit_ambigious_genes');
 
-    var rankRequest = {
-      genes: phantasus.VectorUtil.toArray(dataset.getRowMetadata().getByName(geneIDColumn)),
-      ranks: phantasus.VectorUtil.toArray(dataset.getRowMetadata().getByName(rankBy))
-    };
+    var genes = phantasus.VectorUtil.toArray(dataset.getRowMetadata().getByName(geneIDColumn));
+    var ranks = phantasus.VectorUtil.toArray(dataset.getRowMetadata().getByName(rankBy));
+
+
+    if ((new Set(genes)).size !== genes.length) {
+      promise.reject();
+      throw new Error('FGSEA requires Gene ID column to be unique. Please use collapse tool.');
+    }
+
+    if (omitAmbigious) {
+      var omitIndexes = [];
+      genes = genes.reduce(function (acc, gene, index) {
+        if (!_.isString(gene)) { // rows are not strings???
+          acc.push(gene);
+          return acc;
+        }
+
+        var isAmbiguousGene = gene.indexOf('///') !== -1;
+        if (isAmbiguousGene) {
+          omitIndexes.push(index);
+        } else if (!isAmbiguousGene) {
+          acc.push(gene);
+        }
+
+        return acc;
+      }, []);
+
+      omitIndexes
+        .sort(function (a,b) {return b - a;})
+        .forEach(function (index) {
+          ranks.splice(index,1);
+        });
+    }
 
     var request = {
       dbName: this.formBuilder.getValue('pathway_database'),
-      ranks: rankRequest
+      ranks: {
+        genes: genes,
+        ranks: ranks
+      }
     };
-    this.dbName = request.dbName;
 
+    this.dbName = request.dbName;
     var req = ocpu.call('performFGSEA', request, function (session) {
       self.session = session;
       session.getObject(function (result) {
@@ -16199,10 +16252,14 @@ phantasus.fgseaTool.prototype = {
           var pathwayGenes = JSON.parse(success);
           self.$pathwayDetail.empty();
 
+          var leadingEdge = _.find(self.fgsea, {pathway: pathway}).leadingEdge;
+
           var pathwayDetail = $([
             '<div>',
               '<strong>Pathway name:</strong>' + pathway + '<br>',
-              '<strong>Pathway genes:</strong>' + pathwayGenes.join(','),
+              '<strong>Pathway genes (ID):</strong>' + pathwayGenes.geneID.join(' ') + '<br>',
+              '<strong>Pathway genes (Symbols):</strong>' + pathwayGenes.geneSymbol.join(' ') + '<br>',
+              '<strong>Leading edge:</strong>' + leadingEdge.join(' ') + '<br>',
             '</div>'
           ].join(''));
 
@@ -16213,6 +16270,12 @@ phantasus.fgseaTool.prototype = {
       req.fail(function () {
         throw new Error('Failed to get pathway details: ' + req.responseText);
       });
+    });
+
+    $(this.$table).DataTable({
+      paging: false,
+      searching: false,
+      order: [[1, 'asc']]
     });
 
     this.tab = this.parentHeatmap.tabManager.add({
@@ -16232,7 +16295,7 @@ phantasus.fgseaTool.prototype = {
 
     result += this.fgsea.map(function (pathway) {
       return Object.values(pathway).map(function (value) {
-        return (_.isArray(value)) ? value.join(',') : value.toString();
+        return (_.isArray(value)) ? value.join(' ') : value.toString();
       }).join('\t');
     }).join('\n');
 
@@ -16250,7 +16313,16 @@ phantasus.fgseaTool.prototype = {
         var values = Object.values(pathway);
         var tableRow = values.map(function (value) {
           var result = '<td>';
-          result += (_.isArray(value)) ? value.join(', ') : value.toString();
+
+          if (_.isArray(value)) {
+            if (_.size(value) >= 5) {
+              result += value.slice(0, 5).join(' ') + ' ...';
+            } else {
+              result += value.join(' ');
+            }
+          } else {
+            result += value.toString();
+          }
           result += '</td>';
 
           return result;
@@ -30994,7 +31066,7 @@ phantasus.HeatMapTooltipProvider.vectorToString = function (vector, index, tipTe
   };
   if (vector != null) {
     var primaryVal = vector.getValue(index);
-    if (primaryVal != null && primaryVal != '') {
+    if (primaryVal != null && primaryVal !== '') {
       var primaryFields = vector.getProperties().get(
         phantasus.VectorKeys.FIELDS);
       if (primaryFields != null) {
