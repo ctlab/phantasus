@@ -1,10 +1,5 @@
-commit 152c352791873d9c0151f1366d2fbe2eca655e13
-Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Wed Feb 6 19:02:33 2019 +0300
+commit ec2146419d33f60ac9f3ede4a220a7edbcaa38b2
+Author: petrovich <mazahakaforever@ya.ru>
+Date:   Thu Feb 7 05:38:14 2019 +0300
 
-    All new good-looking FGSEA tool.
-    * Genes split by space
-    * Sortable table (default by pvalue)
-    * Gene symbols in pathway detail
-    * Unique ID checker
-    * Optional omit ambigious genes
+    FGSEA pathway db description

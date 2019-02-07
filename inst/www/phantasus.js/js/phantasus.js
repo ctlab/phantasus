@@ -16041,6 +16041,10 @@ phantasus.fgseaTool = function (heatMap) {
   var numberFields = phantasus.MetadataUtil.getMetadataSignedNumericFields(fullDataset
     .getRowMetadata());
 
+  if (_.size(phantasus.fgseaTool.dbs) === 0) {
+    throw new Error('There is no installed pathway databases.');
+  }
+
   if (numberFields.length === 0) {
     throw new Error('No fields in row annotation appropriate for ranking.');
   }
@@ -16058,10 +16062,17 @@ phantasus.fgseaTool = function (heatMap) {
     formStyle: 'vertical'
   });
 
+  var dbOptions = phantasus.fgseaTool.dbs.map(function (dbObj) {
+    return {
+      name: dbObj.HINT,
+      value: dbObj.FILE
+    };
+  });
+
   [{
     name: 'pathway_database',
-    options: phantasus.fgseaTool.dbs,
-    value: _.first(phantasus.fgseaTool.dbs),
+    options: dbOptions,
+    value: _.first(dbOptions).value,
     type: 'select'
   },{
     name: 'rank_by',
