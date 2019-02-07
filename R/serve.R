@@ -51,6 +51,7 @@ servePhantasus <- function(host = '0.0.0.0',
             phantasusPreloadedDir = preloadedDir)
 
     annotationDBMeta(cacheDir)
+    FGSEAmeta(cacheDir)
 
     if (!opencpu:::win_or_mac()) {
         run_worker <- NULL
