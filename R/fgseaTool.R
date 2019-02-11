@@ -51,7 +51,8 @@ performFGSEA <- function (dbName, ranks) {
                                              absEps = 0.5e-10,
                                              minSize = 15,
                                              maxSize = 500,
-                                             nproc = 1)))
+                                             nproc = 1))
+            , digits = NA)
 }
 
 queryPathway <- function (dbName, pathwayName) {
