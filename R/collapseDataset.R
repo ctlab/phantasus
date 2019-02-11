@@ -7,6 +7,7 @@
 #' @param selectOne select best match or merge duplicates
 #' @param fn select/merge function
 #' @param fields fields to unique on
+#' @param removeEmpty remove unannotated genes
 #'
 #' @return Nothing. Collapsed dataset will be assigned to es in environment
 #'
@@ -19,13 +20,13 @@
 #' fn = mean, fields = c('Gene ID', 'Gene symbol'))
 #' }
 #'
-collapseDataset <- function (es, isRows = TRUE, selectOne = FALSE, fn, fields) {
-    es <- collapseDatasetImpl(es, isRows, selectOne, fn, fields)
+collapseDataset <- function (es, isRows = TRUE, selectOne = FALSE, fn, fields, removeEmpty = TRUE) {
+    es <- collapseDatasetImpl(es, isRows, selectOne, fn, fields, removeEmpty)
 
     assign("es", es, envir = parent.frame())
 }
 
-collapseDatasetImpl <- function (es, isRows = TRUE, selectOne = FALSE, fn, fields) {
+collapseDatasetImpl <- function (es, isRows = TRUE, selectOne = FALSE, fn, fields, removeEmpty) {
     expr <- exprs(es)
     fact <- collectFactor(es, isRows, fields)
     f2 <- factor(fact, levels=unique(fact))
@@ -36,7 +37,6 @@ collapseDatasetImpl <- function (es, isRows = TRUE, selectOne = FALSE, fn, field
         factorFrame <- factorFrame[order(factorFrame$f, -factorFrame$r), ]
         keep <- factorFrame[!duplicated(factorFrame$f) & !is.na(factorFrame$f), ]$i
         res <- es[keep, ]
-        return(res)
     } else { #merge duplicates
         factorFrame <- data.frame(f=f2, i=seq_len(length(f2)))
         keep <- factorFrame[!duplicated(factorFrame$f) & !is.na(factorFrame$f), ]$i
@@ -74,9 +74,25 @@ collapseDatasetImpl <- function (es, isRows = TRUE, selectOne = FALSE, fn, field
         } else {
             pData(res) <- newAnnotaion
         }
-
-        return(res)
     }
+
+    if (removeEmpty) {
+        if (isRows) {
+            newAnnotation <- fData(res)
+        } else {
+            newAnnotation <- pData(res)
+        }
+
+        collapsed <- apply(newAnnotation, 1, paste, collapse="")
+
+        if (isRows) {
+            res <- res[which(nchar(collapsed) != 0), ]
+        } else {
+            res <- res[, which(nchar(collapsed) != 0)]
+        }
+    }
+
+    res
 }
 
 collectFactor <- function (es, isRows, fields) {
@@ -91,11 +107,6 @@ collectFactor <- function (es, isRows, fields) {
     }
 
 
-    f <- target[[fields[1]]]
-    if (length(fields) > 1) {
-        for(i in 2:length(fields)) {
-            f <- paste(f, target[[fields[i]]], sep='//r')
-        }
-    }
+    f <- apply(target[fields], 1, paste, collapse='///')
     return(f)
 }
