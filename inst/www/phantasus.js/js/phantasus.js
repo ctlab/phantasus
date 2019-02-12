@@ -515,7 +515,7 @@ phantasus.Util.autocompleteArrayMatcher = function (token, cb, array, fields, ma
  * @param text. text
  */
 phantasus.Util.setClipboardData = function (text) {
-  const isRTL = document.documentElement.getAttribute('dir') == 'rtl';
+  var isRTL = document.documentElement.getAttribute('dir') == 'rtl';
   var fakeElem = document.createElement('textarea');
   var container = document.body;
   // Prevent zooming on iOS
