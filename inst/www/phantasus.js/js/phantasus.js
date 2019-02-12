@@ -15565,7 +15565,7 @@ phantasus.CollapseDatasetTool.prototype = {
             isRows: rows,
             fn: f.rString(),
             fields: collapseToFields,
-            removeEmpty: omitUnannotatedGenes
+            removeEmpty: omitUnannotated
           };
 
           ocpu
@@ -16069,7 +16069,7 @@ phantasus.fgseaTool = function (heatMap) {
     name: 'omit_ambigious_genes',
     type: 'checkbox',
     tooltipHelp: 'Current column contains cells with multiple values separated by \'///\'.',
-    value: false
+    value: true
   }].forEach(function (a) {
     self.formBuilder.append(a);
   });
@@ -16119,6 +16119,14 @@ phantasus.fgseaTool = function (heatMap) {
 phantasus.fgseaTool.prototype = {
   init: false,
   dbs: [],
+  precision: {
+    pval: 3,
+    padj: 3,
+    log2err: 3,
+    ES: 3,
+    NES: 3,
+    size: undefined
+  },
   toString: function () {
     return "Perform FGSEA"
   },
@@ -16223,7 +16231,7 @@ phantasus.fgseaTool.prototype = {
     this.$saveButton = this.$el.find('button');
     this.$saveButton.on('click', function () {
       var blob = new Blob([self.generateTSV()], {type: "text/plain;charset=utf-8"});
-      saveAs(blob, self.parentHeatmap.getName() + "_FGSEA.txt");
+      saveAs(blob, self.parentHeatmap.getName() + "_FGSEA.tsv");
     });
 
     this.$pathwayDetail = this.$el.find('#pathway-detail');
@@ -16302,8 +16310,7 @@ phantasus.fgseaTool.prototype = {
 
     var tbody = this.fgsea
       .map(function (pathway) {
-        var values = Object.values(pathway);
-        var tableRow = values.map(function (value) {
+        var tableRow = _.map(pathway, function (value, colname) {
           var result = '<td>';
 
           if (_.isArray(value)) {
@@ -16312,6 +16319,8 @@ phantasus.fgseaTool.prototype = {
             } else {
               result += value.join(' ');
             }
+          } else if (_.isNumber(value)) {
+            result += value.toPrecision(phantasus.fgseaTool.prototype.precision[colname]);
           } else {
             result += value.toString();
           }
@@ -16417,6 +16426,7 @@ phantasus.gseaTool = function (heatmap, project) {
     }
 
     if (self.promise) {
+      self.promise.cancelled = true;
       self.promise.reject('Cancelled');
     }
 
@@ -16471,6 +16481,7 @@ phantasus.gseaTool.prototype = {
     this.$chart.empty();
     phantasus.Util.createLoadingEl().appendTo(this.$chart);
     this.promise = $.Deferred();
+    var promise = this.promise;
 
     var selectedDataset = project.getSelectedDataset();
     var parentDataset = selectedDataset.dataset;
@@ -16541,17 +16552,24 @@ phantasus.gseaTool.prototype = {
       request.es = esSession;
 
       ocpu.call('gseaPlot', request, function (session) {
+        if (promise.cancelled) {
+          return;
+        }
+
         session.getObject(function (filenames) {
+          if (promise.cancelled) {
+            return;
+          }
+
           var svgPath = JSON.parse(filenames)[0];
           var absolutePath = phantasus.Util.getFilePath(session, svgPath);
           phantasus.BlobFromPath.getFileObject(absolutePath, function (blob) {
-            self.imageURL = URL.createObjectURL(blob);
-            self.promise.resolve(self.imageURL);
+            promise.resolve(URL.createObjectURL(blob));
           });
         });
       }, false, "::es")
         .fail(function () {
-          self.promise.reject();
+          promise.reject();
         });
     })
 
@@ -17055,12 +17073,11 @@ phantasus.LimmaTool.prototype = {
               });
               // alert("Limma finished successfully");
               dataset.setESSession(Promise.resolve(session));
-              promise.resolve();
-
               project.trigger("trackChanged", {
                 vectors: vs,
                 display: []
               });
+              promise.resolve();
             })
           };
           phantasus.BlobFromPath.getFileObject(filePath, function (file) {

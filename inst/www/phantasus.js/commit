@@ -1,5 +1,5 @@
-commit c0e219bd8387e16c03d8a52e857807f55309fd2e
+commit b7bf4d9d8a7e8b7be3be08eb44e4debb2a2383fc
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Tue Feb 12 18:13:37 2019 +0300
+Date:   Tue Feb 12 23:13:20 2019 +0300
 
-    No const in old JS
+    Some optimizations.
