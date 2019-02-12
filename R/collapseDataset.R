@@ -99,7 +99,7 @@ collectFactor <- function (es, isRows, fields) {
 }
 
 stripEmpty <- function (es, isRows) {
-    target <- isRows ? fData(res) : pData(res)
+    target <- ifelse(isRows, fData(res), pData(res))
     collapsed <- apply(target, 1, paste, collapse="")
 
     if (isRows) {
