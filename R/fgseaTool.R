@@ -10,6 +10,11 @@ availableFGSEADatabases <- function () {
 
 FGSEAmeta <- function (cacheDir) {
     dbDir <- file.path(cacheDir, 'fgsea')
+    if (!dir.exists(dbDir)) {
+        message('No fgsea files provided')
+        return()
+    }
+
     metaFile <- file.path(dbDir, 'fgsea.txt')
     columnFiles <- list.files(dbDir, '*.rds', full.names = FALSE)
     message('Populating FGSEA pathway meta')
