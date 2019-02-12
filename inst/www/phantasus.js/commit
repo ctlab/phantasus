@@ -1,5 +1,5 @@
-commit ec2146419d33f60ac9f3ede4a220a7edbcaa38b2
-Author: petrovich <mazahakaforever@ya.ru>
-Date:   Thu Feb 7 05:38:14 2019 +0300
+commit 5365f8a0787079b6942ec5038816c22c81171bd7
+Author: Vladislav Kamenev <mazahakaforever@ya.ru>
+Date:   Tue Feb 12 17:47:22 2019 +0300
 
-    FGSEA pathway db description
+    Collapse dataset omit unannotated

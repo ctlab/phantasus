@@ -10,7 +10,7 @@
 
 
 
-<meta name="date" content="2019-02-07" />
+<meta name="date" content="2019-02-12" />
 
 <title>Using Phantasus application</title>
 
@@ -1609,6 +1609,9 @@ img {
 button.code-folding-btn:focus {
   outline: none;
 }
+summary {
+  display: list-item;
+}
 </style>
 
 
@@ -1616,14 +1619,74 @@ button.code-folding-btn:focus {
 <div class="container-fluid main-container">
 
 <!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
 <script>
 $(document).ready(function () {
   window.buildTabsets("TOC");
 });
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
 </script>
 
 <!-- code folding -->
-
 
 
 
@@ -1726,7 +1789,7 @@ div.tocify {
 
 
 <h1 class="title toc-ignore">Using Phantasus application</h1>
-<h4 class="date"><em>2019-02-07</em></h4>
+<h4 class="date"><em>2019-02-12</em></h4>
 
 </div>
 
@@ -1836,7 +1899,7 @@ use <em>Tools/New Heat Map</em> menu (or press <em>Ctrl+X</em>).</p>
 To easily distinguish it from other tabs, you can rename it
 by right click on the tab and choosing <em>Rename</em> option. Let us rename it to <code>GSE53986_norm</code>.</p>
 <p>It is also useful to save the current result to be able to return to it later.
-In order to save it use <em>File/Save Dataset</em> menu. Enter an appropriate file name (e.g. <code>GSE53986_norm</code>)
+In order to save it use <em>File/Save Dataset</em> menu. Enter an appropriate file name (e.g. <code>GSE53986_norm</code>)
 and press <code>OK</code>. A file in text <a href="https://software.broadinstitute.org/cancer/software/gsea/wiki/index.php/Data_formats#GCT:_Gene_Cluster_Text_file_format_.28.2A.gct.29">GCT format</a>
 will be downloaded.</p>
 </div>
