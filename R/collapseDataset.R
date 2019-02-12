@@ -27,6 +27,10 @@ collapseDataset <- function (es, isRows = TRUE, selectOne = FALSE, fn, fields, r
 }
 
 collapseDatasetImpl <- function (es, isRows = TRUE, selectOne = FALSE, fn, fields, removeEmpty) {
+    if (removeEmpty) {
+        es <- stripEmpty(es, isRows)
+    }
+
     expr <- exprs(es)
     fact <- collectFactor(es, isRows, fields)
     f2 <- factor(fact, levels=unique(fact))
@@ -75,23 +79,6 @@ collapseDatasetImpl <- function (es, isRows = TRUE, selectOne = FALSE, fn, field
             pData(res) <- newAnnotaion
         }
     }
-
-    if (removeEmpty) {
-        if (isRows) {
-            newAnnotation <- fData(res)
-        } else {
-            newAnnotation <- pData(res)
-        }
-
-        collapsed <- apply(newAnnotation, 1, paste, collapse="")
-
-        if (isRows) {
-            res <- res[which(nchar(collapsed) != 0), ]
-        } else {
-            res <- res[, which(nchar(collapsed) != 0)]
-        }
-    }
-
     res
 }
 
@@ -109,4 +96,17 @@ collectFactor <- function (es, isRows, fields) {
 
     f <- apply(target[fields], 1, paste, collapse='///')
     return(f)
+}
+
+stripEmpty <- function (es, isRows) {
+    target <- isRows ? fData(res) : pData(res)
+    collapsed <- apply(target, 1, paste, collapse="")
+
+    if (isRows) {
+        es <- es[which(nchar(collapsed) != 0), ]
+    } else {
+        es <- es[, which(nchar(collapsed) != 0)]
+    }
+
+    es
 }
