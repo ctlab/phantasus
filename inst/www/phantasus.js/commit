@@ -1,5 +1,5 @@
-commit ec2146419d33f60ac9f3ede4a220a7edbcaa38b2
-Author: petrovich <mazahakaforever@ya.ru>
-Date:   Thu Feb 7 05:38:14 2019 +0300
+commit c0e219bd8387e16c03d8a52e857807f55309fd2e
+Author: Vladislav Kamenev <mazahakaforever@ya.ru>
+Date:   Tue Feb 12 18:13:37 2019 +0300
 
-    FGSEA pathway db description
+    No const in old JS
