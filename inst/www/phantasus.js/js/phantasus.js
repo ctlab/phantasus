@@ -528,7 +528,7 @@ phantasus.Util.setClipboardData = function (text) {
   fakeElem.style.position = 'absolute';
   fakeElem.style[ isRTL ? 'right' : 'left' ] = '-9999px';
   // Move element to the same position vertically
-  let yPosition = window.pageYOffset || document.documentElement.scrollTop;
+  var yPosition = window.pageYOffset || document.documentElement.scrollTop;
   fakeElem.style.top = yPosition+'px';
 
   fakeElem.setAttribute('readonly', '');
@@ -9403,7 +9403,7 @@ phantasus.MetadataUtil.getMetadataSignedNumericFields = function (metadataModel)
       if (hasPositive && hasNegative) {
         fields.push(field);
       }
-     
+
     }
   }
 
@@ -27964,7 +27964,7 @@ phantasus.HeatMapElementCanvas.prototype = {
           if (y2 - y1 >= 4) {
               context.strokeRect(x1, y1, x2 - x1, y2 - y1);
           }
-        
+
         }
       }
     }
@@ -42507,12 +42507,12 @@ phantasus.HCluster = function (distmatrix, linkageAlgorithm) {
  * Searches the distance matrix to find the pair with the shortest distance
  * between them. The indices of the pair are returned in ip and jp; the distance
  * itself is returned by the function.
- * 
+ *
  * @param n The number of elements in the distance matrix.
- * 
+ *
  * @param distmatrix. A ragged array containing the distance matrix. The number
  * of columns in each row is one less than the row index.
- * 
+ *
  * @return The first and second indices of the pair with the shortest distance.
  */
 phantasus.HCluster.findClosestPair = function (n, distmatrix, r) {
