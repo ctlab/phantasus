@@ -90,7 +90,7 @@ collectFactor <- function (es, isRows, fields) {
     if (isRows) {
         target <- fData(es)
     } else {
-        target <- phenoData(es)
+        target <- pData(es)
     }
 
 
