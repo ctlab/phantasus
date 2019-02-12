@@ -28,7 +28,7 @@ collapseDataset <- function (es, isRows = TRUE, selectOne = FALSE, fn, fields, r
 
 collapseDatasetImpl <- function (es, isRows = TRUE, selectOne = FALSE, fn, fields, removeEmpty) {
     if (removeEmpty) {
-        es <- stripEmpty(es, isRows)
+        es <- stripEmpty(es, isRows, fields)
     }
 
     expr <- exprs(es)
@@ -98,10 +98,13 @@ collectFactor <- function (es, isRows, fields) {
     return(f)
 }
 
-stripEmpty <- function (es, isRows) {
-    target <- ifelse(isRows, fData(res), pData(res))
-    collapsed <- apply(target, 1, paste, collapse="")
+stripEmpty <- function (es, isRows, fields) {
+    target <- fData(es)
+    if (!isRows) {
+        target <- pData(es)
+    }
 
+    collapsed <- apply(target[fields], 1, paste, collapse="")
     if (isRows) {
         es <- es[which(nchar(collapsed) != 0), ]
     } else {

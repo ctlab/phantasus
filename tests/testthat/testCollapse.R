@@ -59,3 +59,10 @@ test_that("Collapse dataset by columns", {
     expect_equal(apply(exprs(es)[,c(1,2,3,4)], 1, median), exprs(newEs)[,1])
     expect_equal(apply(exprs(es)[,c(5,6,7)], 1, median), exprs(newEs)[,2])
 })
+
+test_that("Collapse strip unannotated rows", {
+    ess <- getGSE('GSE53986')[[1]]
+    unstripped <- collapseDatasetImpl(ess, selectOne = TRUE, fn = median, fields = c('Gene ID'), removeEmpty = FALSE)
+    stripped <- collapseDatasetImpl(ess, selectOne = TRUE, fn = median, fields = c('Gene ID'), removeEmpty = TRUE)
+    expect_equal(nrow(stripped) + 1, nrow(unstripped))
+})
