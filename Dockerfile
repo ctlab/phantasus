@@ -15,7 +15,7 @@ RUN apt-get -y update && \
         libssl-dev \
         libssh2-1-dev \
         libcurl4-openssl-dev \
-        apache2 \
+        nginx \
         libapparmor-dev \
         libxml2-dev \
         locales \
@@ -39,13 +39,6 @@ RUN R -e 'install.packages("protolite", repo = "https://cran.rstudio.com/")'
 #    apt-get install -y --allow-unauthenticated \
 #        opencpu-lib
 #RUN R -e 'install.packages("opencpu", repo = "https://cran.rstudio.com/")'
-
-RUN touch /etc/apache2/sites-available/opencpu2.conf
-RUN printf "ProxyPass /ocpu/ http://localhost:8001/ocpu/\nProxyPassReverse /ocpu/ http://localhost:8001/ocpu\n" >> /etc/apache2/sites-available/opencpu2.conf
-RUN sed -i 's/DocumentRoot \/var\/www\/html/RedirectMatch ^\/$ \/phantasus\//g' /etc/apache2/sites-available/000-default.conf
-RUN cat /etc/apache2/sites-available/000-default.conf
-RUN a2ensite opencpu2
-
 #RUN sh -c 'echo "deb http://cran.rstudio.com/bin/linux/ubuntu xenial/" >> /etc/apt/sources.list'
 # protobuf 3.5, with 2GB byte limit
 RUN gpg --keyserver keyserver.ubuntu.com --recv-key E084DAB9
@@ -62,9 +55,8 @@ RUN R -e 'devtools::install_github("ctlab/fgsea", tag="1.9.4")'
 RUN R -e 'devtools::install("/root/phantasus", build_vignettes=T)'
 RUN printf "window.PHANTASUS_BUILD='$PHANTASUS_BUILD';" >> /root/phantasus/inst/www/phantasus.js/RELEASE.js
 RUN cp -r /root/phantasus/inst/www/phantasus.js /var/www/html/phantasus
+RUN cp /root/phantasus/inst/nginx-configs/default /etc/nginx/sites-available/default
 RUN rm -rf /root/phantasus/inst
-
-RUN a2enmod proxy_http
 
 EXPOSE 80
 
@@ -77,6 +69,6 @@ RUN mkdir -p /var/phantasus/cache
 RUN mkdir -p /var/phantasus/preloaded
 RUN mkdir -p /var/phantasus/ocpu-root
 
-CMD service apache2 start && \
+CMD service nginx start && \
    R -e 'library(phantasus); servePhantasus("0.0.0.0", 8001, openInBrowser = F, cacheDir="/var/phantasus/cache", preloadedDir="/var/phantasus/preloaded")'
 

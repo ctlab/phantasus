@@ -134,6 +134,7 @@ servePhantasus <- function(host = '0.0.0.0',
 
     utils::capture.output(type = "output", {
         app <- Rook::URLMap$new(`/ocpu` = opencpu:::rookhandler("/ocpu", worker_cb=run_worker),
+                                `/geo` = Rook::Static$new(urls = c("/geo"), root = cacheDir),
                                 `/?` = Rook::Static$new(urls = c("/"),
                                                         root = staticRoot))
 
