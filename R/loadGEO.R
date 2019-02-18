@@ -39,22 +39,24 @@ loadGEO <- function(name, type = NA) {
     }
 
     geoDir <- getGEODir(name, cacheDir)
-    ess <- getES(name, type, destdir = cacheDir, mirrorPath = mirrorPath)
-
-    urls <- c()
-    files <- list()
-    for (i in seq_along(ess)) {
-        assign("es", ess[[i]], envir = parent.frame())
-        seriesName <- if (!grepl(pattern = "-", name) && length(ess) > 1)
-            paste0(name, "-", annotation(ess[[i]])) else name
-        files[[seriesName]] <- writeToList(ess[[i]])
-    }
-
     binaryName <- paste0(name, '.bin')
     filePath <- file.path(geoDir, binaryName)
-    writeBin(protolite::serialize_pb(files), filePath)
-    urls <-c(urls, unlist(strsplit(filePath, cacheDir))[2])
+    urls <- c()
 
+    if (!file.exists(filePath)) {
+        ess <- getES(name, type, destdir = cacheDir, mirrorPath = mirrorPath)
+
+        files <- list()
+        for (i in seq_along(ess)) {
+            assign("es", ess[[i]], envir = parent.frame())
+            seriesName <- if (!grepl(pattern = "-", name) && length(ess) > 1)
+                paste0(name, "-", annotation(ess[[i]])) else name
+            files[[seriesName]] <- writeToList(ess[[i]])
+        }
+        writeBin(protolite::serialize_pb(files), filePath)
+    }
+
+    urls <-c(urls, unlist(strsplit(filePath, cacheDir))[2])
     jsonlite::toJSON(urls)
 }
 
@@ -496,6 +498,7 @@ reparseCachedESs <- function(destdir,
             file.rename(destfile, bakfile)
             getES(name, destdir = destdir, mirrorPath = mirrorPath)
             file.remove(bakfile)
+            file.remove(file.path(geoDir, paste0(name, ".bin")))
         }, error = function(e) {
             message(paste0("Error occured while reparsing, old file stored as ",
                            bakfile))
