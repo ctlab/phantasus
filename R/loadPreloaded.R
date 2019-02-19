@@ -7,25 +7,25 @@
 #'     that in the directory with preloaded files \code{preloadedDir}
 #'     exists file \code{filename.rda} with list of ExpressionSets \code{ess}.
 #'
-#' @param exactName If you know, that inside file is object with name
-#'   \code{exactName}, you can specify it to load only this object.
-#'   Otherwise, whole file will be loaded.
 #'
 #' @return File with ProtoBuf-serialized ExpressionSet-s
 #'     that were loaded from specified file.
 #'
 #' @import Biobase
-loadPreloaded <- function(name, exactName = NULL) {
-  preloadedDir <- getOption("phantasusPreloadedDir")
-  if (is.null(preloadedDir)) {
-    stop("Specify the directory with presaved files")
-  } else if (!dir.exists(preloadedDir)) {
-    stop("No such directory")
-  }
+loadPreloaded <- function(name) {
+    preloadedDir <- getOption("phantasusPreloadedDir")
+    cacheDir <- getOption("phantasusPreloadedDir")
+    if (is.null(preloadedDir)) {
+        stop("Specify the directory with presaved files")
+    } else if (!dir.exists(preloadedDir)) {
+        stop("No such directory")
+    }
 
-  fileToLoad <- file.path(preloadedDir, paste0(name, '.rda'))
+    fileToLoad <- file.path(preloadedDir, paste0(name, '.rda'))
+    if (!file.exists(fileToLoad)) {
+        stop('No such dataset')
+    }
 
-  if (file.exists(fileToLoad)) {
     x <- load(fileToLoad) # must return the object ess
     loaded <- get(x)
 
@@ -36,117 +36,31 @@ loadPreloaded <- function(name, exactName = NULL) {
     ess <- NULL
 
     if (class(loaded) == "ExpressionSet") {
-      ess <- list()
-      ess[[x]] <- loaded
-    } else if (class(loaded) != "list") {
-      stop(wrongFormat)
+        ess <- list()
+        ess[[x]] <- loaded
+    } else if (class(loaded) == "list") {
+        ess <- loaded
     } else {
-      ess <- loaded
+        stop(wrongFormat)
     }
-
-
 
     files <- list()
+    assign("es", ess[[name]], envir = parent.frame())
+    files[[name]] <- writeToList(ess[[name]])
+    path <- NULL
 
-    seriesNames <- names(ess)
-    if (is.null(seriesNames)) {
-      seriesNames <- paste0(name, "_", 1:length(ess))
+    preloadedCacheDir <- file.path(cacheDir, 'preloaded')
+    binaryName <- paste0(name, '.bin')
+    dir.create(preloadedCacheDir, showWarnings = FALSE, recursive = TRUE)
+
+    cachedFile <- file.path(preloadedCacheDir, binaryName)
+    if (!file.exists(cachedFile)) {
+        writeBin(protolite::serialize_pb(files), cachedFile)
     }
 
-    if (!is.null(exactName) && exactName == name) {
-      exactName <- NULL
-    }
-    if (!is.null(exactName) && !(exactName %in% seriesNames)) {
-      stop("There is not such object in this file")
-    }
+    path <- paste0('/preloaded/', binaryName)
 
-    if (!is.null(exactName)) {
-      ess <- list(ess[[exactName]])
-    }
-    for (i in 1:length(ess)) {
-      if (class(ess[[i]]) != "ExpressionSet") {
-        stop(wrongFormat)
-      }
-      assign("es", ess[[i]], envir = parent.frame())
+    jsonlite::toJSON(path)
 
-      files[[seriesNames[[i]]]] <- writeToList(ess[[i]])
-    }
-    f <- tempfile(pattern = "gse", tmpdir = getwd(), fileext = ".bin")
-    writeBin(protolite::serialize_pb(files), f)
-    jsonlite::toJSON(basename(f))
-  } else {
-    stop("No such file")
-  }
-}
-
-#' Check existence of phantasusPreloadedDir
-#'
-#' \code{preloadedDirExists} checks if there is specified
-#'   directory with preloaded files.
-#'
-#' @return Boolean value.
-preloadedDirExists <- function() {
-  preloadedDir <- getOption("phantasusPreloadedDir")
-  jsonlite::toJSON(!is.null(preloadedDir) && dir.exists(preloadedDir))
-}
-
-#' Check names inside preloaded file
-#'
-#' \code{checkPreloadedNames} checks names of ExpressionSets that
-#'   are included in file \code{name}
-#'
-#' @param name String, containing filename. Assuming
-#'     that in the directory with preloaded files \code{preloadedDir}
-#'     exists file \code{filename.rda} with list of ExpressionSets \code{ess}.
-#'
-#' @return Vector of names serialized in JSON format.
-#'
-checkPreloadedNames <- function(name) {
-    if (!jsonlite::fromJSON(preloadedDirExists())) {
-        stop("No such directory")
-    }
-
-    preloadedDir <- getOption("phantasusPreloadedDir")
-    fileToLoad <- file.path(preloadedDir, paste0(name, '.rda'))
-
-    if (!file.exists(fileToLoad)) {
-        fileToLoadGct <- file.path(preloadedDir, paste0(name, '.gct'))
-
-        if (!file.exists(fileToLoadGct)) {
-            stop("No such file")
-        }
-
-        es <- read.gct(fileToLoadGct)
-        ess <- list(es=es)
-        names(ess) <- name
-        save(ess, file=fileToLoad, compress = TRUE)
-    }
-
-    x <- load(fileToLoad) # must return the object ess
-    loaded <- get(x)
-
-    answer <- c()
-
-    if (class(loaded) == "ExpressionSet") {
-        answer <- c(x)
-    } else if (class(loaded) == "list") {
-        if (!is.null(names(loaded))) {
-            answer <- names(loaded)
-        }
-        else {
-            if (length(loaded) > 1) {
-                answer <- paste0(name, "_", 1:length(loaded))
-            } else {
-                answer <- c(name)
-            }
-        }
-    } else {
-        wrongFormat <- paste("Wrong format.",
-                             "File must contain either ExpressionSet",
-                             "or list of ExpressionSets")
-        stop(wrongFormat)
-    }
-
-    jsonlite::toJSON(answer)
 }
 
