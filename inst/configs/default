@@ -21,7 +21,21 @@ server {
         alias /var/phantasus/cache/geo/;
         try_files $uri =404;
         autoindex off;
-        expires 10d;
+        expires 30d;
+        add_header Pragma public;
+        add_header Cache-Control "public";
+    }
+
+    location /phantasus/preloaded {
+        gzip on;
+        gzip_static on;
+        gzip_vary on;
+        gzip_types *;
+
+        alias /var/phantasus/cache/preloaded/;
+        try_files $uri =404;
+        autoindex off;
+        expires 30d;
         add_header Pragma public;
         add_header Cache-Control "public";
     }
