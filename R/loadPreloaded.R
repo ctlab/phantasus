@@ -40,6 +40,9 @@ loadPreloaded <- function(name) {
         ess[[name]] <- loaded
     } else if (class(loaded) == "list") {
         ess <- loaded
+        if (!all(unlist(lapply(loaded, class)) == "ExpressionSet")) {
+            stop(wrongFormat)
+        }
     } else {
         stop(wrongFormat)
     }

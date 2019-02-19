@@ -10,6 +10,7 @@ test_that("loadPreloaded throws errors correctly", {
     options(phantasusPreloadedDir = system.file("testdata", package="phantasus"))
     expect_error(loadPreloaded("falseFile"), regexp = "No such dataset")
     expect_error(loadPreloaded("wrongFormatFile"), regexp = "Wrong format")
+    expect_error(loadPreloaded("wrapped_wrongFormat"), regexp = "Wrong format")
 
     options(phantasusPreloadedDir = NULL)
 })
