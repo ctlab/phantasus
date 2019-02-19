@@ -37,7 +37,7 @@ loadPreloaded <- function(name) {
 
     if (class(loaded) == "ExpressionSet") {
         ess <- list()
-        ess[[x]] <- loaded
+        ess[[name]] <- loaded
     } else if (class(loaded) == "list") {
         ess <- loaded
     } else {
@@ -45,8 +45,8 @@ loadPreloaded <- function(name) {
     }
 
     files <- list()
-    assign("es", ess[[name]], envir = parent.frame())
-    files[[name]] <- writeToList(ess[[name]])
+    assign("es", ess[[1]], envir = parent.frame())
+    files[[name]] <- writeToList(ess[[1]])
     path <- NULL
 
     preloadedCacheDir <- file.path(cacheDir, 'preloaded')
