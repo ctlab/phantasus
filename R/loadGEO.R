@@ -43,12 +43,13 @@ loadGEO <- function(name, type = NA) {
     filePath <- file.path(geoDir, binaryName)
     urls <- c()
 
-    if (!file.exists(filePath)) {
-        ess <- getES(name, type, destdir = cacheDir, mirrorPath = mirrorPath)
 
-        files <- list()
+    ess <- getES(name, type, destdir = cacheDir, mirrorPath = mirrorPath)
+
+    files <- list()
+    assign("es", tail(ess, n=1)[[1]], envir = parent.frame())
+    if (!file.exists(filePath)) {
         for (i in seq_along(ess)) {
-            assign("es", ess[[i]], envir = parent.frame())
             seriesName <- if (!grepl(pattern = "-", name) && length(ess) > 1)
                 paste0(name, "-", annotation(ess[[i]])) else name
             files[[seriesName]] <- writeToList(ess[[i]])
