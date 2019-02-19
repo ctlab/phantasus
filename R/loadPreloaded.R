@@ -52,6 +52,10 @@ loadPreloaded <- function(name) {
     files[[name]] <- writeToList(ess[[1]])
     path <- NULL
 
+    if (is.null(cacheDir)) {
+        cacheDir <- tempdir()
+    }
+
     preloadedCacheDir <- file.path(cacheDir, 'preloaded')
     binaryName <- paste0(name, '.bin')
     dir.create(preloadedCacheDir, showWarnings = FALSE, recursive = TRUE)
