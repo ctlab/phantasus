@@ -1,5 +1,5 @@
-commit ec2146419d33f60ac9f3ede4a220a7edbcaa38b2
-Author: petrovich <mazahakaforever@ya.ru>
-Date:   Thu Feb 7 05:38:14 2019 +0300
+commit 962f516356d4c7620b6049d9b1f591d6bcbcf9ff
+Author: Vladislav Kamenev <mazahakaforever@ya.ru>
+Date:   Tue Feb 19 20:02:28 2019 +0300
 
-    FGSEA pathway db description
+    Preloaded binary cache implemented.

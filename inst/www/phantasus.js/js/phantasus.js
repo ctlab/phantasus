@@ -512,61 +512,33 @@ phantasus.Util.autocompleteArrayMatcher = function (token, cb, array, fields, ma
 
 /**
  *
- * @param array. Array of format,data
+ * @param text. text
  */
-phantasus.Util.setClipboardData = function (clipboardData, delay) {
+phantasus.Util.setClipboardData = function (text) {
   var isRTL = document.documentElement.getAttribute('dir') == 'rtl';
-  var fakeElem = document.createElement('div');
-  fakeElem.contentEditable = true;
-
+  var fakeElem = document.createElement('textarea');
+  var container = document.body;
   // Prevent zooming on iOS
   fakeElem.style.fontSize = '12pt';
   // Reset box model
-
   fakeElem.style.border = '0';
   fakeElem.style.padding = '0';
   fakeElem.style.margin = '0';
   // Move element out of screen horizontally
   fakeElem.style.position = 'absolute';
-  fakeElem.style[isRTL ? 'right' : 'left'] = '-999999px';
+  fakeElem.style[ isRTL ? 'right' : 'left' ] = '-9999px';
   // Move element to the same position vertically
-  fakeElem.style.top = (window.pageYOffset || document.documentElement.scrollTop) + 'px';
+  var yPosition = window.pageYOffset || document.documentElement.scrollTop;
+  fakeElem.style.top = yPosition+'px';
+
   fakeElem.setAttribute('readonly', '');
-  //fakeElem.innerHTML = html;
-  var f = function (e) {
-    clipboardData.forEach(function (elem) {
-      e.clipboardData.setData(elem.format, elem.data);
-    });
+  fakeElem.value = text;
 
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-    fakeElem.removeEventListener('copy', f);
-  };
-  fakeElem.addEventListener('copy', f);
-
-  document.body.appendChild(fakeElem);
-  // if (fakeElem.hasAttribute('contenteditable')) {
-  fakeElem.focus();
-  // }
-  var selection = window.getSelection();
-  var range = document.createRange();
-  range.selectNodeContents(fakeElem);
-  selection.removeAllRanges();
-  selection.addRange(range);
-  if (delay) {
-    setTimeout(function () {
-      if (!document.execCommand('copy')) {
-        console.log('copy failed');
-      }
-      document.body.removeChild(fakeElem);
-    }, 20);
-  } else {
-    if (!document.execCommand('copy')) {
-      console.log('copy failed');
-    }
-    document.body.removeChild(fakeElem);
-  }
+  container.appendChild(fakeElem);
+  fakeElem.select();
+  fakeElem.setSelectionRange(0, fakeElem.value.length);
+  document.execCommand('copy');
+  document.body.removeChild(fakeElem);
 };
 
 /**
@@ -4336,6 +4308,10 @@ phantasus.PreloadedReader.prototype = {
   read: function(name, callback) {
     console.log("preloaded read", name);
     name = typeof name === "string" ? { name : name } : name;
+    var cacheURL = this.getPath('/preloaded/' + name.name + '.bin');
+
+    //load and discard data so cached
+    fetch(cacheURL).then(function () {}, function () {});
 
     var afterLoaded = function (err, dataset) {
       if (!err) {
@@ -4360,11 +4336,14 @@ phantasus.PreloadedReader.prototype = {
     };
 
     var req = ocpu.call('loadPreloaded', name, function(session) {
-      phantasus.ParseDatasetFromProtoBin.parse(session, afterLoaded, { preloaded : true });
+      phantasus.ParseDatasetFromProtoBin.parse(session, afterLoaded, { preloaded : true, pathFunction: phantasus.PreloadedReader.prototype.getPath });
     });
     req.fail(function () {
       callback(req.responseText);
     })
+  },
+  getPath: function (fragment) {
+    return window.libraryPrefix.slice(0, -1) + fragment;
   }
 };
 
@@ -13009,29 +12988,16 @@ phantasus.LandingPage = function (pageOptions) {
         };
         _this.open(options);
       } else if (params.preloaded) {
-        var req = ocpu.call('preloadedDirExists', {}, function (session) {
-          session.getObject(function (success) {
-            console.log(success);
-            if (JSON.parse(success)[0]) {
-              var options = {
-                dataset: {
-                  file: params.preloaded,
-                  options: {
-                    interactive: true,
-                    preloaded: true
-                  }
-                }
-              };
-              _this.open(options);
-            } else {
-              throw new Error("There are no preloaded datasets on this server");
+        var options = {
+          dataset: {
+            file: params.preloaded,
+            options: {
+              interactive: true,
+              preloaded: true
             }
-          });
-        });
-        req.fail(function () {
-          throw new Error(req.responseText);
-        })
-
+          }
+        };
+        _this.open(options);
       } else {
         this.show();
       }
@@ -13076,35 +13042,7 @@ phantasus.LandingPage.prototype = {
     };
 
     var createPreloadedHeatMap = function(options) {
-      var req = ocpu.call('checkPreloadedNames', { name : options.dataset.file }, function(session) {
-        session.getMessages(function(success) {
-          console.log('checkPreloadedNames messages', success);
-        });
-        session.getObject(function(success) {
-          var names = JSON.parse(success);
-          // console.log(names);
-
-          if (names.length === 0) {
-            _this.show();
-            throw new Error("Dataset" + " " + options.dataset.file + " does not exist");
-
-          }
-
-          for (var j = 0; j < names.length; j++) {
-            var specificOptions = options;
-
-            specificOptions.dataset.options.exactName = names[j];
-            // console.log("specific", specificOptions);
-
-            new phantasus.HeatMap(specificOptions);
-          }
-
-        })
-      });
-      req.fail(function () {
-        _this.show();
-        throw new Error("Checking inside names call to OpenCPU failed" + req.responseText);
-      });
+      new phantasus.HeatMap(options);
     };
 
     var createSessionHeatMap = function (options) {
@@ -13238,7 +13176,7 @@ phantasus.LandingPage.prototype = {
     }
 
     var fileName = phantasus.Util.getFileName(value);
-    if (fileName.toLowerCase().indexOf('.json') === fileName.length - 5) {
+    if (fileName.toLowerCase().endsWith('.json')) {
       phantasus.Util.getText(value).done(function (text) {
         _this.open(JSON.parse(text));
       }).fail(function (err) {
@@ -15489,11 +15427,11 @@ phantasus.CollapseDatasetTool.prototype = {
     var setValue = function (val) {
       var isRows = val === 'Rows';
       var names = phantasus
-                  .MetadataUtil
-                  .getMetadataNames(
-                    isRows ?
-                    project.getFullDataset().getRowMetadata() :
-                    project.getFullDataset().getColumnMetadata());
+        .MetadataUtil
+        .getMetadataNames(
+          isRows ?
+            project.getFullDataset().getRowMetadata() :
+            project.getFullDataset().getColumnMetadata());
 
       form.setOptions('collapse_to_fields', names);
     };
@@ -15532,6 +15470,10 @@ phantasus.CollapseDatasetTool.prototype = {
       options: [],
       type: 'select',
       multiple: true
+    }, {
+      name: 'omit_unannotated',
+      type: 'checkbox',
+      value: true
     }];
   },
 
@@ -15539,33 +15481,50 @@ phantasus.CollapseDatasetTool.prototype = {
     var project = options.project;
     var heatMap = options.heatMap;
     var f = phantasus
-            .CollapseDatasetTool
-            .Functions
-            .fromString(options.input.collapse_method);
+      .CollapseDatasetTool
+      .Functions
+      .fromString(options.input.collapse_method);
 
     var collapseToFields = options.input.collapse_to_fields;
+    var omitUnannotated = options.input.omit_unannotated;
     if (!collapseToFields || collapseToFields.length === 0) {
       throw new Error('Please select one or more fields to collapse to');
     }
 
     var dataset = project.getFullDataset();
     var rows = options.input.collapse === 'Rows';
-
     if (!rows) {
       dataset = new phantasus.TransposedDatasetView(dataset);
     }
 
-    var allFields = phantasus.MetadataUtil.getMetadataNames(dataset.getRowMetadata());
+    if (omitUnannotated) {
+      var fieldMeta = dataset.getRowMetadata();
+      var aoa = collapseToFields
+        .map(function (field) {
+          return phantasus.VectorUtil.toArray(fieldMeta.getByName(field));
+        })
+
+      var keepIndexes = _.zip
+        .apply(null, aoa)
+        .map(function (aos) {
+          return aos.join('');
+        })
+        .reduce(function (acc, value, index) {
+          if (_.size(value) !== 0) acc.push(index);
+          return acc;
+        }, [])
+
+      dataset = new phantasus.SlicedDatasetView(dataset, keepIndexes);
+    }
+
     var collapseMethod = f.selectOne ? phantasus.SelectRow : phantasus.CollapseDataset;
     dataset = collapseMethod(dataset, collapseToFields, f, true);
-
     if (!rows) {
       dataset = phantasus.DatasetUtil.copy(new phantasus.TransposedDatasetView(dataset));
     }
 
     var oldDataset = project.getFullDataset();
     var oldSession = oldDataset.getESSession();
-
     if (oldSession) {
       dataset.setESSession(new Promise(function (resolve, reject) {
         oldSession.then(function (esSession) {
@@ -15574,7 +15533,8 @@ phantasus.CollapseDatasetTool.prototype = {
             selectOne: Boolean(f.selectOne),
             isRows: rows,
             fn: f.rString(),
-            fields: collapseToFields
+            fields: collapseToFields,
+            removeEmpty: omitUnannotated
           };
 
           ocpu
@@ -15590,19 +15550,6 @@ phantasus.CollapseDatasetTool.prototype = {
 
     }
 
-
-    var set = new phantasus.Map();
-    _.each(allFields, function (field) {
-      set.set(field, true);
-    });
-    _.each(collapseToFields, function (field) {
-      set.remove(field);
-    });
-    // hide fields that were not part of collapse to
-    // console.log("Collapse ", set);
-    // set.forEach(function (val, name) {
-    //   heatMap.setTrackVisible(name, false, !rows);
-    // });
     return new phantasus.HeatMap({
       name: heatMap.getName(),
       dataset: dataset,
@@ -16091,7 +16038,7 @@ phantasus.fgseaTool = function (heatMap) {
     name: 'omit_ambigious_genes',
     type: 'checkbox',
     tooltipHelp: 'Current column contains cells with multiple values separated by \'///\'.',
-    value: false
+    value: true
   }].forEach(function (a) {
     self.formBuilder.append(a);
   });
@@ -16141,6 +16088,14 @@ phantasus.fgseaTool = function (heatMap) {
 phantasus.fgseaTool.prototype = {
   init: false,
   dbs: [],
+  precision: {
+    pval: 3,
+    padj: 3,
+    log2err: 3,
+    ES: 3,
+    NES: 3,
+    size: undefined
+  },
   toString: function () {
     return "Perform FGSEA"
   },
@@ -16245,7 +16200,7 @@ phantasus.fgseaTool.prototype = {
     this.$saveButton = this.$el.find('button');
     this.$saveButton.on('click', function () {
       var blob = new Blob([self.generateTSV()], {type: "text/plain;charset=utf-8"});
-      saveAs(blob, self.parentHeatmap.getName() + "_FGSEA.txt");
+      saveAs(blob, self.parentHeatmap.getName() + "_FGSEA.tsv");
     });
 
     this.$pathwayDetail = this.$el.find('#pathway-detail');
@@ -16324,8 +16279,7 @@ phantasus.fgseaTool.prototype = {
 
     var tbody = this.fgsea
       .map(function (pathway) {
-        var values = Object.values(pathway);
-        var tableRow = values.map(function (value) {
+        var tableRow = _.map(pathway, function (value, colname) {
           var result = '<td>';
 
           if (_.isArray(value)) {
@@ -16334,6 +16288,8 @@ phantasus.fgseaTool.prototype = {
             } else {
               result += value.join(' ');
             }
+          } else if (_.isNumber(value)) {
+            result += value.toPrecision(phantasus.fgseaTool.prototype.precision[colname]);
           } else {
             result += value.toString();
           }
@@ -16439,6 +16395,7 @@ phantasus.gseaTool = function (heatmap, project) {
     }
 
     if (self.promise) {
+      self.promise.cancelled = true;
       self.promise.reject('Cancelled');
     }
 
@@ -16493,6 +16450,7 @@ phantasus.gseaTool.prototype = {
     this.$chart.empty();
     phantasus.Util.createLoadingEl().appendTo(this.$chart);
     this.promise = $.Deferred();
+    var promise = this.promise;
 
     var selectedDataset = project.getSelectedDataset();
     var parentDataset = selectedDataset.dataset;
@@ -16563,17 +16521,24 @@ phantasus.gseaTool.prototype = {
       request.es = esSession;
 
       ocpu.call('gseaPlot', request, function (session) {
+        if (promise.cancelled) {
+          return;
+        }
+
         session.getObject(function (filenames) {
+          if (promise.cancelled) {
+            return;
+          }
+
           var svgPath = JSON.parse(filenames)[0];
           var absolutePath = phantasus.Util.getFilePath(session, svgPath);
           phantasus.BlobFromPath.getFileObject(absolutePath, function (blob) {
-            self.imageURL = URL.createObjectURL(blob);
-            self.promise.resolve(self.imageURL);
+            promise.resolve(URL.createObjectURL(blob));
           });
         });
       }, false, "::es")
         .fail(function () {
-          self.promise.reject();
+          promise.reject();
         });
     })
 
@@ -17077,12 +17042,11 @@ phantasus.LimmaTool.prototype = {
               });
               // alert("Limma finished successfully");
               dataset.setESSession(Promise.resolve(session));
-              promise.resolve();
-
               project.trigger("trackChanged", {
                 vectors: vs,
                 display: []
               });
+              promise.resolve();
             })
           };
           phantasus.BlobFromPath.getFileObject(filePath, function (file) {
@@ -19714,7 +19678,7 @@ phantasus.aboutDataset = function (options) {
   var dataset = this.project.getFullDataset();
 
   var deepMapper = function (value, index) {
-    if (_.isObject(value) && _.size(value) > 1) {
+    if (!value.values) {
       return _.map(value, deepMapper).join('');
     }
 
@@ -21159,40 +21123,6 @@ phantasus.ActionManager = function () {
 
   //
   this.add({
-    name: 'Copy Image',
-    icon: 'fa fa-clipboard',
-    cb: function (options) {
-      var bounds = options.heatMap.getTotalSize();
-      var height = bounds.height;
-      var width = bounds.width;
-      var canvas = $('<canvas></canvas>')[0];
-      var backingScale = phantasus.CanvasUtil.BACKING_SCALE;
-      canvas.height = backingScale * height;
-      canvas.style.height = height + 'px';
-      canvas.width = backingScale * width;
-      canvas.style.width = width + 'px';
-      var context = canvas.getContext('2d');
-      phantasus.CanvasUtil.resetTransform(context);
-      options.heatMap.snapshot(context);
-      var url = canvas.toDataURL();
-      // canvas.toBlob(function (blob) {
-      // 	url = URL.createObjectURL(blob);
-      // 	event.clipboardData
-      // 	.setData(
-      // 		'text/html',
-      // 		'<img src="' + url + '">');
-      // });
-
-      phantasus.Util.setClipboardData([
-        {
-        format: 'text/html',
-        data: '<img src="' + url + '">'
-      }], true);
-    }
-  });
-
-  //
-  this.add({
     name: 'Close Tab',
     cb: function (options) {
       options.heatMap.getTabManager().remove(options.heatMap.tabId);
@@ -21253,7 +21183,7 @@ phantasus.ActionManager = function () {
         options.heatMap.getProject()
       );
     },
-    icon: 'fa fa-table'
+    icon: 'fa'
   });
 
   this.add({
@@ -21261,7 +21191,7 @@ phantasus.ActionManager = function () {
     cb: function (options) {
       phantasus.initFGSEATool(options);
     },
-    icon: 'fa fa-table'
+    icon: 'fa'
   });
 
   this.add({
@@ -21313,7 +21243,38 @@ phantasus.ActionManager = function () {
       'From file', 'From database']
   });
 
+  this.add({
+    name: 'Differential expression',
+    children: [
+      'Limma',
+      'Marker Selection'],
+    icon: 'fa fa-list'
+  });
 
+  this.add({
+    name: 'Clustering',
+    children: [
+      'K-means',
+      'Hierarchical Clustering'],
+    icon: 'fa'
+  });
+
+  this.add({
+    name: 'Plots',
+    children: [
+      'Chart',
+      'PCA Plot',
+      phantasus.gseaTool.prototype.toString()],
+    icon: 'fa fa-line-chart'
+  });
+
+  this.add({
+    name: 'Pathway analysis',
+    children: [
+      'Submit to Enrichr',
+      phantasus.fgseaTool.prototype.toString()],
+    icon: 'fa fa-table'
+  });
 
   this.add({
     name: 'Annotate columns',
@@ -21452,7 +21413,7 @@ phantasus.ActionManager = function () {
             options.heatMap.getVisibleTrackNames, options.heatMap)
         });
       },
-      icon: 'fa fa-line-chart'
+      icon: 'fa'
     });
 
     this.add({
@@ -21462,7 +21423,7 @@ phantasus.ActionManager = function () {
           project: options.heatMap.getProject()
         });
       },
-      icon: 'fa fa-line-chart'
+      icon: 'fa'
     });
   }
 
@@ -21956,11 +21917,7 @@ phantasus.ActionManager = function () {
         text.push(toStringFunction(v
           .getValue(index)));
       });
-    phantasus.Util.setClipboardData([
-      {
-      format: 'text/plain',
-      data: text.join('\n')
-    }]);
+    phantasus.Util.setClipboardData(text.join('\n'));
   };
   this.add({
     name: 'Copy Selected Rows',
@@ -22108,11 +22065,7 @@ phantasus.ActionManager = function () {
 
       var text = new phantasus.GctWriter()
         .write(dataset);
-      phantasus.Util.setClipboardData([
-        {
-        format: 'text/plain',
-        data: text
-      }]);
+      phantasus.Util.setClipboardData(text);
 
     }
   });
@@ -31763,9 +31716,6 @@ phantasus.HeatMap = function (options) {
         Tools: [
           'New Heat Map',
           null,
-          'Hierarchical Clustering',
-          null,
-          'Marker Selection',
           'Nearest Neighbors',
           'Create Calculated Annotation',
           null,
@@ -31774,23 +31724,18 @@ phantasus.HeatMap = function (options) {
           'Similarity Matrix',
           'Transpose',
           null,
-          'Chart',
-          null,
           'Sort/Group',
           'Filter',
           null,
-          'K-means',
-          'Limma',
-          'PCA Plot',
-          'Submit to Enrichr',
+          'Differential expression',
+          'Clustering',
+          'Plots',
+          'Pathway analysis',
           'Submit to Shiny GAM',
-          phantasus.fgseaTool.prototype.toString(),
-          phantasus.gseaTool.prototype.toString(),
           'DEBUG: Probe Debug Tool',
           'DEBUG: Expose project'],
         View: ['Zoom In', 'Zoom Out', null, 'Fit To Window', 'Fit Rows To Window', 'Fit Columns To Window', null, '100%', null, 'Options'],
         Edit: [
-          'Copy Image',
           'Copy Selected Dataset',
           null,
           'Move Selected Rows To Top',
@@ -32964,11 +32909,6 @@ phantasus.HeatMap.prototype = {
         var items = [];
         phantasus.Popup.showPopup(
           [
-
-            {
-              name: 'Copy Image',
-              class: 'copy'
-            },
             {
               name: 'Save Image (' + phantasus.Util.COMMAND_KEY + 'S)'
             },
@@ -33003,8 +32943,6 @@ phantasus.HeatMap.prototype = {
                   'text/plain',
                   text);
               }
-            } else if (item === 'Copy Image') {
-              _this.getActionManager().execute('Copy Image', {event: event});
             } else {
               //console.log(item + ' unknown.');
             }
