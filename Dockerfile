@@ -55,7 +55,8 @@ RUN R -e 'devtools::install_github("ctlab/fgsea", tag="1.9.4")'
 RUN R -e 'devtools::install("/root/phantasus", build_vignettes=T)'
 RUN printf "window.PHANTASUS_BUILD='$PHANTASUS_BUILD';" >> /root/phantasus/inst/www/phantasus.js/RELEASE.js
 RUN cp -r /root/phantasus/inst/www/phantasus.js /var/www/html/phantasus
-RUN cp /root/phantasus/inst/nginx-configs/default /etc/nginx/sites-available/default
+RUN cp /root/phantasus/inst/configs/default /etc/nginx/sites-available/default
+RUN cp /root/phantasus/inst/configs/opencpu.conf /etc/opencpu/server.conf
 RUN rm -rf /root/phantasus/inst
 
 EXPOSE 80
