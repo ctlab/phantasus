@@ -61,22 +61,26 @@ after_script:
 
 after_success:
   - Rscript -e 'covr::codecov()'
-  - DOCKER_TAG="$TRAVIS_BRANCH-$TRAVIS_BUILD_NUMBER"
-  - if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$TRAVIS_BRANCH" == "master" ]; then
-    docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
-    docker build -t dzenkova/phantasus --build-arg PHANTASUS_BUILD=$DOCKER_TAG --build-arg GITHUB_PAT=$GITHUB_PAT . ;
-    docker tag dzenkova/phantasus dzenkova/phantasus:$DOCKER_TAG ;
-    docker push dzenkova/phantasus;
-    fi
-  - if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$TRAVIS_BRANCH" == "develop" ]; then
-    docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
-    docker build --build-arg PHANTASUS_BUILD=$DOCKER_TAG --build-arg GITHUB_PAT=$GITHUB_PAT -t dzenkova/phantasus:develop . ;
-    docker tag dzenkova/phantasus:develop dzenkova/phantasus:$DOCKER_TAG ;
-    docker push dzenkova/phantasus:develop;
-    docker push dzenkova/phantasus:$DOCKER_TAG;
-    fi
 
 notifications:
   slack:
     rooms:
       - sysbio1:Kt2QCRqnbzJpNE8TvOvgwEMz#phantasus
+
+jobs:
+  include:
+    - stage: Docker build
+      env: DOCKER_TAG="$TRAVIS_BRANCH-$TRAVIS_BUILD_NUMBER"
+      script: if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$TRAVIS_BRANCH" == "master" ]; then
+                docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
+                docker build -t dzenkova/phantasus --build-arg PHANTASUS_BUILD=$DOCKER_TAG --build-arg GITHUB_PAT=$GITHUB_PAT . ;
+                docker tag dzenkova/phantasus dzenkova/phantasus:$DOCKER_TAG ;
+                docker push dzenkova/phantasus;
+              fi
+      script: if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$TRAVIS_BRANCH" == "develop" ]; then
+                docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
+                docker build --build-arg PHANTASUS_BUILD=$DOCKER_TAG --build-arg GITHUB_PAT=$GITHUB_PAT -t dzenkova/phantasus:develop . ;
+                docker tag dzenkova/phantasus:develop dzenkova/phantasus:$DOCKER_TAG ;
+                docker push dzenkova/phantasus:develop;
+                docker push dzenkova/phantasus:$DOCKER_TAG;
+              fi
