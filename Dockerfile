@@ -45,7 +45,7 @@ RUN gpg --keyserver keyserver.ubuntu.com --recv-key E084DAB9
 RUN gpg -a --export E084DAB9 | apt-key add -
 
 RUN R -e 'install.packages("devtools", repo = "https://cran.rstudio.com/")'
-RUN R -e 'install.packages('unix')'
+RUN R -e 'install.packages("unix")'
 
 #RUN git clone -b ${TARGET_BRANCH} --recursive https://github.com/ctlab/phantasus /root/phantasus
 COPY . /root/phantasus
