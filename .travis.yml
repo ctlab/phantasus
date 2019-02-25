@@ -29,6 +29,7 @@ r_packages:
   - opencpu
   - protolite
   - Rook
+  - unix
 
 os:
   - linux
