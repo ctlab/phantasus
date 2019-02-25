@@ -4308,10 +4308,6 @@ phantasus.PreloadedReader.prototype = {
   read: function(name, callback) {
     console.log("preloaded read", name);
     name = typeof name === "string" ? { name : name } : name;
-    var cacheURL = this.getPath('/preloaded/' + name.name + '.bin');
-
-    //load and discard data so cached
-    fetch(cacheURL).then(function () {}, function () {});
 
     var afterLoaded = function (err, dataset) {
       if (!err) {

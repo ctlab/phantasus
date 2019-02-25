@@ -1,5 +1,5 @@
-commit 962f516356d4c7620b6049d9b1f591d6bcbcf9ff
+commit 86ca8d797efbeeed37c2f5d81e92077f4e980c06
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Tue Feb 19 20:02:28 2019 +0300
+Date:   Mon Feb 25 12:55:30 2019 +0300
 
-    Preloaded binary cache implemented.
+    Removed preflight binary loading
