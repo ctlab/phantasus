@@ -84,7 +84,7 @@ server {
         proxy_cache opencpu;
         proxy_cache_methods POST;
         proxy_cache_valid 400 404 5m;
-        proxy_cache_key "$http_origin$http_content_type$client_likes_gzip$http_host$request_method$request_uri$request_body";
+        proxy_cache_key "$request_method$request_uri$request_body";
         proxy_no_cache $request_body_file;
         proxy_buffers 8 32k;
         proxy_buffer_size 64k;
