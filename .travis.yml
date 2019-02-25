@@ -71,6 +71,10 @@ jobs:
   include:
     - stage: Docker build
       env: DOCKER_TAG="$TRAVIS_BRANCH-$TRAVIS_BUILD_NUMBER"
+      before_install: skip
+      after_script: skip
+      after_success: skip
+      r_packages: skip
       install: skip
       script: if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$TRAVIS_BRANCH" == "master" ]; then
                 docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
