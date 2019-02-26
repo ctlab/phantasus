@@ -1,5 +1,8 @@
-commit 8c8efd87e764fd87ebb266e94f05c8122a66fb47
+commit c20e426228078a6b51256af117d7305ce4b0c618
+Merge: 8c8efd8 86ca8d7
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Mon Feb 4 16:26:59 2019 +0300
+Date:   Tue Feb 26 19:30:45 2019 +0300
 
-    Hierarchical clustering (and other "worker-based" tools) fixed
+    Merge pull request #58 from ctlab/develop
+    
+    Merge to master

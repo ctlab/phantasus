@@ -4,19 +4,23 @@ library(Biobase)
 library(data.table)
 
 test_that("loadGEO finishes with result", {
-    options(phantasusMirrorPath = "https://genome.ifmo.ru/files/software/phantasus")
+    options(phantasusMirrorPath = "https://genome.ifmo.ru/files/software/phantasus",
+            phantasusCacheDir = tempdir())
 
+    cacheDir <- getOption("phantasusCacheDir")
     x <- loadGEO("GSE27112")
     expect_is(x, "json")
 
-    ess <- protolite::unserialize_pb(readBin(fromJSON(x), what="raw", n=100000000))
+    binPath <- file.path(cacheDir, fromJSON(x))
+    ess <- protolite::unserialize_pb(readBin(binPath, what="raw", n=100000000))
 
     expect_equal(length(ess), 2)
 
     x <- loadGEO("GSE27112-GPL6885")
     expect_is(x, "json")
 
-    ess <- protolite::unserialize_pb(readBin(fromJSON(x), what="raw", n=100000000))
+    binPath <- file.path(cacheDir, fromJSON(x))
+    ess <- protolite::unserialize_pb(readBin(binPath, what="raw", n=100000000))
 
     expect_equal(length(ess), 1)
 
@@ -25,7 +29,7 @@ test_that("loadGEO finishes with result", {
 
     expect_error(loadGEO("WRONGNAME"))
 
-    options(phantasusMirrorPath = NULL)
+    options(phantasusMirrorPath = NULL, phantasusCacheDir = NULL)
 })
 
 test_that("getGDS adds id field for GDS datasets", {

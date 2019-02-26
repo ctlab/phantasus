@@ -38,18 +38,27 @@ loadGEO <- function(name, type = NA) {
         mirrorPath <- "https://ftp.ncbi.nlm.nih.gov"
     }
 
+    geoDir <- getGEODir(name, cacheDir)
+    binaryName <- paste0(name, '.bin')
+    filePath <- file.path(geoDir, binaryName)
+    urls <- c()
+
+
     ess <- getES(name, type, destdir = cacheDir, mirrorPath = mirrorPath)
 
     files <- list()
-    for (i in seq_along(ess)) {
-        assign("es", ess[[i]], envir = parent.frame())
-        seriesName <- if (!grepl(pattern = "-", name) && length(ess) > 1)
-            paste0(name, "-", annotation(ess[[i]])) else name
-        files[[seriesName]] <- writeToList(ess[[i]])
+    assign("es", tail(ess, n=1)[[1]], envir = parent.frame())
+    if (!file.exists(filePath)) {
+        for (i in seq_along(ess)) {
+            seriesName <- if (!grepl(pattern = "-", name) && length(ess) > 1)
+                paste0(name, "-", annotation(ess[[i]])) else name
+            files[[seriesName]] <- writeToList(ess[[i]])
+        }
+        writeBin(protolite::serialize_pb(files), filePath)
     }
-    f <- tempfile(pattern = "gse", tmpdir = getwd(), fileext = ".bin")
-    writeBin(protolite::serialize_pb(files), f)
-    jsonlite::toJSON(basename(f))
+
+    urls <-c(urls, unlist(strsplit(filePath, cacheDir))[2])
+    jsonlite::toJSON(urls)
 }
 
 #' Load ExpressionSet from GEO Datasets
@@ -78,15 +87,13 @@ getGDS <- function(name, destdir = tempdir(),
     stub <- gsub("\\d{1,3}$", "nnn", name, perl = TRUE)
     filename <- sprintf("%s.soft.gz", name)
     gdsurl <- "%s/geo/datasets/%s/%s/soft/%s"
-    gdsDirPath <- "%s/geo/datasets/%s/%s/soft"
 
-    destfile <- file.path(sprintf(gdsurl, destdir, stub, name, filename))
-    fullGEODirPath <- file.path(sprintf(gdsDirPath, destdir, stub, name))
-    dir.create(fullGEODirPath, showWarnings = FALSE, recursive = TRUE)
+    fullGEODirPath <- getGEODir(name, destdir)
+    destfile <- file.path(fullGEODirPath, filename)
 
     infile <- file.exists(destfile)
 
-    if (!file.exists(destfile)) {
+    if (!infile) {
         tempDestFile <- tempfile(paste0(filename, ".load"), tmpdir=fullGEODirPath)
         tryCatch({
             utils::download.file(sprintf(gdsurl, mirrorPath,
@@ -319,15 +326,13 @@ getGSE <- function(name, destdir = tempdir(),
     stub <- gsub("\\d{1,3}$", "nnn", GEO, perl = TRUE)
     filename <- sprintf("%s_series_matrix.txt.gz", name)
     gseurl <- "%s/geo/series/%s/%s/matrix/%s"
-    gseDirPath <- "%s/geo/series/%s/%s/matrix"
 
-    destfile <- file.path(sprintf(gseurl, destdir, stub, GEO, filename))
-    fullGEODirPath <- file.path(sprintf(gseDirPath, destdir, stub, GEO))
-    dir.create(fullGEODirPath, showWarnings = FALSE, recursive = TRUE)
+    fullGEODirPath <- getGEODir(name, destdir)
+    destfile <- file.path(fullGEODirPath, filename)
 
     infile <- file.exists(destfile)
 
-    if (!file.exists(destfile)) {
+    if (!infile) {
         tempDestFile <- tempfile(paste0(filename, ".load"), tmpdir=fullGEODirPath)
         tryCatch({
             utils::download.file(sprintf(gseurl, mirrorPath,
@@ -419,7 +424,8 @@ getES <- function(name, type = NA, destdir = tempdir(),
     if (is.na(type)) {
         type <- substr(name, 1, 3)
     }
-    possibly.cached <- file.path(destdir, paste0(name, ".rda"))
+    geoDir <- getGEODir(name, destdir)
+    possibly.cached <- file.path(geoDir, paste0(name, ".rda"))
     if (file.exists(possibly.cached)) {
         load(possibly.cached)
         message(paste("Loaded from locally cached parsed file", possibly.cached))
@@ -434,7 +440,7 @@ getES <- function(name, type = NA, destdir = tempdir(),
         if (length(res) > 1) {
             for (i in 1:length(res)) {
                 ess <- list(res[[i]])
-                destfile <- file.path(destdir,
+                destfile <- file.path(geoDir,
                                       paste0(name,
                                              "-",
                                              annotation(res[[i]]),
@@ -444,7 +450,7 @@ getES <- function(name, type = NA, destdir = tempdir(),
             }
         }
         ess <- res
-        destfile <- file.path(destdir, paste0(name, ".rda"))
+        destfile <- file.path(geoDir, paste0(name, ".rda"))
         message(paste("Cached dataset to ", destfile))
         save(ess, file = destfile)
     }
@@ -453,9 +459,11 @@ getES <- function(name, type = NA, destdir = tempdir(),
 
 
 listCachedESs <- function(destdir) {
-    res <- list.files(destdir, pattern=".*\\.rda$")
+    correctFileName <-
+
+    res <- list.files(destdir, pattern=".*\\.rda$", recursive = TRUE)
     res <- grep("\\.gz\\.rda$", res, invert = TRUE, value = TRUE)
-    res <- grep("^(GSE|GDS)", res, value = TRUE)
+    res <- res[grep("^(GSE|GDS)", basename(res), value = FALSE)]
     res <- sub("\\.rda$", "", res)
     res
 }
@@ -481,20 +489,23 @@ reparseCachedESs <- function(destdir,
                                 mirrorPath = "https://ftp.ncbi.nlm.nih.gov") {
     toReparse <- listCachedESs(destdir)
 
-    for (name in toReparse) {
+    for (path in toReparse) {
+        name <- basename(path)
+        geoDir <- getGEODir(name, destdir)
         message(paste0("Reparsing dataset ", name))
-        destfile <- file.path(destdir, paste0(name, ".rda"))
+        destfile <- file.path(geoDir, paste0(name, ".rda"))
         bakfile <- paste0(destfile, ".bak")
         tryCatch({
             file.rename(destfile, bakfile)
             getES(name, destdir = destdir, mirrorPath = mirrorPath)
             file.remove(bakfile)
+            file.remove(file.path(geoDir, paste0(name, ".bin")))
         }, error = function(e) {
             message(paste0("Error occured while reparsing, old file stored as ",
                            bakfile))
         })
     }
-    return(toReparse)
+    return(basename(toReparse))
 }
 
 
@@ -701,4 +712,20 @@ annotateFeatureData <- function (es, destdir = tempdir()) {
 
     featureData(es) <- new('AnnotatedDataFrame',data=dat,varMetadata=vmd)
     es
+}
+
+getGEODir <- function (name, destdir) {
+    type <- substr(name, 1, 3)
+    GEO <- unlist(strsplit(name, "-"))[1]
+    stub <- gsub("\\d{1,3}$", "nnn", GEO, perl = TRUE)
+    gdsDirPath <- "%s/geo/datasets/%s/%s/soft"
+    gseDirPath <- "%s/geo/series/%s/%s/matrix"
+    if (type == 'GSE') {
+        fullGEODirPath <- file.path(sprintf(gseDirPath, destdir, stub, GEO))
+    } else {
+        fullGEODirPath <- file.path(sprintf(gdsDirPath, destdir, stub, GEO))
+    }
+    dir.create(fullGEODirPath, showWarnings = FALSE, recursive = TRUE)
+
+    fullGEODirPath
 }

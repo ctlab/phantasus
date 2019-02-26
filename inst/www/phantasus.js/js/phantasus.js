@@ -512,61 +512,33 @@ phantasus.Util.autocompleteArrayMatcher = function (token, cb, array, fields, ma
 
 /**
  *
- * @param array. Array of format,data
+ * @param text. text
  */
-phantasus.Util.setClipboardData = function (clipboardData, delay) {
+phantasus.Util.setClipboardData = function (text) {
   var isRTL = document.documentElement.getAttribute('dir') == 'rtl';
-  var fakeElem = document.createElement('div');
-  fakeElem.contentEditable = true;
-
+  var fakeElem = document.createElement('textarea');
+  var container = document.body;
   // Prevent zooming on iOS
   fakeElem.style.fontSize = '12pt';
   // Reset box model
-
   fakeElem.style.border = '0';
   fakeElem.style.padding = '0';
   fakeElem.style.margin = '0';
   // Move element out of screen horizontally
   fakeElem.style.position = 'absolute';
-  fakeElem.style[isRTL ? 'right' : 'left'] = '-999999px';
+  fakeElem.style[ isRTL ? 'right' : 'left' ] = '-9999px';
   // Move element to the same position vertically
-  fakeElem.style.top = (window.pageYOffset || document.documentElement.scrollTop) + 'px';
+  var yPosition = window.pageYOffset || document.documentElement.scrollTop;
+  fakeElem.style.top = yPosition+'px';
+
   fakeElem.setAttribute('readonly', '');
-  //fakeElem.innerHTML = html;
-  var f = function (e) {
-    clipboardData.forEach(function (elem) {
-      e.clipboardData.setData(elem.format, elem.data);
-    });
+  fakeElem.value = text;
 
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-    fakeElem.removeEventListener('copy', f);
-  };
-  fakeElem.addEventListener('copy', f);
-
-  document.body.appendChild(fakeElem);
-  // if (fakeElem.hasAttribute('contenteditable')) {
-  fakeElem.focus();
-  // }
-  var selection = window.getSelection();
-  var range = document.createRange();
-  range.selectNodeContents(fakeElem);
-  selection.removeAllRanges();
-  selection.addRange(range);
-  if (delay) {
-    setTimeout(function () {
-      if (!document.execCommand('copy')) {
-        console.log('copy failed');
-      }
-      document.body.removeChild(fakeElem);
-    }, 20);
-  } else {
-    if (!document.execCommand('copy')) {
-      console.log('copy failed');
-    }
-    document.body.removeChild(fakeElem);
-  }
+  container.appendChild(fakeElem);
+  fakeElem.select();
+  fakeElem.setSelectionRange(0, fakeElem.value.length);
+  document.execCommand('copy');
+  document.body.removeChild(fakeElem);
 };
 
 /**
@@ -2008,6 +1980,20 @@ phantasus.Util.chunk = function(array, count) {
   return result;
 };
 
+phantasus.Util.customToolWaiter = function (promise, toolName, heatMap) {
+  var $dialogContent = $('<div><span>' + toolName + '...</span></div>');
+
+  var $dialog = phantasus.FormBuilder.showInDraggableDiv({
+    $content: $dialogContent,
+    appendTo: heatMap.getContentEl(),
+    width: 'auto'
+  });
+
+  promise.always(function () {
+    $dialog.remove();
+  });
+};
+
 phantasus.BlobFromPath = function () {
 };
 phantasus.BlobFromPath.getFileBlob = function (url, cb) {
@@ -2326,7 +2312,10 @@ phantasus.ParseDatasetFromProtoBin = function () {
 
 phantasus.ParseDatasetFromProtoBin.parse = function (session, callback, options) {
   session.getObject(function(success) {
-    var filePath = phantasus.Util.getFilePath(session, JSON.parse(success)[0]);
+    var response = JSON.parse(success)[0];
+    var filePath = options.pathFunction ?
+      options.pathFunction(response) :
+      phantasus.Util.getFilePath(session, response);
 
     var r = new FileReader();
 
@@ -3710,15 +3699,15 @@ phantasus.GeoReader.prototype = {
       session.getMessages(function (success) {
         console.log('loadGEO messages', '::', success);
       });
-      phantasus.ParseDatasetFromProtoBin.parse(session, afterLoaded, { isGEO : true });
+      phantasus.ParseDatasetFromProtoBin.parse(session, afterLoaded, { isGEO : true, pathFunction: phantasus.GeoReader.prototype.getPath });
     });
     req.fail(function () {
       callback(req.responseText);
     });
 
   },
-  _parse: function (text) {
-
+  getPath: function (fragment) {
+    return window.libraryPrefix.slice(0, -1) + fragment;
   }
 };
 
@@ -4343,6 +4332,64 @@ phantasus.PreloadedReader.prototype = {
     };
 
     var req = ocpu.call('loadPreloaded', name, function(session) {
+      phantasus.ParseDatasetFromProtoBin.parse(session, afterLoaded, { preloaded : true, pathFunction: phantasus.PreloadedReader.prototype.getPath });
+    });
+    req.fail(function () {
+      callback(req.responseText);
+    })
+  },
+  getPath: function (fragment) {
+    return window.libraryPrefix.slice(0, -1) + fragment;
+  }
+};
+
+phantasus.SavedSessionReader = function () {
+};
+
+phantasus.SavedSessionReader.prototype = {
+  read: function(name, callback) {
+    console.log("saved session read", name);
+    name = typeof name === "string" ? { sessionName : name } : name;
+
+    var sessionWithLoadedMeta;
+    var afterLoaded = function (err, dataset) {
+      if (!err) {
+        var datasetTitle = "permanent linked dataset";
+        var experimentData = dataset[0].getExperimentData();
+        if (experimentData) datasetTitle = experimentData.title.values.toString() || datasetTitle;
+
+        phantasus.datasetHistory.store({
+          name: name.name,
+          description: datasetTitle,
+          openParameters: {
+            file: name.sessionName,
+            options: {
+              interactive: true,
+              session: true
+            }
+          }
+        });
+      }
+
+
+      sessionWithLoadedMeta.loc = sessionWithLoadedMeta.loc.split(sessionWithLoadedMeta.key).join(name.sessionName);
+      sessionWithLoadedMeta.key = name.sessionName;
+      sessionWithLoadedMeta.getLoc = function () {
+        return sessionWithLoadedMeta.loc;
+      };
+
+      sessionWithLoadedMeta.getKey = function () {
+        return sessionWithLoadedMeta.key;
+      };
+
+      dataset[0].setESSession(new Promise(function (rs) { rs(sessionWithLoadedMeta); }));
+
+      callback(err, dataset);
+    };
+
+    var req = ocpu.call('loadSession', name, function(session) {
+      sessionWithLoadedMeta = session;
+
       phantasus.ParseDatasetFromProtoBin.parse(session, afterLoaded, { preloaded : true });
     });
     req.fail(function () {
@@ -6344,6 +6391,8 @@ phantasus.DatasetUtil.read = function (fileOrUrl, options) {
       name: fileOrUrl,
       exactName: options.exactName
     }
+  } else if (options.session) {
+    datasetReader = new phantasus.SavedSessionReader();
   }
   else if (ext === '' && str != null && str.indexOf('blob:') === 0) {
     datasetReader = new phantasus.TxtReader(); // copy from clipboard
@@ -12808,7 +12857,8 @@ phantasus.Util.extend(phantasus.Vector, phantasus.AbstractVector);
  */
 phantasus.LandingPage = function (pageOptions) {
   pageOptions = $.extend({}, {
-    el: $('#vis')
+    el: $('#vis'),
+    autoInit: true
   }, pageOptions);
   this.pageOptions = pageOptions;
   var _this = this;
@@ -12878,8 +12928,78 @@ phantasus.LandingPage = function (pageOptions) {
   });
 
   phantasus.datasetHistory.render(this.$historyDatsetsEl);
-}
-;
+
+  if (this.pageOptions.autoInit) {
+    var searchString = window.location.search;
+    if (searchString.length === 0) {
+      searchString = window.location.hash;
+    }
+    this.$el.prependTo($(document.body));
+    if (searchString.length === 0) {
+      this.show();
+    } else {
+      searchString = searchString.substring(1);
+      var keyValuePairs = searchString.split('&');
+      var params = {};
+      for (var i = 0; i < keyValuePairs.length; i++) {
+        var pair = keyValuePairs[i].split('=');
+        params[pair[0]] = decodeURIComponent(pair[1]);
+      }
+      // console.log(params);
+      if (params.json) {
+        var options = JSON.parse(decodeURIComponent(params.json));
+        _this.open(options);
+      } else if (params.url) { // url to config
+        var $loading = phantasus.Util.createLoadingEl();
+        $loading.appendTo($('#vis'));
+        phantasus.Util.getText(params.url).done(function (text) {
+          var options = JSON.parse(text);
+          _this.open(options);
+        }).fail(function (err) {
+          console.log('Unable to get config file');
+          _this.show();
+        }).always(function () {
+          $loading.remove();
+        });
+      } else if (params.geo) {
+        var options = {
+          dataset: {
+            file: params.geo.toUpperCase(),
+            options: {
+              interactive: true,
+              isGEO: true
+            }
+          }
+        };
+        this.open(options);
+      } else if (params.session) {
+        var options = {
+          dataset: {
+            file: params.session,
+            options: {
+              interactive: true,
+              session: true
+            }
+          }
+        };
+        _this.open(options);
+      } else if (params.preloaded) {
+        var options = {
+          dataset: {
+            file: params.preloaded,
+            options: {
+              interactive: true,
+              preloaded: true
+            }
+          }
+        };
+        _this.open(options);
+      } else {
+        this.show();
+      }
+    }
+  }
+};
 
 phantasus.LandingPage.prototype = {
   open: function (openOptions) {
@@ -12912,38 +13032,33 @@ phantasus.LandingPage.prototype = {
         })
       });
       req.fail(function () {
+        _this.show();
         throw new Error("Checking GPLs call to OpenCPU failed" + req.responseText);
       });
     };
 
     var createPreloadedHeatMap = function(options) {
-      var req = ocpu.call('checkPreloadedNames', { name : options.dataset.file }, function(session) {
-        session.getMessages(function(success) {
-          console.log('checkPreloadedNames messages', success);
-        });
-        session.getObject(function(success) {
-          var names = JSON.parse(success);
-          // console.log(names);
+      new phantasus.HeatMap(options);
+    };
 
-          if (names.length === 0) {
+    var createSessionHeatMap = function (options) {
+      //http://localhost:3000/?session=x06c106048e7cb1
+      var req = ocpu.call('sessionExists', { sessionName : options.dataset.file }, function(session) {
+        session.getObject(function(success) {
+          var result = JSON.parse(success);
+
+          if (!result.result) {
             _this.show();
             throw new Error("Dataset" + " " + options.dataset.file + " does not exist");
-
           }
 
-          for (var j = 0; j < names.length; j++) {
-            var specificOptions = options;
-
-            specificOptions.dataset.options.exactName = names[j];
-            // console.log("specific", specificOptions);
-
-            new phantasus.HeatMap(specificOptions);
-          }
-
+          var specificOptions = options;
+          new phantasus.HeatMap(specificOptions);
         })
       });
       req.fail(function () {
-        throw new Error("Checking inside names call to OpenCPU failed" + req.responseText);
+        _this.show();
+        throw new Error("Failed to check if the session exists:" + req.responseText);
       });
     };
 
@@ -12962,7 +13077,8 @@ phantasus.LandingPage.prototype = {
         createGEOHeatMap(options);
       } else if (options.dataset.options && options.dataset.options.preloaded) {
         createPreloadedHeatMap(options);
-
+      } else if (options.dataset.options && options.dataset.options.session) {
+        createSessionHeatMap(options);
       }
       else {
         // console.log("before loading heatmap from landing_page", options);
@@ -13056,7 +13172,7 @@ phantasus.LandingPage.prototype = {
     }
 
     var fileName = phantasus.Util.getFileName(value);
-    if (fileName.toLowerCase().indexOf('.json') === fileName.length - 5) {
+    if (fileName.toLowerCase().endsWith('.json')) {
       phantasus.Util.getText(value).done(function (text) {
         _this.open(JSON.parse(text));
       }).fail(function (err) {
@@ -13806,8 +13922,7 @@ phantasus.AnnotateDatasetTool.prototype = {
       required: true,
       allowedInputs: {
         computer: true,
-        url: true,
-        dropbox: true
+        url: true
       }
     });
     array.options = {
@@ -15308,11 +15423,11 @@ phantasus.CollapseDatasetTool.prototype = {
     var setValue = function (val) {
       var isRows = val === 'Rows';
       var names = phantasus
-                  .MetadataUtil
-                  .getMetadataNames(
-                    isRows ?
-                    project.getFullDataset().getRowMetadata() :
-                    project.getFullDataset().getColumnMetadata());
+        .MetadataUtil
+        .getMetadataNames(
+          isRows ?
+            project.getFullDataset().getRowMetadata() :
+            project.getFullDataset().getColumnMetadata());
 
       form.setOptions('collapse_to_fields', names);
     };
@@ -15351,6 +15466,10 @@ phantasus.CollapseDatasetTool.prototype = {
       options: [],
       type: 'select',
       multiple: true
+    }, {
+      name: 'omit_unannotated',
+      type: 'checkbox',
+      value: true
     }];
   },
 
@@ -15358,33 +15477,50 @@ phantasus.CollapseDatasetTool.prototype = {
     var project = options.project;
     var heatMap = options.heatMap;
     var f = phantasus
-            .CollapseDatasetTool
-            .Functions
-            .fromString(options.input.collapse_method);
+      .CollapseDatasetTool
+      .Functions
+      .fromString(options.input.collapse_method);
 
     var collapseToFields = options.input.collapse_to_fields;
+    var omitUnannotated = options.input.omit_unannotated;
     if (!collapseToFields || collapseToFields.length === 0) {
       throw new Error('Please select one or more fields to collapse to');
     }
 
     var dataset = project.getFullDataset();
     var rows = options.input.collapse === 'Rows';
-
     if (!rows) {
       dataset = new phantasus.TransposedDatasetView(dataset);
     }
 
-    var allFields = phantasus.MetadataUtil.getMetadataNames(dataset.getRowMetadata());
+    if (omitUnannotated) {
+      var fieldMeta = dataset.getRowMetadata();
+      var aoa = collapseToFields
+        .map(function (field) {
+          return phantasus.VectorUtil.toArray(fieldMeta.getByName(field));
+        })
+
+      var keepIndexes = _.zip
+        .apply(null, aoa)
+        .map(function (aos) {
+          return aos.join('');
+        })
+        .reduce(function (acc, value, index) {
+          if (_.size(value) !== 0) acc.push(index);
+          return acc;
+        }, [])
+
+      dataset = new phantasus.SlicedDatasetView(dataset, keepIndexes);
+    }
+
     var collapseMethod = f.selectOne ? phantasus.SelectRow : phantasus.CollapseDataset;
     dataset = collapseMethod(dataset, collapseToFields, f, true);
-
     if (!rows) {
       dataset = phantasus.DatasetUtil.copy(new phantasus.TransposedDatasetView(dataset));
     }
 
     var oldDataset = project.getFullDataset();
     var oldSession = oldDataset.getESSession();
-
     if (oldSession) {
       dataset.setESSession(new Promise(function (resolve, reject) {
         oldSession.then(function (esSession) {
@@ -15393,7 +15529,8 @@ phantasus.CollapseDatasetTool.prototype = {
             selectOne: Boolean(f.selectOne),
             isRows: rows,
             fn: f.rString(),
-            fields: collapseToFields
+            fields: collapseToFields,
+            removeEmpty: omitUnannotated
           };
 
           ocpu
@@ -15409,19 +15546,6 @@ phantasus.CollapseDatasetTool.prototype = {
 
     }
 
-
-    var set = new phantasus.Map();
-    _.each(allFields, function (field) {
-      set.set(field, true);
-    });
-    _.each(collapseToFields, function (field) {
-      set.remove(field);
-    });
-    // hide fields that were not part of collapse to
-    // console.log("Collapse ", set);
-    // set.forEach(function (val, name) {
-    //   heatMap.setTrackVisible(name, false, !rows);
-    // });
     return new phantasus.HeatMap({
       name: heatMap.getName(),
       dataset: dataset,
@@ -15824,6 +15948,368 @@ phantasus.enrichrTool.prototype = {
   }
 };
 
+
+phantasus.initFGSEATool = function (options) {
+  if (!phantasus.fgseaTool.init) {
+    var $el = $('<div style="background:white;" title="Init"><h5>Loading FGSEA meta information</h5></div>');
+    phantasus.Util.createLoadingEl().appendTo($el);
+    $el.dialog({
+      resizable: false,
+      height: 150,
+      width: 300
+    });
+
+    var req = ocpu.call("availableFGSEADatabases", {}, function (newSession) {
+      newSession.getObject(function (success) {
+        var result = JSON.parse(success);
+        phantasus.fgseaTool.init = true;
+
+        phantasus.fgseaTool.dbs = result;
+        $el.dialog('destroy').remove();
+        new phantasus.fgseaTool(options.heatMap);
+      })
+    });
+
+    req.fail(function () {
+      $el.dialog('destroy').remove();
+      throw new Error("Couldn't load FGSEA meta information. Please try again in a moment. Error:" + req.responseText);
+    });
+  } else {
+    new phantasus.fgseaTool(options.heatMap);
+  }
+};
+
+phantasus.fgseaTool = function (heatMap) {
+  var self = this;
+
+  var project = heatMap.getProject();
+  var fullDataset = project.getFullDataset();
+  var numberFields = phantasus.MetadataUtil.getMetadataSignedNumericFields(fullDataset
+    .getRowMetadata());
+
+  if (_.size(phantasus.fgseaTool.dbs) === 0) {
+    throw new Error('There is no installed pathway databases.');
+  }
+
+  if (numberFields.length === 0) {
+    throw new Error('No fields in row annotation appropriate for ranking.');
+  }
+
+  var rankRows = numberFields.map(function (field) {
+    return field.getName();
+  });
+
+  var rows = phantasus.MetadataUtil.getMetadataNames(fullDataset
+    .getRowMetadata(), true);
+
+  this.$dialog = $('<div style="background:white;" title="' + phantasus.fgseaTool.prototype.toString() + '"></div>');
+
+  this.formBuilder = new phantasus.FormBuilder({
+    formStyle: 'vertical'
+  });
+
+  var dbOptions = phantasus.fgseaTool.dbs.map(function (dbObj) {
+    return {
+      name: dbObj.HINT,
+      value: dbObj.FILE
+    };
+  });
+
+  [{
+    name: 'pathway_database',
+    options: dbOptions,
+    value: _.first(dbOptions).value,
+    type: 'select'
+  },{
+    name: 'rank_by',
+    options: rankRows,
+    value: _.first(rankRows),
+    type: 'select'
+  }, {
+    name: 'column_with_gene_ID',
+    options: rows,
+    value: _.first(rows),
+    type: 'select'
+  }, {
+    name: 'omit_ambigious_genes',
+    type: 'checkbox',
+    tooltipHelp: 'Current column contains cells with multiple values separated by \'///\'.',
+    value: true
+  }].forEach(function (a) {
+    self.formBuilder.append(a);
+  });
+
+  this.formBuilder.$form.appendTo(this.$dialog);
+  this.formBuilder.$form.find('[data-toggle="tooltip"]').tooltip();
+
+  var columnSelect = this.formBuilder.$form.find("[name=column_with_gene_ID]");
+
+  var onSelect = function () {
+    var geneIDColumn = self.formBuilder.getValue('column_with_gene_ID');
+    var values = phantasus.VectorUtil.toArray(fullDataset.getRowMetadata().getByName(geneIDColumn));
+    var show = values.some(function (value) {
+      return _.isString(value) && value.indexOf('///') !== -1;
+    });
+
+    self.formBuilder.setVisible('omit_ambigious_genes', show);
+  };
+
+  columnSelect.on('change', onSelect);
+  onSelect();
+
+  this.$dialog.dialog({
+    open: function (event, ui) {
+    },
+    close: function (event, ui) {
+      self.$dialog.dialog('destroy').remove();
+      event.stopPropagation();
+    },
+    buttons: {
+      "Submit": function () {
+        var promise = self.execute(heatMap);
+        self.$dialog.dialog('close');
+        phantasus.Util.customToolWaiter(promise, phantasus.fgseaTool.prototype.toString(), heatMap);
+      },
+      "Cancel": function () {
+        self.$dialog.dialog('close');
+      }
+    },
+
+    resizable: true,
+    height: 400,
+    width: 600
+  });
+};
+
+phantasus.fgseaTool.prototype = {
+  init: false,
+  dbs: [],
+  precision: {
+    pval: 3,
+    padj: 3,
+    log2err: 3,
+    ES: 3,
+    NES: 3,
+    size: undefined
+  },
+  toString: function () {
+    return "Perform FGSEA"
+  },
+  execute: function (heatMap) {
+    var self = this;
+    var promise = $.Deferred();
+    this.parentHeatmap = heatMap;
+
+    var dataset = heatMap.getProject().getFullDataset();
+    var rankBy = this.formBuilder.getValue('rank_by');
+    var geneIDColumn = this.formBuilder.getValue('column_with_gene_ID');
+    var omitAmbigious = this.formBuilder.getValue('omit_ambigious_genes');
+
+    var genes = phantasus.VectorUtil.toArray(dataset.getRowMetadata().getByName(geneIDColumn));
+    var ranks = phantasus.VectorUtil.toArray(dataset.getRowMetadata().getByName(rankBy));
+
+
+    if ((new Set(genes)).size !== genes.length) {
+      promise.reject();
+      throw new Error('FGSEA requires Gene ID column to be unique. Please use collapse tool.');
+    }
+
+    if (omitAmbigious) {
+      var omitIndexes = [];
+      genes = genes.reduce(function (acc, gene, index) {
+        if (!_.isString(gene)) { // rows are not strings???
+          acc.push(gene);
+          return acc;
+        }
+
+        var isAmbiguousGene = gene.indexOf('///') !== -1;
+        if (isAmbiguousGene) {
+          omitIndexes.push(index);
+        } else if (!isAmbiguousGene) {
+          acc.push(gene);
+        }
+
+        return acc;
+      }, []);
+
+      omitIndexes
+        .sort(function (a,b) {return b - a;})
+        .forEach(function (index) {
+          ranks.splice(index,1);
+        });
+    }
+
+    var request = {
+      dbName: this.formBuilder.getValue('pathway_database'),
+      ranks: {
+        genes: genes,
+        ranks: ranks
+      }
+    };
+
+    this.dbName = request.dbName;
+    var req = ocpu.call('performFGSEA', request, function (session) {
+      self.session = session;
+      session.getObject(function (result) {
+        self.fgsea = JSON.parse(result);
+        if (_.size(self.fgsea) === 0) {
+          promise.reject();
+          throw new Error("FGSEA returned 0 rows. Nothing to show");
+        }
+
+
+        promise.resolve();
+        self.openTab();
+      });
+    }, false, "::es")
+      .fail(function () {
+        promise.reject();
+        throw new Error("Failed to perform FGSEA. Error:" + req.responseText);
+      });
+
+    return promise;
+  },
+  openTab: function () {
+    var self = this;
+    var template = [
+      '<div class="container-fluid">',
+        '<div class="row">',
+          '<div class="col-sm-12">',
+            '<label class="control-label">Actions:</label>',
+            '<div><button class="btn btn-default">Save as TSV</button></div>',
+          '</div>',
+        '</div>',
+        '<div class="row">',
+          '<div class="col-sm-9">',
+            '<label class="control-label">FGSEA:</label>',
+            '<div>' + this.generateTableHTML() + '</div>',
+          '</div>',
+          '<div class="col-sm-3">',
+            '<label class="control-label">Pathway detail:</label>',
+            '<div id="pathway-detail" style="word-break: break-all">Hint: Click on pathway name to get list of genes in it</div>',
+          '</div>',
+        '</div>',
+      '</div>'
+    ].join('');
+
+    this.$el = $(template);
+    this.$saveButton = this.$el.find('button');
+    this.$saveButton.on('click', function () {
+      var blob = new Blob([self.generateTSV()], {type: "text/plain;charset=utf-8"});
+      saveAs(blob, self.parentHeatmap.getName() + "_FGSEA.tsv");
+    });
+
+    this.$pathwayDetail = this.$el.find('#pathway-detail');
+
+    this.$table = this.$el.find('table');
+    this.$table.on('click', 'tbody tr', function (e) {
+      var pathway = $(e.currentTarget).children().first().text();
+      var request = {
+        dbName: self.dbName,
+        pathwayName: pathway
+      };
+
+      self.$pathwayDetail.empty();
+      phantasus.Util.createLoadingEl().appendTo(self.$pathwayDetail);
+
+      var req = ocpu.call('queryPathway', request, function (session) {
+        session.getObject(function (success) {
+          var pathwayGenes = JSON.parse(success);
+          self.$pathwayDetail.empty();
+
+          var leadingEdge = _.find(self.fgsea, {pathway: pathway}).leadingEdge;
+
+          var pathwayDetail = $([
+            '<div>',
+              '<strong>Pathway name:</strong>' + pathway + '<br>',
+              '<strong>Pathway genes (ID):</strong>' + pathwayGenes.geneID.join(' ') + '<br>',
+              '<strong>Pathway genes (Symbols):</strong>' + pathwayGenes.geneSymbol.join(' ') + '<br>',
+              '<strong>Leading edge:</strong>' + leadingEdge.join(' ') + '<br>',
+            '</div>'
+          ].join(''));
+
+          pathwayDetail.appendTo(self.$pathwayDetail);
+        });
+      });
+
+      req.fail(function () {
+        throw new Error('Failed to get pathway details: ' + req.responseText);
+      });
+    });
+
+    $(this.$table).DataTable({
+      paging: false,
+      searching: false,
+      order: [[1, 'asc']]
+    });
+
+    this.tab = this.parentHeatmap.tabManager.add({
+      $el: this.$el,
+      closeable: true,
+      rename: false,
+      title: this.parentHeatmap.getName() + "_FGSEA",
+      object: this,
+      focus: true
+    });
+    this.tabId = this.id;
+    this.$tabPanel = this.$panel;
+  },
+  generateTSV: function () {
+    var headerNames = Object.keys(_.first(this.fgsea));
+    var result = headerNames.join('\t') + '\n';
+
+    result += this.fgsea.map(function (pathway) {
+      return Object.values(pathway).map(function (value) {
+        return (_.isArray(value)) ? value.join(' ') : value.toString();
+      }).join('\t');
+    }).join('\n');
+
+    return result;
+  },
+  generateTableHTML: function () {
+    var tableHeaderNames = Object.keys(_.first(this.fgsea));
+
+    var thead = tableHeaderNames
+      .map(function (name) { return '<th>' + name + '</th>'; })
+      .join('');
+
+    var tbody = this.fgsea
+      .map(function (pathway) {
+        var tableRow = _.map(pathway, function (value, colname) {
+          var result = '<td>';
+
+          if (_.isArray(value)) {
+            if (_.size(value) >= 5) {
+              result += value.slice(0, 5).join(' ') + ' ...';
+            } else {
+              result += value.join(' ');
+            }
+          } else if (_.isNumber(value)) {
+            result += value.toPrecision(phantasus.fgseaTool.prototype.precision[colname]);
+          } else {
+            result += value.toString();
+          }
+          result += '</td>';
+
+          return result;
+        }).join('');
+
+        return '<tr class="c-pointer">' + tableRow + '</tr>';
+      })
+      .join('');
+
+    var table = [
+      '<table id="fgsea-table" class="table table-hover table-striped table-condensed">',
+      '<thead>' + thead + '</thead>',
+      '<tbody>' + tbody + '</tbody>',
+      '</table>'
+    ].join('');
+
+
+    return table;
+  }
+};
+
 phantasus.gseaTool = function (heatmap, project) {
   var self = this;
 
@@ -15905,6 +16391,7 @@ phantasus.gseaTool = function (heatmap, project) {
     }
 
     if (self.promise) {
+      self.promise.cancelled = true;
       self.promise.reject('Cancelled');
     }
 
@@ -15959,6 +16446,7 @@ phantasus.gseaTool.prototype = {
     this.$chart.empty();
     phantasus.Util.createLoadingEl().appendTo(this.$chart);
     this.promise = $.Deferred();
+    var promise = this.promise;
 
     var selectedDataset = project.getSelectedDataset();
     var parentDataset = selectedDataset.dataset;
@@ -16029,17 +16517,24 @@ phantasus.gseaTool.prototype = {
       request.es = esSession;
 
       ocpu.call('gseaPlot', request, function (session) {
+        if (promise.cancelled) {
+          return;
+        }
+
         session.getObject(function (filenames) {
+          if (promise.cancelled) {
+            return;
+          }
+
           var svgPath = JSON.parse(filenames)[0];
           var absolutePath = phantasus.Util.getFilePath(session, svgPath);
           phantasus.BlobFromPath.getFileObject(absolutePath, function (blob) {
-            self.imageURL = URL.createObjectURL(blob);
-            self.promise.resolve(self.imageURL);
+            promise.resolve(URL.createObjectURL(blob));
           });
         });
       }, false, "::es")
         .fail(function () {
-          self.promise.reject();
+          promise.reject();
         });
     })
 
@@ -16543,12 +17038,11 @@ phantasus.LimmaTool.prototype = {
               });
               // alert("Limma finished successfully");
               dataset.setESSession(Promise.resolve(session));
-              promise.resolve();
-
               project.trigger("trackChanged", {
                 vectors: vs,
                 display: []
               });
+              promise.resolve();
             })
           };
           phantasus.BlobFromPath.getFileObject(filePath, function (file) {
@@ -19174,6 +19668,55 @@ phantasus.TsneTool.prototype = {
   }
 };
 
+phantasus.aboutDataset = function (options) {
+  var _this = this;
+  this.project = options.project;
+  var dataset = this.project.getFullDataset();
+
+  var deepMapper = function (value, index) {
+    if (!value.values) {
+      return _.map(value, deepMapper).join('');
+    }
+
+    return '<tr><td>' + index.toString() + '</td><td>' + value.values.toString() + '</td></tr>';
+  };
+
+  var experimentData = _.map(dataset.getExperimentData(), deepMapper).join('');
+
+  var $dialog = $('<div style="background:white;" title="' + phantasus.aboutDataset.prototype.toString() + '"></div>');
+  this.$el = $([
+    '<div class="container-fluid">',
+      '<div class="row" style="height: 100%">',
+      '<div data-name="experiment-data" class="col-xs-12">',
+        '<label for="experiment-data-table">Experiment data</label>',
+        '<table id="experiment-data-table" class="table table-hover table-striped table-condensed">',
+          '<tr><th>Name</th><th>Value</th></tr>',
+          experimentData,
+        '</table>',
+      '</div>',
+    '</div></div>'].join(''));
+
+  this.$el.appendTo($dialog);
+  $dialog.dialog({
+    dialogClass: 'phantasus',
+    close: function (event, ui) {
+      event.stopPropagation();
+      $(this).dialog('destroy');
+    },
+
+    resizable: true,
+    height: 580,
+    width: 900
+  });
+  this.$dialog = $dialog;
+};
+
+phantasus.aboutDataset.prototype = {
+  toString: function () {
+    return 'About dataset';
+  }
+};
+
 phantasus.AbstractCanvas = function (offscreen) {
   this.canvas = phantasus.CanvasUtil.createCanvas();
   this.lastClip = null;
@@ -20576,40 +21119,6 @@ phantasus.ActionManager = function () {
 
   //
   this.add({
-    name: 'Copy Image',
-    icon: 'fa fa-clipboard',
-    cb: function (options) {
-      var bounds = options.heatMap.getTotalSize();
-      var height = bounds.height;
-      var width = bounds.width;
-      var canvas = $('<canvas></canvas>')[0];
-      var backingScale = phantasus.CanvasUtil.BACKING_SCALE;
-      canvas.height = backingScale * height;
-      canvas.style.height = height + 'px';
-      canvas.width = backingScale * width;
-      canvas.style.width = width + 'px';
-      var context = canvas.getContext('2d');
-      phantasus.CanvasUtil.resetTransform(context);
-      options.heatMap.snapshot(context);
-      var url = canvas.toDataURL();
-      // canvas.toBlob(function (blob) {
-      // 	url = URL.createObjectURL(blob);
-      // 	event.clipboardData
-      // 	.setData(
-      // 		'text/html',
-      // 		'<img src="' + url + '">');
-      // });
-
-      phantasus.Util.setClipboardData([
-        {
-        format: 'text/html',
-        data: '<img src="' + url + '">'
-      }], true);
-    }
-  });
-
-  //
-  this.add({
     name: 'Close Tab',
     cb: function (options) {
       options.heatMap.getTabManager().remove(options.heatMap.tabId);
@@ -20670,7 +21179,15 @@ phantasus.ActionManager = function () {
         options.heatMap.getProject()
       );
     },
-    icon: 'fa fa-table'
+    icon: 'fa'
+  });
+
+  this.add({
+    name: phantasus.fgseaTool.prototype.toString(),
+    cb: function (options) {
+      phantasus.initFGSEATool(options);
+    },
+    icon: 'fa'
   });
 
   this.add({
@@ -20722,7 +21239,38 @@ phantasus.ActionManager = function () {
       'From file', 'From database']
   });
 
+  this.add({
+    name: 'Differential expression',
+    children: [
+      'Limma',
+      'Marker Selection'],
+    icon: 'fa fa-list'
+  });
 
+  this.add({
+    name: 'Clustering',
+    children: [
+      'K-means',
+      'Hierarchical Clustering'],
+    icon: 'fa'
+  });
+
+  this.add({
+    name: 'Plots',
+    children: [
+      'Chart',
+      'PCA Plot',
+      phantasus.gseaTool.prototype.toString()],
+    icon: 'fa fa-line-chart'
+  });
+
+  this.add({
+    name: 'Pathway analysis',
+    children: [
+      'Submit to Enrichr',
+      phantasus.fgseaTool.prototype.toString()],
+    icon: 'fa fa-table'
+  });
 
   this.add({
     name: 'Annotate columns',
@@ -20790,6 +21338,66 @@ phantasus.ActionManager = function () {
     icon: 'fa fa-anchor'
   });
 
+  this.add({
+    ellipsis: true,
+    name: 'Get permanent link',
+    cb: function (options) {
+      var dataset = options.heatMap.getProject().getFullDataset();
+      dataset.getESSession().then(function (es) {
+        var key = es.getKey();
+        var location = window.location;
+        var newLocation = location.origin + location.pathname + '?session=' + key;
+
+        var publishReq = ocpu.call('publishSession', { sessionName: key }, function (tempSession) {
+          tempSession.getObject(function (json) {
+            var parsedJSON = JSON.parse(json);
+            if (!parsedJSON.result) {
+              throw new Error('Failed to make session accessible');
+            }
+
+
+            var formBuilder = new phantasus.FormBuilder();
+            formBuilder.append({
+              name: 'Link',
+              readonly: true,
+              value: newLocation
+            });
+
+            formBuilder.append({
+              name: 'copy',
+              type: 'button'
+            });
+
+            formBuilder.$form.find('button').on('click', function () {
+              formBuilder.$form.find('input')[0].select();
+              document.execCommand('copy');
+            });
+
+            phantasus.FormBuilder.showInModal({
+              title: 'Get permanent link to a dataset',
+              close: 'Close',
+              html: formBuilder.$form,
+              focus: options.heatMap.getFocusEl()
+            });
+          });
+        });
+
+        publishReq.fail(function () {
+          throw new Error('Failed to make session accessible: ' + publishReq.responseText);
+        });
+      })
+    }
+  });
+
+  this.add({
+    name: phantasus.aboutDataset.prototype.toString(),
+    cb: function (options) {
+      phantasus.aboutDataset({
+        project: options.heatMap.getProject()
+      })
+    },
+  });
+
   if (typeof Plotly !== 'undefined') {
     this.add({
       name: 'Chart',
@@ -20801,7 +21409,7 @@ phantasus.ActionManager = function () {
             options.heatMap.getVisibleTrackNames, options.heatMap)
         });
       },
-      icon: 'fa fa-line-chart'
+      icon: 'fa'
     });
 
     this.add({
@@ -20811,7 +21419,7 @@ phantasus.ActionManager = function () {
           project: options.heatMap.getProject()
         });
       },
-      icon: 'fa fa-line-chart'
+      icon: 'fa'
     });
   }
 
@@ -21305,11 +21913,7 @@ phantasus.ActionManager = function () {
         text.push(toStringFunction(v
           .getValue(index)));
       });
-    phantasus.Util.setClipboardData([
-      {
-      format: 'text/plain',
-      data: text.join('\n')
-    }]);
+    phantasus.Util.setClipboardData(text.join('\n'));
   };
   this.add({
     name: 'Copy Selected Rows',
@@ -21457,11 +22061,7 @@ phantasus.ActionManager = function () {
 
       var text = new phantasus.GctWriter()
         .write(dataset);
-      phantasus.Util.setClipboardData([
-        {
-        format: 'text/plain',
-        data: text
-      }]);
+      phantasus.Util.setClipboardData(text);
 
     }
   });
@@ -23603,7 +24203,6 @@ phantasus.FilePicker = function (options) {
   var myComputer = _.uniqueId('phantasus');
   var url = _.uniqueId('phantasus');
   var googleId = _.uniqueId('phantasus');
-  var dropbox = _.uniqueId('phantasus');
   var preloaded = _.uniqueId('phantasus');
   html.push('<ul style="margin-bottom:10px;" class="nav nav-pills phantasus">');
   html.push('<li role="presentation" class="active"><a href="#' + myComputer + '"' +
@@ -23618,11 +24217,6 @@ phantasus.FilePicker = function (options) {
       ' aria-controls="' + googleId + '" role="tab" data-toggle="tab"><i class="fa' +
       ' fa-google"></i>' +
       ' Google</a></li>');
-  }
-  if (typeof Dropbox !== 'undefined') {
-    html.push('<li role="presentation"><a href="#' + dropbox + '"' +
-      ' aria-controls="' + dropbox + '" role="tab" data-toggle="tab"><i class="fa fa-dropbox"></i>' +
-      ' Dropbox</a></li>');
   }
 
   var $sampleDatasetsEl = $('<div class="phantasus-preloaded"></div>');
@@ -23667,13 +24261,6 @@ phantasus.FilePicker = function (options) {
   html.push('</div>');
   html.push('</div>');
 
-  if (typeof Dropbox !== 'undefined') {
-    html.push('<div role="tabpanel" class="tab-pane" id="' + dropbox + '">');
-    html.push('<div class="phantasus-landing-panel">');
-    html.push('<button name="dropbox" class="btn btn-default">Browse Dropbox</button>');
-    html.push('</div>');
-    html.push('</div>');
-  }
   if (typeof gapi !== 'undefined') {
     html.push('<div role="tabpanel" class="tab-pane" id="' + googleId + '">');
     html.push('<div class="phantasus-landing-panel">');
@@ -23716,18 +24303,6 @@ phantasus.FilePicker = function (options) {
     }
   });
 
-  var $dropbox = $el.find('[name=dropbox]');
-  $dropbox.on('click', function (e) {
-    Dropbox.choose({
-      success: function (results) {
-        var val = results[0].link;
-        options.fileCallback(val);
-      },
-      linkType: 'direct',
-      multiselect: false
-
-    });
-  });
 
   var $google = $el.find('[name=google]');
   $google.on('click', function () {
@@ -25081,7 +25656,6 @@ phantasus.FormBuilder.prototype = {
       if (allowedInputs.all || allowedInputs.computer) options.push('My Computer');
       if (allowedInputs.all || allowedInputs.url) options.push('URL');
       if (allowedInputs.all || allowedInputs.geo) options.push('GEO Datasets');
-      if ((allowedInputs.all || allowedInputs.dropbox) && typeof Dropbox !== 'undefined') options.push('Dropbox');
       if (allowedInputs.all || allowedInputs.saved) options.push('Saved on server datasets');
       if (field.text != null) {
         options.push(field.text);
@@ -25097,9 +25671,7 @@ phantasus.FormBuilder.prototype = {
         if (isChoiceObject && choice.disabled) {
           html.push(' disabled');
         }
-        if (optionValue === 'Dropbox') {
-          html.push(' data-icon="fa fa-dropbox"');
-        } else if (optionValue === 'My Computer') {
+        if (optionValue === 'My Computer') {
           html.push(' data-icon="fa fa-desktop"');
         } else if (optionValue === 'URL') {
           html.push(' data-icon="fa fa-external-link"');
@@ -25177,41 +25749,23 @@ phantasus.FormBuilder.prototype = {
             var showTextInput = val === field.text;
             var showPreInput = val === 'Saved on server datasets';
 
-            if ('Dropbox' === val) {
-              var options = {
-                success: function (results) {
-                  var val = !isMultiple ? results[0].link
-                    : results.map(function (result) {
-                    return result.link;
-                  });
-                _this.setValue(name, val);
-                _this.trigger('change', {
-                  name: name,
-                  value: val
-                });
-              },
-              linkType: 'direct',
-              multiselect: isMultiple
-            };
-            Dropbox.choose(options);
-            _this.$form.find('[name=' + name + '_picker]').selectpicker('val', '');
-          } else if ('My Computer' === val) {
-            _this.$form.find('[name=' + name + '_file]')
-            .click();
-            _this.$form.find('[name=' + name + '_picker]').selectpicker('val', '');
-          }
+            if ('My Computer' === val) {
+              _this.$form.find('[name=' + name + '_file]')
+              .click();
+              _this.$form.find('[name=' + name + '_picker]').selectpicker('val', '');
+            }
 
-          _this.$form.find('#' + name + '_url')
-              .css('display', showUrlInput ? 'block' : 'none');
+            _this.$form.find('#' + name + '_url')
+                .css('display', showUrlInput ? 'block' : 'none');
 
-          _this.$form.find('[name=' + name + '_text]')
-              .css('display', showTextInput ? 'block' : 'none');
+            _this.$form.find('[name=' + name + '_text]')
+                .css('display', showTextInput ? 'block' : 'none');
 
-          _this.$form.find('#' + name + '_geo')
-              .css('display', showGSEInput ? 'block' : 'none');
+            _this.$form.find('#' + name + '_geo')
+                .css('display', showGSEInput ? 'block' : 'none');
 
-          _this.$form.find('#' + name + '_pre')
-              .css('display', showPreInput ? 'block' : 'none');
+            _this.$form.find('#' + name + '_pre')
+                .css('display', showPreInput ? 'block' : 'none');
         });
 
       // URL
@@ -25337,6 +25891,9 @@ phantasus.FormBuilder.prototype = {
       }
       if (disabled) {
         html.push(' disabled');
+      }
+      if (field.readonly) {
+        html.push(' readonly');
       }
       if (field.autocomplete != null) {
         html.push(' autocomplete="' + field.autocomplete + '"');
@@ -27130,7 +27687,14 @@ phantasus.RowStats.prototype = {
         }
       }
       if (this.rowCachedMin === this.rowCachedMax) {
-        this.rowCachedMin--;
+        this.rowCachedMax = this.rowCachedMax*2;
+        this.rowCachedMin = 0;
+
+        if (this.rowCachedMax < this.rowCachedMin) {
+          var a = this.rowCachedMax;
+          this.rowCachedMax = this.rowCachedMin;
+          this.rowCachedMin = a;
+        }
       }
       return true;
     }
@@ -30465,7 +31029,7 @@ phantasus.HeatMapTooltipProvider.vectorToString = function (vector, index, tipTe
   };
   if (vector != null) {
     var primaryVal = vector.getValue(index);
-    if (primaryVal != null && primaryVal != '') {
+    if (primaryVal != null && primaryVal !== '') {
       var primaryFields = vector.getProperties().get(
         phantasus.VectorKeys.FIELDS);
       if (primaryFields != null) {
@@ -31133,14 +31697,21 @@ phantasus.HeatMap = function (options) {
       $loadingImage: phantasus.Util.createLoadingEl(),
       menu: {
         File: [
-          'Open', 'Annotate', null, 'Save Image', 'Save Dataset', 'Save Session', null, 'Close Tab', null, 'Rename' +
-          ' Tab'],
+          'Open',
+          'Annotate',
+          phantasus.aboutDataset.prototype.toString(),
+          null,
+          'Save Image',
+          'Save Dataset',
+          'Save Session',
+          'Get permanent link',
+          null,
+          'Close Tab',
+          null,
+          'Rename Tab'],
         Tools: [
           'New Heat Map',
           null,
-          'Hierarchical Clustering',
-          null,
-          'Marker Selection',
           'Nearest Neighbors',
           'Create Calculated Annotation',
           null,
@@ -31149,22 +31720,18 @@ phantasus.HeatMap = function (options) {
           'Similarity Matrix',
           'Transpose',
           null,
-          'Chart',
-          null,
           'Sort/Group',
           'Filter',
           null,
-          'K-means',
-          'Limma',
-          'PCA Plot',
-          'Submit to Enrichr',
+          'Differential expression',
+          'Clustering',
+          'Plots',
+          'Pathway analysis',
           'Submit to Shiny GAM',
-          phantasus.gseaTool.prototype.toString(),
           'DEBUG: Probe Debug Tool',
           'DEBUG: Expose project'],
         View: ['Zoom In', 'Zoom Out', null, 'Fit To Window', 'Fit Rows To Window', 'Fit Columns To Window', null, '100%', null, 'Options'],
         Edit: [
-          'Copy Image',
           'Copy Selected Dataset',
           null,
           'Move Selected Rows To Top',
@@ -31283,7 +31850,7 @@ phantasus.HeatMap = function (options) {
           new phantasus.TabManager({
             landingPage: function () {
               if (_this.options.landingPage == null) {
-                _this.options.landingPage = new phantasus.LandingPage({tabManager: _this.tabManager});
+                _this.options.landingPage = new phantasus.LandingPage({tabManager: _this.tabManager, autoInit: false});
                 _this.options.landingPage.$el.prependTo(_this.$el);
               }
               return _this.options.landingPage;
@@ -32338,11 +32905,6 @@ phantasus.HeatMap.prototype = {
         var items = [];
         phantasus.Popup.showPopup(
           [
-
-            {
-              name: 'Copy Image',
-              class: 'copy'
-            },
             {
               name: 'Save Image (' + phantasus.Util.COMMAND_KEY + 'S)'
             },
@@ -32377,8 +32939,6 @@ phantasus.HeatMap.prototype = {
                   'text/plain',
                   text);
               }
-            } else if (item === 'Copy Image') {
-              _this.getActionManager().execute('Copy Image', {event: event});
             } else {
               //console.log(item + ' unknown.');
             }

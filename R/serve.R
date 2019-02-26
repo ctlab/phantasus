@@ -51,6 +51,7 @@ servePhantasus <- function(host = '0.0.0.0',
             phantasusPreloadedDir = preloadedDir)
 
     annotationDBMeta(cacheDir)
+    FGSEAmeta(cacheDir)
 
     if (!opencpu:::win_or_mac()) {
         run_worker <- NULL
@@ -133,6 +134,8 @@ servePhantasus <- function(host = '0.0.0.0',
 
     utils::capture.output(type = "output", {
         app <- Rook::URLMap$new(`/ocpu` = opencpu:::rookhandler("/ocpu", worker_cb=run_worker),
+                                `/geo` = Rook::Static$new(urls = c("/geo"), root = cacheDir),
+                                `/preloaded` = Rook::Static$new(urls = c("/preloaded"), root = cacheDir),
                                 `/?` = Rook::Static$new(urls = c("/"),
                                                         root = staticRoot))
 

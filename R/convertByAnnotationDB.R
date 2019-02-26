@@ -98,7 +98,7 @@ annotationDBMeta <- function (cacheDir) {
         return()
     }
 
-    message('Populating AnnotationDB cache')
+    message('Populating AnnotationDB meta')
     dbFiles <- list.files(annotDir, '*.sqlite$', full.names = TRUE)
     for (dbFile in dbFiles) {
         db <- loadDb(dbFile)
