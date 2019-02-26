@@ -14,7 +14,7 @@ map $http_accept_encoding $client_likes_gzip {
 	"~gzip" 1;
 	"~deflate" 1;
 }
-proxy_cache_path /var/phantasus/cache/nginx levels=1:2 keys_zone=opencpu:8m max_size=1000m inactive=10y;
+proxy_cache_path /var/phantasus/cache/nginx levels=1:2 keys_zone=opencpu:8m max_size=1000m inactive=1w;
 
 server {
     listen 80 default_server;
@@ -84,14 +84,15 @@ server {
         proxy_cache opencpu;
         proxy_cache_methods POST;
         proxy_cache_valid 400 404 5m;
+        proxy_cache_valid 200 201 1w;
         proxy_cache_key "$request_method$request_uri$request_body";
         proxy_no_cache $request_body_file;
         proxy_buffers 8 32k;
         proxy_buffer_size 64k;
+        proxy_ignore_headers Cache-Control;
 
         proxy_cache_bypass $request_body_file $opencpu_bypass_cache;
 
         add_header X-ocpu-cache $upstream_cache_status;
-
     }
 }
