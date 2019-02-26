@@ -1,5 +1,8 @@
-commit 86ca8d797efbeeed37c2f5d81e92077f4e980c06
+commit c20e426228078a6b51256af117d7305ce4b0c618
+Merge: 8c8efd8 86ca8d7
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Mon Feb 25 12:55:30 2019 +0300
+Date:   Tue Feb 26 19:30:45 2019 +0300
 
-    Removed preflight binary loading
+    Merge pull request #58 from ctlab/develop
+    
+    Merge to master
