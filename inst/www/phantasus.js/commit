@@ -1,8 +1,5 @@
-commit c20e426228078a6b51256af117d7305ce4b0c618
-Merge: 8c8efd8 86ca8d7
+commit 3ee480b8d8d29ab0caaa76b165b6d0db7d7fae35
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Tue Feb 26 19:30:45 2019 +0300
+Date:   Thu Feb 28 12:25:31 2019 +0300
 
-    Merge pull request #58 from ctlab/develop
-    
-    Merge to master
+    Preloaded name fixed
