@@ -57,7 +57,8 @@ loadGEO <- function(name, type = NA) {
         writeBin(protolite::serialize_pb(files), filePath)
     }
 
-    urls <-c(urls, unlist(strsplit(filePath, cacheDir))[2])
+
+    urls <-c(urls, unlist(strsplit(filePath, cacheDir, fixed = TRUE))[2])
     jsonlite::toJSON(urls)
 }
 
