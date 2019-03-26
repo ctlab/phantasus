@@ -58,6 +58,9 @@ server {
         add_header Cache-Control "public";
     }
 
+    location ~ /ocpu/tmp/$ {
+    	return 403;
+    }
 
     location /ocpu {
         gzip on;
