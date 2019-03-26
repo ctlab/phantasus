@@ -527,6 +527,13 @@ reparseCachedESs <- function(destdir,
 #' checkGPLs('GSE14308')
 #' }
 checkGPLs <- function(name) {
+    spl <- unlist(strsplit(name, "-", fixed=TRUE))
+    if (length(spl) == 2) {
+        gpls <- jsonlite::fromJSON(checkGPLs(spl[1]))
+        gpls <- intersect(gpls, name)
+        return(jsonlite::toJSON(gpls))
+    }
+
     mirrorPath <- getOption('phantasusMirrorPath')
     if (is.null(mirrorPath)) {
       mirrorPath <- "https://ftp.ncbi.nlm.nih.gov"
@@ -550,18 +557,36 @@ checkGPLs <- function(name) {
     url <- sprintf(gdsurl, mirrorPath,
                    if (type == "GDS") "datasets" else "series", stub, name)
 
+    cachePath <- paste0(sprintf(gdsurl, cacheDir,
+                        if (type == "GDS") "datasets" else "series", stub, name), "gpls")
+
+    dir.create(dirname(cachePath), recursive = TRUE, showWarnings = FALSE)
+
+    if (file.exists(cachePath)) {
+        gpls <- readLines(cachePath)
+        if (length(gpls) != 0) {
+            return(jsonlite::toJSON(gpls))
+        }
+    }
+
+    if (type != "GDS") {
+        url <- paste0(url, "matrix/")
+    }
+
     gpls <- c()
 
     tryCatch({
-        httr::GET(url)
-        if (httr::status_code(httr::GET(url)) == 404) {
+        resp <- httr::GET(url)
+        if (httr::status_code(resp) == 404) {
             warning("No such dataset")
             return(jsonlite::toJSON(c()))
         } else {
             if (type == "GDS") {
                 gpls <- c(name)
             } else {
-                file.names <- GEOquery:::getDirListing(paste0(url, "matrix/"))
+                con <- rawConnection(resp$content)
+                file.names <- GEOquery:::getDirListing(con)
+                close(con)
 
                 file.names <- file.names[grepl(pattern = paste0("^", name),
                                             x = file.names)]
@@ -575,24 +600,13 @@ checkGPLs <- function(name) {
                 gpls <- file.names
             }
 
+            writeLines(gpls, cachePath)
             return(jsonlite::toJSON(gpls))
         }
     },
     error = function(e) {
-        message(paste("Problems establishing connection.",
-                        "Trying to find corresponding files in cache."))
-
-        files <- list.files(path = cacheDir)
-
-        corresponding <- take(sapply(files[grep(x = files,
-                                    pattern = paste0(name, "[-_].*(gz|rda)$"))],
-                                    FUN = function(x) { strsplit(x, ".", fixed = TRUE) }), 1)
-        gpls <- unique(take(sapply(corresponding,
-                            FUN = function(x) { strsplit(x, "_") }), 1))
-        if (length(gpls) == 0) {
-            warning("No corresponding files were found")
-        }
-        return(jsonlite::toJSON(gpls))
+        message("Problems establishing connection.")
+        return(jsonlite::toJSON(c()))
     })
 }
 

@@ -62,6 +62,15 @@ test_that("checkGPLs counts gpls correctly", {
     options(phantasusMirrorPath = NULL)
 })
 
+test_that("checkGPLs works with fully specified name", {
+    options(phantasusMirrorPath = "https://genome.ifmo.ru/files/software/phantasus")
+
+    expect_equal(fromJSON(checkGPLs("GSE27112-GPL6885")), c("GSE27112-GPL6885"))
+
+    options(phantasusMirrorPath = NULL)
+})
+
+
 test_that("checkGPLs counts existing files correctly without connection", {
     options(phantasusMirrorPath = "https://notworkingdomain",
             phantasusCacheDir = system.file("testdata", package="phantasus"))
