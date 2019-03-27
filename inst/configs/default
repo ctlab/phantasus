@@ -4,8 +4,9 @@ map $request_method $not_post {
 }
 
 map $http_cache_control $opencpu_bypass_cache {
-	default $not_post;
 	"" 0;
+	"no-cache" 1;
+	default $not_post;
 }
 
 # Apache returns gzip for either deflate or gzip
@@ -95,6 +96,7 @@ server {
         proxy_ignore_headers Cache-Control;
 
         proxy_cache_bypass $request_body_file $opencpu_bypass_cache;
+        proxy_no_cache $opencpu_bypass_cache;
 
         add_header X-ocpu-cache $upstream_cache_status;
     }
