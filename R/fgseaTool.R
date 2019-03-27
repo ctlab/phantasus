@@ -53,11 +53,12 @@ performFGSEA <- function (dbName, ranks) {
     return (jsonlite::toJSON(fgseaMultilevel(pathways,
                                              rranks,
                                              sampleSize = 101,
-                                             absEps = 0.5e-10,
+                                             absEps = 1e-10,
                                              minSize = 15,
                                              maxSize = 500,
                                              nproc = 1)
-                             , digits = NA))
+                             , digits = NA
+                             , na="string"))
 }
 
 queryPathway <- function (dbName, pathwayName) {
