@@ -137,9 +137,7 @@ servePhantasus <- function(host = '0.0.0.0',
             static <- Rook::File$new(targetDirectory)
 
             function (env) {
-                message(env$PATH_INFO)
                 env$PATH_INFO <- unlist(strsplit(env$PATH_INFO, subPath, fixed=TRUE))[2]
-                message(env$PATH_INFO)
                 static$call(env)
             }
         }
