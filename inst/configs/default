@@ -23,13 +23,16 @@ server {
     gzip_min_length 5000;
 
     location / {
-        root /var/www/html/;
+        return 301 http://$host$request_uri/phantasus;
+    }
+
+    location /phantasus {
+        root /var/www/html/phantasus;
         gzip on;
         gzip_vary on;
         gzip_types text/plain text/css application/json application/x-javascript text/javascript application/javascript;
         autoindex off;
     }
-
 
     location /phantasus/geo {
         gzip on;
@@ -59,11 +62,11 @@ server {
         add_header Cache-Control "public";
     }
 
-    location ~ /ocpu/tmp/$ {
+    location ~ /phantasus/ocpu/tmp/$ {
     	return 403;
     }
 
-    location /ocpu {
+    location /phantasus/ocpu {
         gzip on;
         gzip_types *;
         gzip_vary on;

@@ -133,11 +133,22 @@ servePhantasus <- function(host = '0.0.0.0',
 
 
     utils::capture.output(type = "output", {
-        app <- Rook::URLMap$new(`/ocpu` = opencpu:::rookhandler("/ocpu", worker_cb=run_worker),
-                                `/geo` = Rook::Static$new(urls = c("/geo"), root = cacheDir),
-                                `/preloaded` = Rook::Static$new(urls = c("/preloaded"), root = cacheDir),
-                                `/?` = Rook::Static$new(urls = c("/"),
-                                                        root = staticRoot))
+        subPathStatic <- function (targetDirectory, subPath) {
+            static <- Rook::File$new(targetDirectory)
+
+            function (env) {
+                message(env$PATH_INFO)
+                env$PATH_INFO <- unlist(strsplit(env$PATH_INFO, subPath, fixed=TRUE))[2]
+                message(env$PATH_INFO)
+                static$call(env)
+            }
+        }
+
+        app <- Rook::URLMap$new(`/phantasus/ocpu` = opencpu:::rookhandler("/phantasus/ocpu", worker_cb=run_worker),
+                                `/phantasus/geo` = subPathStatic(cacheDir, '/phantasus/'),
+                                `/phantasus/preloaded` = subPathStatic(cacheDir, '/phantasus/'),
+                                `/phantasus/?` = subPathStatic(staticRoot, '/phantasus/'),
+                                `/?` = Rook::Redirect("/phantasus/index.html"))
 
         tryCatch({
             server <- startServer(host, port, app = app)
