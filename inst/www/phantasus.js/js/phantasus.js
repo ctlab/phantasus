@@ -4372,10 +4372,13 @@ phantasus.SavedSessionReader.prototype = {
       if (!err) {
         var datasetTitle = "permanent linked dataset";
         var experimentData = dataset[0].getExperimentData();
-        if (experimentData) datasetTitle = experimentData.title.values.toString() || datasetTitle;
+        var seriesName = dataset[0].seriesNames[0];
+
+        if (experimentData) datasetTitle = experimentData.title.values.toString() || seriesName || datasetTitle;
+        else datasetTitle = seriesName || datasetTitle;
 
         phantasus.datasetHistory.store({
-          name: name.name,
+          name: name.sessionName,
           description: datasetTitle,
           openParameters: {
             file: name.sessionName,
@@ -4385,9 +4388,15 @@ phantasus.SavedSessionReader.prototype = {
             }
           }
         });
+
+        dataset[0].setESSession(new Promise(function (rs) { rs(sessionWithLoadedMeta); }));
       }
 
+      callback(err, dataset);
+    };
 
+    var req = ocpu.call('loadSession', name, function(session) {
+      sessionWithLoadedMeta = session;
       sessionWithLoadedMeta.loc = sessionWithLoadedMeta.loc.split(sessionWithLoadedMeta.key).join(name.sessionName);
       sessionWithLoadedMeta.key = name.sessionName;
       sessionWithLoadedMeta.getLoc = function () {
@@ -4398,16 +4407,11 @@ phantasus.SavedSessionReader.prototype = {
         return sessionWithLoadedMeta.key;
       };
 
-      dataset[0].setESSession(new Promise(function (rs) { rs(sessionWithLoadedMeta); }));
-
-      callback(err, dataset);
-    };
-
-    var req = ocpu.call('loadSession', name, function(session) {
-      sessionWithLoadedMeta = session;
-
-      phantasus.ParseDatasetFromProtoBin.parse(session, afterLoaded, { preloaded : true });
+      phantasus.ParseDatasetFromProtoBin.parse(session, afterLoaded, {
+        preloaded : true
+      });
     });
+
     req.fail(function () {
       callback(req.responseText);
     })
@@ -21363,16 +21367,16 @@ phantasus.ActionManager = function () {
       dataset.getESSession().then(function (es) {
         var key = es.getKey();
         var location = window.location;
-        var newLocation = location.origin + location.pathname + '?session=' + key;
+        var datasetName = options.heatMap.getName();
 
-        var publishReq = ocpu.call('publishSession', { sessionName: key }, function (tempSession) {
+        var publishReq = ocpu.call('publishSession', { sessionName: key, datasetName: datasetName }, function (tempSession) {
           tempSession.getObject(function (json) {
             var parsedJSON = JSON.parse(json);
-            if (!parsedJSON.result) {
+            if (!parsedJSON.result === false) {
               throw new Error('Failed to make session accessible');
             }
 
-
+            var newLocation = location.origin + location.pathname + '?session=' + tempSession.key;
             var formBuilder = new phantasus.FormBuilder();
             formBuilder.append({
               name: 'Link',
@@ -32572,6 +32576,9 @@ phantasus.HeatMap.prototype = {
   },
   setName: function (name) {
     this.options.name = name;
+    if (this.tabId) {
+      this.tabManager.setTabName(this.tabId, name);
+    }
   },
   getName: function () {
     return this.options.name;
@@ -37787,6 +37794,9 @@ phantasus.TabManager.prototype = {
    */
   setTabTitle: function (id, title) {
     this._getA(id).attr('title', title);
+  },
+  setTabName: function (id, name) {
+    this._getA(id).contents().first().replaceWith(name + '&nbsp;');
   },
   _getA: function (id) {
     if (id[0] === '#') {
