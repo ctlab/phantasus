@@ -48,7 +48,7 @@ loadGEO <- function(name, type = NA) {
     ess <- getES(name, type, destdir = cacheDir, mirrorPath = mirrorPath)
 
     files <- list()
-    assign("es", tail(ess, n=1)[[1]], envir = parent.frame())
+    assign("es", utils::tail(ess, n=1)[[1]], envir = parent.frame())
     if (!file.exists(filePath)) {
         for (i in seq_along(ess)) {
             seriesName <- if (!grepl(pattern = "-", name) && length(ess) > 1)

@@ -114,7 +114,7 @@ annotationDBMeta <- function (cacheDir) {
             })
 
             humanMeta <- t(data.frame(strsplit(columns, " - ", fixed=TRUE)))
-            cat(species(db), "\n", file=columnFile)
+            cat(AnnotationDbi::species(db), "\n", file=columnFile)
             suppressWarnings(write.table(humanMeta, file=columnFile, quote=FALSE, sep='\t',  row.names=FALSE, col.names=c('FIELD', 'HINT'), append=TRUE))
         }
     }
