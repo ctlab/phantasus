@@ -21282,6 +21282,7 @@ phantasus.ActionManager = function () {
     name: 'Clustering',
     children: [
       'K-means',
+      'Nearest Neighbors',
       'Hierarchical Clustering'],
     icon: 'fa'
   });
@@ -31745,9 +31746,7 @@ phantasus.HeatMap = function (options) {
         Tools: [
           'New Heat Map',
           null,
-          'Nearest Neighbors',
           'Create Calculated Annotation',
-          null,
           'Adjust',
           'Collapse',
           'Similarity Matrix',
