@@ -19010,6 +19010,16 @@ phantasus.PcaPlotTool.prototype = {
 
           Plotly.newPlot(plot, data, layout, config).then(Plotly.annotate);
           _this.exportButton.toggle(true);
+
+          plot.on('plotly_selected', function(eventData) {
+            var indexes = new phantasus.Set();
+            eventData.points.forEach(function (point) {
+              indexes.add(point.pointIndex);
+            });
+
+            _this.project.getColumnSelectionModel().setViewIndices(indexes, true);
+          });
+
         };
 
         if (!_this.pca) {
@@ -21361,7 +21371,7 @@ phantasus.ActionManager = function () {
 
   this.add({
     ellipsis: true,
-    name: 'Get permanent link',
+    name: 'Get link to a dataset',
     cb: function (options) {
       var dataset = options.heatMap.getProject().getFullDataset();
       dataset.getESSession().then(function (es) {
@@ -21394,8 +21404,10 @@ phantasus.ActionManager = function () {
               document.execCommand('copy');
             });
 
+            formBuilder.appendContent('<h4>Please note that link will be valid for 30 days.</h4>');
+
             phantasus.FormBuilder.showInModal({
-              title: 'Get permanent link to a dataset',
+              title: 'Get link to a dataset',
               close: 'Close',
               html: formBuilder.$form,
               focus: options.heatMap.getFocusEl()
@@ -31725,7 +31737,7 @@ phantasus.HeatMap = function (options) {
           'Save Image',
           'Save Dataset',
           'Save Session',
-          'Get permanent link',
+          'Get link to a dataset',
           null,
           'Close Tab',
           null,
