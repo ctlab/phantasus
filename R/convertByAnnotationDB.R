@@ -40,7 +40,7 @@ convertByAnnotationDB <- function (es, dbName, columnName, columnType, keyType) 
                            multiVals = function (x) { paste0(x, collapse="///")})
 
     if (keyType == 'ENSEMBL') {
-        # remove versions
+        convertedData <- sapply(convertedData, function (x) unlist(strsplit(x, '[.]'))[1] )
     }
 
     fData(es)[[keyType]] <- convertedData
