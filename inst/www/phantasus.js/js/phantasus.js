@@ -14834,7 +14834,7 @@ phantasus.ChartTool = function (chartOptions) {
       if (!phantasus.ChartTool.prototype.warningShown) {
         phantasus.FormBuilder.showInModal({
           title: 'Warning',
-          html: 'Selected 100 or more genes in dataset. Lines and points of profile were automatically disabled due performance concerns. Process with caution.',
+          html: 'Selected 100 or more genes in dataset. Lines and points were automatically disabled due to performance concerns. You can enable them by yourself. Process with caution.',
           z: 10000
         });
         phantasus.ChartTool.prototype.warningShown = true;
