@@ -177,3 +177,39 @@ updateARCHS4 <- function (cacheDir = "/var/phantasus/cache/archs4") {
                   destfile = paste(cacheDir, "mouse_matrix.h5", sep=.Platform$file.sep),
                   mode = "wb")
 }
+
+selfCheck <- function () {
+    cacheDir <- getOption("phantasusCacheDir")
+    preloadedDir <- getOption("phantasusPreloadedDir")
+
+    if (!is.null(preloadedDir) && dir.exists(preloadedDir)) {
+        preloadedFiles <- list.files(preloadedDir)
+        message(paste(length(preloadedFiles), 'preloaded datasets are available'))
+    } else {
+        message('Preloaded dir is not set')
+    }
+
+    archs4Files <- list.files(paste(file.path(cacheDir), 'archs4', sep = .Platform$file.sep), '*.h5', full.names = TRUE)
+    if (length(archs4Files)) {
+        message(paste(length(archs4Files), 'archs4 files are available'))
+    } else {
+        message('No archs4 provided RNA-seq will load without matrices')
+    }
+
+
+    annotDir <- file.path(cacheDir, "annotationdb")
+    dbFiles <- list.files(annotDir, '*.sqlite$', full.names = TRUE)
+    if (length(dbFiles)) {
+        message(paste(length(dbFiles), 'annotationDb are available'))
+    } else {
+        message('No annotationDb provided')
+    }
+
+    fgseaDir <- file.path(cacheDir, 'fgsea')
+    fgseaFiles <- list.files(fgseaDir, '*.rds', full.names = FALSE)
+    if (length(fgseaFiles)) {
+        message(paste(length(fgseaFiles), 'fgsea tables are available'))
+    } else {
+        message('No fgsea tables provided')
+    }
+}

@@ -97,7 +97,6 @@ queryAnnotationDBMeta <- function () {
 annotationDBMeta <- function (cacheDir) {
     annotDir <- file.path(cacheDir, "annotationdb")
     if (!dir.exists(annotDir)) {
-        message('No annotationdb files provided')
         return()
     }
 
