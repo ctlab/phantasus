@@ -58,7 +58,7 @@ RUN printf "window.PHANTASUS_BUILD='$PHANTASUS_BUILD';" >> /root/phantasus/inst/
 RUN cp -r /root/phantasus/inst/www/phantasus.js /var/www/html/phantasus
 RUN cp /root/phantasus/inst/configs/default /etc/nginx/sites-available/default
 RUN cp /root/phantasus/inst/configs/opencpu.conf /etc/opencpu/server.conf
-RUN cp /root/phantasus/inst/configs/index.nginx.html /var/www/html/
+RUN cp /root/phantasus/inst/configs/index.html /var/www/html/
 RUN rm -rf /root/phantasus/inst
 
 EXPOSE 80
