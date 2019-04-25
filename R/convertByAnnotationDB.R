@@ -13,6 +13,7 @@
 #'
 #' @param keyType Type of mapped indexes
 #'
+#' @return JSON object with a vector of converted IDs
 #' @import AnnotationDbi
 #'
 #' @examples
@@ -83,6 +84,8 @@ queryAnnotationDBMeta <- function () {
 #' provided sqlite files for AnnotationDB
 #'
 #' @param cacheDir cacheDir for phantasus
+#'
+#' @return nothing
 #'
 #' @import AnnotationDbi
 #'

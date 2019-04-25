@@ -66,7 +66,7 @@ gseaPlot <- function(es, rankBy, selectedGenes, width, height,
     pvalString <- if (fgseaRes$pval < absEps) {
         sprintf("<%.2g", absEps)
     } else {
-        sprintf("≈%.2g", fgseaRes$pval)
+        sprintf("\u2248%.2g", fgseaRes$pval)
     }
 
     labelString <- sprintf("p-value%s, NES=%.2f", pvalString, fgseaRes$NES)

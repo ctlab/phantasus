@@ -9,6 +9,9 @@ annotationDBMeta(cacheDir)
 \arguments{
 \item{cacheDir}{cacheDir for phantasus}
 }
+\value{
+nothing
+}
 \description{
 \code{createES} function creates an rds file containing meta information of
 provided sqlite files for AnnotationDB

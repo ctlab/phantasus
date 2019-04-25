@@ -17,6 +17,9 @@ convertByAnnotationDB(es, dbName, columnName, columnType, keyType)
 
 \item{keyType}{Type of mapped indexes}
 }
+\value{
+JSON object with a vector of converted IDs
+}
 \description{
 \code{createES} function creates an rds file containing meta information of
 provided sqlite files for AnnotationDB

@@ -4,7 +4,8 @@
 \alias{collapseDataset}
 \title{Collapse dataset}
 \usage{
-collapseDataset(es, isRows = TRUE, selectOne = FALSE, fn, fields)
+collapseDataset(es, isRows = TRUE, selectOne = FALSE, fn, fields,
+  removeEmpty = TRUE)
 }
 \arguments{
 \item{es}{Expression set}
@@ -16,6 +17,8 @@ collapseDataset(es, isRows = TRUE, selectOne = FALSE, fn, fields)
 \item{fn}{select/merge function}
 
 \item{fields}{fields to unique on}
+
+\item{removeEmpty}{remove unannotated genes}
 }
 \value{
 Nothing. Collapsed dataset will be assigned to es in environment
