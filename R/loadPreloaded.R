@@ -35,10 +35,10 @@ loadPreloaded <- function(name) {
 
     ess <- NULL
 
-    if (class(loaded) == "ExpressionSet") {
+    if (is(loaded, "ExpressionSet")) {
         ess <- list()
         ess[[name]] <- loaded
-    } else if (class(loaded) == "list") {
+    } else if (is(loaded, "list")) {
         ess <- loaded
         if (!all(unlist(lapply(loaded, class)) == "ExpressionSet")) {
             stop(wrongFormat)
