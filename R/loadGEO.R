@@ -22,6 +22,7 @@
 #'     loadGEO("GDS4922")
 #' }
 #'
+#' @importFrom utils tail
 #' @import Biobase
 #' @import GEOquery
 loadGEO <- function(name, type = NA) {

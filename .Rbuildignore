@@ -1,7 +1,7 @@
 ^.*/.Rproj$
 ^\.Rproj\.user$
 
-vignettes/phantasus-tutorial_cache 
+vignettes/phantasus-tutorial_cache
 ^tests/testthat/cache$
 ^inst/www/phantasus.js/.git$
 ^inst/www/phantasus.js/.idea$
@@ -41,3 +41,6 @@ vignettes/phantasus-tutorial_cache
 ^.*bin$
 ^.travis.yml$
 ^appveyor\.yml$
+.dockerignore
+docker-compose.yml
+Dockerfile

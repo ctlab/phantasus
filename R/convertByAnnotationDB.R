@@ -14,7 +14,7 @@
 #' @param keyType Type of mapped indexes
 #'
 #' @return JSON object with a vector of converted IDs
-#' @import AnnotationDbi
+#' @importFrom AnnotationDbi loadDb mapIds
 #'
 #' @examples
 #' \dontrun{
@@ -87,7 +87,7 @@ queryAnnotationDBMeta <- function () {
 #'
 #' @return nothing
 #'
-#' @import AnnotationDbi
+#' @importFrom AnnotationDbi keys species columns loadDb
 #'
 #' @examples
 #' \dontrun{
