@@ -1863,7 +1863,7 @@ phantasus.Util.getMessages = function(session) {
 };
 
 phantasus.Util.setLibrary = function (libraryName) {
-  if (!window.libraryPrefix) window.libraryPrefix = '/';
+  if (!window.libraryPrefix) window.libraryPrefix = '/phantasus/';
 
   ocpu.seturl(window.libraryPrefix + 'ocpu/library/' + libraryName + '/R');
 };
@@ -1992,6 +1992,22 @@ phantasus.Util.customToolWaiter = function (promise, toolName, heatMap) {
   promise.always(function () {
     $dialog.remove();
   });
+};
+
+phantasus.Util.browserCheck = function () {
+  var ua = navigator.userAgent;
+
+  var isFirefox = typeof InstallTrigger !== 'undefined';
+  var isSafari = /constructor/i.test(window.HTMLElement) || (function (p) { return p.toString() === "[object SafariRemoteNotification]"; })(!window['safari'] || (typeof safari !== 'undefined' && safari.pushNotification));
+  var isChrome = !!window.chrome && (!!window.chrome.webstore || !!window.chrome.csi);
+  var test = [isFirefox, isSafari, isChrome];
+
+  if (test.every(function (val) {return !val;})) {
+    phantasus.FormBuilder.showInModal({
+      title: 'Unsupported browser.',
+      html: 'Please note that Phantasus works best with Chrome, Firefox, Safari browsers'
+    });
+  }
 };
 
 phantasus.BlobFromPath = function () {

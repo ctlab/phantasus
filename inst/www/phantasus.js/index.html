@@ -27,7 +27,6 @@
 
 <script type="text/javascript">
   console.log(PHANTASUS_VERSION,'-',PHANTASUS_BUILD);
-  window.libraryPrefix = '/phantasus/';
   phantasus.DEBUG_ENABLED = phantasus.Util.getURLParameter('debug') !== null;
   phantasus.Util.setLibrary('phantasus');
   phantasus.Util.loadTrackingCode();
@@ -40,6 +39,7 @@
     });
   };
 
+  phantasus.Util.browserCheck();
   var landingPage = new phantasus.LandingPage();
 </script>
 </body>
