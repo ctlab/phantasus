@@ -497,11 +497,15 @@ reparseCachedESs <- function(destdir,
         message(paste0("Reparsing dataset ", name))
         destfile <- file.path(geoDir, paste0(name, ".rda"))
         bakfile <- paste0(destfile, ".bak")
+        binfile <- file.path(geoDir, paste0(name, ".bin"))
+        if (file.exists(binfile)) {
+            file.remove(binfile)
+        }
+
         tryCatch({
             file.rename(destfile, bakfile)
             getES(name, destdir = destdir, mirrorPath = mirrorPath)
             file.remove(bakfile)
-            file.remove(file.path(geoDir, paste0(name, ".bin")))
         }, error = function(e) {
             message(paste0("Error occured while reparsing, old file stored as ",
                            bakfile))
