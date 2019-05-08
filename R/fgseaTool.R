@@ -11,7 +11,6 @@ availableFGSEADatabases <- function () {
 FGSEAmeta <- function (cacheDir) {
     dbDir <- file.path(cacheDir, 'fgsea')
     if (!dir.exists(dbDir)) {
-        message('No fgsea files provided')
         return()
     }
 

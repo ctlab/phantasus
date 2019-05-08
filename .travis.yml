@@ -44,7 +44,7 @@ bioc_packages:
   - BiocStyle
 
 before_install:
-  - if [ ${TRAVIS_OS_NAME} = 'osx' ]; then brew unlink python; brew install protobuf; fi
+  - if [ ${TRAVIS_OS_NAME} = 'osx' ]; then brew unlink python; brew install protobuf; brew install cairo; fi
   - R -e 'install.packages("devtools")'
   - R -e 'source("https://bioconductor.org/biocLite.R"); biocLite()'
   - R -e 'devtools::install_github("ctlab/fgsea", tag="1.9.4")'

@@ -50,6 +50,7 @@ servePhantasus <- function(host = '0.0.0.0',
     options(phantasusCacheDir = cacheDir,
             phantasusPreloadedDir = preloadedDir)
 
+    selfCheck()
     annotationDBMeta(cacheDir)
     FGSEAmeta(cacheDir)
 

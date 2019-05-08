@@ -1,8 +1,16 @@
 sessionExists <- function(sessionName) {
     ocpuRoot <- strsplit(getwd(), 'ocpu-temp')[[1]][1]
-    sessionPath <- paste(ocpuRoot, 'ocpu-store', sessionName, sep=.Platform$file.sep)
+    sessionPath <- file.path(ocpuRoot, 'ocpu-store', sessionName)
 
-    RDataPath <- paste(sessionPath, '.RData', sep=.Platform$file.sep)
+    savedPath <- file.path(sessionPath, 'sess.bin')
+    RDataPath <- file.path(sessionPath, '.RData')
+
+    if (file.exists(savedPath)) {
+        return (jsonlite::toJSON(list(result=TRUE), auto_unbox = TRUE))
+    }
+
+    #-----------------LEGACY-----------------------------------
+
     if (file.exists(RDataPath)) {
         env <- new.env()
         load(RDataPath, envir = env)
@@ -14,9 +22,9 @@ sessionExists <- function(sessionName) {
     return (jsonlite::toJSON(list(result=FALSE), auto_unbox = TRUE))
 }
 
-publishSession <- function (sessionName) {
+publishSession <- function (sessionName, datasetName = sessionName) {
     ocpuRoot <- strsplit(getwd(), 'ocpu-temp')[[1]][1]
-    sessionPath <- paste(ocpuRoot, 'ocpu-store', sessionName, sep=.Platform$file.sep)
+    sessionPath <- file.path(ocpuRoot, 'ocpu-store', sessionName)
 
     RDataPath <- paste(sessionPath, '.RData', sep=.Platform$file.sep)
     if (file.exists(RDataPath)) {
@@ -24,18 +32,30 @@ publishSession <- function (sessionName) {
         load(RDataPath, envir = env)
 
         if (!is.null(env$es)) { # this session is for actual dataset
-            attr(env$es, 'published') <- TRUE
-            save(list = ls(all.names = TRUE, env), file = file.path(sessionPath, ".RData"), envir = env)
-            return (jsonlite::toJSON(list(result=TRUE), auto_unbox = TRUE))
+            result <- list()
+            datasetName <- ifelse(nchar(datasetName) > 0, datasetName, sessionName)
+            result[[datasetName]] <- writeToList(env$es)
+            binaryFile <- file.path(getwd(), 'sess.bin')
+
+            writeBin(protolite::serialize_pb(result), binaryFile)
+            assign("es", env$es, envir = parent.frame())
+            return (jsonlite::toJSON(basename(binaryFile)))
         }
     }
 
-    return (jsonlite::toJSON(list(result=FALSE), auto_unbox = TRUE))
+    stop('Invalid session')
 }
 
 loadSession <- function (sessionName) {
     ocpuRoot <- strsplit(getwd(), 'ocpu-temp')[[1]][1]
-    sessionPath <- paste(ocpuRoot, 'ocpu-store', sessionName, sep=.Platform$file.sep)
+    sessionPath <- file.path(ocpuRoot, 'ocpu-store', sessionName)
+
+    savedPath <- paste(sessionPath, 'sess.bin', sep=.Platform$file.sep)
+    if (file.exists(savedPath)) {
+        return (jsonlite::toJSON(basename(savedPath)))
+    }
+
+    #---------------------LEGACY-------------------------------------
 
     RDataPath <- paste(sessionPath, '.RData', sep=.Platform$file.sep)
     if (file.exists(RDataPath)) {
@@ -45,10 +65,10 @@ loadSession <- function (sessionName) {
             stop('Invalid session key')
         }
 
-        result <- list(es=writeToList(es))
-        f <- tempfile(pattern = "session", tmpdir = getwd(), fileext = ".bin")
-        writeBin(protolite::serialize_pb(result), f)
-        return (jsonlite::toJSON(basename(f)))
+        result <- list()
+        result[[sessionName]] <- writeToList(es)
+        writeBin(protolite::serialize_pb(result), savedPath)
+        return (jsonlite::toJSON(basename(savedPath)))
     }
 
     stop('Invalid session key')

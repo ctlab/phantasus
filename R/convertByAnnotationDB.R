@@ -40,7 +40,7 @@ convertByAnnotationDB <- function (es, dbName, columnName, columnType, keyType) 
                            multiVals = function (x) { paste0(x, collapse="///")})
 
     if (keyType == 'ENSEMBL') {
-        # remove versions
+        convertedData <- sapply(convertedData, function (x) unlist(strsplit(x, '[.]'))[1] )
     }
 
     fData(es)[[keyType]] <- convertedData
@@ -97,7 +97,6 @@ queryAnnotationDBMeta <- function () {
 annotationDBMeta <- function (cacheDir) {
     annotDir <- file.path(cacheDir, "annotationdb")
     if (!dir.exists(annotDir)) {
-        message('No annotationdb files provided')
         return()
     }
 
@@ -114,7 +113,7 @@ annotationDBMeta <- function (cacheDir) {
             })
 
             humanMeta <- t(data.frame(strsplit(columns, " - ", fixed=TRUE)))
-            cat(species(db), "\n", file=columnFile)
+            cat(AnnotationDbi::species(db), "\n", file=columnFile)
             suppressWarnings(write.table(humanMeta, file=columnFile, quote=FALSE, sep='\t',  row.names=FALSE, col.names=c('FIELD', 'HINT'), append=TRUE))
         }
     }
