@@ -2327,47 +2327,45 @@ phantasus.ParseDatasetFromProtoBin = function () {
 };
 
 phantasus.ParseDatasetFromProtoBin.parse = function (session, callback, options) {
-  session.getObject(function(success) {
-    var response = JSON.parse(success)[0];
-    var filePath = options.pathFunction ?
-      options.pathFunction(response) :
-      phantasus.Util.getFilePath(session, response);
+  var response = JSON.parse(session.txt)[0];
+  var filePath = options.pathFunction ?
+    options.pathFunction(response) :
+    phantasus.Util.getFilePath(session, response);
 
-    var r = new FileReader();
+  var r = new FileReader();
 
-    r.onload = function (e) {
-      var contents = e.target.result;
-      var ProtoBuf = dcodeIO.ProtoBuf;
-      ProtoBuf.protoFromFile("./message.proto", function (error, success) {
-        if (error) {
-          throw new Error(error);
-        }
-        var builder = success,
-          rexp = builder.build("rexp"),
-          REXP = rexp.REXP,
-          rclass = REXP.RClass;
+  r.onload = function (e) {
+    var contents = e.target.result;
+    var ProtoBuf = dcodeIO.ProtoBuf;
+    ProtoBuf.protoFromFile("./message.proto", function (error, success) {
+      if (error) {
+        throw new Error(error);
+      }
+      var builder = success,
+        rexp = builder.build("rexp"),
+        REXP = rexp.REXP,
+        rclass = REXP.RClass;
 
 
-        var res = REXP.decode(contents);
+      var res = REXP.decode(contents);
 
-        var jsondata = phantasus.Util.getRexpData(res, rclass);
+      var jsondata = phantasus.Util.getRexpData(res, rclass);
 
-        var datasets = [];
-        for (var k = 0; k < Object.keys(jsondata).length; k++) {
-          var dataset = phantasus.ParseDatasetFromProtoBin.getDataset(new Promise(function (resolve) {resolve(session)}),
-                                                                      Object.keys(jsondata)[k],
-                                                                      jsondata[Object.keys(jsondata)[k]],
-                                                                      options);
-          datasets.push(dataset);
-        }
-        callback(null, datasets);
-      });
-    };
-
-    phantasus.BlobFromPath.getFileObject(filePath, function (f) {
-      r.readAsArrayBuffer(f);
+      var datasets = [];
+      for (var k = 0; k < Object.keys(jsondata).length; k++) {
+        var dataset = phantasus.ParseDatasetFromProtoBin.getDataset(new Promise(function (resolve) {resolve(session)}),
+                                                                    Object.keys(jsondata)[k],
+                                                                    jsondata[Object.keys(jsondata)[k]],
+                                                                    options);
+        datasets.push(dataset);
+      }
+      callback(null, datasets);
     });
-  })
+  };
+
+  phantasus.BlobFromPath.getFileObject(filePath, function (f) {
+    r.readAsArrayBuffer(f);
+  });
 };
 
 phantasus.ParseDatasetFromProtoBin.getDataset = function (session, seriesName, jsondata, options) {
@@ -3711,10 +3709,10 @@ phantasus.GeoReader.prototype = {
     };
 
 
-    var req = ocpu.call('loadGEO', { name: name }, function (session) {
-      session.getMessages(function (success) {
-        console.log('loadGEO messages', '::', success);
-      });
+    var req = ocpu.call('loadGEO/print', { name: name }, function (session) {
+      // session.getMessages(function (success) {
+      //   console.log('loadGEO messages', '::', success);
+      // });
       phantasus.ParseDatasetFromProtoBin.parse(session, afterLoaded, { isGEO : true, pathFunction: phantasus.GeoReader.prototype.getPath });
     });
     req.fail(function () {
@@ -4347,7 +4345,7 @@ phantasus.PreloadedReader.prototype = {
       callback(err, dataset);
     };
 
-    var req = ocpu.call('loadPreloaded', name, function(session) {
+    var req = ocpu.call('loadPreloaded/print', name, function(session) {
       phantasus.ParseDatasetFromProtoBin.parse(session, afterLoaded, { preloaded : true, pathFunction: phantasus.PreloadedReader.prototype.getPath });
     });
     req.fail(function () {
@@ -4372,10 +4370,13 @@ phantasus.SavedSessionReader.prototype = {
       if (!err) {
         var datasetTitle = "permanent linked dataset";
         var experimentData = dataset[0].getExperimentData();
-        if (experimentData) datasetTitle = experimentData.title.values.toString() || datasetTitle;
+        var seriesName = dataset[0].seriesNames[0];
+
+        if (experimentData) datasetTitle = experimentData.title.values.toString() || seriesName || datasetTitle;
+        else datasetTitle = seriesName || datasetTitle;
 
         phantasus.datasetHistory.store({
-          name: name.name,
+          name: name.sessionName,
           description: datasetTitle,
           openParameters: {
             file: name.sessionName,
@@ -4385,9 +4386,15 @@ phantasus.SavedSessionReader.prototype = {
             }
           }
         });
+
+        dataset[0].setESSession(new Promise(function (rs) { rs(sessionWithLoadedMeta); }));
       }
 
+      callback(err, dataset);
+    };
 
+    var req = ocpu.call('loadSession/print', name, function(session) {
+      sessionWithLoadedMeta = session;
       sessionWithLoadedMeta.loc = sessionWithLoadedMeta.loc.split(sessionWithLoadedMeta.key).join(name.sessionName);
       sessionWithLoadedMeta.key = name.sessionName;
       sessionWithLoadedMeta.getLoc = function () {
@@ -4398,16 +4405,11 @@ phantasus.SavedSessionReader.prototype = {
         return sessionWithLoadedMeta.key;
       };
 
-      dataset[0].setESSession(new Promise(function (rs) { rs(sessionWithLoadedMeta); }));
-
-      callback(err, dataset);
-    };
-
-    var req = ocpu.call('loadSession', name, function(session) {
-      sessionWithLoadedMeta = session;
-
-      phantasus.ParseDatasetFromProtoBin.parse(session, afterLoaded, { preloaded : true });
+      phantasus.ParseDatasetFromProtoBin.parse(session, afterLoaded, {
+        preloaded : true
+      });
     });
+
     req.fail(function () {
       callback(req.responseText);
     })
@@ -7491,31 +7493,29 @@ phantasus.DatasetUtil.probeDataset = function (dataset, session) {
         query: query
       };
 
-      var req = ocpu.call("probeDataset", request, function (newSession) {
-        newSession.getObject(function (success) {
-          var backendProbe = JSON.parse(success);
+      var req = ocpu.call("probeDataset/print", request, function (newSession) {
+        var backendProbe = JSON.parse(newSession.txt);
 
-          var isRowCountEqual = backendProbe.dims[0] === dataset.getRowCount();
-          var isColumnCountEqual = backendProbe.dims[1] === dataset.getColumnCount();
-          var exprsEqual = backendProbe.probe.every(verifyExprs);
-          var fDataValuesEqual = true;
+        var isRowCountEqual = backendProbe.dims[0] === dataset.getRowCount();
+        var isColumnCountEqual = backendProbe.dims[1] === dataset.getColumnCount();
+        var exprsEqual = backendProbe.probe.every(verifyExprs);
+        var fDataValuesEqual = true;
 
-          var fDataNamesEqual = fvarLabels.every(function (value) {
-            return backendProbe.fvarLabels.indexOf(value) !== -1;
+        var fDataNamesEqual = fvarLabels.every(function (value) {
+          return backendProbe.fvarLabels.indexOf(value) !== -1;
+        });
+
+        if (fDataNamesEqual) {
+          _.each(backendProbe.fdata, function (values, name) {
+            if (!fDataValuesEqual) {
+              return;
+            }
+
+            fDataValuesEqual = verifyFeature(name, values);
           });
+        }
 
-          if (fDataNamesEqual) {
-            _.each(backendProbe.fdata, function (values, name) {
-              if (!fDataValuesEqual) {
-                return;
-              }
-
-              fDataValuesEqual = verifyFeature(name, values);
-            });
-          }
-
-          resolve(isRowCountEqual && isColumnCountEqual && exprsEqual && fDataNamesEqual && fDataValuesEqual);
-        })
+        resolve(isRowCountEqual && isColumnCountEqual && exprsEqual && fDataNamesEqual && fDataValuesEqual);
       }, false, "::es");
 
 
@@ -13023,29 +13023,27 @@ phantasus.LandingPage.prototype = {
     var _this = this;
 
     var createGEOHeatMap = function(options)  {
-      var req = ocpu.call('checkGPLs', { name : options.dataset.file }, function (session) {
-        session.getMessages(function(success) {
-          console.log('checkGPLs messages', '::', success);
-        });
-        session.getObject(function (filenames) {
-          filenames = JSON.parse(filenames);
-          // console.log("filenames", filenames, filenames.length);
-          if (!filenames.length) {
-            _this.show();
-            throw new Error("Dataset" + " " + options.dataset.file + " does not exist");
-          }
-          if (filenames.length === 1) {
-            new phantasus.HeatMap(options);
-          }
-          else {
-            for (var j = 0; j < filenames.length; j++) {
-              var specificOptions = options;
-              specificOptions.dataset.file = filenames[j];
+      var req = ocpu.call('checkGPLs/print', { name : options.dataset.file }, function (session) {
+        // session.getMessages(function(success) {
+        //   console.log('checkGPLs messages', '::', success);
+        // });
+        var filenames = JSON.parse(session.txt);
+        // console.log("filenames", filenames, filenames.length);
+        if (!filenames.length) {
+          _this.show();
+          throw new Error("Dataset" + " " + options.dataset.file + " does not exist");
+        }
+        if (filenames.length === 1) {
+          new phantasus.HeatMap(options);
+        }
+        else {
+          for (var j = 0; j < filenames.length; j++) {
+            var specificOptions = options;
+            specificOptions.dataset.file = filenames[j];
 
-              new phantasus.HeatMap(specificOptions);
-            }
+            new phantasus.HeatMap(specificOptions);
           }
-        })
+        }
       });
       req.fail(function () {
         _this.show();
@@ -13060,18 +13058,16 @@ phantasus.LandingPage.prototype = {
 
     var createSessionHeatMap = function (options) {
       //http://localhost:3000/?session=x06c106048e7cb1
-      var req = ocpu.call('sessionExists', { sessionName : options.dataset.file }, function(session) {
-        session.getObject(function(success) {
-          var result = JSON.parse(success);
+      var req = ocpu.call('sessionExists/print', { sessionName : options.dataset.file }, function(session) {
+        var result = JSON.parse(session.txt);
 
-          if (!result.result) {
-            _this.show();
-            throw new Error("Dataset" + " " + options.dataset.file + " does not exist");
-          }
+        if (!result.result) {
+          _this.show();
+          throw new Error("Dataset" + " " + options.dataset.file + " does not exist");
+        }
 
-          var specificOptions = options;
-          new phantasus.HeatMap(specificOptions);
-        })
+        var specificOptions = options;
+        new phantasus.HeatMap(specificOptions);
       });
       req.fail(function () {
         _this.show();
@@ -14416,15 +14412,13 @@ phantasus.initAnnotationConvertTool = function (options) {
       width: 300
     });
 
-    var req = ocpu.call("queryAnnotationDBMeta", {}, function (newSession) {
-      newSession.getObject(function (success) {
-        var result = JSON.parse(success);
-        phantasus.annotationDBMeta.init = true;
+    var req = ocpu.call("queryAnnotationDBMeta/print", {}, function (newSession) {
+      var result = JSON.parse(newSession.txt);
+      phantasus.annotationDBMeta.init = true;
 
-        phantasus.annotationDBMeta.dbs = result;
-        $el.dialog('destroy').remove();
-        new phantasus.AnnotationConvertTool(options.heatMap);
-      })
+      phantasus.annotationDBMeta.dbs = result;
+      $el.dialog('destroy').remove();
+      new phantasus.AnnotationConvertTool(options.heatMap);
     });
 
     req.fail(function () {
@@ -14563,26 +14557,24 @@ phantasus.AnnotationConvertTool.prototype = {
         columnType: columnType,
         keyType: keyType
       };
-      var req = ocpu.call("convertByAnnotationDB", args, function (newSession) {
-        newSession.getObject(function (success) {
-          var result = JSON.parse(success);
+      var req = ocpu.call("convertByAnnotationDB/print", args, function (newSession) {
+        var result = JSON.parse(newSession.txt);
 
-          var v = dataset.getRowMetadata().add(keyType);
-          for (var i = 0; i < dataset.getRowCount(); i++) {
-            v.setValue(i, result[i].toString());
-          }
+        var v = dataset.getRowMetadata().add(keyType);
+        for (var i = 0; i < dataset.getRowCount(); i++) {
+          v.setValue(i, result[i].toString());
+        }
 
-          v.getProperties().set("phantasus.dataType", "string");
+        v.getProperties().set("phantasus.dataType", "string");
 
-          dataset.setESSession(Promise.resolve(newSession));
+        dataset.setESSession(Promise.resolve(newSession));
 
-          project.trigger("trackChanged", {
-            vectors: [v],
-            display: []
-          });
+        project.trigger("trackChanged", {
+          vectors: [v],
+          display: []
+        });
 
-          promise.resolve();
-        })
+        promise.resolve();
       }, false, "::es");
 
       req.fail(function () {
@@ -14730,6 +14722,11 @@ phantasus.ChartTool = function (chartOptions) {
     value: true
   });
   formBuilder.append({
+    name: 'show_lines',
+    type: 'checkbox',
+    value: true
+  });
+  formBuilder.append({
     name: 'add_profile',
     type: 'bootstrap-select',
     options: [{
@@ -14784,6 +14781,7 @@ phantasus.ChartTool = function (chartOptions) {
     formBuilder.setVisible('tooltip', chartType !== 'boxplot');
     formBuilder.setVisible('add_profile', chartType !== 'boxplot');
     formBuilder.setVisible('show_points', chartType !== 'boxplot');
+    formBuilder.setVisible('show_lines', chartType !== 'boxplot');
     formBuilder.setVisible('group_by', chartType === 'boxplot');
     formBuilder.setVisible('box_show_points', chartType === 'boxplot');
 
@@ -14818,15 +14816,35 @@ phantasus.ChartTool = function (chartOptions) {
 
   setVisibility();
 
+  var selectionChanged = function () {
+    var selected = project.getRowSelectionModel().count();
+    if (selected >= 100) {
+      if (!phantasus.ChartTool.prototype.warningShown) {
+        phantasus.FormBuilder.showInModal({
+          title: 'Warning',
+          html: 'Selected 100 or more genes in dataset. Lines and points were automatically disabled due to performance concerns. You can enable them by yourself. Process with caution.',
+          z: 10000
+        });
+        phantasus.ChartTool.prototype.warningShown = true;
+      }
+
+      formBuilder.setValue('show_points', false);
+      formBuilder.setValue('show_lines', false);
+    }
+
+    draw();
+  };
+
   var trackChanged = function () {
     updateOptions();
     setVisibility();
+    selectionChanged();
     formBuilder.setOptions('group_columns_by', options, true);
     formBuilder.setOptions('group_rows_by', options, true);
   };
 
-  project.getColumnSelectionModel().on('selectionChanged.chart', draw);
-  project.getRowSelectionModel().on('selectionChanged.chart', draw);
+  project.getColumnSelectionModel().on('selectionChanged.chart', selectionChanged);
+  project.getRowSelectionModel().on('selectionChanged.chart', selectionChanged);
   project.on('trackChanged.chart', trackChanged);
 
   var $dialog = $('<div style="background:white;" title="Chart"></div>');
@@ -14950,7 +14968,7 @@ phantasus.ChartTool.specialProfilers = {
 };
 
 phantasus.ChartTool.prototype = {
-
+  warningShown: false,
   _createProfile: function (options) {
     var dataset = options.dataset;
     var _this = this;
@@ -14962,6 +14980,12 @@ phantasus.ChartTool.prototype = {
     var addProfile = options.addProfile;
     var isColumnChart = options.isColumnChart;
     var colorByInfo = options.colorByInfo;
+    var traceMode = [
+      options.showLines ? 'lines' : '',
+      options.showPoints ? 'markers' : ''
+    ] .filter(function (val) { return val.length; })
+      .join('+') || 'none';
+
     var heatmap = this.heatmap;
     var uniqColors = {};
     var myPlot = options.myPlot;
@@ -14975,98 +14999,90 @@ phantasus.ChartTool.prototype = {
     var tickvals = [];
     var color = undefined;
 
-    if (colorByVector) {
-      _.each(phantasus.VectorUtil.toArray(colorByVector), function (value) {
-        if (!uniqColors[value]) {
-          if (colorModel.containsDiscreteColor(colorByVector, value)
-            && colorByVector.getProperties().get(phantasus.VectorKeys.DISCRETE)) {
-            uniqColors[value] = colorModel.getMappedValue(colorByVector, value);
-          } else if (colorModel.isContinuous(colorByVector)) {
-            uniqColors[value] = colorModel.getContinuousMappedValue(colorByVector, value);
-          } else {
-            uniqColors[value] = phantasus.VectorColorModel.CATEGORY_ALL[_.size(uniqColors) % 60];
-          }
-        }
-
-        return uniqColors[value]
-      });
-
-      _.each(uniqColors, function (color, categoryName) {
-        categoryName = phantasus.Util.chunk(categoryName, 10).join('<br>');
-        traces.push({
-          x: [1000000], y: [1000000],
-          marker: {
-            fillcolor: color,
-            color: color,
-            size: 10
-          },
-          name: categoryName,
-          legendgroup: 'colors',
-          mode: "markers",
-          type: "scatter",
-          showlegend: true
-        });
-      });
-    }
-
-    for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
-      ticktext.push(axisLabelVector != null ? axisLabelVector.getValue(j) : '' + j);
-      tickvals.push(j);
-    }
-
-    for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
-      // each row is a new trace
-      var x = [];
-      var y = [];
-      var text = [];
-      var size = 6;
-
+    if (traceMode !== 'none') {
       if (colorByVector) {
-        if (colorByInfo.isColumns === isColumnChart) {
-          color = uniqColors[colorByVector.getValue(i)];
-        } else {
-          color = [];
-          for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
-            color.push(uniqColors[colorByVector.getValue(j)])
-          }
-        }
-      }
-
-
-      for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
-        x.push(j);
-        y.push(dataset.getValue(i, j));
-
-        var obj = {
-          i: i,
-          j: j
-        };
-        obj.toString = function () {
-          var s = [];
-          for (var tipIndex = 0; tipIndex < _this.tooltip.length; tipIndex++) {
-            var tip = _this.tooltip[tipIndex];
-            if (tip.isColumns) {
-              phantasus.HeatMapTooltipProvider.vectorToString(dataset.getColumnMetadata().getByName(tip.field),
-                this.j, s, '<br>');
+        _.each(phantasus.VectorUtil.toArray(colorByVector), function (value) {
+          if (!uniqColors[value]) {
+            if (colorModel.containsDiscreteColor(colorByVector, value)
+              && colorByVector.getProperties().get(phantasus.VectorKeys.DISCRETE)) {
+              uniqColors[value] = colorModel.getMappedValue(colorByVector, value);
+            } else if (colorModel.isContinuous(colorByVector)) {
+              uniqColors[value] = colorModel.getContinuousMappedValue(colorByVector, value);
             } else {
-              phantasus.HeatMapTooltipProvider.vectorToString(dataset.getRowMetadata().getByName(tip.field),
-                this.i, s, '<br>');
+              uniqColors[value] = phantasus.VectorColorModel.CATEGORY_ALL[_.size(uniqColors) % 60];
             }
           }
 
-          return s.join('');
+          return uniqColors[value]
+        });
 
-        };
-
-        text.push(obj);
+        _.each(uniqColors, function (color, categoryName) {
+          categoryName = phantasus.Util.chunk(categoryName, 10).join('<br>');
+          traces.push({
+            x: [1000000], y: [1000000],
+            marker: {
+              fillcolor: color,
+              color: color,
+              size: 10
+            },
+            name: categoryName,
+            legendgroup: 'colors',
+            mode: "markers",
+            type: "scatter",
+            showlegend: true,
+            invisiblePoint: true
+          });
+        });
       }
 
-      xmin = Math.min(xmin, _.min(x));
-      xmax = Math.max(xmax, _.max(x));
-      ymin = Math.min(ymin, _.min(y));
-      ymax = Math.max(ymax, _.max(y));
+      for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
+        // each row is a new trace
+        var x = [];
+        var y = [];
+        var text = [];
+        var size = 6;
 
-      var trace = {
+        if (colorByVector) {
+          if (colorByInfo.isColumns === isColumnChart) {
+            color = uniqColors[colorByVector.getValue(i)];
+          } else {
+            color = [];
+            for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
+              color.push(uniqColors[colorByVector.getValue(j)])
+            }
+          }
+        }
+
+
+        for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
+          x.push(j);
+          y.push(dataset.getValue(i, j));
+
+          var obj = {
+            i: i,
+            j: j
+          };
+          obj.toString = function () {
+            var s = [];
+            for (var tipIndex = 0; tipIndex < _this.tooltip.length; tipIndex++) {
+              var tip = _this.tooltip[tipIndex];
+              if (tip.isColumns) {
+                phantasus.HeatMapTooltipProvider.vectorToString(dataset.getColumnMetadata().getByName(tip.field),
+                  this.j, s, '<br>');
+              } else {
+                phantasus.HeatMapTooltipProvider.vectorToString(dataset.getRowMetadata().getByName(tip.field),
+                  this.i, s, '<br>');
+              }
+            }
+
+            return s.join('');
+
+          };
+
+          text.push(obj);
+        }
+
+        var trace = {
           x: x,
           y: y,
           name: colorByVector ? colorByVector.getValue(i) : '',
@@ -15077,20 +15093,20 @@ phantasus.ChartTool.prototype = {
             color: color
           },
           text: text,
-          mode: 'lines' + (options.showPoints ? '+markers' : ''
-          ),
+          mode: traceMode,
           type: 'scatter',
           showlegend: false
-      };
+        };
 
-      if (colorByVector && colorByInfo.isColumns !== isColumnChart) {
-        trace.marker.size = 10;
-        trace.line = {
-          color: 'rgba(125,125,125,0.35)',
+        if (colorByVector && colorByInfo.isColumns !== isColumnChart) {
+          trace.marker.size = 10;
+          trace.line = {
+            color: 'rgba(125,125,125,0.35)',
+          }
         }
-      }
 
-      traces.push(trace);
+        traces.push(trace);
+      }
     }
 
     if (addProfile) {
@@ -15131,6 +15147,19 @@ phantasus.ChartTool.prototype = {
         showlegend: true,
         legendgroup: 'added_profile'
       });
+    }
+
+    _.each(traces, function (trace) {
+      if (trace.invisiblePoint) return;
+      xmin = Math.min(xmin, _.min(trace.x));
+      xmax = Math.max(xmax, _.max(trace.x));
+      ymin = Math.min(ymin, _.min(trace.y));
+      ymax = Math.max(ymax, _.max(trace.y));
+    });
+
+    for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
+      ticktext.push(axisLabelVector != null ? axisLabelVector.getValue(j) : '' + j);
+      tickvals.push(j);
     }
 
     options.layout.xaxis.tickvals = tickvals;
@@ -15248,6 +15277,7 @@ phantasus.ChartTool.prototype = {
     var boxShowPoints = this.formBuilder.getValue('box_show_points');
 
     var showPoints = this.formBuilder.getValue('show_points');
+    var showLines = this.formBuilder.getValue('show_lines');
     var showOutliers = this.formBuilder.getValue('show_outliers');
     var addProfile = this.formBuilder.getValue('add_profile');
     var adjustData = this.formBuilder.getValue('adjust_data');
@@ -15325,6 +15355,7 @@ phantasus.ChartTool.prototype = {
       this
         ._createProfile({
           showPoints: showPoints,
+          showLines: showLines,
           isColumnChart: chartType === 'column profile',
           axisLabelVector: axisLabelVector,
           colorByVector: colorByVector,
@@ -15976,15 +16007,13 @@ phantasus.initFGSEATool = function (options) {
       width: 300
     });
 
-    var req = ocpu.call("availableFGSEADatabases", {}, function (newSession) {
-      newSession.getObject(function (success) {
-        var result = JSON.parse(success);
-        phantasus.fgseaTool.init = true;
+    var req = ocpu.call("availableFGSEADatabases/print", {}, function (newSession) {
+      var result = JSON.parse(newSession.txt);
+      phantasus.fgseaTool.init = true;
 
-        phantasus.fgseaTool.dbs = result;
-        $el.dialog('destroy').remove();
-        new phantasus.fgseaTool(options.heatMap);
-      })
+      phantasus.fgseaTool.dbs = result;
+      $el.dialog('destroy').remove();
+      new phantasus.fgseaTool(options.heatMap);
     });
 
     req.fail(function () {
@@ -16165,19 +16194,17 @@ phantasus.fgseaTool.prototype = {
     };
 
     this.dbName = request.dbName;
-    var req = ocpu.call('performFGSEA', request, function (session) {
+    var req = ocpu.call('performFGSEA/print', request, function (session) {
       self.session = session;
-      session.getObject(function (result) {
-        self.fgsea = JSON.parse(result);
-        if (_.size(self.fgsea) === 0) {
-          promise.reject();
-          throw new Error("FGSEA returned 0 rows. Nothing to show");
-        }
+      self.fgsea = JSON.parse(session.txt);
+      if (_.size(self.fgsea) === 0) {
+        promise.reject();
+        throw new Error("FGSEA returned 0 rows. Nothing to show");
+      }
 
 
-        promise.resolve();
-        self.openTab();
-      });
+      promise.resolve();
+      self.openTab();
     }, false, "::es")
       .fail(function () {
         promise.reject();
@@ -16229,24 +16256,22 @@ phantasus.fgseaTool.prototype = {
       self.$pathwayDetail.empty();
       phantasus.Util.createLoadingEl().appendTo(self.$pathwayDetail);
 
-      var req = ocpu.call('queryPathway', request, function (session) {
-        session.getObject(function (success) {
-          var pathwayGenes = JSON.parse(success);
-          self.$pathwayDetail.empty();
+      var req = ocpu.call('queryPathway/print', request, function (session) {
+        var pathwayGenes = JSON.parse(session.txt);
+        self.$pathwayDetail.empty();
 
-          var leadingEdge = _.find(self.fgsea, {pathway: pathway}).leadingEdge;
+        var leadingEdge = _.find(self.fgsea, {pathway: pathway}).leadingEdge;
 
-          var pathwayDetail = $([
-            '<div>',
-              '<strong>Pathway name:</strong>' + pathway + '<br>',
-              '<strong>Pathway genes (ID):</strong>' + pathwayGenes.geneID.join(' ') + '<br>',
-              '<strong>Pathway genes (Symbols):</strong>' + pathwayGenes.geneSymbol.join(' ') + '<br>',
-              '<strong>Leading edge:</strong>' + leadingEdge.join(' ') + '<br>',
-            '</div>'
-          ].join(''));
+        var pathwayDetail = $([
+          '<div>',
+            '<strong>Pathway name:</strong>' + pathway + '<br>',
+            '<strong>Pathway genes (ID):</strong>' + pathwayGenes.geneID.join(' ') + '<br>',
+            '<strong>Pathway genes (Symbols):</strong>' + pathwayGenes.geneSymbol.join(' ') + '<br>',
+            '<strong>Leading edge:</strong>' + leadingEdge.join(' ') + '<br>',
+          '</div>'
+        ].join(''));
 
-          pathwayDetail.appendTo(self.$pathwayDetail);
-        });
+        pathwayDetail.appendTo(self.$pathwayDetail);
       });
 
       req.fail(function () {
@@ -16533,21 +16558,16 @@ phantasus.gseaTool.prototype = {
     fullDataset.getESSession().then(function (esSession) {
       request.es = esSession;
 
-      ocpu.call('gseaPlot', request, function (session) {
+      ocpu.call('gseaPlot/print', request, function (session) {
         if (promise.cancelled) {
           return;
         }
+        
 
-        session.getObject(function (filenames) {
-          if (promise.cancelled) {
-            return;
-          }
-
-          var svgPath = JSON.parse(filenames)[0];
-          var absolutePath = phantasus.Util.getFilePath(session, svgPath);
-          phantasus.BlobFromPath.getFileObject(absolutePath, function (blob) {
-            promise.resolve(URL.createObjectURL(blob));
-          });
+        var svgPath = JSON.parse(session.txt)[0];
+        var absolutePath = phantasus.Util.getFilePath(session, svgPath);
+        phantasus.BlobFromPath.getFileObject(absolutePath, function (blob) {
+          promise.resolve(URL.createObjectURL(blob));
         });
       }, false, "::es")
         .fail(function () {
@@ -16862,25 +16882,23 @@ phantasus.KmeansTool.prototype = {
         k: number,
         replacena: replacena
       };
-      var req = ocpu.call("performKmeans", args, function (newSession) {
-        newSession.getObject(function (success) {
-          var result = JSON.parse(success);
+      var req = ocpu.call("performKmeans/print", args, function (newSession) {
+        var result = JSON.parse(newSession.txt);
 
-          var v = dataset.getRowMetadata().add('clusters');
-          for (var i = 0; i < dataset.getRowCount(); i++) {
-            v.setValue(i, result[i].toString());
-          }
+        var v = dataset.getRowMetadata().add('clusters');
+        for (var i = 0; i < dataset.getRowCount(); i++) {
+          v.setValue(i, result[i].toString());
+        }
 
-          v.getProperties().set("phantasus.dataType", "string");
+        v.getProperties().set("phantasus.dataType", "string");
 
-          dataset.setESSession(Promise.resolve(newSession));
-          promise.resolve();
+        dataset.setESSession(Promise.resolve(newSession));
+        promise.resolve();
 
-          project.trigger("trackChanged", {
-            vectors: [v],
-            display: ["color"]
-          });
-        })
+        project.trigger("trackChanged", {
+          vectors: [v],
+          display: ["color"]
+        });
       }, false, "::es");
       req.fail(function () {
         promise.reject();
@@ -17022,50 +17040,48 @@ phantasus.LimmaTool.prototype = {
         fieldValues: values
       };
 
-      var req = ocpu.call("limmaAnalysis", args, function (session) {
-        session.getObject(function (success) {
-          var r = new FileReader();
-          var filePath = phantasus.Util.getFilePath(session, JSON.parse(success)[0]);
+      var req = ocpu.call("limmaAnalysis/print", args, function (session) {
+        var r = new FileReader();
+        var filePath = phantasus.Util.getFilePath(session, JSON.parse(session.txt)[0]);
 
-          r.onload = function (e) {
-            var contents = e.target.result;
-            var ProtoBuf = dcodeIO.ProtoBuf;
-            ProtoBuf.protoFromFile("./message.proto", function (error, success) {
-              if (error) {
-                alert(error);
-              }
-              var builder = success,
-                rexp = builder.build("rexp"),
-                REXP = rexp.REXP,
-                rclass = REXP.RClass;
-              var res = REXP.decode(contents);
-              var data = phantasus.Util.getRexpData(res, rclass);
-              var names = phantasus.Util.getFieldNames(res, rclass);
-              var vs = [];
+        r.onload = function (e) {
+          var contents = e.target.result;
+          var ProtoBuf = dcodeIO.ProtoBuf;
+          ProtoBuf.protoFromFile("./message.proto", function (error, success) {
+            if (error) {
+              alert(error);
+            }
+            var builder = success,
+              rexp = builder.build("rexp"),
+              REXP = rexp.REXP,
+              rclass = REXP.RClass;
+            var res = REXP.decode(contents);
+            var data = phantasus.Util.getRexpData(res, rclass);
+            var names = phantasus.Util.getFieldNames(res, rclass);
+            var vs = [];
 
-              names.forEach(function (name) {
-                if (name !== "symbol") {
-                  var v = dataset.getRowMetadata().add(name);
-                  for (var i = 0; i < dataset.getRowCount(); i++) {
-                    v.setValue(i, data[name].values[i]);
-                  }
-                  vs.push(v);
+            names.forEach(function (name) {
+              if (name !== "symbol") {
+                var v = dataset.getRowMetadata().add(name);
+                for (var i = 0; i < dataset.getRowCount(); i++) {
+                  v.setValue(i, data[name].values[i]);
                 }
+                vs.push(v);
+              }
 
-              });
-              // alert("Limma finished successfully");
-              dataset.setESSession(Promise.resolve(session));
-              project.trigger("trackChanged", {
-                vectors: vs,
-                display: []
-              });
-              promise.resolve();
-            })
-          };
-          phantasus.BlobFromPath.getFileObject(filePath, function (file) {
-            r.readAsArrayBuffer(file);
-          });
-        })
+            });
+            // alert("Limma finished successfully");
+            dataset.setESSession(Promise.resolve(session));
+            project.trigger("trackChanged", {
+              vectors: vs,
+              display: []
+            });
+            promise.resolve();
+          })
+        };
+        phantasus.BlobFromPath.getFileObject(filePath, function (file) {
+          r.readAsArrayBuffer(file);
+        });
       }, false, "::es");
       req.fail(function () {
         promise.reject();
@@ -19006,15 +19022,22 @@ phantasus.PcaPlotTool.prototype = {
 
           Plotly.newPlot(plot, data, layout, config).then(Plotly.annotate);
           _this.exportButton.toggle(true);
+
+          plot.on('plotly_selected', function(eventData) {
+            var indexes = new phantasus.Set();
+            eventData.points.forEach(function (point) {
+              indexes.add(point.pointIndex);
+            });
+
+            _this.project.getColumnSelectionModel().setViewIndices(indexes, true);
+          });
+
         };
 
         if (!_this.pca) {
-          var req = ocpu.call("calcPCA", args, function (session) {
-            session.getObject(function (success) {
-              _this.pca = JSON.parse(success);
+          var req = ocpu.call("calcPCA/print", args, function (session) {
+              _this.pca = JSON.parse(session.txt);
               drawResult();
-            });
-
           }, false, "::es");
           req.fail(function () {
             new Error("PcaPlot call failed" + req.responseText);
@@ -19324,12 +19347,10 @@ phantasus.shinyGamTool.prototype = {
     var promise = $.Deferred();
 
     dataset.getESSession().then(function (oldSession) {
-      ocpu.call('shinyGAMAnalysis', {
+      ocpu.call('shinyGAMAnalysis/print', {
         es: oldSession
       }, function (context) {
-        context.getObject('.val', null, function (link) {
-          window.open(link.split('"')[1], '_blank');
-        });
+        window.open(JSON.parse(context.txt)[0], '_blank');
         promise.resolve();
       }, false, '::es').fail(function () {
         console.error('Failed to submit to shiny GAM analysis');
@@ -21268,6 +21289,7 @@ phantasus.ActionManager = function () {
     name: 'Clustering',
     children: [
       'K-means',
+      'Nearest Neighbors',
       'Hierarchical Clustering'],
     icon: 'fa'
   });
@@ -21357,45 +21379,45 @@ phantasus.ActionManager = function () {
 
   this.add({
     ellipsis: true,
-    name: 'Get permanent link',
+    name: 'Get link to a dataset',
     cb: function (options) {
       var dataset = options.heatMap.getProject().getFullDataset();
       dataset.getESSession().then(function (es) {
         var key = es.getKey();
         var location = window.location;
-        var newLocation = location.origin + location.pathname + '?session=' + key;
+        var datasetName = options.heatMap.getName();
 
-        var publishReq = ocpu.call('publishSession', { sessionName: key }, function (tempSession) {
-          tempSession.getObject(function (json) {
-            var parsedJSON = JSON.parse(json);
-            if (!parsedJSON.result) {
-              throw new Error('Failed to make session accessible');
-            }
+        var publishReq = ocpu.call('publishSession/print', { sessionName: key, datasetName: datasetName }, function (tempSession) {
+          var parsedJSON = JSON.parse(tempSession.txt);
+          if (!parsedJSON.result === false) {
+            throw new Error('Failed to make session accessible');
+          }
 
+          var newLocation = location.origin + location.pathname + '?session=' + tempSession.key;
+          var formBuilder = new phantasus.FormBuilder();
+          formBuilder.append({
+            name: 'Link',
+            readonly: true,
+            value: newLocation
+          });
 
-            var formBuilder = new phantasus.FormBuilder();
-            formBuilder.append({
-              name: 'Link',
-              readonly: true,
-              value: newLocation
-            });
+          formBuilder.append({
+            name: 'copy',
+            type: 'button'
+          });
 
-            formBuilder.append({
-              name: 'copy',
-              type: 'button'
-            });
+          formBuilder.$form.find('button').on('click', function () {
+            formBuilder.$form.find('input')[0].select();
+            document.execCommand('copy');
+          });
 
-            formBuilder.$form.find('button').on('click', function () {
-              formBuilder.$form.find('input')[0].select();
-              document.execCommand('copy');
-            });
+          formBuilder.appendContent('<h4>Please note that link will be valid for 30 days.</h4>');
 
-            phantasus.FormBuilder.showInModal({
-              title: 'Get permanent link to a dataset',
-              close: 'Close',
-              html: formBuilder.$form,
-              focus: options.heatMap.getFocusEl()
-            });
+          phantasus.FormBuilder.showInModal({
+            title: 'Get link to a dataset',
+            close: 'Close',
+            html: formBuilder.$form,
+            focus: options.heatMap.getFocusEl()
           });
         });
 
@@ -31721,7 +31743,7 @@ phantasus.HeatMap = function (options) {
           'Save Image',
           'Save Dataset',
           'Save Session',
-          'Get permanent link',
+          'Get link to a dataset',
           null,
           'Close Tab',
           null,
@@ -31729,9 +31751,7 @@ phantasus.HeatMap = function (options) {
         Tools: [
           'New Heat Map',
           null,
-          'Nearest Neighbors',
           'Create Calculated Annotation',
-          null,
           'Adjust',
           'Collapse',
           'Similarity Matrix',
@@ -32572,6 +32592,9 @@ phantasus.HeatMap.prototype = {
   },
   setName: function (name) {
     this.options.name = name;
+    if (this.tabId) {
+      this.tabManager.setTabName(this.tabId, name);
+    }
   },
   getName: function () {
     return this.options.name;
@@ -37787,6 +37810,9 @@ phantasus.TabManager.prototype = {
    */
   setTabTitle: function (id, title) {
     this._getA(id).attr('title', title);
+  },
+  setTabName: function (id, name) {
+    this._getA(id).contents().first().replaceWith(name + '&nbsp;');
   },
   _getA: function (id) {
     if (id[0] === '#') {
