@@ -32111,6 +32111,7 @@ phantasus.HeatMap = function (options) {
       if (dataset.length && dataset.length > 0) {
         _this.options.dataset = dataset[0];
         _this.setName(dataset[0].seriesNames[0]);
+        _this.tabManager.trigger('rename');
 
         for (var i = 1; i < dataset.length; i++) {
 

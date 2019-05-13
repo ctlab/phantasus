@@ -1,8 +1,5 @@
-commit 2e85e5b35bf74d6e12d5ddcb2e329dc2979f8438
-Merge: 1892fe2 284e0fd
+commit 7f1ee361eca4a3ab4d36dab07e583f57e0ab6b61
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Wed May 8 13:32:50 2019 +0300
+Date:   Mon May 13 19:01:50 2019 +0300
 
-    Merge pull request #59 from ctlab/develop
-    
-    Develop
+    Fix document title ctlab/phantasus#124
