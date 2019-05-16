@@ -9,7 +9,7 @@ sessionExists <- function(sessionName) {
         return (jsonlite::toJSON(list(result=TRUE), auto_unbox = TRUE))
     }
 
-    #-----------------LEGACY-----------------------------------
+    #-----------------LEGACY----------------------------------- DELETE AFTER 3 JUNE 2019
 
     if (file.exists(RDataPath)) {
         env <- new.env()
@@ -22,7 +22,7 @@ sessionExists <- function(sessionName) {
     return (jsonlite::toJSON(list(result=FALSE), auto_unbox = TRUE))
 }
 
-publishSession <- function (sessionName, datasetName = sessionName) {
+publishSession <- function (sessionName, datasetName = sessionName, heatmapJson = NULL) {
     ocpuRoot <- strsplit(getwd(), 'ocpu-temp')[[1]][1]
     sessionPath <- file.path(ocpuRoot, 'ocpu-store', sessionName)
 
@@ -39,6 +39,11 @@ publishSession <- function (sessionName, datasetName = sessionName) {
 
             writeBin(protolite::serialize_pb(result), binaryFile)
             assign("es", env$es, envir = parent.frame())
+            if (!is.null(heatmapJson)) {
+                heatmapPath <- file.path(getwd(), 'heatmap.json')
+                write(jsonlite::toJSON(heatmapJson, auto_unbox = TRUE, null = 'null'), heatmapPath)
+            }
+
             return (jsonlite::toJSON(basename(binaryFile)))
         }
     }
@@ -55,7 +60,7 @@ loadSession <- function (sessionName) {
         return (jsonlite::toJSON(basename(savedPath)))
     }
 
-    #---------------------LEGACY-------------------------------------
+    #---------------------LEGACY------------------------------------- DELETE AFTER 3 JUNE 2019
 
     RDataPath <- paste(sessionPath, '.RData', sep=.Platform$file.sep)
     if (file.exists(RDataPath)) {
@@ -72,4 +77,17 @@ loadSession <- function (sessionName) {
     }
 
     stop('Invalid session key')
+}
+
+heatmapSettings <- function (sessionName) {
+    ocpuRoot <- strsplit(getwd(), 'ocpu-temp')[[1]][1]
+    sessionPath <- file.path(ocpuRoot, 'ocpu-store', sessionName)
+    heatmapPath <- file.path(sessionPath, 'heatmap.json')
+
+    if (file.exists(heatmapPath)) {
+        heatmap <- fromJSON(heatmapPath)
+        return (jsonlite::toJSON(list(result=heatmap), auto_unbox = TRUE, null = 'null'))
+    }
+
+    return (jsonlite::toJSON(list(result=FALSE), auto_unbox = TRUE))
 }
