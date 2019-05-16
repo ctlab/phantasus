@@ -11864,7 +11864,7 @@ phantasus.VectorColorModel.prototype = {
       } else {
         // colorScheme is instanceof phantasus.HeatMapColorScheme
         var colorScheme = _this.vectorNameToColorScheme.get(track.getName());
-        if (colorScheme != null) {
+        if (colorScheme != null && typeof colorScheme.getCurrentColorSupplier !== 'undefined') {
           var colorSchemeJSON = phantasus.AbstractColorSupplier.toJSON(colorScheme.getCurrentColorSupplier());
           json[track.getName()] = colorSchemeJSON;
         }
@@ -13066,8 +13066,23 @@ phantasus.LandingPage.prototype = {
           throw new Error("Dataset" + " " + options.dataset.file + " does not exist");
         }
 
-        var specificOptions = options;
-        new phantasus.HeatMap(specificOptions);
+        var heatmapReq = ocpu.call('heatmapSettings/print', { sessionName: options.dataset.file }, function (session) {
+          var data = JSON.parse(session.txt);
+          if (!data.result) {
+            console.log('Unavailable heatmap json settings');
+            return new phantasus.HeatMap(options);
+          }
+
+          options.inheritFromParent = false;
+
+          var newOptions = $.extend({}, data.result, options);
+          new phantasus.HeatMap(newOptions);
+        });
+
+        heatmapReq.fail(function () {
+          console.warn('Could not load heatmap json settings');
+          new phantasus.HeatMap(options);
+        });
       });
       req.fail(function () {
         _this.show();
@@ -21386,8 +21401,9 @@ phantasus.ActionManager = function () {
         var key = es.getKey();
         var location = window.location;
         var datasetName = options.heatMap.getName();
+        var heatmapJson = options.heatMap.toJSON({dataset: false});
 
-        var publishReq = ocpu.call('publishSession/print', { sessionName: key, datasetName: datasetName }, function (tempSession) {
+        var publishReq = ocpu.call('publishSession/print', { sessionName: key, datasetName: datasetName, heatmapJson: heatmapJson }, function (tempSession) {
           var parsedJSON = JSON.parse(tempSession.txt);
           if (!parsedJSON.result === false) {
             throw new Error('Failed to make session accessible');
@@ -32148,6 +32164,8 @@ phantasus.HeatMap = function (options) {
         appendTo: _this.getContentEl(),
         focus: _this.getFocusEl()
       });
+
+      _this.tabManager.remove();
     });
 
     promises.push(deferred);
@@ -39757,6 +39775,7 @@ phantasus.VectorTrack.prototype = {
   _computePreferredSize: function (forPrint) {
     var width = 0;
     var height = 0;
+    phantasus.VectorUtil.getDataType(this.getVector());
     if (this.isRenderAs(phantasus.VectorTrack.RENDER.TEXT)) {
       if (this.positions.getSize() >= 6) {
         var context = this.canvas.getContext('2d');

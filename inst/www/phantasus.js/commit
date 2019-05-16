@@ -1,5 +1,5 @@
-commit 7f1ee361eca4a3ab4d36dab07e583f57e0ab6b61
+commit 8d7b636f9365127bc1aebca255f949206a5e20f3
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Mon May 13 19:01:50 2019 +0300
+Date:   Thu May 16 15:58:33 2019 +0300
 
-    Fix document title ctlab/phantasus#124
+    HeatMap view loading.
