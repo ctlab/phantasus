@@ -1,5 +1,5 @@
-commit 8d7b636f9365127bc1aebca255f949206a5e20f3
+commit fffa43b109589782416d28de4d69182b31bfc0a8
 Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Thu May 16 15:58:33 2019 +0300
+Date:   Mon May 20 18:06:02 2019 +0300
 
-    HeatMap view loading.
+    Dataset link tool rename.

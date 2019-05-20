@@ -1505,6 +1505,7 @@ phantasus.Util.createPhantasusHeader = function () {
   html.push('<span>u</span>');
   html.push('<span>s</span>');
   html.push('</span>');
+  html.push('<strong style="font-size: 12px">v' + PHANTASUS_VERSION + '</strong>');
   html.push('</div>');
   var $div = $(html.join(''));
   var colorScale = d3.scale.linear().domain([0, 4, 7]).range(['#ca0020', '#999999', '#0571b0']).clamp(true);
@@ -21394,7 +21395,7 @@ phantasus.ActionManager = function () {
 
   this.add({
     ellipsis: true,
-    name: 'Get link to a dataset',
+    name: 'Get dataset link',
     cb: function (options) {
       var dataset = options.heatMap.getProject().getFullDataset();
       dataset.getESSession().then(function (es) {
@@ -21430,7 +21431,7 @@ phantasus.ActionManager = function () {
           formBuilder.appendContent('<h4>Please note that link will be valid for 30 days.</h4>');
 
           phantasus.FormBuilder.showInModal({
-            title: 'Get link to a dataset',
+            title: 'Get dataset link',
             close: 'Close',
             html: formBuilder.$form,
             focus: options.heatMap.getFocusEl()
@@ -21441,6 +21442,26 @@ phantasus.ActionManager = function () {
           throw new Error('Failed to make session accessible: ' + publishReq.responseText);
         });
       })
+    }
+  });
+
+  this.add({
+    name: 'About',
+    cb: function (options) {
+      var $div = $([
+        '<div>',
+        'Phantasus version: ' + PHANTASUS_VERSION + ', build: ' + PHANTASUS_BUILD + '<br/>',
+        'Changelog available at: <a href="https://raw.githubusercontent.com/ctlab/phantasus/master/NEWS" target="_blank">Github</a><br/>',
+        'Source Code available at: <a href="http://github.com/ctlab/phantasus" target="_blank">Github</a>',
+        '</div>'
+      ].join('\n'));
+
+      phantasus.FormBuilder.showInModal({
+        title: 'About Phantasus',
+        close: 'Close',
+        html: $div,
+        focus: options.heatMap.getFocusEl()
+      });
     }
   });
 
@@ -31759,7 +31780,7 @@ phantasus.HeatMap = function (options) {
           'Save Image',
           'Save Dataset',
           'Save Session',
-          'Get link to a dataset',
+          'Get dataset link',
           null,
           'Close Tab',
           null,
@@ -31803,7 +31824,7 @@ phantasus.HeatMap = function (options) {
           'Select All Columns',
           'Clear Selected Columns'],
         Help: [
-          'Search Menus', null, 'Contact', 'Configuration', 'Tutorial', 'Source Code', null, 'Keyboard' +
+          'Search Menus', null, 'Contact', 'Configuration', 'Tutorial', 'Source Code', 'About', null, 'Keyboard' +
           ' Shortcuts']
       },
       toolbar: {
@@ -35953,6 +35974,7 @@ phantasus.HelpMenu = function () {
 
   html.push('<li><a data-name="tutorial" href="#">Tutorial</a></li>');
   html.push('<li><a data-name="source" href="#">Source Code</a></li>');
+  html.push('<li><a data-name="about" href="#">About</a></li>');
 
   html.push('</ul>');
   html.push('</div>');
@@ -35979,7 +36001,19 @@ phantasus.HelpMenu = function () {
   });
 
   this.$el.find('[data-name=about]').on('click', function (e) {
-    window.open('about.html');
+    var $div = $([
+      '<div>',
+      'Phantasus version: ' + PHANTASUS_VERSION + ', build: ' + PHANTASUS_BUILD + '<br/>',
+      'Changelog available at: <a href="https://raw.githubusercontent.com/ctlab/phantasus/master/NEWS" target="_blank">Github</a><br/>',
+      'Source Code available at: <a href="http://github.com/ctlab/phantasus" target="_blank">Github</a>',
+      '</div>'
+    ].join('\n'));
+
+    phantasus.FormBuilder.showInModal({
+      title: 'About Phantasus',
+      close: 'Close',
+      html: $div,
+    });
     e.preventDefault();
 
   });
