@@ -700,7 +700,20 @@ getGPLAnnotation <- function (GPL, destdir = tempdir()) {
 
     dir.create(fullGPLDirPath, showWarnings = FALSE, recursive = TRUE)
 
-    return(suppressWarnings(getGEO(GPL, destdir = fullGPLDirPath, AnnotGPL = TRUE)))
+    cachedFile <- file.path(fullGPLDirPath, paste0(GPL, ".annot.gz"))
+    if (file.exists(cachedFile) && file.size(cachedFile) == 0) {
+        file.remove(cachedFile)
+    }
+
+    filename <- getGEOfile(GPL, destdir=fullGPLDirPath, AnnotGPL = TRUE, amount = "data")
+
+    if (file.size(filename) == 0) {
+        file.remove(filename)
+        stop(sprintf("Downloaded %s annotation is empty: %s", GPL, filename))
+    }
+    ret <- parseGEO(filename, destdir=fullGPLDirPath, AnnotGPL = TRUE)
+
+    return(ret)
 }
 
 annotateFeatureData <- function (es, destdir = tempdir()) {
