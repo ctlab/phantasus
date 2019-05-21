@@ -178,38 +178,54 @@ updateARCHS4 <- function (cacheDir = "/var/phantasus/cache/archs4") {
                   mode = "wb")
 }
 
-selfCheck <- function () {
-    cacheDir <- getOption("phantasusCacheDir")
-    preloadedDir <- getOption("phantasusPreloadedDir")
+selfCheck <- function (cacheDir=getOption("phantasusCacheDir"),
+                       preloadedDir=getOption("phantasusPreloadedDir"),
+                       verbose=FALSE) {
 
     if (!is.null(preloadedDir) && dir.exists(preloadedDir)) {
-        preloadedFiles <- list.files(preloadedDir)
+        preloadedFiles <- list.files(preloadedDir, pattern = "\\.(gct|rda)$")
         message(paste(length(preloadedFiles), 'preloaded datasets are available'))
+        if (verbose) {
+            message(paste0(preloadedFiles, collapse=" "))
+            message(" ")
+        }
     } else {
-        message('Preloaded dir is not set')
+        message('!!! Preloaded dir is not set')
     }
 
-    archs4Files <- list.files(paste(file.path(cacheDir), 'archs4', sep = .Platform$file.sep), '*.h5', full.names = TRUE)
+    archs4Files <- list.files(file.path(cacheDir, "archs4"),
+                              pattern='\\.h5$')
     if (length(archs4Files)) {
         message(paste(length(archs4Files), 'archs4 files are available'))
+        if (verbose) {
+            message(paste0(archs4Files, collapse=" "))
+            message(" ")
+        }
     } else {
-        message('No archs4 provided RNA-seq will load without matrices')
+        message('!!! No archs4 provided RNA-seq will load without matrices')
     }
 
-
     annotDir <- file.path(cacheDir, "annotationdb")
-    dbFiles <- list.files(annotDir, '*.sqlite$', full.names = TRUE)
+    dbFiles <- list.files(annotDir, pattern='\\.sqlite$')
     if (length(dbFiles)) {
         message(paste(length(dbFiles), 'annotationDb are available'))
+        if (verbose) {
+            message(paste0(dbFiles, collapse=" "))
+            message(" ")
+        }
     } else {
-        message('No annotationDb provided')
+        message('!!! No annotationDb provided')
     }
 
     fgseaDir <- file.path(cacheDir, 'fgsea')
-    fgseaFiles <- list.files(fgseaDir, '*.rds', full.names = FALSE)
+    fgseaFiles <- list.files(fgseaDir, '\\.rds$', full.names = FALSE)
     if (length(fgseaFiles)) {
         message(paste(length(fgseaFiles), 'fgsea tables are available'))
+        if (verbose) {
+            message(paste0(fgseaFiles, collapse=" "))
+            message(" ")
+        }
     } else {
-        message('No fgsea tables provided')
+        message('!!! No fgsea tables provided')
     }
 }
