@@ -42,6 +42,7 @@ server {
         expires 30d;
         add_header Pragma public;
         add_header Cache-Control "public";
+        add_header Cache-Control "no-cache, public, must-revalidate, proxy-revalidate";
     }
 
     location /phantasus/preloaded {
@@ -55,7 +56,7 @@ server {
         autoindex off;
         expires 30d;
         add_header Pragma public;
-        add_header Cache-Control "public";
+        add_header Cache-Control "no-cache, public, must-revalidate, proxy-revalidate";
     }
 
     location ~ /phantasus/ocpu/tmp/$ {
