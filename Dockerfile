@@ -50,7 +50,7 @@ RUN R -e 'install.packages("unix")'
 #RUN git clone -b ${TARGET_BRANCH} --recursive https://github.com/ctlab/phantasus /root/phantasus
 COPY . /root/phantasus
 
-RUN R -e 'source("https://bioconductor.org/biocLite.R")'
+RUN R -e 'install.packages("BiocManager"); BiocManager::install()'
 
 RUN R -e 'devtools::install_github("ctlab/fgsea", tag="1.9.5")'
 RUN R -e 'devtools::install_github("opencpu/opencpu")'
