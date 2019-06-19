@@ -43,6 +43,7 @@ convertByAnnotationDB <- function (es, dbName, columnName, columnType, keyType) 
         convertedData <- sapply(convertedData, function (x) unlist(strsplit(x, '[.]'))[1] )
     }
 
+    convertedData[ convertedData == 'NA' ] <- NA # AnnotationDB can produce 'NA' as string and <NA> as NA. Confusing
     fData(es)[[keyType]] <- convertedData
     assign("es", es, envir = parent.frame())
 
