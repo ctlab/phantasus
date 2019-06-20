@@ -157,7 +157,7 @@ getGDS <- function(name, destdir = tempdir(),
 #' @param cacheDir base directory for cache
 #' @return list of .h5 files
 getArchs4Files <- function(cacheDir) {
-    list.files(paste(file.path(cacheDir), 'archs4', sep = .Platform$file.sep), '*.h5', full.names = TRUE)
+    list.files(paste(file.path(cacheDir), 'archs4', sep = .Platform$file.sep), '\\.h5$', full.names = TRUE)
 }
 
 
