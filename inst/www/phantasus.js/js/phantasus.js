@@ -14578,7 +14578,7 @@ phantasus.AnnotationConvertTool.prototype = {
 
         var v = dataset.getRowMetadata().add(keyType);
         for (var i = 0; i < dataset.getRowCount(); i++) {
-          v.setValue(i, result[i].toString());
+          v.setValue(i, (result[i] || 'NA').toString());
         }
 
         v.getProperties().set("phantasus.dataType", "string");
@@ -15558,6 +15558,9 @@ phantasus.CollapseDatasetTool.prototype = {
     }
 
     if (omitUnannotated) {
+      var omitCheck = function (x) {
+        return !x || x.toString() === '' || x.toString() === 'NA'
+      };
       var fieldMeta = dataset.getRowMetadata();
       var aoa = collapseToFields
         .map(function (field) {
@@ -15566,13 +15569,14 @@ phantasus.CollapseDatasetTool.prototype = {
 
       var keepIndexes = _.zip
         .apply(null, aoa)
-        .map(function (aos) {
-          return aos.join('');
-        })
         .reduce(function (acc, value, index) {
-          if (_.size(value) !== 0) acc.push(index);
+          if (value.some(omitCheck)) {
+            return acc;
+          }
+
+          acc.push(index);
           return acc;
-        }, [])
+        }, []);
 
       dataset = new phantasus.SlicedDatasetView(dataset, keepIndexes);
     }
@@ -31857,7 +31861,6 @@ phantasus.HeatMap = function (options) {
       menu: {
         File: [
           'Open',
-          'Annotate',
           phantasus.aboutDataset.prototype.toString(),
           null,
           'Save Image',
@@ -31871,6 +31874,7 @@ phantasus.HeatMap = function (options) {
         Tools: [
           'New Heat Map',
           null,
+          'Annotate',
           'Create Calculated Annotation',
           'Adjust',
           'Collapse',

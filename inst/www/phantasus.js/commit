@@ -1,5 +1,5 @@
-commit a693de1fe178dd3ed9d98818a9e7976ce3120331
-Author: petrovich <mazahakaforever@ya.ru>
-Date:   Mon Jun 3 19:04:05 2019 +0300
+commit 68aac14c61621670d2e3659383cf7555e095d2c3
+Author: Vladislav Kamenev <mazahakaforever@ya.ru>
+Date:   Fri Jun 21 16:09:14 2019 +0300
 
-    Reproduce tool with docker image.
+    Omit unannotated removes NA aswell.
