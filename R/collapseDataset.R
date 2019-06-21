@@ -104,11 +104,14 @@ stripEmpty <- function (es, isRows, fields) {
         target <- pData(es)
     }
 
-    collapsed <- apply(target[fields], 1, paste, collapse="")
+    toStrip <- !apply(target[fields], 1, function (row) {
+        any(is.na(row)) || any(nchar(row) == 0)
+    })
+
     if (isRows) {
-        es <- es[which(nchar(collapsed) != 0), ]
+        es <- es[which(toStrip), ]
     } else {
-        es <- es[, which(nchar(collapsed) != 0)]
+        es <- es[, which(toStrip)]
     }
 
     es
