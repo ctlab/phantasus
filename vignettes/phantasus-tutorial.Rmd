@@ -296,7 +296,7 @@ data("dbExample", package="phantasus")
 
 ### Annotation convertation with AnnotationDB
 
-**Please note**: Be advised that self-hosted Phantasus requires some additional installation. Consider the end of this part for instructions.
+**Please note**: Be advised that self-hosted Phantasus requires some additional installation to make **AnnotationDB** work properly. Consider the end of this part for instructions.
 
 AnnotationDB provides an opportunity to convert annotation columns in dataset. Open _Tools/Annotate/Annotate Rows/From Database_. Example: converting ENTREZID column in GSE53986 to ENSEMBL. Select _org.Mm.hg.sqlite_ specimen database which column Gene ID, Source column type ENTREZID and result column type to ENSEMBL. 
 
@@ -337,7 +337,7 @@ knitr::include_graphics("images/enrichr_result.png")
 
 
 
-###Metabolic network analysis with Shiny GAM
+### Metabolic network analysis with Shiny GAM
 
 Another analysis integrated into Phantasus is metabolic network analysis
 with [Shiny GAM](https://artyomovlab.wustl.edu/shiny/gam/).
