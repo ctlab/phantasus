@@ -17,7 +17,8 @@ for heatmap visualisation and analysis, which was integrated with an R environme
 
 The main object in Phantasus is a gene expression matrix.
 It can either be uploaded from a local text or Excel file 
-or loaded from Gene Expression Omnibus (GEO) database by the series identifier.
+or loaded from Gene Expression Omnibus (GEO) database by the series identifier
+(both microarray and RNA-seq datasets are supported).
 Aside from basic visualization and filtering methods as implemented in Morpheus,
 R-based methods such as k-means clustering, principal component analysis, 
 differential expression analysis with limma package are supported.  
@@ -137,7 +138,7 @@ power of downstream analysis methods.
 
 First, we calculate mean expression of each gene using 
 _Tools/Create Calculated Annotation_ menu. 
-Enter `mean_expression` as the annotation name and `MEAN()` in the _Formula_ field
+Select `Mean` operation, optionally enter a name for the resulting column,
 and click _OK_. The result will appear as an additional column in row annotations.
 
 ```{r, out.width = "500px", echo = FALSE}
@@ -264,7 +265,8 @@ knitr::include_graphics("images/limma_results.png")
 
 **Pathway analysis with FGSEA**
 
-**Please note**: Be advised that self-hosted Phantasus requires additional steps to make **FGSEA** work properly. Consider the end of this part for instructions. Your mileage may vary.
+**Note**: Self-hosted Phantasus requires additional steps to make **FGSEA** work properly:
+see section \@ref(serving-phantasus).
 
 The results of differential gene expression can be used for pathway enrichment analysis
 with _FGSEA_ tool.
@@ -283,36 +285,31 @@ knitr::include_graphics("images/fgsea_result.png")
 ```
 
 Clicking on table row will provide additional information on pathway: pathway name, genes in pathway, leading edge.
-You can save result of analysis in TSV format.
+You can save result of analysis in `TSV` format.
 
-**Additional steps**: **FGSEA** requires pathway database in .rds files under cacheDir/fgsea folder. Pathway database is a .rds file containing dataframe with columns: geneID, pathName, geneSymbol. You can see example dataframe by entering
-```{r, eval=FALSE}
-data("dbExample", package="phantasus")
-```
 
 # Advanced usage
 
-## Additional Tools
+## Gene identifiers conversion with AnnotationDB
 
-### Annotation convertation with AnnotationDB
+**Note**: Self-hosted Phantasus requires additional steps to make *AnnotationDB* work properly:
+see section \@ref(serving-phantasus).
 
-**Please note**: Be advised that self-hosted Phantasus requires some additional installation to make **AnnotationDB** work properly. Consider the end of this part for instructions.
-
-AnnotationDB provides an opportunity to convert annotation columns in dataset. Open _Tools/Annotate/Annotate Rows/From Database_. Example: converting ENTREZID column in GSE53986 to ENSEMBL. Select _org.Mm.hg.sqlite_ specimen database which column Gene ID, Source column type ENTREZID and result column type to ENSEMBL. 
+AnnotationDB provides an opportunity to convert annotation columns in dataset. Open _Tools/Annotate/Annotate Rows/From Database_. Example: converting `ENTREZID` column in GSE53986 to `ENSEMBL`. Select _org.Mm.hg.sqlite_ specimen database with 
+*Source column* -- `Gene ID`,
+*Source column type* -- `ENTREZID`, and *Result column type* -- `ENSEMBL`. 
 
 ```{r, out.width = "600px", echo = FALSE}
 knitr::include_graphics("images/annotation_tool.png")
 ```
 
-Clicking OK will append new column with correspoding ENSEMBL to gene annotation.
+Clicking *OK* will append a new column with correspoding `ENSEMBL` identifier to the gene annotation.
 
 ```{r, out.width = "600px", echo = FALSE}
 knitr::include_graphics("images/annotation_result.png")
 ```
 
-**Addtitional steps**: AnnotationDB tool requires annotation databases under cacheDir/annotationdb folder. For example you can get [Mus Musculus](https://bioconductor.org/packages/release/data/annotation/html/org.Mm.eg.db.html) database. Extract org.Mm.eg.sqlite and put to cacheDir/annotationdb folder.
-
-### Pathway analysis with Enrichr
+## Pathway analysis with Enrichr
 
 The results of differential gene expression can be used, for example,
 for pathway enrichment analysis with online tools such as
@@ -336,8 +333,7 @@ knitr::include_graphics("images/enrichr_result.png")
 ```
 
 
-
-### Metabolic network analysis with Shiny GAM
+## Metabolic network analysis with Shiny GAM
 
 Another analysis integrated into Phantasus is metabolic network analysis
 with [Shiny GAM](https://artyomovlab.wustl.edu/shiny/gam/).
@@ -356,14 +352,6 @@ knitr::include_graphics("images/shiny_gam_result.jpg")
 ```
 
 
-## Options for `servePhantasus`
-
-You can customise serving of the application by specifying following parameters:
-
-- `host` and `port` (by default: `"0.0.0.0"` and `8000`);
-- `cacheDir` (by default: `tempdir()`) -- directory where downloaded datasets will be saved and reused in later sessions;
-- `preloadedDir` (by default: `NULL`) -- directory with `ExpressionSet` objects encoded in rda-files, that can be quickly loaded to application by name (see section \@ref(preloaded-datasets));
-- `openInBrowser` (by default `TRUE`).
 
 ## Loading dataset options
 
@@ -385,6 +373,20 @@ You can either open the dataset from the main page, or if you are already lookin
 ```{r, out.width="500px", echo = FALSE}
 knitr::include_graphics("images/open_file_tool.jpg")
 ```
+
+# Serving Phantasus
+
+Some of Phantasus features require additional set up.
+
+## Options for `servePhantasus`
+
+You can customise serving of the application by specifying following parameters:
+
+- `host` and `port` (by default: `"0.0.0.0"` and `8000`);
+- `cacheDir` (by default: `tempdir()`) -- directory where downloaded datasets will be saved and reused in later sessions;
+- `preloadedDir` (by default: `NULL`) -- directory with `ExpressionSet` objects encoded in rda-files, that can be quickly loaded to application by name (see section \@ref(preloaded-datasets));
+- `openInBrowser` (by default `TRUE`).
+
 
 ## Preloaded datasets 
 
@@ -439,6 +441,22 @@ Or you can call
 ```{r, eval=F}
 updateARCHS4(cacheDir=cacheDir)
 ```
+
+
+## Pathway database for FGSEA
+
+*FGSEA* requires pathway database in `.rds` files under `<cacheDir>/fgsea` folder.
+Pathway database is an `.rds` file containing dataframe with columns: `geneID`, `pathName`, `geneSymbol`. You can see an example dataframe by entering:
+```{r, eval=FALSE}
+data("dbExample", package="phantasus")
+```
+
+## Annotation database for AnnotationDB tool
+
+*AnnotationDB* tool requires annotation databases 
+under `<cacheDir>/annotationdb` folder. For example you can get 
+[Mus Musculus](https://bioconductor.org/packages/release/data/annotation/html/org.Mm.eg.db.html) database package from Bioconductor, extract `org.Mm.eg.sqlite`, and put it to `<cacheDir>/annotationdb` folder.
+
 
 # Feedback
 
