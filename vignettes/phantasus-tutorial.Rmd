@@ -185,7 +185,7 @@ will be downloaded.
 
 One of the ways to asses quality of the dataset is to use
 principal component analysis (PCA) method. This can be done
-using _Tools/PCA Plot_ menu.
+using _Tools/Plots/PCA Plot_ menu.
 
 ```{r, out.width = "550px", echo = FALSE}
 knitr::include_graphics("images/pcaplot_tool_clean.png")
@@ -206,7 +206,7 @@ are outliers.
 **K-means clustering**
 
 Another useful dataset exploration tool is k-means clustering.
-Use _Tools/k-means_ to cluster genes into 16 clusters.
+Use _Tools/Clustering/k-means_ to cluster genes into 16 clusters.
 
 ```{r, out.width = "500px", echo = FALSE}
 knitr::include_graphics("images/kmeans_tool.jpg")
@@ -245,7 +245,7 @@ knitr::include_graphics("images/good_samples.jpg")
 **Apllying _limma_ tool**
 
 Differential gene expression analysis can be carried out
-with _Tool/limma_ menu. 
+with _Tool/Diffential Expression/limma_ menu. 
 Choose _treatment_ as a _Field_, with
 _Untreated_ and _LPS_ as classes. Clicking _OK_
 will call differential gene expression analysis method 
@@ -262,7 +262,57 @@ up-regulated upon LPS treatment.
 knitr::include_graphics("images/limma_results.png")
 ```
 
-**Pahway analysis with Enrichr**
+**Pathway analysis with FGSEA**
+
+**Please note**: Be advised that self-hosted Phantasus requires additional steps to make **FGSEA** work properly. Consider the end of this part for instructions. Your mileage may vary.
+
+The results of differential gene expression can be used for pathway enrichment analysis
+with _FGSEA_ tool.
+
+Open _Tools/Pathway Analysis/Perform FGSEA_, then select Pathway database, which corresponds specimen used in dataset
+(Mus Musculus in this example), ranking column and column with ENTREZID or Gene IDs.
+
+```{r, out.width = "600px", echo = FALSE}
+knitr::include_graphics("images/fgsea_tool.png")
+```
+
+Clicking OK will open new tab with pathways table.
+
+```{r, out.width = "800px", echo = FALSE}
+knitr::include_graphics("images/fgsea_result.png")
+```
+
+Clicking on table row will provide additional information on pathway: pathway name, genes in pathway, leading edge.
+You can save result of analysis in TSV format.
+
+**Additional steps**: **FGSEA** requires pathway database in .rds files under cacheDir/fgsea folder. Pathway database is a .rds file containing dataframe with columns: geneID, pathName, geneSymbol. You can see example dataframe by entering
+```{r, eval=FALSE}
+data("dbExample", package="phantasus")
+```
+
+# Advanced usage
+
+## Additional Tools
+
+### Annotation convertation with AnnotationDB
+
+**Please note**: Be advised that self-hosted Phantasus requires some additional installation. Consider the end of this part for instructions.
+
+AnnotationDB provides an opportunity to convert annotation columns in dataset. Open _Tools/Annotate/Annotate Rows/From Database_. Example: converting ENTREZID column in GSE53986 to ENSEMBL. Select _org.Mm.hg.sqlite_ specimen database which column Gene ID, Source column type ENTREZID and result column type to ENSEMBL. 
+
+```{r, out.width = "600px", echo = FALSE}
+knitr::include_graphics("images/annotation_tool.png")
+```
+
+Clicking OK will append new column with correspoding ENSEMBL to gene annotation.
+
+```{r, out.width = "600px", echo = FALSE}
+knitr::include_graphics("images/annotation_result.png")
+```
+
+**Addtitional steps**: AnnotationDB tool requires annotation databases under cacheDir/annotationdb folder. For example you can get [Mus Musculus](https://bioconductor.org/packages/release/data/annotation/html/org.Mm.eg.db.html) database. Extract org.Mm.eg.sqlite and put to cacheDir/annotationdb folder.
+
+### Pathway analysis with Enrichr
 
 The results of differential gene expression can be used, for example,
 for pathway enrichment analysis with online tools such as
@@ -270,7 +320,7 @@ for pathway enrichment analysis with online tools such as
 or [Enrichr](http://amp.pharm.mssm.edu/Enrichr/).
 
 For ease of use Enrichr is integrated into Phantasus. 
-Open _Tools/Submit to Enrichr_ menu and select about top 200 genes up-regulated on LPS.
+Open _Tools/Pathway Analysis/Submit to Enrichr_ menu and select about top 200 genes up-regulated on LPS.
 Also select _Gene symbol_ as the column with gene symbols.
 
 ```{r, out.width = "600px", echo = FALSE}
@@ -287,12 +337,12 @@ knitr::include_graphics("images/enrichr_result.png")
 
 
 
-**Metabolic network analysis with Shiny GAM**
+###Metabolic network analysis with Shiny GAM
 
 Another analysis integrated into Phantasus is metabolic network analysis
 with [Shiny GAM](https://artyomovlab.wustl.edu/shiny/gam/).
 After differential expression you can submit 
-the table with _limma_ results using _Tools/Sumbit to Shiny GAM_ menu.
+the table with _limma_ results using _Tools/Pathway Analysis/Sumbit to Shiny GAM_ menu.
 
 ```{r, out.width = "300px", echo = FALSE}
 knitr::include_graphics("images/shiny_gam.jpg")
@@ -305,7 +355,6 @@ and the submitted data.
 knitr::include_graphics("images/shiny_gam_result.jpg")
 ```
 
-# Advanced usage
 
 ## Options for `servePhantasus`
 
@@ -385,7 +434,11 @@ gene expression counts as computed by [ARCHS4 project](http://amp.pharm.mssm.edu
 To make it work one need to download gene level expression from 
 the [Download](http://amp.pharm.mssm.edu/archs4/download.html) section. The
 downloaded files `human_matrix.h5` and `mouse_matrix.h5` should be placed 
-into Phantasus cache folder.
+into Phantasus cache under archs4 folder.
+Or you can call
+```{r, eval=F}
+updateARCHS4(cacheDir=cacheDir)
+```
 
 # Feedback
 
