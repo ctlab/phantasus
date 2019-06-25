@@ -466,3 +466,11 @@ You can see known issues and submit yours at GitHub:
 # Acknowledgments
 
 The authors are very thankful to Joshua Gould for developing Morpheus.
+
+# Citation
+
+Please cite us as: 
+
+Zenkova D., Kamenev V., Sablina R., Artyomov M., Sergushichev A.
+Phantasus: visual and interactive gene expression analysis.
+https://genome.ifmo.ru/phantasus doi: 10.18129/B9.bioc.phantasus

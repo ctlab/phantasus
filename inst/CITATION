@@ -1,0 +1,11 @@
+    citEntry(entry="Manual",
+    author = "Daria Zenkova and Vlad Kamenev and Rita Sablina and Maxim Artyomov and Alexey Sergushichev",
+    title = "Phantasus: visual and interactive gene expression analysis",
+    year = "2018",
+    doi = "10.18129/B9.bioc.phantasus",
+    URL = "https://genome.ifmo.ru/phantasus",
+    textVersion = paste("Zenkova D., Kamenev V., Sablina R., Artyomov M., Sergushichev A.",
+                        "Phantasus: visual and interactive gene expression analysis.",
+                        "https://genome.ifmo.ru/phantasus",
+                        "doi: 10.18129/B9.bioc.phantasus")
+)
