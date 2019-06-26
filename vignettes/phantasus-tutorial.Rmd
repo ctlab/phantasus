@@ -287,7 +287,6 @@ knitr::include_graphics("images/fgsea_result.png")
 Clicking on table row will provide additional information on pathway: pathway name, genes in pathway, leading edge.
 You can save result of analysis in `TSV` format.
 
-
 # Advanced usage
 
 ## Gene identifiers conversion with AnnotationDB
@@ -351,7 +350,33 @@ and the submitted data.
 knitr::include_graphics("images/shiny_gam_result.jpg")
 ```
 
+## GSEA enrichment plot
 
+The results of pathway analysis with _FGSEA_ can be used for generating enrichment plot.
+Clicking on table row will provide you a list of _Gene IDs_. 
+```{r, out.width = "600px", echo = FALSE}
+knitr::include_graphics("images/fgsea_genes.png")
+```
+Copy the list, switch back to dataset tab and paste to search field. 
+```{r, out.width = "600px", echo = FALSE}
+knitr::include_graphics("images/fgsea_search.png")
+```
+This will select the corresponding genes in dataset. Then proceed to _Tools/Plots/GSEA plot_
+```{r, out.width = "600px", echo = FALSE}
+knitr::include_graphics("images/GSEA_plot.png")
+```
+Then use _Export to SVG_ button to save plot in `.svg` format.
+Also there are options to control orientation of plot, ranking column and annotation.
+
+## Link sharing
+
+Current progress on the dataset can be shared via link.
+Go to _File/Get link to a dataset_. 
+This will provide you a link, to a current dataset.
+```{r, out.width = "600px", echo = FALSE}
+knitr::include_graphics("images/link.png")
+```
+**Note**: The following warning about 30 days to live is not applicable to self-hosted Phantasus
 
 ## Loading dataset options
 
@@ -448,7 +473,7 @@ updateARCHS4(cacheDir=cacheDir)
 *FGSEA* requires pathway database in `.rds` files under `<cacheDir>/fgsea` folder.
 Pathway database is an `.rds` file containing dataframe with columns: `geneID`, `pathName`, `geneSymbol`. You can see an example dataframe by entering:
 ```{r, eval=FALSE}
-data("dbExample", package="phantasus")
+data("fgseaExample", package="phantasus")
 ```
 
 ## Annotation database for AnnotationDB tool
