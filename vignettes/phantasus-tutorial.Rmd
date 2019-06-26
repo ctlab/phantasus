@@ -366,7 +366,8 @@ This will select the corresponding genes in dataset. Then proceed to _Tools/Plot
 knitr::include_graphics("images/GSEA_plot.png")
 ```
 Then use _Export to SVG_ button to save plot in `.svg` format.
-Also there are options to control orientation of plot, ranking column and annotation.
+Also there are options to control orientation of the plot, the ranking column 
+and annotation.
 
 ## Link sharing
 
@@ -472,8 +473,9 @@ updateARCHS4(cacheDir=cacheDir)
 
 *FGSEA* requires pathway database in `.rds` files under `<cacheDir>/fgsea` folder.
 Pathway database is an `.rds` file containing dataframe with columns: `geneID`, `pathName`, `geneSymbol`. You can see an example dataframe by entering:
-```{r, eval=FALSE}
+```{r, eval=TRUE}
 data("fgseaExample", package="phantasus")
+head(fgseaExample)
 ```
 
 ## Annotation database for AnnotationDB tool
