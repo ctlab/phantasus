@@ -21301,17 +21301,19 @@ phantasus.ActionManager = function () {
         window.dataset = options.heatMap.project.getFullDataset();
         window.heatmap = options.heatMap;
       }
-    })
+    });
+
+
+    this.add({
+      name: phantasus.ReproduceTool.prototype.toString(),
+      cb: function (options) {
+        new phantasus.ReproduceTool(
+          options.heatMap.getProject()
+        );
+      }
+    });
   }
 
-  this.add({
-    name: phantasus.ReproduceTool.prototype.toString(),
-    cb: function (options) {
-      new phantasus.ReproduceTool(
-        options.heatMap.getProject()
-      );
-    }
-  });
 
   this.add({
     name: 'Submit to Enrichr',
