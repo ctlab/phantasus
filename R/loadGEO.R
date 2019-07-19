@@ -692,26 +692,99 @@ inferCondition <- function(es) {
 }
 
 
+downloadGPL <- function (GPL, destdir = tempdir()) {
+  GPL <- toupper(GPL)
+  stub = gsub('\\d{1,3}$','nnn',GPL,perl=TRUE)
+  GPLDirPath <- '%s/geo/platforms/%s/%s/annot'
+  fullGPLDirPath <- file.path(sprintf(GPLDirPath, destdir, stub, GPL))
+
+  cachedFile <- file.path(fullGPLDirPath, paste0(GPL, ".annot.gz"))
+  cachedSoft <- file.path(fullGPLDirPath, paste0(GPL, ".soft"))
+  cachedSoftGz <- file.path(fullGPLDirPath, paste0(GPL, ".soft.gz"))
+  if (file.exists(cachedFile)) {
+    if (file.size(cachedFile) == 0) {
+      file.remove(cachedFile)
+      message(cachedFile, ' size is 0')
+    } else {
+      return (cachedFile)
+    }
+  } else if (file.exists(cachedSoft)) {
+    if (file.size(cachedSoft) == 0) {
+      file.remove(cachedSoft)
+      message(cachedSoft, ' size is 0')
+    } else {
+      return (cachedSoft)
+    }
+  } else if (file.exists(cachedSoftGz)) {
+    if (file.size(cachedSoftGz) == 0) {
+      file.remove(cachedSoftGz)
+      message(cachedSoftGz, ' size is 0')
+    } else {
+      return (cachedSoftGz)
+    }
+  }
+
+
+  annotPath <- 'https://ftp.ncbi.nlm.nih.gov/geo/platforms/%s/%s/annot/%s'
+  annotURL <- sprintf(annotPath,stub,GPL,paste0(GPL,'.annot.gz'))
+  dir.create(fullGPLDirPath, showWarnings = FALSE, recursive = TRUE)
+  targetFile <- ''
+
+  req <- httr::HEAD(annotURL)
+  if (httr::status_code(req) != 404) {
+    # annot available
+    tmp <- tempfile(pattern=paste0(GPL, ".annot.gz"), tmpdir=fullGPLDirPath)
+    tryCatch({
+      download.file(annotURL, tmp)
+    }, error=function (e) {
+      unlink(tmp)
+      stop('Could not download GPL ', GPL, e)
+    })
+
+    file.copy(tmp, cachedFile)
+    unlink(tmp)
+    targetFile <- cachedFile
+  } else {
+    # need submitter
+    tmp <- tempfile(pattern=paste0(GPL, ".soft"), tmpdir=fullGPLDirPath)
+    apiURL <- "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi"
+    submitterURL <- paste(apiURL,'?targ=self&acc=',GPL,'&form=text&view=quick',sep='')
+    tryCatch({
+      download.file(submitterURL, tmp)
+    }, error=function (e) {
+      unlink(tmp)
+      stop('Could not download GPL ', GPL, e)
+    })
+
+    gzFile <- gzfile(cachedSoftGz, 'w')
+    lines <- readLines(tmp)
+    writeLines(lines, gzFile)
+    close(gzFile)
+    unlink(tmp)
+    targetFile <- cachedSoftGz
+  }
+
+  if (file.size(targetFile) == 0) {
+    file.remove(targetFile)
+    stop('Could not download GPL ', GPL, '. Zero file')
+  }
+
+  con <- file(targetFile, 'r')
+  first_hundred_lines <- readLines(con, n=100)
+  close(con)
+  found<-grep('^\\^(PLATFORM|ANNOTATION)', first_hundred_lines, ignore.case = TRUE)
+  if (!length(found)) {
+    file.remove(targetFile)
+    stop('Could not download GPL ', GPL, '.  Possible NCBI problems')
+  }
+
+
+  return(targetFile)
+}
+
 getGPLAnnotation <- function (GPL, destdir = tempdir()) {
-    GPL <- toupper(GPL)
-    stub = gsub('\\d{1,3}$','nnn',GPL,perl=TRUE)
-    GPLDirPath <- '%s/geo/platforms/%s/%s/annot'
-    fullGPLDirPath <- file.path(sprintf(GPLDirPath, destdir, stub, GPL))
-
-    dir.create(fullGPLDirPath, showWarnings = FALSE, recursive = TRUE)
-
-    cachedFile <- file.path(fullGPLDirPath, paste0(GPL, ".annot.gz"))
-    if (file.exists(cachedFile) && file.size(cachedFile) == 0) {
-        file.remove(cachedFile)
-    }
-
-    filename <- getGEOfile(GPL, destdir=fullGPLDirPath, AnnotGPL = TRUE, amount = "data")
-
-    if (file.size(filename) == 0) {
-        file.remove(filename)
-        stop(sprintf("Downloaded %s annotation is empty: %s", GPL, filename))
-    }
-    ret <- parseGEO(filename, destdir=fullGPLDirPath, AnnotGPL = TRUE)
+    filename <- downloadGPL(GPL, destdir)
+    ret <- parseGEO(filename)
 
     return(ret)
 }
