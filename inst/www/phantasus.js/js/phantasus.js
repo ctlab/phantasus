@@ -23394,7 +23394,22 @@ phantasus.DatasetHistory.prototype = {
     var currentHistory = this.get();
 
     if (!_.size(currentHistory)) {
-      $('<h5>But apparently there is no datasets in your history.</h5>').appendTo($parent);
+      var $example = $('<h5>But apparently there is no datasets in your history. <a href="#" id="example-dataset">Open example dataset</a></h5>');
+      var $example_button = $example.find('#example-dataset');
+
+      $example_button.on('click', function () {
+        _this.trigger('open',
+          {
+            "file":"GSE53986",
+            "options":{
+              "interactive":true,
+              "isGEO":true
+            }
+          }
+        );
+      });
+
+      $example.appendTo($parent);
     } else {
       var ul = $('<ul></ul>');
       _.each(currentHistory, function (elem, idx) {
