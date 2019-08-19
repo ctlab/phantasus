@@ -24,7 +24,7 @@ Imports: ggplot2, protolite, Biobase, GEOquery, Rook, htmltools,
         httpuv, jsonlite, limma, opencpu, assertthat, methods, httr, rhdf5,
         utils, parallel, stringr, fgsea (>= 1.9.4), svglite, gtable, stats,
         Matrix, Matrix.utils, pheatmap, scales, ccaPP, grid, grDevices,
-        AnnotationDbi
+        AnnotationDbi, DESeq2
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true

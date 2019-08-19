@@ -1,7 +1,7 @@
-limmaAnalysisImpl <- function(es, rows, columns, fieldValues) {
+limmaAnalysisImpl <- function(es, fieldValues) {
     fieldValues <- replace(fieldValues, fieldValues == "", NA)
 
-    es.copy <- es[rows, columns]
+    es.copy <- es
     es.copy$Comparison <- fieldValues
     fData(es.copy) <- data.frame(row.names = rownames(es.copy))
 
@@ -45,14 +45,13 @@ limmaAnalysisImpl <- function(es, rows, columns, fieldValues) {
 #' limmaAnalysis(es, fieldValues = c("A", "A", "A", "B", "B"))
 #' }
 limmaAnalysis <- function(es, fieldValues) {
-    rows <- getIndicesVector(c(), nrow(exprs(es)))
-    columns <- getIndicesVector(c(), ncol(exprs(es)))
-
-    de <- limmaAnalysisImpl(es, rows=rows, columns = columns, fieldValues)
+    fieldValues <- replace(fieldValues, fieldValues == "", NA)
+    de <- limmaAnalysisImpl(es, fieldValues)
 
     toRemove <- intersect(colnames(fData(es)), colnames(de))
     fData(es)[, toRemove] <- NULL
     fData(es) <- cbind(fData(es), de)
+    es$Comparison <- fieldValues
     assign("es", es, envir = parent.frame())
 
     f <- tempfile(pattern = "de", tmpdir = getwd(), fileext = ".bin")
