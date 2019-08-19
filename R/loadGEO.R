@@ -55,7 +55,10 @@ loadGEO <- function(name, type = NA) {
                 paste0(name, "-", annotation(ess[[i]])) else name
             files[[seriesName]] <- writeToList(ess[[i]])
         }
-        writeBin(protolite::serialize_pb(files), filePath)
+        tempBinFile <- tempfile(paste0(binaryName, ".binsave"), tmpdir=geoDir)
+        writeBin(protolite::serialize_pb(files), tempBinFile)
+        message('Saved binary file')
+        file.rename(tempBinFile, filePath)
     }
 
 
