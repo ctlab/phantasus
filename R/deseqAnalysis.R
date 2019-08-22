@@ -10,7 +10,7 @@ deseqAnalysis <- function (es, fieldValues) {
     dds <- DESeq2::DESeqDataSetFromMatrix(exprs(es.copy), pData(es.copy), design=~Comparison)
 
     populatedDds <- DESeq2::DESeq(dds)
-    de <- DESeq2::results(populatedDds, contrast = c('Comparison', 'A', 'B'), cooksCutoff = FALSE)
+    de <- DESeq2::lfcShrink(populatedDds, contrast = c('Comparison', 'A', 'B'), cooksCutoff = FALSE)
 
     es$Comparsion <- fieldValues
     fData(es) <- cbind(fData(es), as.data.frame(de))
