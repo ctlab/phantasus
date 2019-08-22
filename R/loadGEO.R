@@ -194,14 +194,18 @@ loadFromARCHS4 <- function(es, archs4_files) {
                                         stats::na.omit(sampleIndexes)))
         rownames(expression) <- genes
         colnames(expression) <- colnames(es)[!is.na(sampleIndexes)]
-        H5close()
 
         es2 <- ExpressionSet(assayData = expression,
                              phenoData = phenoData(es[, !is.na(sampleIndexes)]),
                              annotation = annotation(es),
                              experimentData = experimentData(es)
                             )
-        fData(es2) <- cbind(fData(es2), "Gene symbol"=rownames(es2))
+        fData(es2) <- cbind(fData(es2),
+          "id"=as.character(h5read(destfile, "meta/gene_ensemblid")),
+          "Gene symbol"=rownames(es2),
+          "Gene ID"=as.character(h5read(destfile, "meta/gene_entrezid"))
+        )
+        H5close()
         return(es2)
     }
 
