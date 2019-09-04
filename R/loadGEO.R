@@ -202,9 +202,9 @@ loadFromARCHS4 <- function(es, archs4_files) {
                              experimentData = experimentData(es)
                             )
         fData(es2) <- cbind(fData(es2),
-          "id"=as.character(h5read(destfile, "meta/gene_ensemblid", index=h5Indexes)),
+          "id"=as.character(h5read(destfile, "meta/gene_ensemblid")),
           "Gene symbol"=rownames(es2),
-          "Gene ID"=as.character(h5read(destfile, "meta/gene_entrezid", index=h5Indexes))
+          "Gene ID"=as.character(h5read(destfile, "meta/gene_entrezid"))
         )
         H5close()
         return(es2)
@@ -340,7 +340,7 @@ getGSE <- function(name, destdir = tempdir(),
     fullGEODirPath <- getGEODir(name, destdir)
     destfile <- file.path(fullGEODirPath, filename)
 
-    if (!checkGSEType(name)) {
+    if (!checkGSEType(name, destdir)) {
       stop('Currently unsupported experiment type')
     }
 
@@ -678,7 +678,7 @@ checkGSEType <- function (name, destDir) {
   spl <- unlist(strsplit(name, "-", fixed=TRUE))
   GEO <- spl[1]
 
-  briefData <- getBriefData(name, cacheDir)
+  briefData <- getBriefData(name, destDir)
   types <- briefData$type
 
   if (length(types) < 1) {

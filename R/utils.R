@@ -269,7 +269,7 @@ getBriefData <- function (name, destdir = tempdir()) {
 
   url <- sprintf("www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=%s&targ=self&form=text&view=brief", GEO)
   resp <- httr::GET(url)
-  text <- httr::content(resp, "text", "utf-8")
+  text <- httr::content(resp, "text", "UTF-8")
   check <- grep('Could not', text)
   if (length(check)) {
     message('No such dataset: ', name)
