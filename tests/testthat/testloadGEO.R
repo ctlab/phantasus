@@ -128,3 +128,10 @@ test_that("getGPLAnnotation works with errorneous empty annotation files", {
     gpl <- getGPLAnnotation(GPL, destdir)
     expect_true(!is.null(gpl))
 })
+
+test_that("getGSEType works", {
+    expect_true(getGSEType('GSE53986', tempdir()))
+    expect_true(getGSEType('GSE99709', tempdir()))
+    expect_false(getGSEType('GSE33356', tempdir()))
+    expect_false(getGSEType('GSE33356-GPL6801', tempdir()))
+})
