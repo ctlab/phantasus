@@ -52,7 +52,7 @@ COPY . /root/phantasus
 
 RUN R -e 'install.packages("BiocManager"); BiocManager::install()'
 
-RUN R -e 'devtools::install_github("ctlab/fgsea", tag="1.9.5")'
+#RUN R -e 'devtools::install_github("ctlab/fgsea", tag="1.9.6")'
 RUN R -e 'devtools::install_github("opencpu/opencpu")'
 RUN R -e 'devtools::install_github("vlakam/geoquery")'
 RUN R -e 'devtools::install("/root/phantasus", build_vignettes=T)'
