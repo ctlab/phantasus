@@ -15951,9 +15951,17 @@ phantasus.DESeqTool.prototype = {
       var columnInB = checkCortege(vs, classB, i);
       if (columnInA && columnInB) {
         var warning = "Chosen classes have intersection in column " + i;
+        promise.reject();
         throw new Error(warning);
       }
       v.setValue(i, columnInA ? "A" : (columnInB ? "B" : ""));
+    }
+
+    var vecArr = phantasus.VectorUtil.toArray(v);
+    var count = _.countBy(vecArr);
+    if (count['A'] === 1 || count['B'] === 1) {
+      promise.reject();
+      throw new Error('Chosen classes have only single sample');
     }
 
     project.trigger("trackChanged", {
@@ -16005,7 +16013,7 @@ phantasus.DESeqTool.prototype = {
               }
 
             });
-            // alert("Limma finished successfully");
+
             dataset.setESSession(Promise.resolve(session));
             project.trigger("trackChanged", {
               vectors: vs,

@@ -12,8 +12,12 @@ deseqAnalysis <- function (es, fieldValues) {
     populatedDds <- DESeq2::DESeq(dds)
     de <- DESeq2::lfcShrink(populatedDds, contrast = c('Comparison', 'A', 'B'), cooksCutoff = FALSE)
 
+    deDf <- as.data.frame(de)
+    toRemove <- intersect(colnames(fData(es)), colnames(deDf))
+    fData(es)[, toRemove] <- NULL
+
     es$Comparsion <- fieldValues
-    fData(es) <- cbind(fData(es), as.data.frame(de))
+    fData(es) <- cbind(fData(es), deDf)
     assign("es", es, envir = parent.frame())
 
     f <- tempfile(pattern = "de", tmpdir = getwd(), fileext = ".bin")

@@ -1,5 +1,5 @@
-commit fc6cf248610b1508e199a6d2204850b9a5426c4c
+commit 6c1bec08c99e7a5c83edd09c491ddfc03f3b14de
 Author: petrovich <mazahakaforever@ya.ru>
-Date:   Mon Aug 19 05:02:34 2019 +0300
+Date:   Tue Sep 10 18:35:52 2019 +0300
 
-    Initial DESeq2 analysis.
+    DESeq: single sample check.
