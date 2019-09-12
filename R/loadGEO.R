@@ -201,11 +201,16 @@ loadFromARCHS4 <- function(es, archs4_files) {
                              annotation = annotation(es),
                              experimentData = experimentData(es)
                             )
-        fData(es2) <- cbind(fData(es2),
-          "id"=as.character(h5read(destfile, "meta/gene_ensemblid")),
-          "Gene symbol"=rownames(es2),
-          "Gene ID"=as.character(h5read(destfile, "meta/gene_entrezid"))
-        )
+
+        tryCatch({
+          fData(es2) <- cbind(fData(es2), "ENSEMBLID"=as.character(h5read(destfile, "meta/gene_ensemblid")))
+        }, error=function (e) {})
+
+        tryCatch({
+          fData(es2) <- cbind(fData(es2), "Gene ID"=as.character(h5read(destfile, "meta/gene_entrezid")))
+        }, error=function (e) {})
+
+        fData(es2) <- cbind(fData(es2), "Gene symbol"=rownames(es2))
         H5close()
         return(es2)
     }
