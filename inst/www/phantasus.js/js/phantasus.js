@@ -2011,6 +2011,17 @@ phantasus.Util.browserCheck = function () {
   }
 };
 
+phantasus.Util.fuzzySearchIdx = function (values, candidates) {
+  var fit = values.map(function (value) {
+    return candidates.some(function (candidate) {
+      return value.startsWith(candidate);
+    });
+  });
+
+  var firstIndex = fit.findIndex(function (val) { return val; });
+  return (firstIndex === -1) ? 0 : firstIndex;
+};
+
 phantasus.BlobFromPath = function () {
 };
 phantasus.BlobFromPath.getFileBlob = function (url, cb) {
@@ -14628,7 +14639,7 @@ phantasus.ChartTool = function (chartOptions) {
   formBuilder.append({
     name: 'chart_type',
     type: 'bootstrap-select',
-    options: ["row profile", "column profile", 'boxplot']
+    options: ["row profile", "column profile", 'boxplot', 'volcano plot']
   });
   var rowOptions = [];
   var columnOptions = [];
@@ -14713,6 +14724,25 @@ phantasus.ChartTool = function (chartOptions) {
 
 
   updateOptions();
+  var numericRowNames = numericRowOptions.map(function (option) { return option.name; });
+  var defaultVolcanoX = numericRowOptions[phantasus.Util.fuzzySearchIdx(numericRowNames, ['logFC', 'log2FoldChange'])];
+  var defaultVolcanoY = numericRowOptions[phantasus.Util.fuzzySearchIdx(numericRowNames, ['P.Value', 'pvalue'])];
+
+  formBuilder.append({
+    name: 'volcano_column_x',
+    title: 'X-axis',
+    type: 'bootstrap-select',
+    value: defaultVolcanoX.value,
+    options: numericRowOptions
+  });
+
+  formBuilder.append({
+    name: 'volcano_column_y',
+    title: 'Y-axis',
+    type: 'bootstrap-select',
+    value: defaultVolcanoY.value,
+    options: numericRowOptions
+  });
 
   formBuilder.append({
     name: 'group_by',
@@ -14748,7 +14778,7 @@ phantasus.ChartTool = function (chartOptions) {
     options: [{
       name: "(None)",
       value: ""
-    },{
+    }, {
       name: "mean",
       value: "mean"
     }, {
@@ -14792,21 +14822,27 @@ phantasus.ChartTool = function (chartOptions) {
 
   function setVisibility() {
     var chartType = formBuilder.getValue('chart_type');
-    formBuilder.setVisible('axis_label', chartType !== 'boxplot');
-    formBuilder.setVisible('color', chartType !== 'boxplot');
-    formBuilder.setVisible('tooltip', chartType !== 'boxplot');
-    formBuilder.setVisible('add_profile', chartType !== 'boxplot');
-    formBuilder.setVisible('show_points', chartType !== 'boxplot');
-    formBuilder.setVisible('show_lines', chartType !== 'boxplot');
+    var isProfile = chartType === 'column profile' || chartType === 'row profile';
+    formBuilder.setVisible('axis_label', isProfile);
+    formBuilder.setVisible('color', isProfile);
+    formBuilder.setVisible('tooltip', isProfile);
+    formBuilder.setVisible('add_profile', isProfile);
+    formBuilder.setVisible('show_points', isProfile);
+    formBuilder.setVisible('show_lines', isProfile);
     formBuilder.setVisible('group_by', chartType === 'boxplot');
     formBuilder.setVisible('box_show_points', chartType === 'boxplot');
+    formBuilder.setVisible('adjust_data', chartType !== 'volcano plot');
+    formBuilder.setVisible('volcano_column_x', chartType === 'volcano plot');
+    formBuilder.setVisible('volcano_column_y', chartType === 'volcano plot');
 
-    if (chartType === 'column profile' || chartType === 'row profile') {
+    if (isProfile) {
       formBuilder.setOptions('axis_label', chartType === 'column profile' ? rowOptions : columnOptions,
         true);
     }
 
-
+    if (chartType === 'volcano plot') {
+      formBuilder.setValue('adjust_data', []);
+    }
   }
 
   this.tooltip = [];
@@ -14838,7 +14874,7 @@ phantasus.ChartTool = function (chartOptions) {
       if (!phantasus.ChartTool.prototype.warningShown) {
         phantasus.FormBuilder.showInModal({
           title: 'Warning',
-          html: 'Selected 100 or more genes in dataset. Lines and points were automatically disabled due to performance concerns. You can enable them by yourself. Process with caution.',
+          html: 'Selected 100 or more genes in dataset. Lines and points in profile mode were automatically disabled due to performance concerns. You can enable them by yourself. Process with caution.',
           z: 10000
         });
         phantasus.ChartTool.prototype.warningShown = true;
@@ -14999,7 +15035,9 @@ phantasus.ChartTool.prototype = {
     var traceMode = [
       options.showLines ? 'lines' : '',
       options.showPoints ? 'markers' : ''
-    ] .filter(function (val) { return val.length; })
+    ].filter(function (val) {
+      return val.length;
+    })
       .join('+') || 'none';
 
     var heatmap = this.heatmap;
@@ -15330,19 +15368,21 @@ phantasus.ChartTool.prototype = {
     }
 
     this.dataset = dataset;
-    if (dataset.getRowCount() === 0 && dataset.getColumnCount() === 0) {
-      $('<h4>Please select rows and columns in the heat map.</h4>')
-        .appendTo(this.$chart);
-      return;
-    } else if (dataset.getRowCount() === 0) {
-      $('<h4>Please select rows in the heat map.</h4>')
-        .appendTo(this.$chart);
-      return;
-    }
-    if (dataset.getColumnCount() === 0) {
-      $('<h4>Please select columns in the heat map.</h4>')
-        .appendTo(this.$chart);
-      return;
+
+    if (chartType !== 'volcano plot') {
+      if (dataset.getRowCount() === 0 && dataset.getColumnCount() === 0) {
+        $('<h4>Please select rows and columns in the heat map.</h4>')
+          .appendTo(this.$chart);
+        return;
+      } else if (dataset.getRowCount() === 0) {
+        $('<h4>Please select rows in the heat map.</h4>')
+          .appendTo(this.$chart);
+        return;
+      } else if (dataset.getColumnCount() === 0) {
+        $('<h4>Please select columns in the heat map.</h4>')
+          .appendTo(this.$chart);
+        return;
+      }
     }
 
     var groupBy = this.formBuilder.getValue('group_by');
@@ -15395,6 +15435,41 @@ phantasus.ChartTool.prototype = {
                 xaxis: {}
               })
         });
+    } else if (chartType === 'volcano plot') {
+      if (dataset.getRowCount() === 0) {
+        $('<h4>Please select rows in the heat map.</h4>')
+          .appendTo(this.$chart);
+        return;
+      }
+
+      var isColumnsSelected = this.formBuilder.getValue('volcano_column_x') !== '' && this.formBuilder.getValue('volcano_column_y') !== '';
+      if (!isColumnsSelected) {
+        $('<h4>Please select columns to draw plot on.</h4>')
+          .appendTo(this.$chart);
+        return;
+      }
+
+      var volcanoColumnXInfo = phantasus.ChartTool.getVectorInfo(this.formBuilder.getValue('volcano_column_x'));
+      var volcanoColumnYInfo = phantasus.ChartTool.getVectorInfo(this.formBuilder.getValue('volcano_column_y'));
+
+      var vectorX = dataset.getRowMetadata().getByName(volcanoColumnXInfo.field);
+      var vectorY = dataset.getRowMetadata().getByName(volcanoColumnYInfo.field);
+
+      var X = phantasus.VectorUtil.toArray(vectorX);
+      var Y = phantasus.VectorUtil.toArray(vectorY);
+
+      var data = [{
+        x: X,
+        y: Y,
+        mode: 'markers',
+        type: 'scatter'
+      }];
+
+      layout.xaxis.title = volcanoColumnXInfo.field;
+      layout.yaxis.title = volcanoColumnYInfo.field;
+      layout.title = volcanoColumnXInfo.field + ' vs ' + volcanoColumnYInfo.field;
+
+      phantasus.ChartTool.newPlot(myPlot, data, layout, config);
     } else {
       if (boxShowPoints === '') boxShowPoints = false;
 
@@ -25802,7 +25877,7 @@ phantasus.FormBuilder.prototype = {
       }
     } else if ('collapsed-checkboxes' === type) {
       var checkboxes = field.checkboxes;
-      html.push('<div id="' + id + '" data-name="' + name + '" data-type="collapsed-checkboxes">');
+      html.push('<div id="' + id + '" name="' + name + '" data-type="collapsed-checkboxes">');
       html.push('<button style="' + style + '" type="button" class="btn btn-default btn-sm" data-toggle="collapse" data-target="#' + id + '_collapse">');
       if (field.icon) {
         html.push('<span class="' + field.icon + '"></span> ');

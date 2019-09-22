@@ -1,5 +1,5 @@
-commit 6c1bec08c99e7a5c83edd09c491ddfc03f3b14de
+commit c9c7d80ae1b1c06c79e52fe141699459c2b4888f
 Author: petrovich <mazahakaforever@ya.ru>
-Date:   Tue Sep 10 18:35:52 2019 +0300
+Date:   Sun Sep 22 13:39:22 2019 +0300
 
-    DESeq: single sample check.
+    Chart: volcano mode added.
