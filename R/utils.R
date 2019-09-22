@@ -262,26 +262,32 @@ getBriefData <- function (name, destdir = tempdir()) {
   GEO <- unlist(strsplit(name, "-"))[1]
   GEOdir <- dirname(getGEODir(GEO, destdir))
   briefFile <- file.path(GEOdir, 'brief')
+
   if (file.exists(briefFile)) {
     message('Using cached brief file: ', briefFile)
-    return (parseBriefData(readLines(briefFile)))
-  }
-
-  url <- sprintf("www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=%s&targ=self&form=text&view=brief", GEO)
-  message('Trying ', url)
-  resp <- httr::GET(url)
-  text <- httr::content(resp, "text", "UTF-8")
-  check <- grep('Could not', text)
-  if (length(check) || httr::status_code(resp) != 200) {
-    message('No such dataset: ', name)
-    unlink(GEOdir, recursive = TRUE, force = TRUE)
-    stop('Failed to download brief data on: ', GEO, '. No such dataset')
   } else {
-    writeLines(text, briefFile)
-    message('Stored brief data of ', GEO, ' at ', briefFile)
+    url <- sprintf("www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=%s&targ=self&form=text&view=brief", GEO)
+    message('Trying ', url)
+    resp <- httr::GET(url)
+    text <- httr::content(resp, "text", "UTF-8")
+    check <- grep('Could not', text)
+    if (length(check) || httr::status_code(resp) != 200) {
+      message('No such dataset: ', name)
+      unlink(GEOdir, recursive = TRUE, force = TRUE)
+      stop('Failed to download brief data on: ', GEO, '. No such dataset')
+    } else {
+      writeLines(text, briefFile)
+      message('Stored brief data of ', GEO, ' at ', briefFile)
+    }
   }
 
-  return (parseBriefData(readLines(briefFile)))
+  parsedList <- parseBriefData(readLines(briefFile))
+  if (length(parsedList) == 0) {
+    file.remove(briefFile)
+    stop('Failed to parse brief data on: ', GEO, '. Empty list')
+  }
+
+  return (parsedList)
 }
 
 parseBriefData <- function(txt) {
