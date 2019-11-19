@@ -1,5 +1,5 @@
-commit c9c7d80ae1b1c06c79e52fe141699459c2b4888f
-Author: petrovich <mazahakaforever@ya.ru>
-Date:   Sun Sep 22 13:39:22 2019 +0300
+commit b4e26408728a804becfdb0ca0648322d5dd55369
+Author: Vladislav Kamenev <vlad.kamenev96@gmail.com>
+Date:   Tue Nov 19 20:20:53 2019 +0300
 
-    Chart: volcano mode added.
+    Client: DESeq -> DESeq2 (experimental)
