@@ -229,3 +229,74 @@ selfCheck <- function (cacheDir=getOption("phantasusCacheDir"),
         message('!!! No fgsea tables provided')
     }
 }
+
+safeDownload <- function (url, dir, filename) {
+  dest <- file.path(dir, filename)
+  if (file.exists(dest)) {
+    return()
+  }
+
+  tempDest <- tempfile(paste0(filename, ".load"), tmpdir=dir)
+  utils::download.file(url, destfile = tempDestFile)
+  file.rename(tempDest, dest)
+}
+
+
+getGEODir <- function (name, destdir = tempdir()) {
+  type <- substr(name, 1, 3)
+  GEO <- unlist(strsplit(name, "-"))[1]
+  stub <- gsub("\\d{1,3}$", "nnn", GEO, perl = TRUE)
+  gdsDirPath <- "%s/geo/datasets/%s/%s/soft"
+  gseDirPath <- "%s/geo/series/%s/%s/matrix"
+  if (type == 'GSE') {
+    fullGEODirPath <- file.path(sprintf(gseDirPath, destdir, stub, GEO))
+  } else {
+    fullGEODirPath <- file.path(sprintf(gdsDirPath, destdir, stub, GEO))
+  }
+  dir.create(fullGEODirPath, showWarnings = FALSE, recursive = TRUE)
+
+  fullGEODirPath
+}
+
+getBriefData <- function (name, destdir = tempdir()) {
+  GEO <- unlist(strsplit(name, "-"))[1]
+  GEOdir <- dirname(getGEODir(GEO, destdir))
+  briefFile <- file.path(GEOdir, 'brief')
+
+  if (file.exists(briefFile)) {
+    message('Using cached brief file: ', briefFile)
+  } else {
+    url <- sprintf("www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=%s&targ=self&form=text&view=brief", GEO)
+    message('Trying ', url)
+    resp <- httr::GET(url)
+    text <- httr::content(resp, "text", "UTF-8")
+    check <- grep('Could not', text)
+    if (length(check) || httr::status_code(resp) != 200) {
+      message('No such dataset: ', name)
+      unlink(GEOdir, recursive = TRUE, force = TRUE)
+      stop('Failed to download brief data on: ', GEO, '. No such dataset')
+    } else {
+      writeLines(text, briefFile)
+      message('Stored brief data of ', GEO, ' at ', briefFile)
+    }
+  }
+
+  parsedList <- parseBriefData(readLines(briefFile))
+  if (length(parsedList) == 0) {
+    file.remove(briefFile)
+    stop('Failed to parse brief data on: ', GEO, '. Empty list')
+  }
+
+  return (parsedList)
+}
+
+parseBriefData <- function(txt) {
+  tmp <- txt[grep("!\\w*?_",txt)]
+  tmp <- gsub("!\\w*?_",'',tmp)
+  first.eq <- regexpr(' = ',tmp)
+  tmp <- cbind(substring(tmp,first=1,last=first.eq-1),
+               substring(tmp,first=first.eq+3))
+  tmp <- tmp[tmp[,1]!="",]
+  header <- split(tmp[,2],tmp[,1])
+  return(header)
+}

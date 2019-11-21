@@ -55,7 +55,10 @@ loadGEO <- function(name, type = NA) {
                 paste0(name, "-", annotation(ess[[i]])) else name
             files[[seriesName]] <- writeToList(ess[[i]])
         }
-        writeBin(protolite::serialize_pb(files), filePath)
+        tempBinFile <- tempfile(paste0(binaryName, ".binsave"), tmpdir=geoDir)
+        protolite::serialize_pb(files, tempBinFile)
+        message('Saved binary file: ', tempBinFile)
+        file.rename(tempBinFile, filePath)
     }
 
 
@@ -184,21 +187,31 @@ loadFromARCHS4 <- function(es, archs4_files) {
         }
 
         genes <- as.character(h5read(destfile, "meta/genes"))
+        h5Indexes = list(seq_len(length(genes)),
+                         stats::na.omit(sampleIndexes))
 
         expression <- h5read(destfile,
                              "data/expression",
-                             index=list(seq_len(length(genes)),
-                                        stats::na.omit(sampleIndexes)))
+                             index=h5Indexes)
         rownames(expression) <- genes
         colnames(expression) <- colnames(es)[!is.na(sampleIndexes)]
-        H5close()
 
         es2 <- ExpressionSet(assayData = expression,
                              phenoData = phenoData(es[, !is.na(sampleIndexes)]),
                              annotation = annotation(es),
                              experimentData = experimentData(es)
                             )
+
+        tryCatch({
+          fData(es2) <- cbind(fData(es2), "ENSEMBLID"=as.character(h5read(destfile, "meta/gene_ensemblid")))
+        }, error=function (e) {})
+
+        tryCatch({
+          fData(es2) <- cbind(fData(es2), "Gene ID"=as.character(h5read(destfile, "meta/gene_entrezid")))
+        }, error=function (e) {})
+
         fData(es2) <- cbind(fData(es2), "Gene symbol"=rownames(es2))
+        H5close()
         return(es2)
     }
 
@@ -331,6 +344,10 @@ getGSE <- function(name, destdir = tempdir(),
 
     fullGEODirPath <- getGEODir(name, destdir)
     destfile <- file.path(fullGEODirPath, filename)
+
+    if (!checkGSEType(name, destdir)) {
+      stop('Currently unsupported experiment type')
+    }
 
     infile <- file.exists(destfile)
 
@@ -531,7 +548,7 @@ reparseCachedESs <- function(destdir,
 #' checkGPLs('GSE27112')
 #' checkGPLs('GSE14308')
 #' }
-checkGPLs <- function(name) {
+checkGPLsFallback <- function(name) {
     spl <- unlist(strsplit(name, "-", fixed=TRUE))
     if (length(spl) == 2) {
         gpls <- jsonlite::fromJSON(checkGPLs(spl[1]))
@@ -613,6 +630,68 @@ checkGPLs <- function(name) {
         message("Problems establishing connection.")
         return(jsonlite::toJSON(c()))
     })
+}
+
+checkGPLs <- function(name) {
+  spl <- unlist(strsplit(name, "-", fixed=TRUE))
+  GEO <- spl[1]
+  if (length(spl) == 2) {
+    gpls <- jsonlite::fromJSON(checkGPLs(spl[1]))
+    gpls <- intersect(gpls, name)
+    return(jsonlite::toJSON(gpls))
+  }
+
+  cacheDir <- getOption("phantasusCacheDir")
+  if (is.null(cacheDir)) {
+    cacheDir <- tempdir()
+  }
+  GEOdir <- dirname(getGEODir(GEO, cacheDir))
+  GPLCacheFile <- file.path(GEOdir, 'gpls')
+  if (file.exists(GPLCacheFile)) {
+    gpls <- readLines(GPLCacheFile)
+    if (length(gpls) != 0) {
+      return(jsonlite::toJSON(gpls))
+    }
+  }
+
+  tryCatch({
+    briefData <- getBriefData(name, cacheDir)
+    platforms <- briefData$platform_id
+
+    if (length(platforms) < 1) {
+      stop('No platforms in brief data')
+    }
+
+    if (length(platforms) == 1) {
+      gpls <- c(name)
+    }
+
+    if (length(platforms) >= 2) {
+      gpls <- lapply(platforms, function (platform) {
+        paste(spl[1], platform, sep='-')
+      })
+    }
+
+    writeLines(gpls, GPLCacheFile)
+    return(jsonlite::toJSON(gpls))
+  }, error=function(e) {
+    return(checkGPLsFallback(name))
+  })
+}
+
+checkGSEType <- function (name, destDir) {
+  spl <- unlist(strsplit(name, "-", fixed=TRUE))
+  GEO <- spl[1]
+
+  briefData <- getBriefData(name, destDir)
+  types <- briefData$type
+
+  if (length(types) < 1) {
+    stop('No types in brief data')
+  }
+
+  supportedTypes <- c('Expression profiling by array', 'Expression profiling by high throughput sequencing')
+  return (all(types %in% supportedTypes))
 }
 
 removeRepeatWords <- function(titles) {
@@ -818,20 +897,4 @@ annotateFeatureData <- function (es, destdir = tempdir()) {
 
     featureData(es) <- new('AnnotatedDataFrame',data=dat,varMetadata=vmd)
     es
-}
-
-getGEODir <- function (name, destdir) {
-    type <- substr(name, 1, 3)
-    GEO <- unlist(strsplit(name, "-"))[1]
-    stub <- gsub("\\d{1,3}$", "nnn", GEO, perl = TRUE)
-    gdsDirPath <- "%s/geo/datasets/%s/%s/soft"
-    gseDirPath <- "%s/geo/series/%s/%s/matrix"
-    if (type == 'GSE') {
-        fullGEODirPath <- file.path(sprintf(gseDirPath, destdir, stub, GEO))
-    } else {
-        fullGEODirPath <- file.path(sprintf(gdsDirPath, destdir, stub, GEO))
-    }
-    dir.create(fullGEODirPath, showWarnings = FALSE, recursive = TRUE)
-
-    fullGEODirPath
 }

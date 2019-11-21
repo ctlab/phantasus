@@ -1,5 +1,5 @@
-commit bc3a1760fb179d3600c2fb7ebc5b8d080c1b6dbd
-Author: Vladislav Kamenev <mazahakaforever@ya.ru>
-Date:   Thu Jul 11 15:59:18 2019 +0300
+commit b4e26408728a804becfdb0ca0648322d5dd55369
+Author: Vladislav Kamenev <vlad.kamenev96@gmail.com>
+Date:   Tue Nov 19 20:20:53 2019 +0300
 
-    Example dataset.
+    Client: DESeq -> DESeq2 (experimental)

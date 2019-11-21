@@ -28,6 +28,9 @@ server {
         gzip_vary on;
         gzip_types text/plain text/css application/json application/x-javascript text/javascript application/javascript;
         autoindex off;
+
+        add_header Pragma public;
+        add_header Cache-Control "no-cache, public, must-revalidate, proxy-revalidate";
     }
 
     location /phantasus/geo {
@@ -41,7 +44,6 @@ server {
         autoindex off;
         expires 30d;
         add_header Pragma public;
-        add_header Cache-Control "public";
         add_header Cache-Control "no-cache, public, must-revalidate, proxy-revalidate";
     }
 
