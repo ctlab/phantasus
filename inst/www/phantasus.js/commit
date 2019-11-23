@@ -1,5 +1,6 @@
-commit b4e26408728a804becfdb0ca0648322d5dd55369
-Author: Vladislav Kamenev <vlad.kamenev96@gmail.com>
-Date:   Tue Nov 19 20:20:53 2019 +0300
+commit ded23fb3543828226703d87eef8f6a51a586f6d5
+Merge: 2e85e5b b4e2640
+Author: Alexey Sergushichev <alsergbox@gmail.com>
+Date:   Thu Nov 21 16:33:53 2019 +0300
 
-    Client: DESeq -> DESeq2 (experimental)
+    Merge branch 'develop'
