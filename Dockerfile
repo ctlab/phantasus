@@ -12,7 +12,7 @@ RUN R -e 'devtools::install("/root/phantasus", dependencies=TRUE, upgrade=FALSE,
 RUN printf "window.PHANTASUS_BUILD='$PHANTASUS_BUILD';" >> /root/phantasus/inst/www/phantasus.js/RELEASE.js
 RUN cp -r /root/phantasus/inst/www/phantasus.js /var/www/html/phantasus
 RUN cp /root/phantasus/inst/configs/default /etc/nginx/sites-available/default
-RUN mkdir /etc/opencpu
+RUN mkdir -p /etc/opencpu
 RUN cp /root/phantasus/inst/configs/opencpu.conf /etc/opencpu/server.conf
 RUN cp /root/phantasus/inst/configs/index.html /var/www/html/
 RUN rm -rf /root/phantasus/inst
