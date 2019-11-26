@@ -1,61 +1,14 @@
-FROM ubuntu:16.04
+FROM assaron/phantasus-preimage
 
 ARG TARGET_BRANCH=master
 ARG PHANTASUS_BUILD
 ARG GITHUB_PAT
 ENV OCPU_MASTER_HOME=/var/phantasus/ocpu-root
 
-RUN apt-get -y update && \
-    apt-get -y dist-upgrade && \
-    apt-get -y install \
-        software-properties-common \
-        git \
-        libcairo2-dev \
-        libxt-dev \
-        libssl-dev \
-        libssh2-1-dev \
-        libcurl4-openssl-dev \
-        nginx \
-        libapparmor-dev \
-        libxml2-dev \
-        locales \
-        wget
-
-
-RUN add-apt-repository -y 'deb http://cloud.r-project.org/bin/linux/ubuntu xenial-cran35/' && apt-get -y update
-RUN apt-get install -y --allow-unauthenticated r-base r-base-dev
-
-RUN apt-add-repository -y 'deb http://ppa.launchpad.net/maarten-fonville/protobuf/ubuntu zesty main' && \
-    apt-get -y update
-
-RUN apt-get -y --allow-unauthenticated install \
-    libprotobuf-dev \
-    protobuf-compiler
-
-RUN R -e 'install.packages("protolite", repo = "https://cran.rstudio.com/")'
-
-#RUN apt-add-repository -y ppa:opencpu/opencpu-2.0 && \
-#    apt-get update && \
-#    apt-get install -y --allow-unauthenticated \
-#        opencpu-lib
-#RUN R -e 'install.packages("opencpu", repo = "https://cran.rstudio.com/")'
-#RUN sh -c 'echo "deb http://cran.rstudio.com/bin/linux/ubuntu xenial/" >> /etc/apt/sources.list'
-# protobuf 3.5, with 2GB byte limit
-RUN gpg --keyserver keyserver.ubuntu.com --recv-key E084DAB9
-RUN gpg -a --export E084DAB9 | apt-key add -
-
-RUN R -e 'install.packages("devtools", repo = "https://cran.rstudio.com/")'
-RUN R -e 'install.packages("unix")'
-
 #RUN git clone -b ${TARGET_BRANCH} --recursive https://github.com/ctlab/phantasus /root/phantasus
 COPY . /root/phantasus
 
-RUN R -e 'install.packages("BiocManager"); BiocManager::install()'
-
-#RUN R -e 'devtools::install_github("ctlab/fgsea", tag="1.9.6")'
-RUN R -e 'devtools::install_github("opencpu/opencpu")'
-RUN R -e 'devtools::install_github("vlakam/geoquery")'
-RUN R -e 'devtools::install("/root/phantasus", build_vignettes=T)'
+RUN R -e 'devtools::install("/root/phantasus", dependencies=TRUE, upgrade=FALSE, build_vignettes=TRUE)'
 RUN printf "window.PHANTASUS_BUILD='$PHANTASUS_BUILD';" >> /root/phantasus/inst/www/phantasus.js/RELEASE.js
 RUN cp -r /root/phantasus/inst/www/phantasus.js /var/www/html/phantasus
 RUN cp /root/phantasus/inst/configs/default /etc/nginx/sites-available/default
@@ -77,4 +30,5 @@ RUN mkdir -p /var/phantasus/ocpu-root
 
 CMD service nginx start && \
    R -e 'library(phantasus); servePhantasus("0.0.0.0", 8001, openInBrowser = F, cacheDir="/var/phantasus/cache", preloadedDir="/var/phantasus/preloaded")'
+
 
