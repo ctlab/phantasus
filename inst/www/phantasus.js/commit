@@ -1,6 +1,8 @@
-commit ded23fb3543828226703d87eef8f6a51a586f6d5
-Merge: 2e85e5b b4e2640
+commit d4d24f4af13e82cc2bf138bccf0b9350c8e892f7
+Merge: ded23fb ef203aa
 Author: Alexey Sergushichev <alsergbox@gmail.com>
-Date:   Thu Nov 21 16:33:53 2019 +0300
+Date:   Fri Dec 20 18:57:31 2019 +0300
 
-    Merge branch 'develop'
+    Merge pull request #60 from ElucidataInc/ftr_volcano_plot
+    
+    Feature: volcano plot tool

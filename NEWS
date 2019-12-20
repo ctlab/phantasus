@@ -1,4 +1,7 @@
 CHANGES IN VERSION 1.7.2
+* Volcano plot tool
+
+CHANGES IN VERSION 1.7.2
 * Better GEO loader
 * DESeq2 experimental support
 * Initial support for hierarchical preloaded folder
