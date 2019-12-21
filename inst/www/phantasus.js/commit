@@ -1,8 +1,8 @@
-commit d4d24f4af13e82cc2bf138bccf0b9350c8e892f7
-Merge: ded23fb ef203aa
+commit e5bf000c714ab780fb719b7f806413172f484171
+Merge: d4d24f4 028aeda
 Author: Alexey Sergushichev <alsergbox@gmail.com>
-Date:   Fri Dec 20 18:57:31 2019 +0300
+Date:   Sat Dec 21 18:45:20 2019 +0300
 
-    Merge pull request #60 from ElucidataInc/ftr_volcano_plot
+    Merge pull request #61 from ElucidataInc/ftr_volcano_plot
     
-    Feature: volcano plot tool
+    change 'let' to 'var' to pass ES5 for phantomjs
