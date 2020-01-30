@@ -1,6 +1,6 @@
 Package: phantasus
 Title: Visual and interactive gene expression analysis
-Version: 1.7.3
+Version: 1.7.4
 Authors@R: c(person("Daria", "Zenkova", email = "daria.zenkova.cs@gmail.com", role = "aut"),
              person("Vladislav", "Kamenev", role = "aut"),        
              person("Rita", "Sablina", role = "ctb"),        
@@ -23,12 +23,12 @@ biocViews: GeneExpression, GUI, Visualization, DataRepresentation, Transcriptomi
 Imports: ggplot2, protolite, Biobase, GEOquery, Rook, htmltools,
         httpuv, jsonlite, limma, opencpu, assertthat, methods, httr, rhdf5,
         utils, parallel, stringr, fgsea (>= 1.9.4), svglite, gtable, stats,
-        Matrix, Matrix.utils, pheatmap, scales, ccaPP, grid, grDevices,
+        Matrix, pheatmap, scales, ccaPP, grid, grDevices,
         AnnotationDbi, DESeq2
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 6.1.1
+RoxygenNote: 7.0.0
 Suggests: testthat, BiocStyle, knitr, rmarkdown, data.table
 VignetteBuilder: knitr
 NeedsCompilation: no

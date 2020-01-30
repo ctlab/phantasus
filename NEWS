@@ -1,4 +1,7 @@
-CHANGES IN VERSION 1.7.2
+CHANGES IN VERSION 1.7.4
+* Removed Matrix.utils dependency
+
+CHANGES IN VERSION 1.7.3
 * Volcano plot tool
 
 CHANGES IN VERSION 1.7.2

@@ -4,8 +4,7 @@
 \alias{getGSE}
 \title{Load ExpressionSet from GEO Series}
 \usage{
-getGSE(name, destdir = tempdir(),
-  mirrorPath = "https://ftp.ncbi.nlm.nih.gov")
+getGSE(name, destdir = tempdir(), mirrorPath = "https://ftp.ncbi.nlm.nih.gov")
 }
 \arguments{
 \item{name}{String, containing GEO identifier of the dataset.

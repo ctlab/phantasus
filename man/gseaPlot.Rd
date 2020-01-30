@@ -4,9 +4,18 @@
 \alias{gseaPlot}
 \title{Returns path to an svg file with enrichment plot}
 \usage{
-gseaPlot(es, rankBy, selectedGenes, width, height, vertical = FALSE,
-  addHeatmap = FALSE, showAnnotation = NULL, annotationColors = NULL,
-  pallete = c("blue", "white", "red"))
+gseaPlot(
+  es,
+  rankBy,
+  selectedGenes,
+  width,
+  height,
+  vertical = FALSE,
+  addHeatmap = FALSE,
+  showAnnotation = NULL,
+  annotationColors = NULL,
+  pallete = c("blue", "white", "red")
+)
 }
 \arguments{
 \item{es}{ExpressionSet object.}

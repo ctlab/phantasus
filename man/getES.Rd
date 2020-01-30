@@ -4,8 +4,12 @@
 \alias{getES}
 \title{Load ExpressionSet by GEO identifier}
 \usage{
-getES(name, type = NA, destdir = tempdir(),
-  mirrorPath = "https://ftp.ncbi.nlm.nih.gov")
+getES(
+  name,
+  type = NA,
+  destdir = tempdir(),
+  mirrorPath = "https://ftp.ncbi.nlm.nih.gov"
+)
 }
 \arguments{
 \item{name}{String, containing GEO identifier of the dataset.

@@ -4,8 +4,7 @@
 \alias{getGDS}
 \title{Load ExpressionSet from GEO Datasets}
 \usage{
-getGDS(name, destdir = tempdir(),
-  mirrorPath = "https://ftp.ncbi.nlm.nih.gov")
+getGDS(name, destdir = tempdir(), mirrorPath = "https://ftp.ncbi.nlm.nih.gov")
 }
 \arguments{
 \item{name}{String, containing GEO identifier of the dataset.

@@ -4,10 +4,15 @@
 \alias{servePhantasus}
 \title{Serve phantasus.}
 \usage{
-servePhantasus(host = "0.0.0.0", port = 8000,
+servePhantasus(
+  host = "0.0.0.0",
+  port = 8000,
   staticRoot = system.file("www/phantasus.js", package = "phantasus"),
-  cacheDir = tempdir(), preloadedDir = NULL, openInBrowser = TRUE,
-  quiet = TRUE)
+  cacheDir = tempdir(),
+  preloadedDir = NULL,
+  openInBrowser = TRUE,
+  quiet = TRUE
+)
 }
 \arguments{
 \item{host}{Host to listen.}

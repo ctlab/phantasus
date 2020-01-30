@@ -1,3 +1,17 @@
+#' @param m matrix n x m
+#' @param groups vector of size n of numbers from 1 to k
+#' @return matrix k*m of column averages  by groups
+colMeansByGroups <- function(m, groups) {
+    x <- Matrix::sparseMatrix(j=seq_along(groups),
+                 i=groups,
+                 x=rep(1, length(groups)))
+    z <- x %*% m
+    res <- sweep(z, 1, table(groups), "/")
+}
+
+
+
+
 rasterizeHeatmap <- function(m, palette=palette, maxDimensions=c(2500, 1000)) {
     mr <- round((m - min(m))/(max(m)-min(m)) * (length(palette) - 1) + 1)
     cap <- matrix(palette[as.matrix(mr)], nrow=nrow(m))
@@ -89,7 +103,7 @@ gseaPlot <- function(es, rankBy, selectedGenes, width, height,
         mat <- exprs(es)[order(ranks, decreasing = TRUE), ]
         mat <- t(apply(mat, 1, scales::rescale))
         grouping <- ceiling(seq_len(nrow(mat)) / nrow(mat) * 1000)
-        aggr <- Matrix.utils::aggregate.Matrix(mat, groupings=grouping, fun="mean")
+        aggr <- colMeansByGroups(mat, grouping)
 
         annotation_col <- NULL
         annotation_colors <- NULL

@@ -4,8 +4,14 @@
 \alias{calculatedAnnotation}
 \title{Create calculated annotation}
 \usage{
-calculatedAnnotation(es, operation, rows = c(), columns = c(),
-  isColumns = FALSE, name = NULL)
+calculatedAnnotation(
+  es,
+  operation,
+  rows = c(),
+  columns = c(),
+  isColumns = FALSE,
+  name = NULL
+)
 }
 \arguments{
 \item{es}{ExpressionSet object.}

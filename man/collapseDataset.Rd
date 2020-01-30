@@ -4,8 +4,14 @@
 \alias{collapseDataset}
 \title{Collapse dataset}
 \usage{
-collapseDataset(es, isRows = TRUE, selectOne = FALSE, fn, fields,
-  removeEmpty = TRUE)
+collapseDataset(
+  es,
+  isRows = TRUE,
+  selectOne = FALSE,
+  fn,
+  fields,
+  removeEmpty = TRUE
+)
 }
 \arguments{
 \item{es}{Expression set}
