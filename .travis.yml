@@ -30,6 +30,7 @@ r_packages:
   - protolite
   - Rook
   - unix
+  - magick
 
 os:
   - linux
