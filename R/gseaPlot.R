@@ -1,3 +1,5 @@
+#' Calculate column averages in row groups
+#'
 #' @param m matrix n x m
 #' @param groups vector of size n of numbers from 1 to k
 #' @return matrix k*m of column averages  by groups

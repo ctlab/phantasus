@@ -9,7 +9,6 @@ complexArgumentLimitBytes <- 400
 #' @param savedEnv Environment, where to store complex arguments (default = new.env())
 #'
 #' @return JSON with R code
-#' @export
 #'
 #' @examples
 #' \dontrun{
