@@ -64,7 +64,7 @@ gseaPlot <- function(es, rankBy, selectedGenes, width, height,
     fullPalette <- colorRampPalette(pallete)(50)
     featureData <- fData(es)
     colnames(featureData) <- fvarLabels(es)
-    absEps <- 1e-10
+    eps <- 1e-10
 
     ranks <- featureData[, rankBy]
     if (!is.numeric(ranks)) {
@@ -76,11 +76,11 @@ gseaPlot <- function(es, rankBy, selectedGenes, width, height,
 
     system.time(
 
-    fgseaRes <- fgseaMultilevel(list(p=pathway), ranks, sampleSize = 101, nproc=1, absEps = absEps/2)
+    fgseaRes <- fgseaMultilevel(list(p=pathway), ranks, sampleSize = 101, nproc=1, eps = eps/2)
     )
 
-    pvalString <- if (fgseaRes$pval < absEps) {
-        sprintf("<%.2g", absEps)
+    pvalString <- if (fgseaRes$pval < eps) {
+        sprintf("<%.2g", eps)
     } else {
         sprintf("\u2248%.2g", fgseaRes$pval)
     }
@@ -105,7 +105,11 @@ gseaPlot <- function(es, rankBy, selectedGenes, width, height,
         mat <- exprs(es)[order(ranks, decreasing = TRUE), ]
         mat <- t(apply(mat, 1, scales::rescale))
         grouping <- ceiling(seq_len(nrow(mat)) / nrow(mat) * 1000)
-        aggr <- colMeansByGroups(mat, grouping)
+        if (nrow(mat) <= length(unique(grouping))) {
+            aggr <- mat
+        } else {
+            aggr <- colMeansByGroups(mat, grouping)
+        }
 
         annotation_col <- NULL
         annotation_colors <- NULL
