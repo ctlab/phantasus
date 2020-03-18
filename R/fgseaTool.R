@@ -52,7 +52,7 @@ performFGSEA <- function (dbName, ranks) {
     return (jsonlite::toJSON(fgseaMultilevel(pathways,
                                              rranks,
                                              sampleSize = 101,
-                                             eps = 1e-10,
+                                             absEps = 1e-10,
                                              minSize = 15,
                                              maxSize = 500,
                                              nproc = 1)

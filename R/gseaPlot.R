@@ -74,10 +74,9 @@ gseaPlot <- function(es, rankBy, selectedGenes, width, height,
 
     pathway <- as.character(selectedGenes)
 
-    system.time(
 
-    fgseaRes <- fgseaMultilevel(list(p=pathway), ranks, sampleSize = 101, nproc=1, eps = eps/2)
-    )
+    fgseaRes <- fgseaMultilevel(list(p=pathway), ranks, sampleSize = 101, nproc=1, absEps = eps/2)
+
 
     pvalString <- if (fgseaRes$pval < eps) {
         sprintf("<%.2g", eps)
