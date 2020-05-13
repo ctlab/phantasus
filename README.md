@@ -4,7 +4,7 @@
 
 
 
- Phantasus is a web tool designed for visual and
+Phantasus is a web tool designed for visual and
 interactive gene expression analysis.
 In particular, it was designed to allow to go from a typical dataset to
 differential expression and downstream analysis in an easy and streamlined
@@ -19,7 +19,7 @@ Main features:
 * Gene set enrichment analysis via `fgsea` package.
 * Sharing session links.
 
-<img src="images/screenshot.png" width="600px" />
+<img src="https://ctlab.github.io/phantasus-doc/images/start_screen.jpg" width="600px" />
 
 Links:
 * Official mirrors: <https://ctlab.itmo.ru/phantasus> 
