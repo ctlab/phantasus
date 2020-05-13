@@ -18,8 +18,9 @@ cache:
 # Adapt as necessary starting from here
 
 environment:
-    BIOC_USE_DEVEL: "FALSE"
+    BIOC_USE_DEVEL: "FALSE"    
     nodejs_version: "9"
+    PKGTYPE: "both"
     matrix:
         - R_VERSION: release
           USE_RTOOLS: true
