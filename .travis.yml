@@ -32,7 +32,7 @@ r_packages:
   - magick
 
 os:
-#  - linux
+  - linux
   - osx
 
 bioc_required: true
