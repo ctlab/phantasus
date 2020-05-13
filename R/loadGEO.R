@@ -869,7 +869,7 @@ getGPLAnnotation <- function (GPL, destdir = tempdir()) {
 }
 
 annotateFeatureData <- function (es, destdir = tempdir()) {
-    platform <- levels(es$platform_id)[1]
+    platform <- as.character(es$platform_id)[1]
     platformParsed <- getGPLAnnotation(platform, destdir)
 
     #https://github.com/seandavi/GEOquery/blob/master/R/parseGEO.R#L569
