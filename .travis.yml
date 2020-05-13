@@ -3,8 +3,6 @@ r:
   - bioc-devel
   - bioc-release
 # warnings_are_errors: true
-sudo: false
-fortran: true
 cache: packages
 
 services:
