@@ -24,7 +24,7 @@ Main features:
 Links:
 * Official mirrors: <https://ctlab.itmo.ru/phantasus> 
     and <https://artyomovlab.wustl.edu/phantasus>.
-* Documentation <https://ctlab.github.io/phantasus-doc>.
+* Documentation: <https://ctlab.github.io/phantasus-doc>.
 * Source code at GitHub: <https://github.com/ctlab/phantasus>. 
 * Bioconductor package: <https://bioconductor.org/packages/phantasus>.
 * Docker image: <https://hub.docker.com/r/dzenkova/phantasus>.
