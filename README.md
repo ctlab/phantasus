@@ -19,7 +19,7 @@ Main features:
 * Gene set enrichment analysis via `fgsea` package.
 * Sharing session links.
 
-<img src="https://ctlab.github.io/phantasus-doc/images/start_screen.jpg" width="600px" />
+<img src="https://ctlab.github.io/phantasus-doc/images/screenshot.png" width="600px" />
 
 Links:
 * Official mirrors: <https://ctlab.itmo.ru/phantasus> 
