@@ -1,8 +1,5 @@
-commit e5bf000c714ab780fb719b7f806413172f484171
-Merge: d4d24f4 028aeda
+commit 6f2ee74c24cd46656eaecde019b83245f1612973
 Author: Alexey Sergushichev <alsergbox@gmail.com>
-Date:   Sat Dec 21 18:45:20 2019 +0300
+Date:   Fri May 22 19:29:30 2020 +0300
 
-    Merge pull request #61 from ElucidataInc/ftr_volcano_plot
-    
-    change 'let' to 'var' to pass ES5 for phantomjs
+    checking number of selected rows on row profile start

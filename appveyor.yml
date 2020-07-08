@@ -18,8 +18,9 @@ cache:
 # Adapt as necessary starting from here
 
 environment:
-    BIOC_USE_DEVEL: "FALSE"
+    BIOC_USE_DEVEL: "FALSE"    
     nodejs_version: "9"
+    PKGTYPE: "both"
     matrix:
         - R_VERSION: release
           USE_RTOOLS: true
@@ -28,7 +29,6 @@ build_script:
   - travis-tool.sh install_r tidyselect
   - travis-tool.sh install_deps
   - travis-tool.sh install_bioc_deps
-  - R -e "devtools::install_github('ctlab/fgsea')"
 
 test_script:
   - travis-tool.sh run_tests

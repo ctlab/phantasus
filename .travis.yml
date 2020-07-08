@@ -3,8 +3,6 @@ r:
   - bioc-devel
   - bioc-release
 # warnings_are_errors: true
-sudo: false
-fortran: true
 cache: packages
 
 services:
@@ -46,7 +44,7 @@ bioc_packages:
   - BiocStyle
 
 before_install:
-  - if [ ${TRAVIS_OS_NAME} = 'osx' ]; then brew unlink python; brew install protobuf; brew install cairo; fi
+#  - if [ ${TRAVIS_OS_NAME} = 'osx' ]; then brew unlink python; brew install protobuf; fi
   - R -e 'install.packages("devtools")'
 
 script:
@@ -98,3 +96,7 @@ jobs:
                 docker push dzenkova/phantasus:develop;
                 docker push dzenkova/phantasus:$DOCKER_TAG;
               fi
+# Something always happens to osx bioc-devel builds 
+  exclude:
+  - os: osx
+    r: bioc-devel

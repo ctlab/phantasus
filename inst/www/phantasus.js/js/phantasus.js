@@ -14908,9 +14908,8 @@ phantasus.ChartTool = function (chartOptions) {
       event.stopPropagation();
       $(this).dialog('destroy');
       project.off('trackChanged.chart', trackChanged);
-      project.getRowSelectionModel().off('selectionChanged.chart', draw);
-      project.getColumnSelectionModel().off('selectionChanged.chart',
-        draw);
+      project.getRowSelectionModel().off('selectionChanged.chart', selectionChanged);
+      project.getColumnSelectionModel().off('selectionChanged.chart', selectionChanged);
     },
 
     resizable: true,
@@ -14918,7 +14917,7 @@ phantasus.ChartTool = function (chartOptions) {
     width: 900
   });
   this.$dialog = $dialog;
-  this.draw();
+  selectionChanged();
 };
 
 phantasus.ChartTool.BUTTONS_TO_REMOVE_FOR_STATIC_CHART = ['select2d', 'lasso2d']; // ['zoom2d', 'pan2d', 'select2d', 'lasso2d', 'autoScale2d', 'resetScale2d'];
