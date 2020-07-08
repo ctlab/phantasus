@@ -7,10 +7,10 @@ ENV OCPU_MASTER_HOME=/var/phantasus/ocpu-root
 
 # RUN apt install -y git && git clone -b ${TARGET_BRANCH} --recursive https://github.com/ctlab/phantasus /root/phantasus
 
+COPY . /root/phantasus
 
 RUN R -e 'devtools::install("/root/phantasus", dependencies=TRUE, upgrade=FALSE, build_vignettes=TRUE); remove.packages("BH")'
 
-COPY . /root/phantasus
 
 RUN printf "window.PHANTASUS_BUILD='$PHANTASUS_BUILD';" >> /root/phantasus/inst/www/phantasus.js/RELEASE.js
 RUN cp -r /root/phantasus/inst/www/phantasus.js /var/www/html/phantasus
