@@ -1,0 +1,18 @@
+## Rprofile for OpenCPU cloud server.
+## Example of Rprofile
+#
+# options(width=65, digits=5)
+# options(show.signif.stars=FALSE)
+
+library(phantasus)
+cacheDir="/var/phantasus/cache"
+preloadedDir="/var/phantasus/preloaded"
+cacheDir <- normalizePath(cacheDir)
+preloadedDir <- normalizePath(preloadedDir)
+options(phantasusCacheDir = cacheDir,
+            phantasusPreloadedDir = preloadedDir)
+phantasus:::selfCheck()
+phantasus:::annotationDBMeta(cacheDir)
+phantasus:::FGSEAmeta(cacheDir)
+
+

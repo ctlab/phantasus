@@ -1,0 +1,18 @@
+apache_ports.conf to /etc/apache2/ports.conf
+000-default.conf to /etc/apache2/sites-avaliable/000-default.conf
+apache_opencpu.conf to /etc/apache2/sites-avaliable/opencpu.conf  (here port and location are essential)
+apache_mpm_prefork.conf to /etc/apache2/mods-avaliable/mpm_prefork.conf  (number of workers)
+Rprofile to /etc/opencpu/Rprofile (setting options for user)
+
+
+groupadd phantasus
+usermod -aG phantasus www-data  (seting group to apache user)
+chgrp phantasus /var/phantasus
+chmod -R g+rw /var/phantasus
+
+
+
+
+
+AppArmor???
+ запуск apachectl -DFOREGROU

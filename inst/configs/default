@@ -18,8 +18,8 @@ map $http_accept_encoding $client_likes_gzip {
 proxy_cache_path /var/phantasus/cache/nginx levels=1:2 keys_zone=opencpu:8m max_size=1000m inactive=1w;
 
 server {
-    listen 80 default_server;
-    listen [::]:80 default_server;
+    listen 8000 default_server;
+    listen [::]:8000 default_server;
     gzip_min_length 5000;
 
     location / {
