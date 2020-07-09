@@ -7,7 +7,6 @@ inst-raw/
 data/
 inst/extdata/
 inst/testdata/
-inst/*.sh
 inst/*.R
 inst/www/phantasus.js/jasmine/
 .git/

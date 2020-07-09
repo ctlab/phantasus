@@ -1,6 +1,6 @@
 FROM assaron/phantasus-preimage
 
-ARG TARGET_BRANCH=develop
+ARG TARGET_BRANCH=master
 ARG PHANTASUS_BUILD
 ARG GITHUB_PAT
 ENV OCPU_MASTER_HOME=/var/phantasus/ocpu-root
@@ -10,7 +10,6 @@ ENV OCPU_MASTER_HOME=/var/phantasus/ocpu-root
 COPY . /root/phantasus
 
 RUN R -e 'devtools::install("/root/phantasus", dependencies=TRUE, upgrade=FALSE, build_vignettes=TRUE); remove.packages("BH")'
-
 
 RUN printf "window.PHANTASUS_BUILD='$PHANTASUS_BUILD';" >> /root/phantasus/inst/www/phantasus.js/RELEASE.js
 RUN cp -r /root/phantasus/inst/www/phantasus.js /var/www/html/phantasus
