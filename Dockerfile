@@ -1,6 +1,6 @@
 FROM assaron/phantasus-preimage
 
-ARG TARGET_BRANCH=master
+ARG TARGET_BRANCH=develop
 ARG PHANTASUS_BUILD
 ARG GITHUB_PAT
 ENV OCPU_MASTER_HOME=/var/phantasus/ocpu-root
@@ -24,6 +24,7 @@ RUN cp -f /root/phantasus/inst/configs/apache_conf/000-default.conf /etc/apache2
 RUN cp -f /root/phantasus/inst/configs/apache_conf/apache_opencpu.conf /etc/apache2/sites-available/opencpu.conf
 RUN cp -f /root/phantasus/inst/configs/apache_conf/apache_mpm_prefork.conf /etc/apache2/mods-available/mpm_prefork.conf
 RUN cp -f /root/phantasus/inst/configs/apache_conf/Rprofile /etc/opencpu/Rprofile
+RUN cp -f /root/phantasus/inst/docker-entrypoint.sh /usr/bin/docker-entrypoint.sh
 RUN rm -rf /root/phantasus/inst
 
 RUN a2dissite default-ssl.conf
