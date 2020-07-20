@@ -12,8 +12,6 @@ write.gct(es, file, gzip = FALSE)
 \item{file}{Path to output gct file}
 
 \item{gzip}{Whether to gzip apply gzip-compression for the output file#'}
-
-\item{...}{additional options for read.csv}
 }
 \value{
 Result of the closing file (as in `close()` function`)

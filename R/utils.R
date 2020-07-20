@@ -97,7 +97,6 @@ read.tsv <- function(file, header = TRUE, sep = "\t", quote = "",
 #' @param es ExpresionSet obeject to save
 #' @param file Path to output gct file
 #' @param gzip Whether to gzip apply gzip-compression for the output file#'
-#' @param ... additional options for read.csv
 #' @return Result of the closing file (as in `close()` function`)
 #' @examples
 #' es <- read.gct(system.file("extdata", "centers.gct", package = "phantasus"))
