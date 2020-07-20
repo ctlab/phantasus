@@ -14,15 +14,10 @@ RUN R -e 'devtools::install("/root/phantasus", dependencies=TRUE, upgrade=FALSE,
 RUN printf "window.PHANTASUS_BUILD='$PHANTASUS_BUILD';" >> /root/phantasus/inst/www/phantasus.js/RELEASE.js
 RUN cp -r /root/phantasus/inst/www/phantasus.js /var/www/html/phantasus
 
-RUN cp /root/phantasus/inst/configs/default /etc/nginx/sites-available/default
-RUN mkdir -p /etc/opencpu
-RUN cp /root/phantasus/inst/configs/opencpu.conf /etc/opencpu/server.conf
+RUN cp -r /root/phantasus/inst/configs/nginx  /etc/
+RUN cp -r /root/phantasus/inst/configs/opencpu  /etc/
+RUN cp -r /root/phantasus/inst/configs/apache2  /etc/
 RUN cp /root/phantasus/inst/configs/index.html /var/www/html/
-RUN cp -f /root/phantasus/inst/configs/apache_conf/apache_ports.conf /etc/apache2/ports.conf 
-RUN cp -f /root/phantasus/inst/configs/apache_conf/000-default.conf /etc/apache2/sites-available/000-default.conf
-RUN cp -f /root/phantasus/inst/configs/apache_conf/apache_opencpu.conf /etc/apache2/sites-available/opencpu.conf
-RUN cp -f /root/phantasus/inst/configs/apache_conf/apache_mpm_prefork.conf /etc/apache2/mods-available/mpm_prefork.conf
-RUN cp -f /root/phantasus/inst/configs/apache_conf/Rprofile /etc/opencpu/Rprofile
 RUN cp -f /root/phantasus/inst/docker-entrypoint.sh /usr/bin/docker-entrypoint.sh
 RUN rm -rf /root/phantasus/inst
 
