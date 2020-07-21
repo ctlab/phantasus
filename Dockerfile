@@ -27,10 +27,10 @@ RUN a2dissite rstudio.conf
 
 EXPOSE 8000
 
+RUN echo "LC_ALL=en_US.UTF-8" >> /etc/environment
+RUN echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
+RUN echo "LANG=en_US.UTF-8" > /etc/locale.conf
 RUN locale-gen en_US.UTF-8
-ENV LANG en_US.UTF-8
-ENV LANGUAGE en_US:en
-ENV LC_ALL en_US.UTF-8
 
 RUN mkdir -p /var/phantasus/cache && chown www-data /var/phantasus/cache 
 RUN mkdir -p /var/phantasus/preloaded && chown www-data /var/phantasus/preloaded 
