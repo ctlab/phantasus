@@ -13070,7 +13070,21 @@ phantasus.LandingPage.prototype = {
 
     var createPreloadedHeatMap = function(options) {
       options.dataset.options.exactName = options.dataset.file;
-      new phantasus.HeatMap(options);
+      var heatmapReq = ocpu.call('heatmapSettings/print', { sessionName: options.dataset.file, isTempSession: false }, function (session) {
+          var data = JSON.parse(session.txt);
+          if (!data.result) {
+            console.log('Unavailable heatmap json settings');
+            return new phantasus.HeatMap(options);
+          }
+          options.inheritFromParent = false;
+
+          var newOptions = $.extend({}, data.result, options);
+          new phantasus.HeatMap(newOptions);
+      });
+      heatmapReq.fail(function () {
+          console.warn('Could not load heatmap json settings');
+          new phantasus.HeatMap(options);
+        });
     };
 
     var createSessionHeatMap = function (options) {
@@ -22362,7 +22376,6 @@ phantasus.ActionManager = function () {
       })
     }
   });
-
   this.add({
     name: 'About',
     cb: function (options) {

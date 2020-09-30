@@ -1,5 +1,5 @@
-commit 6f2ee74c24cd46656eaecde019b83245f1612973
-Author: Alexey Sergushichev <alsergbox@gmail.com>
-Date:   Fri May 22 19:29:30 2020 +0300
+commit 72973a53208f324d441d155dac18c791f4f0e570
+Author: Alexey Sergushichev <alserg@itmo.ru>
+Date:   Wed Sep 30 12:04:02 2020 +0000
 
-    checking number of selected rows on row profile start
+    Now phantasus can use json with parameters for preloaded datasets
