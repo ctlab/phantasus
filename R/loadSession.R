@@ -79,11 +79,17 @@ loadSession <- function (sessionName) {
     stop('Invalid session key')
 }
 
-heatmapSettings <- function (sessionName) {
-    ocpuRoot <- strsplit(getwd(), 'ocpu-temp')[[1]][1]
-    sessionPath <- file.path(ocpuRoot, 'ocpu-store', sessionName)
-    heatmapPath <- file.path(sessionPath, 'heatmap.json')
+heatmapSettings <- function (sessionName, isTempSession = TRUE) {
 
+    if (isTempSession){
+        ocpuRoot <- strsplit(getwd(), 'ocpu-temp')[[1]][1]
+        sessionPath <- file.path(ocpuRoot, 'ocpu-store', sessionName)
+        heatmapPath <- file.path(sessionPath, 'heatmap.json')
+    }
+    else{
+        preloadedDir <- getOption("phantasusPreloadedDir")
+        heatmapPath <- file.path(preloadedDir, paste0(sessionName,'.json'))
+    }
     if (file.exists(heatmapPath)) {
         heatmap <- fromJSON(heatmapPath)
         return (jsonlite::toJSON(list(result=heatmap), auto_unbox = TRUE, null = 'null'))
