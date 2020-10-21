@@ -86,6 +86,7 @@ loadPreloaded <- function(name) {
 #' sessionURL <- "https://ctlab.itmo.ru/phantasus/?session=x063c1b365b9211" # link from 'Get dataset link...' tool in phantasus
 #' newName <- "my_session" # user defined name
 #' preloadedDir <- "./preloaded" # directory where files will be stored. In order too get access through phantasus web-app should be preloadedDir
+#' dir.create(preloadedDir, showWarnings = FALSE)
 #' generatePreloadedSession(sessionURL= sessionURL,
 #'                          preloadedName = newName,
 #'                          preloadedDir = preloadedDir)
