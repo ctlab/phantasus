@@ -1,3 +1,6 @@
+CHANGES IN VERSION 1.9.5
+* Support for preloaded sessions
+
 CHANGES IN VERSION 1.9.3
 * Changed Dockerfile to nginx+rApache (default ports are changed)
 

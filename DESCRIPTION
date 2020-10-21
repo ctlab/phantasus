@@ -1,9 +1,10 @@
 Package: phantasus
 Title: Visual and interactive gene expression analysis
-Version: 1.9.5
+Version: 1.9.6
 Authors@R: c(person("Daria", "Zenkova", email = "daria.zenkova.cs@gmail.com", role = "aut"),
              person("Vladislav", "Kamenev", role = "aut"),        
              person("Rita", "Sablina", role = "ctb"),        
+             person("Maxim", "Kleverov", role = "ctb"),        
              person("Maxim", "Artyomov", role = "aut"),
              person("Alexey", "Sergushichev", email = "alsergbox@gmail.com", role = c("aut", "cre")))
 Description: 
