@@ -21,9 +21,8 @@
 #' }
 #'
 #'
-convertByAnnotationDB <- function (es, dbName, columnName, columnType, keyType) {
+convertByAnnotationDB <- function (es, dbName, columnName, columnType, keyType, otherOptions) {
     cacheDir <- getOption("phantasusCacheDir")
-
     annotDir <- paste(cacheDir, "annotationdb", sep = .Platform$file.sep)
     dbPath <- file.path(annotDir, dbName)
     if (!file.exists(dbPath)) {
@@ -33,15 +32,16 @@ convertByAnnotationDB <- function (es, dbName, columnName, columnType, keyType) 
     dbFile <- loadDb(dbPath)
 
     inputData <- fData(es)[[columnName]]
+    if ("deleteDotVersion" %in% names(otherOptions)){
+        if(otherOptions$deleteDotVersion){
+            inputData <- sub(pattern = "\\.[0-9]+$", replacement = "", x = inputData)
+        }
+    }
     convertedData <- mapIds(dbFile,
                            keys = inputData,
                            keytype = columnType,
                            column = keyType,
                            multiVals = function (x) { paste0(x, collapse="///")})
-
-    if (keyType == 'ENSEMBL') {
-        convertedData <- sapply(convertedData, function (x) unlist(strsplit(x, '[.]'))[1] )
-    }
 
     convertedData[ convertedData == 'NA' ] <- NA # AnnotationDB can produce 'NA' as string and <NA> as NA. Confusing
     fData(es)[[keyType]] <- convertedData
