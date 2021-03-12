@@ -2353,18 +2353,13 @@ phantasus.ParseDatasetFromProtoBin.parse = function (session, callback, options)
 
   r.onload = function (e) {
     var contents = e.target.result;
-    var ProtoBuf = dcodeIO.ProtoBuf;
-    ProtoBuf.protoFromFile("./message.proto", function (error, success) {
+    protobuf.load("./message.proto", function (error, root) {
       if (error) {
         throw new Error(error);
       }
-      var builder = success,
-        rexp = builder.build("rexp"),
-        REXP = rexp.REXP,
-        rclass = REXP.RClass;
-
-
-      var res = REXP.decode(contents);
+      var REXP = root.lookupType("REXP");
+      var rclass = REXP.RClass;
+      var res = REXP.decode(new Uint8Array(contents));
 
       var jsondata = phantasus.Util.getRexpData(res, rclass);
 
@@ -7289,36 +7284,36 @@ phantasus.DatasetUtil.toESSessionPromise = function (dataset) {
         rexpValue: [{
           rclass: "REAL",
           realValue: array,
-          attrName: "dim",
-          attrValue: {
+          attrName: ["dim"],
+          attrValue: [{
             rclass: "INTEGER",
             intValue: [dataset.getRowCount(), dataset.getColumnCount()]
-          }
+          }]
         }, {
           rclass: "STRING",
           stringValue: meta.pdata,
-          attrName: "dim",
-          attrValue: {
+          attrName: ["dim"],
+          attrValue: [{
             rclass: "INTEGER",
             intValue: [dataset.getColumnCount(), meta.varLabels.length]
-          }
+          }]
         }, {
           rclass: "STRING",
           stringValue: meta.varLabels
         }, {
           rclass: "STRING",
           stringValue: meta.fdata,
-          attrName: "dim",
-          attrValue: {
+          attrName: ["dim"],
+          attrValue: [{
             rclass: "INTEGER",
             intValue: [dataset.getRowCount(), meta.fvarLabels.length]
-          }
+          }]
         }, {
           rclass: "STRING",
           stringValue: meta.fvarLabels
         }],
-        attrName: "names",
-        attrValue: {
+        attrName: ["names"],
+        attrValue: [{
           rclass: "STRING",
           stringValue: [{
             strval: "data",
@@ -7339,13 +7334,13 @@ phantasus.DatasetUtil.toESSessionPromise = function (dataset) {
             strval: "eData",
             isNA: false
           }]
-        }
+        }]
       };
 
       messageJSON.rexpValue.push({
         rclass: "LIST",
-        attrName: "names",
-        attrValue: {
+        attrName: ["names"],
+        attrValue: [{
           rclass: "STRING",
           stringValue: Object.keys(expData).map(function (name) {
             return {
@@ -7353,7 +7348,7 @@ phantasus.DatasetUtil.toESSessionPromise = function (dataset) {
               isNA: false
             }
           })
-        },
+        }],
         rexpValue: [{
           rclass: "STRING",
           stringValue: [{
@@ -7386,8 +7381,8 @@ phantasus.DatasetUtil.toESSessionPromise = function (dataset) {
           }]
         }, {
           rclass: "LIST",
-          attrName: "names",
-          attrValue: {
+          attrName: ["names"],
+          attrValue: [{
             rclass: "STRING",
             stringValue: Object.keys(expData.other).map(function (name) {
               return {
@@ -7395,7 +7390,7 @@ phantasus.DatasetUtil.toESSessionPromise = function (dataset) {
                 isNA: false
               }
             })
-          },
+          }],
           rexpValue: _.map(expData.other, function (value) {
             return {
               rclass: "STRING",
@@ -7411,18 +7406,15 @@ phantasus.DatasetUtil.toESSessionPromise = function (dataset) {
         }]
       });
 
-      var ProtoBuf = dcodeIO.ProtoBuf;
-      ProtoBuf.protoFromFile('./message.proto', function (error, success) {
+      protobuf.load("./message.proto", function (error, root) {
         if (error) {
           alert(error);
           return;
         }
 
-        var builder = success,
-          rexp = builder.build('rexp'),
-          REXP = rexp.REXP;
-
-        var proto = new REXP(messageJSON);
+        var REXP = root.lookupType("REXP");
+        var proto = REXP.fromObject(messageJSON);
+        proto.toArrayBuffer = function(){return REXP.encode(proto).finish()} //for r_fun_call_proto in ocpu
         var req = ocpu.call('createES', proto, function (session) {
           dataset.esSource = 'original';
           resolve(session);
@@ -9442,7 +9434,7 @@ phantasus.MetadataUtil.getMetadataSignedNumericFields = function (metadataModel)
       if (hasPositive && hasNegative) {
         fields.push(field);
       }
-     
+
     }
   }
 
@@ -9471,6 +9463,7 @@ phantasus.MetadataUtil.indexOf = function (metadataModel, name) {
 };
 
 phantasus.MetadataUtil.DEFAULT_STRING_ARRAY_FIELDS = ['target', 'gene_target', 'moa'];
+phantasus.MetadataUtil.DEFAULT_STRINF_FIELDS = ['Gene ID', 'ID', 'ENTREZID']
 
 phantasus.MetadataUtil.DEFAULT_HIDDEN_FIELDS = new phantasus.Set();
 ['pr_analyte_id', 'pr_gene_title', 'pr_gene_id', 'pr_analyte_num',
@@ -9488,7 +9481,9 @@ phantasus.MetadataUtil.DEFAULT_HIDDEN_FIELDS = new phantasus.Set();
 phantasus.MetadataUtil.maybeConvertStrings = function (metadata,
                                                       metadataStartIndex) {
   for (var i = metadataStartIndex, count = metadata.getMetadataCount(); i < count; i++) {
-    phantasus.VectorUtil.maybeConvertStringToNumber(metadata.get(i));
+    if (!phantasus.MetadataUtil.DEFAULT_STRINF_FIELDS.includes(metadata.get(i).name)){
+      phantasus.VectorUtil.maybeConvertStringToNumber(metadata.get(i));
+    }
   }
   phantasus.MetadataUtil.DEFAULT_STRING_ARRAY_FIELDS.forEach(function (field) {
     if (metadata.getByName(field)) {
@@ -14517,7 +14512,16 @@ phantasus.AnnotationConvertTool = function (heatMap) {
     type: 'select',
     options: phantasus.annotationDBMeta.dbs[firstDBName].columns,
     value: _.first(phantasus.annotationDBMeta.dbs[firstDBName].columns)
-  }, {
+  }, 
+  {
+    name: 'delete_dot_version',
+    title: 'Omit ID versions before conversion (removing with regex ".[0-9]+$")',
+    type: 'checkbox',
+    options: [],
+    showLabel: false,
+    value: ""
+    },
+    {
     name: 'result_column_type',
     type: 'select',
     options: phantasus.annotationDBMeta.dbs[firstDBName].columns,
@@ -14590,7 +14594,9 @@ phantasus.AnnotationConvertTool.prototype = {
     var selectedDB = options.form.getValue('specimen_DB').split(' - ')[0];
     var columnType = options.form.getValue('source_column_type').split(' - ')[0];
     var keyType = options.form.getValue('result_column_type').split(' - ')[0];
-
+    var otherOptions = {}
+    otherOptions.deleteDotVersion = options.form.getValue('delete_dot_version');
+  
     if (columnType === keyType) {
       throw new Error('Converting column from ' + columnType + ' to ' + keyType + ' is invalid');
     }
@@ -14601,8 +14607,10 @@ phantasus.AnnotationConvertTool.prototype = {
         dbName: selectedDB,
         columnName: selectedFeatureName,
         columnType: columnType,
-        keyType: keyType
+        keyType: keyType,
+        otherOptions: otherOptions
       };
+     
       var req = ocpu.call("convertByAnnotationDB/print", args, function (newSession) {
         var result = JSON.parse(newSession.txt);
 
@@ -16018,16 +16026,13 @@ phantasus.DESeqTool.prototype = {
 
         r.onload = function (e) {
           var contents = e.target.result;
-          var ProtoBuf = dcodeIO.ProtoBuf;
-          ProtoBuf.protoFromFile("./message.proto", function (error, success) {
+          protobuf.load("./message.proto", function (error, root) {
             if (error) {
               alert(error);
             }
-            var builder = success,
-              rexp = builder.build("rexp"),
-              REXP = rexp.REXP,
-              rclass = REXP.RClass;
-            var res = REXP.decode(contents);
+            var REXP = root.lookupType("REXP");
+            var rclass = REXP.RClass;
+            var res = REXP.decode(new Uint8Array(contents));
             var data = phantasus.Util.getRexpData(res, rclass);
             var names = phantasus.Util.getFieldNames(res, rclass);
             var vs = [];
@@ -17287,16 +17292,13 @@ phantasus.LimmaTool.prototype = {
 
         r.onload = function (e) {
           var contents = e.target.result;
-          var ProtoBuf = dcodeIO.ProtoBuf;
-          ProtoBuf.protoFromFile("./message.proto", function (error, success) {
+          protobuf.load("./message.proto", function (error, root) {
             if (error) {
               alert(error);
             }
-            var builder = success,
-              rexp = builder.build("rexp"),
-              REXP = rexp.REXP,
-              rclass = REXP.RClass;
-            var res = REXP.decode(contents);
+            var REXP = root.lookupType("REXP");
+            var rclass = REXP.RClass;
+            var res = REXP.decode(new Uint8Array(contents));
             var data = phantasus.Util.getRexpData(res, rclass);
             var names = phantasus.Util.getFieldNames(res, rclass);
             var vs = [];

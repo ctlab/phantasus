@@ -51,7 +51,7 @@
     "karma-requirejs": "^1.1.0",
     "phantomjs-prebuilt": "^2.1.14",
     "promise-polyfill": "^6.0.2",
-    "protobufjs": "~3.7",
+    "protobufjs": "~6.10.2",
     "requirejs": "^2.3.4",
     "serve-static": "^1.12.3",
     "whatwg-fetch": "^2.0.3"

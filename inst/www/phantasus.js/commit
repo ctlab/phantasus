@@ -1,5 +1,7 @@
-commit 72973a53208f324d441d155dac18c791f4f0e570
+commit 68b2e3c5d63dbbebba7c288b21e77b81b1a01a3c
 Author: Alexey Sergushichev <alserg@itmo.ru>
-Date:   Wed Sep 30 12:04:02 2020 +0000
+Date:   Fri Mar 12 09:46:18 2021 +0000
 
-    Now phantasus can use json with parameters for preloaded datasets
+    add checkbox for omitting source id versions
+    
+    Co-authored-by: Maksim Kleverov <klevermx@gmail.com>
