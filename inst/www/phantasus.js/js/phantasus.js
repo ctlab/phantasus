@@ -1494,31 +1494,12 @@ phantasus.Util.createValueToIndices = function (array, field) {
 phantasus.Util.createPhantasusHeader = function () {
   var html = [];
 
-  html.push('<div style="margin-bottom:10px;"><svg width="32px" height="32px"><g><rect x="0" y="0" width="32" height="14" style="fill:#ca0020;stroke:none"/><rect x="0" y="18" width="32" height="14" style="fill:#0571b0;stroke:none"/></g></svg> <div data-name="brand" style="display:inline-block; vertical-align: top;font-size:24px;font-family:sans-serif;">');
-  html.push('<span>P</span>');
-  html.push('<span>h</span>');
-  html.push('<span>a</span>');
-  html.push('<span>n</span>');
-  html.push('<span>t</span>');
-  html.push('<span>a</span>');
-  html.push('<span>s</span>');
-  html.push('<span>u</span>');
-  html.push('<span>s</span>');
-  html.push('</span>');
+  html.push('<div style="margin-bottom:10px;margin-top:5px"><img src="css/images/phantasus_logo_main.svg" style="vertical-align: -8.2px" height="32px">')
+  html.push('<div data-name="brand" style="padding-left: 0.25em; display:inline-block; vertical-align: center;font-family:sans-serif">')
   html.push('<strong style="font-size: 12px">v' + PHANTASUS_VERSION + '</strong>');
   html.push('</div>');
+  html.push('</div>');
   var $div = $(html.join(''));
-  var colorScale = d3.scale.linear().domain([0, 4, 7]).range(['#ca0020', '#999999', '#0571b0']).clamp(true);
-  var brands = $div.find('span');
-  var index = 0;
-  var step = function () {
-    brands[index].style.color = colorScale(index);
-    index++;
-    if (index < brands.length) {
-      setTimeout(step, 200);
-    }
-  };
-  setTimeout(step, 500);
   return $div;
 };
 phantasus.Util.createLoadingEl = function () {
@@ -36912,7 +36893,8 @@ phantasus.HelpMenu = function () {
   html.push('<button type="button" class="btn btn-default btn-xxs' +
     ' dropdown-toggle"' +
     ' data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">');
-  html.push('<svg width="14px" height="14px" style="inline-block;vertical-align:middle;"><g><rect x="0" y="0" width="14" height="6" style="fill:#ca0020;stroke:none"></rect><rect x="0" y="7" width="14" height="6" style="fill:#0571b0;stroke:none"></rect></g></svg>');
+  // html.push('<svg width="14px" height="14px" style="inline-block;vertical-align:middle;"><g><rect x="0" y="0" width="14" height="6" style="fill:#ca0020;stroke:none"></rect><rect x="0" y="7" width="14" height="6" style="fill:#0571b0;stroke:none"></rect></g></svg>');
+  html.push('<img style="padding-right:2px" src="css/images/phantasus_logo_16.png"></img>');
   html.push('<span class="fa fa-caret-down"></span>');
   html.push('</button>');
   html

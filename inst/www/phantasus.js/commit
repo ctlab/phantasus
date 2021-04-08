@@ -1,7 +1,7 @@
-commit 68b2e3c5d63dbbebba7c288b21e77b81b1a01a3c
-Author: Alexey Sergushichev <alserg@itmo.ru>
-Date:   Fri Mar 12 09:46:18 2021 +0000
+commit 9b78487334f4145a4b333e42224169a149a7e54a
+Author: Alexey Sergushichev <alsergbox@gmail.com>
+Date:   Fri Mar 12 17:29:14 2021 +0300
 
-    add checkbox for omitting source id versions
+    Update .travis.yml
     
-    Co-authored-by: Maksim Kleverov <klevermx@gmail.com>
+    don't test against bioc-devel
