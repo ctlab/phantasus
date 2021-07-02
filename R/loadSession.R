@@ -6,7 +6,7 @@ sessionExists <- function(sessionName) {
     RDataPath <- file.path(sessionPath, '.RData')
 
     if (file.exists(savedPath)) {
-        return (jsonlite::toJSON(list(result=TRUE), auto_unbox = TRUE))
+        return(jsonlite::toJSON(list(result = TRUE), auto_unbox = TRUE))
     }
 
     #-----------------LEGACY----------------------------------- DELETE AFTER 3 JUNE 2019
@@ -37,7 +37,7 @@ publishSession <- function (sessionName, datasetName = sessionName, heatmapJson 
             result[[datasetName]] <- writeToList(env$es)
             binaryFile <- file.path(getwd(), 'sess.bin')
 
-            writeBin(protolite::serialize_pb(result), binaryFile)
+            writeBin(protolite::serialize_pb(list(layout_version = as.raw(PROTOBUF_LAYOUT_VERSION), ess = result)), binaryFile)
             assign("es", env$es, envir = parent.frame())
             if (!is.null(heatmapJson)) {
                 heatmapPath <- file.path(getwd(), 'heatmap.json')

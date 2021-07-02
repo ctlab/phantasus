@@ -48,21 +48,24 @@ loadGEO <- function(name, type = NA) {
     ess <- getES(name, type, destdir = cacheDir, mirrorPath = mirrorPath)
 
     files <- list()
-    assign("es", utils::tail(ess, n=1)[[1]], envir = parent.frame())
-    if (!file.exists(filePath)) {
+    assign("es", utils::tail(ess, n = 1)[[1]], envir = parent.frame())
+
+    current_rda <- file.path(geoDir, paste0(name, ".rda"))
+    bin_is_valid <- checkBinValidity(filePath, file.info(current_rda)$ctime)
+    if (!bin_is_valid) {
         for (i in seq_along(ess)) {
             seriesName <- if (!grepl(pattern = "-", name) && length(ess) > 1)
                 paste0(name, "-", annotation(ess[[i]])) else name
             files[[seriesName]] <- writeToList(ess[[i]])
         }
-        tempBinFile <- tempfile(paste0(binaryName, ".binsave"), tmpdir=geoDir)
-        protolite::serialize_pb(files, tempBinFile)
+        tempBinFile <- tempfile(paste0(binaryName, ".binsave"), tmpdir = geoDir)
+        protolite::serialize_pb(list(layout_version = as.raw(PROTOBUF_LAYOUT_VERSION), ess = files), tempBinFile)
         message('Saved binary file: ', tempBinFile)
         file.rename(tempBinFile, filePath)
     }
 
 
-    urls <-c(urls, unlist(strsplit(filePath, cacheDir, fixed = TRUE))[2])
+    urls <- c(urls, unlist(strsplit(filePath, cacheDir, fixed = TRUE))[2])
     jsonlite::toJSON(urls)
 }
 

@@ -1,3 +1,5 @@
+PROTOBUF_LAYOUT_VERSION = c(0x00, 0x02)
+
 getIndicesVector <- function(current, neededLength) {
     if (length(current) == 0) {
         current <- 0:(neededLength - 1)
@@ -143,15 +145,16 @@ writeToList <- function(es) {
   colnames(data) <- NULL
   row.names(data) <- NULL
 
-  pdata <- as.matrix(pData(es))
-  colnames(pdata) <- NULL
+  pdata <- pData(es)
   row.names(pdata) <- NULL
+  pdata <- as.list(pdata)
 
   rownames <- rownames(es)
 
-  fdata <- as.matrix(fData(es))
-  colnames(fdata) <- NULL
+  fdata <- fData(es)
   row.names(fdata) <- NULL
+  fdata = as.list(fdata)
+
 
   ed <- experimentData(es)
   experimentList <- as.list(expinfo(ed))
@@ -298,4 +301,25 @@ parseBriefData <- function(txt) {
   tmp <- tmp[tmp[,1]!="",]
   header <- split(tmp[,2],tmp[,1])
   return(header)
+}
+
+
+checkBinValidity <- function(filePath, valid_from){
+  if (!file.exists(filePath)) {
+    return(FALSE)
+  }
+
+  if (file.info(filePath)$ctime < valid_from) {
+    return(FALSE)
+  }
+
+  raw_proto_version <- as.raw(PROTOBUF_LAYOUT_VERSION)
+  bin_ref <- protolite::serialize_pb(list(raw_proto_version))
+  file_head <- readBin(con = filePath,what = raw(), n = length(bin_ref))
+
+  if (!all(bin_ref == file_head)) {
+    return(FALSE)
+  }
+
+  return(TRUE)
 }

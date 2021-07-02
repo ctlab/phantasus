@@ -64,9 +64,9 @@ loadPreloaded <- function(name) {
 
     cachedFile <- file.path(preloadedCacheDir, binaryName)
     dir.create(dirname(cachedFile), showWarnings = FALSE, recursive = TRUE)
-    if (!file.exists(cachedFile) ||
-        file.info(cachedFile)$ctime < file.info(fileToLoad)$ctime) {
-        writeBin(protolite::serialize_pb(files), cachedFile)
+    bin_is_valid <- checkBinValidity(cachedFile, file.info(fileToLoad)$ctime)
+    if (!bin_is_valid) {
+        writeBin(protolite::serialize_pb(list(layout_version = as.raw(PROTOBUF_LAYOUT_VERSION), ess = files)), cachedFile)
     }
 
     path <- paste0('/preloaded/', binaryName)
