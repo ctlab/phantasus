@@ -1,7 +1,8 @@
-commit 9b78487334f4145a4b333e42224169a149a7e54a
-Author: Alexey Sergushichev <alsergbox@gmail.com>
-Date:   Fri Mar 12 17:29:14 2021 +0300
+commit 2659f865b579fcf3ed44496b5e47d00033db9792
+Author: Alexey Sergushichev <alserg@itmo.ru>
+Date:   Fri Jul 2 13:09:37 2021 +0000
 
-    Update .travis.yml
+    Annotations are now transmitted with type information
     
-    don't test against bioc-devel
+    
+    Co-authored-by: Maksim Kleverov <klevermx@gmail.com>

@@ -1787,22 +1787,36 @@ phantasus.Util.getRexpData = function (rexp, rclass) {
     if (rexpV.rclass == rclass.INTEGER) {
       if (rexpV.attrName.length > 0 && rexpV.attrName[0] == 'levels') {
         data[names[i]].values = [];
+        data[names[i]].levels = [];
+        data[names[i]][phantasus.VectorKeys.DATA_TYPE] = 'string'
+        data[names[i]][phantasus.VectorKeys.IS_PHANTASUS_FACTOR] = true
         rexpV.attrValue[0].stringValue.forEach(function (v) {
-          data[names[i]].values.push(v.strval);
-        })
+          data[names[i]]["levels"].push(v.strval);
+        });
+        rexpV.intValue.forEach(function (v) {
+          data[names[i]].values.push(data[names[i]]["levels"][v-1]); // factor values in R starts from 1
+        });
+        
       }
       else {
+        data[names[i]][phantasus.VectorKeys.DATA_TYPE] = 'integer';
         data[names[i]].values = rexpV.intValue;
       }
     }
     else if (rexpV.rclass == rclass.REAL) {
       data[names[i]].values = rexpV.realValue;
+      data[names[i]][phantasus.VectorKeys.DATA_TYPE] = 'real';
     }
     else if (rexpV.rclass == rclass.STRING) {
       data[names[i]].values = [];
+      data[names[i]][phantasus.VectorKeys.DATA_TYPE] = 'string'
       rexpV.stringValue.forEach(function (v) {
         data[names[i]].values.push(v.strval);
       });
+    }
+    else if (rexpV.rclass == rclass.RAW){
+      data[names[i]][phantasus.VectorKeys.DATA_TYPE] = 'raw';
+      data[names[i]].values = rexpV.rawValue;
     }
   }
   return data;
@@ -2323,6 +2337,7 @@ phantasus.Map.fromJSON = function (json) {
 
 phantasus.ParseDatasetFromProtoBin = function () {
 };
+phantasus.ParseDatasetFromProtoBin.LAYOUT_VERSION = [0x00, 0x02];
 
 phantasus.ParseDatasetFromProtoBin.parse = function (session, callback, options) {
   var response = JSON.parse(session.txt)[0];
@@ -2343,7 +2358,23 @@ phantasus.ParseDatasetFromProtoBin.parse = function (session, callback, options)
       var res = REXP.decode(new Uint8Array(contents));
 
       var jsondata = phantasus.Util.getRexpData(res, rclass);
-
+      if (jsondata["layout_version"]){
+        let in_file_version = jsondata["layout_version"].values;
+        let in_js_version = phantasus.ParseDatasetFromProtoBin.LAYOUT_VERSION;
+        
+        let versions_are_equal = (in_file_version.length == in_js_version.length) && 
+                                  in_file_version.every(function(element, index) {
+                                                                                    return element === in_js_version[index]; 
+                                                                                  });
+        if (!versions_are_equal){
+          throw( new Error("Wrong version of session binnary file. Please contact administrator."));
+          
+        }
+      }
+      else {
+        throw( new Error("Wrong version of session binnary file. Please contact administrator."));
+      }
+      jsondata = jsondata.ess;
       var datasets = [];
       for (var k = 0; k < Object.keys(jsondata).length; k++) {
         var dataset = phantasus.ParseDatasetFromProtoBin.getDataset(new Promise(function (resolve) {resolve(session)}),
@@ -2365,8 +2396,8 @@ phantasus.ParseDatasetFromProtoBin.getDataset = function (session, seriesName, j
   var flatData = jsondata.data.values;
   var nrowData = jsondata.data.dim[0];
   var ncolData = jsondata.data.dim[1];
-  var flatPdata = jsondata.pdata.values;
-  var annotation = jsondata.fdata.values;
+  var pData = jsondata.pdata;
+  var annotation = jsondata.fdata;
   //var id = jsondata.rownames.values;
   var metaNames = jsondata.colMetaNames.values;
   var rowMetaNames = jsondata.rowMetaNames.values;
@@ -2398,10 +2429,19 @@ phantasus.ParseDatasetFromProtoBin.getDataset = function (session, seriesName, j
 
   if (metaNames) {
     for (i = 0; i < metaNames.length; i++) {
-      var curVec = dataset.getColumnMetadata().add(metaNames[i]);
-      for (j = 0; j < ncolData; j++) {
-        curVec.setValue(j, phantasus.Util.safeTrim(flatPdata[j + i * ncolData]));
+      let curVec = dataset.getColumnMetadata().add(metaNames[i]);
+      let sourceVec = pData[metaNames[i]].values
+      for (j = 0; j < sourceVec.length; j++) {
+        curVec.setValue(j, phantasus.Util.safeTrim(sourceVec[j]));
       }
+      curVec.setDatatype(pData[metaNames[i]][phantasus.VectorKeys.DATA_TYPE]);
+      let is_factor = pData[metaNames[i]][phantasus.VectorKeys.IS_PHANTASUS_FACTOR];
+      if(is_factor){
+          curVec.levels = pData[metaNames[i]]["levels"];
+          curVec.getProperties().set(phantasus.VectorKeys.IS_PHANTASUS_FACTOR, is_factor);
+      }
+      
+    
     }
   }
   // console.log(seriesName, "meta?");
@@ -2412,15 +2452,16 @@ phantasus.ParseDatasetFromProtoBin.getDataset = function (session, seriesName, j
   // console.log(rowMetaNames);
 
   for (i = 0; i < rowMetaNames.length; i++) {
-    curVec = dataset.getRowMetadata().add(rowMetaNames[i]);
+    let curVec = dataset.getRowMetadata().add(rowMetaNames[i]);
+    let sourceVec = annotation[rowMetaNames[i]].values
     for (j = 0; j < nrowData; j++) {
-      curVec.setValue(j, phantasus.Util.safeTrim(annotation[j + i * nrowData]));
+      curVec.setValue(j, phantasus.Util.safeTrim(sourceVec[j]));
       //rowIds.setValue(j, id[j])
     }
+    curVec.setDatatype(annotation[rowMetaNames[i]][phantasus.VectorKeys.DATA_TYPE]);
   }
-  phantasus.MetadataUtil.maybeConvertStrings(dataset.getRowMetadata(), 1);
-  phantasus.MetadataUtil.maybeConvertStrings(dataset.getColumnMetadata(),
-    1);
+  phantasus.MetadataUtil.maybeConvertStringsArray(dataset.getRowMetadata());
+  phantasus.MetadataUtil.maybeConvertStringsArray(dataset.getColumnMetadata());
 
   return dataset;
 };
@@ -5182,6 +5223,12 @@ phantasus.VectorAdapter.prototype = {
   },
   defactorize: function () {
     return this.v.defactorize();
+  },
+  getDatatype: function(){
+    return this.v.getDatatype();
+  },
+  setDatatype: function(datatype){
+    return this.v.setDatatype(datatype);
   }
 };
 
@@ -7091,7 +7138,7 @@ phantasus.DatasetUtil.shallowCopy = function (dataset) {
   // make a shallow copy of the dataset, metadata is immutable via the UI
   var rowMetadataModel = phantasus.MetadataUtil.shallowCopy(dataset
     .getRowMetadata());
-  var columnMetadataModel = phantasus.MetadataUtil.shallowCopy(dataset
+  var columnMetadataModel = phantasus.MetadataUtil.shallowCopy(dataset  
     .getColumnMetadata());
   dataset.getRowMetadata = function () {
     return rowMetadataModel;
@@ -7235,7 +7282,107 @@ phantasus.DatasetUtil.getMetadataArray = function (dataset) {
     fvarLabels: varLabels
   };
 };
-
+phantasus.DatasetUtil.getMetadataRexp = function (metadata, featuresCount, participantsCount){
+  var dataArray = [];
+  var metaLabels = [];
+  for (var j = 0; j < featuresCount; j++) {
+    var vecJ = metadata.get(j);
+    var ph_type = vecJ.getDatatype();
+    var curRexp = { attrName: [],
+                    attrValue: [],
+                    rclass: ph_type.toUpperCase(),
+                    stringValue: [],
+                    intValue: [],
+                    realValue: [],
+                    rexpValue:[]
+                  }
+    if (ph_type === "integer"){
+      curRexp["intValue"] = vecJ.array; 
+    } 
+    else if (ph_type === "real"){
+      curRexp[realValue] = vecJ.array; 
+    }
+    else{
+       if (vecJ.isFactorized()){
+         vecJ.getFactorLevels().forEach(function (v) {
+            curRexp["stringValue"].push({
+            strval: v ? v.toString() : "",
+            isNA: false
+            });
+         });
+         curRexp = { attrName: ["levels","class"],
+                      attrValue: [curRexp, 
+                      {
+                         attrName: [],
+                         attrValue: [],
+                         rclass: "STRING",
+                         stringValue: [{
+                                  strval: "factor",
+                                  isNA: false
+                                      }],
+                         intValue: [],
+                         realValue: [],
+                         rexpValue:[]
+                      }],
+                      rclass: "INTEGER",
+                      stringValue: [],
+                      intValue: [],
+                      realValue: [],
+                      rexpValue:[]
+                    };
+          for (let i = 0; i<vecJ.size(); i++){
+            curRexp["intValue"].push(vecJ.getFactorLevels().indexOf(vecJ.getValue(i))+1); 
+          }
+       }
+       else{
+         for (var l = 0; l < participantsCount; l++) {
+           curRexp["stringValue"].push({
+             strval: vecJ.getValue(l) ? vecJ.getValue(l).toString() : "",
+             isNA: false
+           });
+         }
+       }
+    }
+    metaLabels.push({
+      strval: vecJ.getName(),
+      isNA: false
+    });
+    dataArray.push(curRexp);
+  }
+  return {      attrName: ["names"],
+                attrValue: [
+                  { attrName: [],
+                    attrValue: [],
+                    rclass: "STRING",
+                    stringValue: metaLabels,
+                    intValue: [],
+                    realValue: [],
+                    rexpValue:[]
+                  }
+                ],
+                rclass: "LIST",
+                stringValue: [],
+                intValue: [],
+                realValue: [],
+                rexpValue: dataArray
+          };
+    
+};
+phantasus.DatasetUtil.getMetadataRexpArray = function (dataset){
+  var columnMeta = dataset.getColumnMetadata();
+  var colFeatures = columnMeta.getMetadataCount();
+  var participants = dataset.getColumnCount();
+  var pData = phantasus.DatasetUtil.getMetadataRexp(columnMeta, colFeatures, participants);
+  var rowMeta = dataset.getRowMetadata();
+  var rowFeatures = rowMeta.getMetadataCount();
+  var fData = phantasus.DatasetUtil.getMetadataRexp(rowMeta, rowFeatures, dataset.getRowCount());
+  return {
+    pdata: pData,
+    varLabels: pData.attrValue[0] ,
+    fdata: fData,
+    fvarLabels: fData.attrValue[0]
+  };
+};
 phantasus.DatasetUtil.toESSessionPromise = function (dataset) {
   var datasetSession = dataset.getESSession();
 
@@ -7248,7 +7395,7 @@ phantasus.DatasetUtil.toESSessionPromise = function (dataset) {
       }
 
       var array = phantasus.DatasetUtil.getContentArray(dataset);
-      var meta = phantasus.DatasetUtil.getMetadataArray(dataset);
+      var meta = phantasus.DatasetUtil.getMetadataRexpArray(dataset);
 
       var expData = dataset.getExperimentData() || {
         name: { values: "" },
@@ -7270,29 +7417,10 @@ phantasus.DatasetUtil.toESSessionPromise = function (dataset) {
             rclass: "INTEGER",
             intValue: [dataset.getRowCount(), dataset.getColumnCount()]
           }]
-        }, {
-          rclass: "STRING",
-          stringValue: meta.pdata,
-          attrName: ["dim"],
-          attrValue: [{
-            rclass: "INTEGER",
-            intValue: [dataset.getColumnCount(), meta.varLabels.length]
-          }]
-        }, {
-          rclass: "STRING",
-          stringValue: meta.varLabels
-        }, {
-          rclass: "STRING",
-          stringValue: meta.fdata,
-          attrName: ["dim"],
-          attrValue: [{
-            rclass: "INTEGER",
-            intValue: [dataset.getRowCount(), meta.fvarLabels.length]
-          }]
-        }, {
-          rclass: "STRING",
-          stringValue: meta.fvarLabels
-        }],
+        }, meta.pdata,
+           meta.varLabels,
+           meta.fdata,
+           meta.fvarLabels],
         attrName: ["names"],
         attrValue: [{
           rclass: "STRING",
@@ -7418,8 +7546,9 @@ phantasus.DatasetUtil.probeDataset = function (dataset, session) {
 
     var meta = phantasus.DatasetUtil.getMetadataArray(dataset);
     var fData = dataset.getRowMetadata();
-
+    var pData = dataset.getColumnMetadata();
     var fvarLabels = meta.fvarLabels.map(function (fvarLabel) { return (fvarLabel.isNA)?'NA':fvarLabel.strval});
+    var varLabels = meta.varLabels.map(function (varLabel) { return (varLabel.isNA)?'NA':varLabel.strval});
     var query = {
       exprs: [],
       fData: []
@@ -7434,12 +7563,12 @@ phantasus.DatasetUtil.probeDataset = function (dataset, session) {
       return (isNaN(rdaValue) && isNaN(testValue)) || Math.abs(rdaValue - testValue) < epsExprs;
     };
 
-    var verifyFeature = function (name, backendValues) {
-      var indices = _.find(query.fData, {name: name}).indices;
-      var column = fData.getByName(name);
+    var verifyFeature = function (name, backendValues, metadata, indices) {
+      //var indices = _.find(query.fData, {name: name}).indices;
+      var column = metadata.getByName(name);
       var frontendValues = _.map(indices, function (index) {return column.getValue(index - 1)});
-      var type = column.getProperties().get(phantasus.VectorKeys.DATA_TYPE);
-      if (type === 'number' || type === '[number]') {
+      var type = column.getDatatype();
+      if (type === 'number' || type === '[number]' || type === 'integer' || type === 'real') {
         return frontendValues.every(function (value, index) {
           var backendValue = parseFloat(backendValues[index]);  // backend might be string, frontend number
 
@@ -7476,7 +7605,14 @@ phantasus.DatasetUtil.probeDataset = function (dataset, session) {
 
       return fDataVectorMeta;
     });
+    query.pData = _.map(pData.vectors, function (pDataVector) {
+      var pDataVectorMeta = {name: pDataVector.getName()};
+      pDataVectorMeta.indices = _.times(20, function () {
+        return _.random(0, pDataVector.size() - 1) + 1;
+      });
 
+      return pDataVectorMeta;
+    });
     targetSession.then(function (essession) {
       var request = {
         es: essession,
@@ -7490,9 +7626,12 @@ phantasus.DatasetUtil.probeDataset = function (dataset, session) {
         var isColumnCountEqual = backendProbe.dims[1] === dataset.getColumnCount();
         var exprsEqual = backendProbe.probe.every(verifyExprs);
         var fDataValuesEqual = true;
-
+        var pDataValuesEqual = true;
         var fDataNamesEqual = fvarLabels.every(function (value) {
           return backendProbe.fvarLabels.indexOf(value) !== -1;
+        });
+        var pDataNamesEqual = varLabels.every(function (value) {
+          return backendProbe.varLabels.indexOf(value) !== -1;
         });
 
         if (fDataNamesEqual) {
@@ -7500,12 +7639,19 @@ phantasus.DatasetUtil.probeDataset = function (dataset, session) {
             if (!fDataValuesEqual) {
               return;
             }
-
-            fDataValuesEqual = verifyFeature(name, values);
+            fDataValuesEqual = verifyFeature(name, values, fData, _.find(query.fData, {name: name}).indices);
           });
         }
+        if (pDataNamesEqual) {
+          _.each(backendProbe.pdata, function (values, name) {
+            if (!pDataValuesEqual) {
+              return;
+            }
 
-        resolve(isRowCountEqual && isColumnCountEqual && exprsEqual && fDataNamesEqual && fDataValuesEqual);
+            pDataValuesEqual = verifyFeature(name, values, pData, _.find(query.pData, {name: name}).indices);
+          });
+        }
+        resolve(isRowCountEqual && isColumnCountEqual && exprsEqual && fDataNamesEqual && fDataValuesEqual && pDataNamesEqual && pDataValuesEqual);
       }, false, "::es");
 
 
@@ -9111,7 +9257,7 @@ phantasus.MetadataUtil.search = function (options) {
     var filterColumnName = predicate.getField();
     if (filterColumnName != null && !predicate.isNumber()) {
       var wrapper = nameToVector.get(filterColumnName);
-      if (wrapper && (wrapper.dataType === 'number' || wrapper.dataType === '[number]')) {
+      if (wrapper && (wrapper.dataType === 'number' || wrapper.dataType === '[number]' || wrapper.dataType === 'integer' || wrapper.dataType === 'real')) {
         if (predicate.getText) {
           predicates[p] = new phantasus.Util.EqualsPredicate(filterColumnName, parseFloat(predicate.getText()));
         } else if (predicate.getValues) {
@@ -9354,7 +9500,7 @@ phantasus.MetadataUtil.autocomplete = function (model) {
       var v = searchModel.get(j);
       var dataType = phantasus.VectorUtil.getDataType(v);
       var field = v.getName();
-      if (dataType === 'number' || dataType === 'string'
+      if (dataType === 'number' || dataType === 'integer' || dataType === 'real' || dataType === 'string'
         || dataType === '[string]') {
         if (regex.test(field) && field !== fieldSearchFieldName) {
           var quotedField = field;
@@ -9364,7 +9510,7 @@ phantasus.MetadataUtil.autocomplete = function (model) {
           matches.push({
             value: quotedField + ':',
             label: '<span style="font-weight:300;">' + (regexMatch == null ? field : field.replace(regexMatch, '<b>$1</b>'))
-            + ':</span>' + (dataType === 'number' ? ('<span' +
+            + ':</span>' + (phantasus.VectorUtil.isNumber(v)? ('<span' +
             ' style="font-weight:300;font-size:85%;">.., >, <, >=, <=,' +
             ' =</span>') : ''),
             show: true
@@ -9397,7 +9543,7 @@ phantasus.MetadataUtil.getMetadataSignedNumericFields = function (metadataModel)
   for (var i = 0, count = metadataModel.getMetadataCount(); i < count; i++) {
     var field = metadataModel.get(i);
     var properties = field.getProperties();
-    if (properties.get('phantasus.dataType') === 'number') {
+    if (phantasus.VectorUtil.isNumber(field)) {
       var hasPositive = false;
       var hasNegative = false;
       for (var j = 0; j < field.size(); j++) {
@@ -9444,7 +9590,6 @@ phantasus.MetadataUtil.indexOf = function (metadataModel, name) {
 };
 
 phantasus.MetadataUtil.DEFAULT_STRING_ARRAY_FIELDS = ['target', 'gene_target', 'moa'];
-phantasus.MetadataUtil.DEFAULT_STRINF_FIELDS = ['Gene ID', 'ID', 'ENTREZID']
 
 phantasus.MetadataUtil.DEFAULT_HIDDEN_FIELDS = new phantasus.Set();
 ['pr_analyte_id', 'pr_gene_title', 'pr_gene_id', 'pr_analyte_num',
@@ -9462,9 +9607,7 @@ phantasus.MetadataUtil.DEFAULT_HIDDEN_FIELDS = new phantasus.Set();
 phantasus.MetadataUtil.maybeConvertStrings = function (metadata,
                                                       metadataStartIndex) {
   for (var i = metadataStartIndex, count = metadata.getMetadataCount(); i < count; i++) {
-    if (!phantasus.MetadataUtil.DEFAULT_STRINF_FIELDS.includes(metadata.get(i).name)){
       phantasus.VectorUtil.maybeConvertStringToNumber(metadata.get(i));
-    }
   }
   phantasus.MetadataUtil.DEFAULT_STRING_ARRAY_FIELDS.forEach(function (field) {
     if (metadata.getByName(field)) {
@@ -9473,6 +9616,14 @@ phantasus.MetadataUtil.maybeConvertStrings = function (metadata,
     }
   });
 
+};
+phantasus.MetadataUtil.maybeConvertStringsArray = function (metadata) {
+  phantasus.MetadataUtil.DEFAULT_STRING_ARRAY_FIELDS.forEach(function (field) {
+    if (metadata.getByName(field)) {
+      phantasus.VectorUtil.maybeConvertToStringArray(metadata
+        .getByName(field), ',');
+    }
+  });
 };
 phantasus.MetadataUtil.copy = function (src, dest) {
   if (src.getItemCount() != dest.getItemCount()) {
@@ -10340,11 +10491,14 @@ phantasus.SlicedVector = function (v, indices) {
 
   if (v.isFactorized()) {
     var oldLevels = v.getFactorLevels();
-    var newValues = phantasus.VectorUtil.getSet(this).values();
-
-    this.levels = _.filter(oldLevels, function (level) {
-      return _.indexOf(newValues, level) !== -1;
+    var newValues = phantasus.VectorUtil.getSet(this);
+    let newLevels = [];
+    oldLevels.forEach(function (candidate){
+      if (newValues.has(candidate)){
+        newLevels.push(candidate);
+      }
     });
+    this.levels = newLevels;
   }
 };
 phantasus.SlicedVector.prototype = {
@@ -10535,7 +10689,7 @@ phantasus.SortKey.prototype = {
         }
       } else {
         var dataType = phantasus.VectorUtil.getDataType(this.v);
-        if (dataType === 'number') {
+        if (dataType === 'number' || dataType === 'integer' || dataType === 'real') {
           this.c = this.sortOrder === phantasus.SortKey.SortOrder.ASCENDING ? phantasus.SortKey.NUMBER_ASCENDING_COMPARATOR
             : phantasus.SortKey.NUMBER_DESCENDING_COMPARATOR;
         } else if (dataType === '[number]') {
@@ -12187,6 +12341,7 @@ phantasus.VectorKeys.VALUE_TO_INDICES = 'phantasus.valueToIndices';
 /** [int] of visible field indices in phantasus.VectorKeys.FIELDS */
 phantasus.VectorKeys.VISIBLE_FIELDS = 'phantasus.visibleFields';
 phantasus.VectorKeys.DATA_TYPE = 'phantasus.dataType';
+phantasus.VectorKeys.IS_PHANTASUS_FACTOR = 'phantasus.factor';
 /** Function to map an array to a single value for sorting */
 phantasus.VectorKeys.ARRAY_SUMMARY_FUNCTION = 'phantasus.arraySummaryFunct';
 /** Key for object (e.g. box plot) that summarizes data values */
@@ -12677,11 +12832,12 @@ phantasus.VectorUtil.toString = function (vector) {
 };
 
 phantasus.VectorUtil.getDataType = function (vector) {
-  var dataType = vector.getProperties().get(phantasus.VectorKeys.DATA_TYPE);
+  //get origin datatype
+  var dataType = vector.getDatatype();
   if (dataType === undefined) {
     var firstNonNull = phantasus.VectorUtil.getFirstNonNull(vector);
     dataType = phantasus.Util.getDataType(firstNonNull);
-    vector.getProperties().set(phantasus.VectorKeys.DATA_TYPE, dataType);
+    vector.setDatatype(dataType);
   }
   return dataType;
 
@@ -12744,7 +12900,7 @@ phantasus.VectorUtil.getFirstNonNull = function (vector) {
   return null;
 };
 phantasus.VectorUtil.isNumber = function (vector) {
-  return phantasus.VectorUtil.getDataType(vector) === 'number';
+  return phantasus.VectorUtil.getDataType(vector) === 'number' || phantasus.VectorUtil.getDataType(vector) === 'integer' || phantasus.VectorUtil.getDataType(vector) === 'real' ;
 };
 
 /**
@@ -12789,7 +12945,6 @@ phantasus.Vector.prototype = {
    */
   setValue: function (index, value) {
     this.defactorize();
-
     this.array[index] = value;
   },
   getValue: function (index) {
@@ -12832,11 +12987,9 @@ phantasus.Vector.prototype = {
       return _.indexOf(levels, value) !== -1; // all current values present in levels
     });
 
-
     if (!allLevelsArePresent) {
       throw Error('Cannot factorize vector. Invalid levels');
     }
-
     this.levels = levels;
   },
 
@@ -12844,17 +12997,30 @@ phantasus.Vector.prototype = {
     if (!this.isFactorized()) {
       return;
     }
+    if (this.isPhantasusFactor()){
+      this.getProperties().set(phantasus.VectorKeys.IS_PHANTASUS_FACTOR,false);
+    } 
+      this.levels = null;
 
-    this.levels = null;
   },
 
   isFactorized: function () {
     return _.size(this.levels)  > 0;
   },
+  isPhantasusFactor: function(){
+    return this.getProperties().get(phantasus.VectorKeys.IS_PHANTASUS_FACTOR)?true:false;
+  },
 
   getFactorLevels: function () {
     return this.levels;
+  },
+  getDatatype: function(){
+    return this.getProperties().get(phantasus.VectorKeys.DATA_TYPE);
+  },
+  setDatatype: function(datatype){
+    this.getProperties().set(phantasus.VectorKeys.DATA_TYPE, datatype);
   }
+  
 };
 phantasus.Util.extend(phantasus.Vector, phantasus.AbstractVector);
 
@@ -13657,7 +13823,7 @@ phantasus.AdjustDataTool.prototype = {
     var filterNumeric = function (metadata, currentName) {
       var meta = metadata.getByName(currentName);
       var type = phantasus.VectorUtil.getDataType(meta);
-      return type === 'number' || type === '[number]'
+      return type === 'number' || type === 'integer' || type === 'real' || type === '[number]'
     };
 
     var numericRows = phantasus.MetadataUtil.getMetadataNames(dataset.getRowMetadata()).filter(filterNumeric.bind(null,dataset.getRowMetadata()));
@@ -14690,7 +14856,7 @@ phantasus.ChartTool = function (chartOptions) {
             .getDataType(dataset.getRowMetadata()
               .getByName(name));
           if (dataType === 'number'
-            || dataType === '[number]') {
+            || dataType === '[number]' || dataType === 'integer' || dataType === 'real') {
             numericRowOptions.push({
               name: name + ' (row)',
               value: name + '_r'
@@ -14709,7 +14875,7 @@ phantasus.ChartTool = function (chartOptions) {
             .getDataType(dataset.getColumnMetadata()
               .getByName(name));
           if (dataType === 'number'
-            || dataType === '[number]') {
+            || dataType === '[number]' || dataType === 'integer' || dataType === 'real') {
             numericColumnOptions.push({
               name: name + ' (column)',
               value: name + '_c'
@@ -15753,11 +15919,10 @@ phantasus.CreateAnnotation.prototype = {
       var val = eval(operation);
       vector.setValue(idx, val.valueOf());
     }
-
-    phantasus.VectorUtil.maybeConvertStringToNumber(vector);
+    vector.getProperties().set(phantasus.VectorKeys.DATA_TYPE, 'number');
     project.trigger('trackChanged', {
       vectors: [vector],
-      display: ['text'],
+      display: ['text, continuous'],
       columns: isColumns
     });
   }
@@ -17783,7 +17948,7 @@ phantasus.NearestNeighbors.prototype = {
           // get numeric columns only
           for (var i = 0; i < metadata.getMetadataCount(); i++) {
             var v = metadata.get(i);
-            if (phantasus.VectorUtil.getDataType(v) === 'number') {
+            if (phantasus.VectorUtil.isNumber(v)) {
               names.push(v.getName());
             }
           }
@@ -23772,7 +23937,7 @@ phantasus.ColorSchemeChooser = function (options) {
     value: track.getVector(track.settings.colorByField).getProperties().get(phantasus.VectorKeys.DISCRETE)
   });
   var dataType = phantasus.VectorUtil.getDataType(track.getVector(track.settings.colorByField));
-  var isNumber = dataType === 'number' || dataType === '[number]';
+  var isNumber = dataType === 'number' || dataType === '[number]' || dataType === 'real' || dataType === 'integer';
   formBuilder.setVisible('discrete', isNumber);
   formBuilder.setVisible('annotation_name', track.settings.colorByField != null);
 
@@ -23838,7 +24003,7 @@ phantasus.ColorSchemeChooser = function (options) {
     colorModel.getMappedValue(track.getVector(annotationName), track.getVector(annotationName).getValue(0));
     track.settings.colorByField = annotationName;
     var dataType = phantasus.VectorUtil.getDataType(track.getVector(track.settings.colorByField));
-    var isNumber = dataType === 'number' || dataType === '[number]';
+    var isNumber = dataType === 'number' || dataType === '[number]' || dataType === 'real' || dataType === 'integer';
     formBuilder.setVisible('discrete', isNumber);
     updateChooser();
     track.setInvalid(true);
@@ -40154,7 +40319,7 @@ phantasus.VectorTrackHeader = function (project, name, isColumns, heatMap) {
           } else if (sortKey.getSortOrder() === phantasus.SortKey.SortOrder.TOP_N) {
             sortOrder = phantasus.SortKey.SortOrder.UNSORTED;
           } else {
-            sortOrder = dataType === 'number' || dataType === '[number]' ? phantasus.SortKey.SortOrder.TOP_N : phantasus.SortKey.SortOrder.UNSORTED; // 3rd
+            sortOrder = dataType === 'number'|| dataType === 'integer' || dataType === 'real' || dataType === '[number]' ? phantasus.SortKey.SortOrder.TOP_N : phantasus.SortKey.SortOrder.UNSORTED; // 3rd
             // click
           }
 
@@ -40623,7 +40788,7 @@ phantasus.VectorTrack.prototype = {
         if (mapped !== undefined) {
           settings.display.push(mapped);
         } else if (method === 'DISCRETE') {
-          _this.getFullVector().getProperties().get(phantasus.VectorKeys.DISCRETE, true);
+          _this.getFullVector().getProperties().set(phantasus.VectorKeys.DISCRETE, true);
         } else if (method === 'CONTINUOUS') {
           _this.getFullVector().getProperties().set(phantasus.VectorKeys.DISCRETE, false);
         } else if (method === 'HIGHLIGHT') {
@@ -40860,7 +41025,7 @@ phantasus.VectorTrack.prototype = {
         this.settings.highlightMatchingValues = true;
       } else if (this.getFullVector().getProperties().has(
           phantasus.VectorKeys.FIELDS)
-        || phantasus.VectorUtil.getDataType(this.getFullVector()) === 'number' || phantasus.VectorUtil.getDataType(this.getFullVector()) === '[number]') {
+        ||  phantasus.VectorUtil.getDataType(this.getFullVector()) === '[number]' || phantasus.VectorUtil.isNumber(this.getFullVector())) {
         this.getFullVector().getProperties().set(phantasus.VectorKeys.DISCRETE, false);
         this.settings.highlightMatchingValues = false;
       }
