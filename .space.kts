@@ -21,7 +21,7 @@ job("build and test in latest preimage") {
             }
         }
     }
-    container(displayName = "", image = "ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus-preimage") {
+    container(displayName = "", image = "ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus-preimage:0.2-using_ocpu") {
     	shellScript {
         	content = """
             	R CMD build .
