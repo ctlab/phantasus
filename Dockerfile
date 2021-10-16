@@ -1,5 +1,5 @@
-FROM assaron/phantasus-preimage
-
+ARG PREIMAGE_NAME=assaron/phantasus-preimage:latest
+FROM $PREIMAGE_NAME
 ARG TARGET_BRANCH=master
 ARG PHANTASUS_BUILD
 ARG GITHUB_PAT
