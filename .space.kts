@@ -26,9 +26,9 @@ job("build and test in latest preimage") {
         	content = """
             	R CMD build .
                 FILE=$(ls -1t *.tar.gz | head -n 1)
-                R CMD check \"$FILE\"
+                R CMD check "${'$'}FILE"
                 bash inst/test_js.sh
-                Rscript -e "library(BiocCheck); BiocCheck(\"${FILE}\")"
+                Rscript -e "library(BiocCheck); BiocCheck(\"${'$'}{FILE}\")"
                 Rscript -e 'covr::codecov()'
             """
         }
