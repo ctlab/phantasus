@@ -6,14 +6,21 @@
 
 job("build and test in latest preimage") {
     container(displayName = "", image = "ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus-preimage"){
-        startOn{
+        startOn {
+             //push in preimage repo
             gitPush {
                 repository = "phantasus-preimage"
-                branchFilter {
+            	branchFilter {
+                	+"refs/heads/master"
+            	}                
+            }
+            //push in phantasus repo
+        	gitPush {
+            	branchFilter {
                 	+"refs/heads/master"
                     +"refs/heads/space_jobs"
             	}
-            }
+        	}
         }
     	shellScript{
         	content = """
