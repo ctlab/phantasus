@@ -1,0 +1,30 @@
+/**
+* JetBrains Space Automation
+* This Kotlin-script file lets you automate build activities
+* For more info, see https://www.jetbrains.com/help/space/automation.html
+*/
+
+job("build and test in latest preimage") {
+    container(displayName = "", image = "ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus-preimage"){
+        startOn{
+            gitPush {
+                repository = "phantasus-preimage"
+                branchFilter {
+                	+"refs/heads/master"
+                    +"refs/heads/space_jobs"
+            	}
+            }
+        }
+    	shellScript{
+        	content = """
+            	R CMD build .
+                FILE=$(ls -1t *.tar.gz | head -n 1)
+                R CMD check "$FILE"
+                bash inst/test_js.sh
+                Rscript -e "library(BiocCheck); BiocCheck(\"${FILE}\")"
+                Rscript -e 'covr::codecov()'
+            """
+        }
+    }
+}
+
