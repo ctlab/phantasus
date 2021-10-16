@@ -5,24 +5,24 @@
 */
 
 job("build and test in latest preimage") {
-    container(displayName = "", image = "ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus-preimage"){
-        startOn {
-            //push in preimage repo
-        	gitPush {
-                 repository = "phantasus-preimage"
-            	branchFilter {
-                	+"refs/heads/master"
-            	}
+    startOn {
+        //push in preimage repo
+		gitPush {
+            repository = "phantasus-preimage"
+            branchFilter {
+                +"refs/heads/master"
         	}
-            //push in phantasus repo
-        	gitPush {
-            	branchFilter {
-                	+"refs/heads/master"
-                    +"refs/heads/space_jobs"
-            	}
-        	}
+    	}
+        //push in phantasus repo
+        gitPush {
+            branchFilter {
+            	+"refs/heads/master"
+                +"refs/heads/space_jobs"
+            }
         }
-    	shellScript{
+    }
+    container(displayName = "", image = "ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus-preimage") {
+    	shellScript {
         	content = """
             	R CMD build .
                 FILE=$(ls -1t *.tar.gz | head -n 1)
