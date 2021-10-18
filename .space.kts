@@ -21,17 +21,41 @@ job("build and test in latest preimage") {
             }
         }
     }
-    container(displayName = "", image = "ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus-preimage:0.2-using_ocpu") {
+    container(displayName = "Build R package and copy to share", image = "ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus-preimage") {
     	shellScript {
         	content = """
             	R CMD build .
-                FILE=$(ls -1t *.tar.gz | head -n 1)
-                R CMD check "${'$'}FILE"
+                FILE=${'$'}(ls -1t *.tar.gz | head -n 1)
+                cp  ${'$'}FILE $mountDir/share/
+            """
+        }
+    }
+    container(displayName = "Check builded package", image = "ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus-preimage") {
+    	shellScript {
+        	content = """
+                FILE=${'$'}(ls -1t $mountDir/share/*.tar.gz | head -n 1)
+                R CMD check "$mountDir/share/${'$'}FILE"
                 bash inst/test_js.sh
+            """
+        }
+    }
+    container(displayName = "BioCheck", image = "ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus-preimage") {
+    	shellScript {
+        	content = """
+                FILE=${'$'}(ls -1t $mountDir/share/*.tar.gz | head -n 1)
                 Rscript -e "library(BiocCheck); BiocCheck(\"${'$'}{FILE}\")"
                 Rscript -e 'covr::codecov()'
             """
         }
     }
+    container(displayName = "code covr", image = "ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus-preimage") {
+    	shellScript {
+        	content = """
+                Rscript -e "install.packages(\"covr\")"
+                Rscript -e 'covr::codecov()'
+            """
+        }
+    }
+    
 }
 
