@@ -30,13 +30,6 @@ job("build and test in latest preimage") {
             """
         }
     }
-    container(displayName = "Test parameters", image = "ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus-preimage") {
-    	shellScript {
-        	content = """
-                echo ${'$'}FILE
-            """
-        }
-    }
     container(displayName = "Check builded package", image = "ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus-preimage") {
     	shellScript {
         	content = """
@@ -46,12 +39,20 @@ job("build and test in latest preimage") {
             """
         }
     }
+        container(displayName = "Check js", image = "ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus-preimage") {
+    	shellScript {
+        	content = """
+				apt install nodejs
+                apt install npm
+                bash inst/test_js.sh
+            """
+        }
+    }
     container(displayName = "BioCheck", image = "ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus-preimage") {
     	shellScript {
         	content = """
                 FILE=${'$'}(ls -1t $mountDir/share/*.tar.gz | head -n 1)
                 Rscript -e "library(BiocCheck); BiocCheck(\"${'$'}{FILE}\")"
-                Rscript -e 'covr::codecov()'
             """
         }
     }
