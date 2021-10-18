@@ -34,7 +34,7 @@ job("build and test in latest preimage") {
     	shellScript {
         	content = """
                 FILE=${'$'}(ls -1t $mountDir/share/*.tar.gz | head -n 1)
-                R CMD check "$mountDir/share/${'$'}FILE"
+                R CMD check "${'$'}FILE"
                 bash inst/test_js.sh
             """
         }
