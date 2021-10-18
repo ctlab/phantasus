@@ -30,6 +30,13 @@ job("build and test in latest preimage") {
             """
         }
     }
+    container(displayName = "Test parameters", image = "ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus-preimage") {
+    	shellScript {
+        	content = """
+                echo ${'$'}FILE
+            """
+        }
+    }
     container(displayName = "Check builded package", image = "ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus-preimage") {
     	shellScript {
         	content = """
