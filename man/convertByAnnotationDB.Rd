@@ -4,7 +4,14 @@
 \alias{convertByAnnotationDB}
 \title{Map indexes using Annotation DB}
 \usage{
-convertByAnnotationDB(es, dbName, columnName, columnType, keyType)
+convertByAnnotationDB(
+  es,
+  dbName,
+  columnName,
+  columnType,
+  keyType,
+  otherOptions
+)
 }
 \arguments{
 \item{es}{source ExpressionSet}
@@ -16,6 +23,8 @@ convertByAnnotationDB(es, dbName, columnName, columnType, keyType)
 \item{columnType}{Type of indexes in columnName}
 
 \item{keyType}{Type of mapped indexes}
+
+\item{otherOptions}{additional parameters for conversion. Currently only named boolean deleteDotVersion is not ignored.}
 }
 \value{
 JSON object with a vector of converted IDs
