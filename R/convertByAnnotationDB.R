@@ -13,6 +13,8 @@
 #'
 #' @param keyType Type of mapped indexes
 #'
+#' @param otherOptions additional parameters for conversion. Currently only named boolean deleteDotVersion is not ignored.
+#'
 #' @return JSON object with a vector of converted IDs
 #' @importFrom AnnotationDbi loadDb mapIds
 #'
