@@ -34,7 +34,7 @@ job("build and test in latest preimage") {
     	shellScript {
         	content = """
                 FILE=${'$'}(ls -1t $mountDir/share/*.tar.gz | head -n 1)
-                R CMD check "${'$'}FILE"
+                R CMD check "${'$'}FILE" --no-manual
             """
         }
     }
@@ -51,6 +51,7 @@ job("build and test in latest preimage") {
     	shellScript {
         	content = """
                 FILE=${'$'}(ls -1t $mountDir/share/*.tar.gz | head -n 1)
+                Rscript -e "BiocManager::install(\"BiocCheck\")"
                 Rscript -e "library(BiocCheck); BiocCheck(\"${'$'}{FILE}\")"
             """
         }
