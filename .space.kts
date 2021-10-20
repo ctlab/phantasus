@@ -62,8 +62,7 @@ job("build and test in latest preimage") {
             shellScript {
                 content = """
                     apt install nodejs
-                    apt install -y npm
-                    apt install firefox
+                    apt install -y npm firefox
                     bash inst/test_js.sh
                 """
             }
