@@ -63,6 +63,7 @@ job("build and test in latest preimage") {
                 content = """
                     apt install nodejs
                     apt install -y npm
+                    apt install firefox
                     bash inst/test_js.sh
                 """
             }
