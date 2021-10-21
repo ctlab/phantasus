@@ -53,7 +53,7 @@ job("build and test in latest preimage") {
                 shellScript {
                     content = """
                             Rscript -e "install.packages(\"covr\")"
-                            Rscript -e 'covr::codecov()'
+                            Rscript -e 'covr::package_coverage(quiet = FALSE)'
                      """
                 }
             }
