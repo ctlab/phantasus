@@ -61,8 +61,7 @@ job("build and test in latest preimage") {
         container(displayName = "Check js", image = "ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus-preimage") {
             shellScript {
                 content = """
-                    apt install nodejs
-                    apt install -y npm firefox
+                    apt-get install -y --no-install-recommends nodejs npm firefox
                     bash inst/test_js.sh
                 """
             }
