@@ -36,7 +36,7 @@ RUN mkdir -p /var/phantasus/cache && chown www-data /var/phantasus/cache
 RUN mkdir -p /var/phantasus/preloaded && chown www-data /var/phantasus/preloaded 
 RUN mkdir -p /var/phantasus/ocpu-root && chown www-data /var/phantasus/ocpu-root 
 
-
+RUN rm /var/log/apache2/access.log /var/log/apache2/error.log /var/log/opencpu/apache_access.log /var/log/opencpu/apache_error.log
 ENV OCPU_USER=www-data
 CMD /usr/bin/docker-entrypoint.sh
 
