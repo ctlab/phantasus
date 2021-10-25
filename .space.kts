@@ -30,39 +30,47 @@ job("build and test in latest preimage") {
             """
         }
     }
-    container(displayName = "Check builded package", image = "ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus-preimage") {
-    	shellScript {
-        	content = """
-                FILE=${'$'}(ls -1t $mountDir/share/*.tar.gz | head -n 1)
-                R CMD check "${'$'}FILE"
-            """
+    parallel{
+    	sequential{
+            container(displayName = "Check builded package", image = "ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus-preimage") {
+                shellScript {
+                    content = """
+                			FILE=${'$'}(ls -1t $mountDir/share/*.tar.gz | head -n 1)
+                			R CMD check "${'$'}FILE" --no-manual
+                    """
+                }
+            }
+            container(displayName = "BioCheck", image = "ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus-preimage") {
+                shellScript {
+                    content = """
+                			FILE=${'$'}(ls -1t $mountDir/share/*.tar.gz | head -n 1)
+                            Rscript -e "BiocManager::install(\"BiocCheck\")"
+                            Rscript -e "library(BiocCheck); BiocCheck(\"${'$'}{FILE}\")"
+                    """
+                }
+            }
+            container(displayName = "code covr", image = "ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus-preimage") {
+                shellScript {
+                    content = """
+                            Rscript -e "install.packages(\"covr\")"
+                            Rscript -e 'covr::package_coverage(quiet = FALSE)'
+                     """
+                }
+            }
         }
-    }
         container(displayName = "Check js", image = "ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus-preimage") {
-    	shellScript {
-        	content = """
-				apt install nodejs
-                apt install npm
-                bash inst/test_js.sh
-            """
-        }
+            shellScript {
+                content = """
+                    apt-get install -y --no-install-recommends nodejs npm firefox
+                    bash inst/test_js.sh
+                """
+            }
+    	}
     }
-    container(displayName = "BioCheck", image = "ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus-preimage") {
-    	shellScript {
-        	content = """
-                FILE=${'$'}(ls -1t $mountDir/share/*.tar.gz | head -n 1)
-                Rscript -e "library(BiocCheck); BiocCheck(\"${'$'}{FILE}\")"
-            """
-        }
-    }
-    container(displayName = "code covr", image = "ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus-preimage") {
-    	shellScript {
-        	content = """
-                Rscript -e "install.packages(\"covr\")"
-                Rscript -e 'covr::codecov()'
-            """
-        }
-    }
+
+    
+    
+
     docker {
     	beforeBuildScript {
             // Create an env variable BRANCH,
