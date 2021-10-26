@@ -1,5 +1,14 @@
 #!/bin/bash
 
+_term() {
+  echo "Caught signal!"
+  nginx -s stop
+  apachectl -k graceful-stop
+}
+
+trap _term SIGINT SIGTERM SIGWINCH
+
+
 chown -R $OCPU_USER /var/log/apache2
 chown -R $OCPU_USER /var/run/apache2
 chown -R $OCPU_USER /var/log/opencpu
@@ -14,6 +23,6 @@ chown $OCPU_USER /run/nginx.pid
 
 gosu $OCPU_USER nginx
 
-exec gosu $OCPU_USER apachectl -D FOREGROUND
+gosu $OCPU_USER apachectl start
 
-
+tail -f /var/log/nginx/access.log
