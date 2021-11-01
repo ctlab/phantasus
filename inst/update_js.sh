@@ -14,7 +14,7 @@ echo "Using phantasus.js from ${PHANTASUS_JS_DIR}"
 
 grunt --base "${PHANTASUS_JS_DIR}" dist
 
-git --work-tree="${PHANTASUS_JS_DIR}" log -1 > ./inst/www/phantasus.js/commit
+git -C "${PHANTASUS_JS_DIR}" log -1 > ./inst/www/phantasus.js/commit
 
 cp ${PHANTASUS_JS_DIR}/index.html ./inst/www/phantasus.js/
 cp ${PHANTASUS_JS_DIR}/js/phantasus.js ./inst/www/phantasus.js/js/
