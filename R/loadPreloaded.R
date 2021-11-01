@@ -83,6 +83,7 @@ loadPreloaded <- function(name) {
 #'         and \code{preloadedName.json} with session features) in \code{preloadedDir} folder.
 #' @export
 #' @examples
+#' \dontrun{
 #' sessionURL <- "https://ctlab.itmo.ru/phantasus/?session=x063c1b365b9211" # link from 'Get dataset link...' tool in phantasus
 #' newName <- "my_session" # user defined name
 #' preloadedDir <- "./preloaded" # directory where files will be stored. In order too get access through phantasus web-app should be preloadedDir
@@ -90,7 +91,7 @@ loadPreloaded <- function(name) {
 #' generatePreloadedSession(sessionURL= sessionURL,
 #'                          preloadedName = newName,
 #'                          preloadedDir = preloadedDir)
-#' \dontrun{
+#'
 #' servePhantasus(preloadedDir=preloadedDir, openInBrowser=FALSE)
 #' # open browser manually at http://0.0.0.0:8000/phantasus/index.html?preloaded=my_session
 #' }

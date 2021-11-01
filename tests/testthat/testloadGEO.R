@@ -12,15 +12,14 @@ test_that("loadGEO finishes with result", {
     expect_is(x, "json")
 
     binPath <- file.path(cacheDir, fromJSON(x))
-    ess <- protolite::unserialize_pb(readBin(binPath, what="raw", n=100000000))
-
+    ess <- protolite::unserialize_pb(readBin(binPath, what="raw", n=100000000))$ess
     expect_equal(length(ess), 2)
 
     x <- loadGEO("GSE27112-GPL6885")
     expect_is(x, "json")
 
     binPath <- file.path(cacheDir, fromJSON(x))
-    ess <- protolite::unserialize_pb(readBin(binPath, what="raw", n=100000000))
+    ess <- protolite::unserialize_pb(readBin(binPath, what="raw", n=100000000))$ess
 
     expect_equal(length(ess), 1)
 

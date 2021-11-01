@@ -1,8 +1,5 @@
-commit 2659f865b579fcf3ed44496b5e47d00033db9792
-Author: Alexey Sergushichev <alserg@itmo.ru>
-Date:   Fri Jul 2 13:09:37 2021 +0000
+commit b9847771f63d8d0278e0167509f187d3a18a59b3
+Author: Alexey Sergushichev <alsergbox@gmail.com>
+Date:   Mon Nov 1 19:41:19 2021 +0300
 
-    Annotations are now transmitted with type information
-    
-    
-    Co-authored-by: Maksim Kleverov <klevermx@gmail.com>
+    karma-firefox-launcher

@@ -44,3 +44,4 @@ vignettes/phantasus-tutorial_cache
 .dockerignore
 docker-compose.yml
 Dockerfile
+.space.kts
