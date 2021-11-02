@@ -323,3 +323,7 @@ checkBinValidity <- function(filePath, valid_from){
 
   return(TRUE)
 }
+
+phantasusVersion <- function() {
+  jsonlite::toJSON(as.character(utils::packageVersion("phantasus")))
+}
