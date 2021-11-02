@@ -114,7 +114,7 @@ test_that("InferConditionImpl  works correctly", {
 
 test_that("getGPLAnnotation works with errorneous empty annotation files", {
     destdir <- file.path(tempdir(), "cache_bad")
-    dir.create(destdir)
+    dir.create(destdir, showWarnings = FALSE)
 
     GPL <- "GPL17021"
     stub = gsub('\\d{1,3}$','nnn',GPL,perl=TRUE)
