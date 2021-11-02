@@ -22766,10 +22766,10 @@ phantasus.ActionManager = function () {
     }
   });
   this.add({
-    name: 'Tutorial',
+    name: 'Documentation',
     cb: function () {
       window
-        .open('phantasus-tutorial.html');
+        .open('https://ctlab.github.io/phantasus-doc/');
     }
   });
   this.add({
@@ -32927,7 +32927,7 @@ phantasus.HeatMap = function (options) {
           'Select All Columns',
           'Clear Selected Columns'],
         Help: [
-          'Search Menus', null, 'Contact', 'Configuration', 'Tutorial', 'Source Code', 'About', null, 'Keyboard' +
+          'Search Menus', null, 'Contact', 'Configuration', 'Documentation', 'Source Code', 'About', null, 'Keyboard' +
           ' Shortcuts']
       },
       toolbar: {
@@ -37074,7 +37074,7 @@ phantasus.HelpMenu = function () {
     .push('<ul class="dropdown-menu dropdown-menu-right" role="menu">');
   html.push('<li><a data-name="contact" href="#">Contact</a></li>');
 
-  html.push('<li><a data-name="tutorial" href="#">Tutorial</a></li>');
+  html.push('<li><a data-name="documentation" href="#">Documentation</a></li>');
   html.push('<li><a data-name="source" href="#">Source Code</a></li>');
   html.push('<li><a data-name="about" href="#">About</a></li>');
 
@@ -37089,9 +37089,9 @@ phantasus.HelpMenu = function () {
     });
     e.preventDefault();
   });
-  this.$el.find('[data-name=tutorial]').on('click', function (e) {
+  this.$el.find('[data-name=documentation]').on('click', function (e) {
     window
-    .open('phantasus-tutorial.html');
+    .open('https://ctlab.github.io/phantasus-doc/');
     e.preventDefault();
 
   });
