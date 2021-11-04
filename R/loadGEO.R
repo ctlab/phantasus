@@ -862,8 +862,15 @@ downloadGPL <- function (GPL, destdir = tempdir()) {
 
 getGPLAnnotation <- function (GPL, destdir = tempdir()) {
     filename <- downloadGPL(GPL, destdir)
-    ret <- parseGEO(filename)
+    # ret <- parseGEO(filename)
 
+    # TODO: workaround for https://github.com/seandavi/GEOquery/pull/120,
+    txt <- data.table::fread(filename,sep="")[[1]]
+    if (length(txt) == 0) {
+      txt <- c("table_begin", "table_end")
+    }
+    ret <- GEOquery:::.parseGPLTxt(txt)
+    # end of workaround
     return(ret)
 }
 
