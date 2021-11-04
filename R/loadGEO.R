@@ -830,19 +830,15 @@ downloadGPL <- function (GPL, destdir = tempdir()) {
     # need submitter
     tmp <- tempfile(pattern=paste0(GPL, ".soft"), tmpdir=fullGPLDirPath)
     apiURL <- "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi"
-    submitterURL <- paste(apiURL,'?targ=self&acc=',GPL,'&form=text&view=quick',sep='')
+    submitterURL <- paste(apiURL,'?targ=self&acc=',GPL,'&form=text&view=data',sep='')
     tryCatch({
-      download.file(submitterURL, tmp)
+      download.file(submitterURL, tmp, headers = c("accept-encoding" = "gzip"))
     }, error=function (e) {
       unlink(tmp)
       stop('Could not download GPL ', GPL, e)
     })
 
-    gzFile <- gzfile(cachedSoftGz, 'w')
-    lines <- readLines(tmp)
-    writeLines(lines, gzFile)
-    close(gzFile)
-    unlink(tmp)
+    file.rename(tmp, cachedSoftGz)
     targetFile <- cachedSoftGz
   }
 
