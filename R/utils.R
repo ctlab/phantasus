@@ -232,19 +232,26 @@ selfCheck <- function (cacheDir=getOption("phantasusCacheDir"),
     }
 }
 
-safeDownload <- function (url, dir, filename) {
+safeDownload <- function (url, dir, filename, ...) {
   dest <- file.path(dir, filename)
   if (file.exists(dest)) {
     return()
   }
 
   tempDest <- tempfile(paste0(filename, ".load"), tmpdir=dir)
-  utils::download.file(url, destfile = tempDestFile)
+  utils::download.file(url, destfile = tempDestFile, ...)
   file.rename(tempDest, dest)
+}
+
+isValidExperimentID <- function (name) {
+  grepl("^(GSE|GDS)[0-9]+(-GPL[0-9]+)?$", name, ignore.case = TRUE)
 }
 
 
 getGEODir <- function (name, destdir = tempdir()) {
+  if (!isValidExperimentID(name)) {
+    stop(name, " does not look like a valid GEO Series ID")
+  }
   type <- substr(name, 1, 3)
   GEO <- unlist(strsplit(name, "-"))[1]
   stub <- gsub("\\d{1,3}$", "nnn", GEO, perl = TRUE)

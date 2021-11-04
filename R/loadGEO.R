@@ -339,6 +339,9 @@ filterPhenoAnnotations <- function(es) {
 #' @import rhdf5
 getGSE <- function(name, destdir = tempdir(),
                    mirrorPath = "https://ftp.ncbi.nlm.nih.gov") {
+    if (!isValidExperimentID(name)) {
+      stop(name, " does not look like a valid GEO Series ID")
+    }
     GEO <- unlist(strsplit(name, "-"))[1]
 
     stub <- gsub("\\d{1,3}$", "nnn", GEO, perl = TRUE)
