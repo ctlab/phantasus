@@ -1,6 +1,6 @@
 CHANGES IN VERSION 1.15.1
 * Option to omit gene version IDs (like in ENSEMBL) before  conversion 
-* Annotations are trasnmitted with type information
+* Annotations are trasnmitted with type information, which fixes many bugs
 
 CHANGES IN VERSION 1.9.5
 * Support for preloaded sessions
