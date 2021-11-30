@@ -1,3 +1,6 @@
+CHANGES IN VERSION 1.15.3
+* Fix typing bug
+
 CHANGES IN VERSION 1.15.1
 * Option to omit gene version IDs (like in ENSEMBL) before  conversion 
 * Annotations are trasnmitted with type information, which fixes many bugs

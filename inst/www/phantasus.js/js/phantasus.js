@@ -5233,6 +5233,9 @@ phantasus.VectorAdapter.prototype = {
   },
   setDatatype: function(datatype){
     return this.v.setDatatype(datatype);
+  },
+  getArray: function(){
+    return this.v.getArray();
   }
 };
 
@@ -7302,13 +7305,13 @@ phantasus.DatasetUtil.getMetadataRexp = function (metadata, featuresCount, parti
                     rexpValue:[]
                   }
     if (ph_type === "integer"){
-      curRexp["intValue"] = vecJ.array; 
+      curRexp["intValue"] = vecJ.getArray(); 
     } 
     else if (ph_type === "real"){
-      curRexp["realValue"] = vecJ.array; 
+      curRexp["realValue"] = vecJ.getArray(); 
     }
     else if (ph_type === "logical"){
-      curRexp["booleanValue"] = vecJ.array.map(function (item) {return item == 'NA' ? 2 : item;});; 
+      curRexp["booleanValue"] = vecJ.getArray().map(function (item) {return item == 'NA' ? 2 : item;});; 
     }
     else{
        if (vecJ.isFactorized()){
@@ -10555,10 +10558,14 @@ phantasus.SlicedVector.prototype = {
 
   isFactorized: function () {
     return _.size(this.levels)  > 0;
-  },
+  },  
 
   getFactorLevels: function () {
     return this.levels;
+  },
+  
+  getArray: function(){
+    return Array.apply(0, Array(this.size())).map((x,i) => this.getValue(i));
   }
 };
 phantasus.Util.extend(phantasus.SlicedVector, phantasus.VectorAdapter);
@@ -13027,6 +13034,9 @@ phantasus.Vector.prototype = {
   },
   setDatatype: function(datatype){
     this.getProperties().set(phantasus.VectorKeys.DATA_TYPE, datatype);
+  },
+   getArray: function(){
+    return this.array;
   }
   
 };
