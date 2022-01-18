@@ -1,5 +1,5 @@
 #!/bin/bash
-R -e "devtools::install('.')"
+R -e "devtools::install('.', upgrade=FALSE)"
 
 mkdir -p inst/www/phantasus.js/jasmine/cache
 cp "./inst/testdata/GSE27112-GPL6103.rda" inst/www/phantasus.js/jasmine/cache

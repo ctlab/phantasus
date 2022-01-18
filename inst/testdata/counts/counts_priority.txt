@@ -1,0 +1,3 @@
+directory	priority
+.	1
+archs4	2

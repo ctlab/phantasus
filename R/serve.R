@@ -53,7 +53,7 @@ servePhantasus <- function(host = '0.0.0.0',
     selfCheck()
     annotationDBMeta(cacheDir)
     FGSEAmeta(cacheDir)
-
+    updateCountsMeta(file.path(cacheDir, "counts"))
     if (!opencpu:::win_or_mac()) {
         run_worker <- NULL
     } else {

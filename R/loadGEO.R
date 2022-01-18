@@ -174,6 +174,7 @@ getArchs4Files <- function(cacheDir) {
 #' @param archs4_files list of available .h5 files from ARCHS4 project
 #' @return either original es or an ExpressionSet with loaded count data from ARCHS4
 loadFromARCHS4 <- function(es, archs4_files) {
+
     if (nrow(es) > 0 ) {
         return(es)
     }
@@ -188,8 +189,7 @@ loadFromARCHS4 <- function(es, archs4_files) {
             H5close()
             next
         }
-
-        genes <- as.character(h5read(destfile, "meta/genes"))
+           genes <- as.character(h5read(destfile, "meta/genes"))
         h5Indexes = list(seq_len(length(genes)),
                          stats::na.omit(sampleIndexes))
 
@@ -206,8 +206,9 @@ loadFromARCHS4 <- function(es, archs4_files) {
                             )
 
         tryCatch({
+
           fData(es2) <- cbind(fData(es2), "ENSEMBLID"=as.character(h5read(destfile, "meta/gene_ensemblid")))
-        }, error=function (e) {})
+          }, error=function (e) {})
 
         tryCatch({
           fData(es2) <- cbind(fData(es2), "Gene ID"=as.character(h5read(destfile, "meta/gene_entrezid")))
@@ -221,6 +222,103 @@ loadFromARCHS4 <- function(es, archs4_files) {
     return(es)
 }
 
+#' Loads expression data from .h5 count files.
+#' Only samples with counted expression are kept.
+#' If es already containts expression data it is returned as is.
+#' @param es ExpressionSet from GEO to check for expression in ARCHS4/dee2 or other h5 files
+#' @param counts_dir directory with  .h5 files  collections. There must be meta.rda file
+#' in counts_dir and each collection's sub directory must have meta.txt file with description.
+#' Also \code{counts_dir} must contain \code{counts_priority.txt} file.
+#' @return either original es or an ExpressionSet with loaded count data from ARCHS4
+#' @import data.table
+loadCounts <- function(es, counts_dir) {
+    if (!file.exists(file.path(counts_dir, "counts_priority.txt"))) {
+      return(es)
+    }
+    priority <- fread(file.path(counts_dir, "counts_priority.txt"))[, .(directory), keyby = priority]$directory
+    if (nrow(es) > 0) {
+        return(es)
+    }
+    load(paste(counts_dir,"meta.rda",sep = "/"))
+    sample_amount <- DT_counts_meta[accession %in% es$geo_accession,
+                                   .(.N),
+                                   by = list(file, type_fac = factor(x = collection_type, levels = priority))]
+    if (nrow(sample_amount) == 0) {
+        return(es)
+    }
+    setorderv(x = sample_amount,cols = c("N","type_fac"),order = c(-1,1))
+    destfile <- sample_amount[,.SD[1]]$file
+    h5_meta <- fread(file.path(dirname(destfile), "meta.txt"), index = "file_name")[file_name == basename(destfile)]
+    samples <- h5read(destfile, h5_meta$sample_id)
+    sampleIndexes <- match(es$geo_accession,
+                           samples)
+    genes <- as.character(h5read(destfile, h5_meta$gene_id))
+
+    arch_version = tryCatch({
+                              as.integer(h5read(file = destfile, name = '/info/version'))
+                            },
+                            error = function(e) {
+                              as.integer(h5read(file = destfile, name = '/meta/info/version'))
+                            })
+    if (is.na(arch_version)) {
+      arch_version <- 8
+    }
+    if (arch_version >= 9) {
+      h5Indexes = list(stats::na.omit(sampleIndexes),
+                       seq_len(length(genes)))
+      expression <- h5read(destfile,
+                           "data/expression",
+                           index = h5Indexes)
+      expression <- t(expression)
+      rownames(expression) <- genes
+      colnames(expression) <- colnames(es)[!is.na(sampleIndexes)]
+      es2 <- ExpressionSet(assayData = expression,
+                           phenoData = phenoData(es[, !is.na(sampleIndexes)]),
+                           annotation = annotation(es),
+                           experimentData = experimentData(es)
+      )
+      if (!toupper(h5_meta$gene_id_type) == "GENE SYMBOL") {
+        tryCatch({
+          fData(es2) <- cbind(fData(es2), "Gene symbol" = as.character(h5read(destfile, "meta/genes/gene_symbol")))
+        }, error = function(e) {})
+      }
+      if (!toupper(h5_meta$gene_id_type) == "ENSEMBLID") {
+        tryCatch({
+          fData(es2) <- cbind(fData(es2), "ENSEMBLID" = as.character(h5read(destfile, "meta/genes/ensembl_gene_id")))
+        }, error = function(e) {})
+      }
+    }
+    else{
+      h5Indexes <- list(seq_len(length(genes)),
+                       stats::na.omit(sampleIndexes))
+      expression <- h5read(destfile,
+                           "data/expression",
+                           index = h5Indexes)
+      rownames(expression) <- genes
+      colnames(expression) <- colnames(es)[!is.na(sampleIndexes)]
+      es2 <- ExpressionSet(assayData = expression,
+                           phenoData = phenoData(es[, !is.na(sampleIndexes)]),
+                           annotation = annotation(es),
+                           experimentData = experimentData(es)
+      )
+      tryCatch({
+        fData(es2) <- cbind(fData(es2), "Gene ID" = as.character(h5read(destfile, "meta/gene_entrezid")))
+      }, error = function (e) {})
+      if (!toupper(h5_meta$gene_id_type) == "GENE SYMBOL") {
+        tryCatch({
+          fData(es2) <- cbind(fData(es2), "Gene symbol" = as.character(h5read(destfile, "meta/genes")))
+        }, error = function(e) {})
+      }
+      if (!toupper(h5_meta$gene_id_type) == "ENSEMBLID") {
+        tryCatch({
+          fData(es2) <- cbind(fData(es2), "ENSEMBLID" = as.character(h5read(destfile, "meta/gene_ensemblid")))
+        }, error = function(e) {})
+      }
+    }
+    fData(es2) <- cbind(fData(es2), setNames(list(rownames(es2)), h5_meta$gene_id_type))
+    H5close()
+    return(es2)
+}
 
 filterFeatureAnnotations <- function(es) {
     fvarsToKeep <- c()
@@ -398,14 +496,14 @@ getGSE <- function(name, destdir = tempdir(),
         return(ess)
     }
 
-
+    ess <- lapply(ess, filterFeatureAnnotations)
     archs4_files <- getArchs4Files(destdir)
+    if (dir.exists(file.path(destdir,"counts"))){
+      ess <- lapply(ess, loadCounts,counts_dir=file.path(destdir,"counts"))
+    }
     if (length(archs4_files) > 0)  {
         ess <- lapply(ess, loadFromARCHS4, archs4_files=archs4_files)
     }
-
-    ess <- lapply(ess, filterFeatureAnnotations)
-
     ess <- lapply(ess, filterPhenoAnnotations)
 
     ess <- lapply(ess, inferCondition)

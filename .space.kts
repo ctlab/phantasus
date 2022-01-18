@@ -8,10 +8,9 @@ job("build and test in latest preimage") {
     startOn {
         //push in phantasus repo
         gitPush {
-            branchFilter {
-            	+"refs/heads/master"
-                +"refs/heads/space_jobs"
-            }
+           branchFilter {
+                +"refs/heads/master"
+           }
         }
     }
     container(displayName = "Build R package and copy to share", image = "ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus-preimage") {
@@ -54,7 +53,7 @@ job("build and test in latest preimage") {
         container(displayName = "Check js", image = "ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus-preimage") {
             shellScript {
                 content = """
-                    apt-get install -y --no-install-recommends nodejs npm firefox
+                    apt-get update && apt-get install -y --no-install-recommends nodejs npm firefox
                     bash inst/test_js.sh
                 """
             }
@@ -73,6 +72,10 @@ job("build and test in latest preimage") {
                 export BRANCH=${'$'}(echo ${'$'}JB_SPACE_GIT_BRANCH | cut -d'/' -f 3)
                 export DOCKER_TAG=${'$'}BRANCH-${'$'}JB_SPACE_EXECUTION_NUMBER
                 export GITHUB_PAT=${'$'}JB_SPACE_API_URL/${'$'}JB_SPACE_PROJECT_KEY
+                case ${'$'}BRANCH in 
+                  "master") export LATEST="latest" ;;
+                  *)  export LATEST="test" ;;
+                esac
             """
         }  
         build {
@@ -85,8 +88,7 @@ job("build and test in latest preimage") {
             labels["vendor"] = "ctlab"
         }
          push("ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus") {
-            // use current job run number and branch name as a tag - '0.run_number-branch_name'
-            tags("\$DOCKER_TAG")
+            tags("\$DOCKER_TAG", "\$LATEST")
         }
     }
     
