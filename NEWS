@@ -1,4 +1,5 @@
 CHANGES IN VERSION 1.15.3
+* Major rework of RNA-seq counts support from external hdf5 files (like ARCHS4)
 * Fix typing bug
 
 CHANGES IN VERSION 1.15.1
