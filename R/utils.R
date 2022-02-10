@@ -246,9 +246,12 @@ updateARCHS4meta <- function(archDir = file.path(getOption("phantasusCacheDir"),
         } else if (genus[i_file] %in% c("rattus", "bos", "gallus", "danio")) {
             DT_meta$gene_id_type[i_file] <- "ENSEMBLID"
             next
-        } else if (genus[i_file] %in% c("arabidopsis", "saccharomyces")) {
-            DT_meta$gene_id_type[i_file] <- "Gene Symbol"
+        } else if (genus[i_file] %in% c("arabidopsis")) {
+            DT_meta$gene_id_type[i_file] <- "TAIR id"
             next
+        } else if (genus[i_file] %in% c("saccharomyces")) {
+          DT_meta$gene_id_type[i_file] <- "ORF id"
+          next
         } else if (genus[i_file] %in% c("caenorhabditis")) {
             DT_meta$gene_id_type[i_file] <- "WormBase id"
             next
