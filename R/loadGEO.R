@@ -303,8 +303,8 @@ loadCounts <- function(es, counts_dir) {
       )
       tryCatch({
         fData(es2) <- cbind(fData(es2), "Gene ID" = as.character(h5read(destfile, "meta/gene_entrezid")))
-      }, error = function (e) {})
-      if (!toupper(h5_meta$gene_id_type) == "GENE SYMBOL") {
+      }, error = function(e) {})
+      if (!toupper(h5_meta$gene_id_type) == "GENE SYMBOL" & !tolower(h5_meta$gene_id) == "/meta/genes") {
         tryCatch({
           fData(es2) <- cbind(fData(es2), "Gene symbol" = as.character(h5read(destfile, "meta/genes")))
         }, error = function(e) {})
