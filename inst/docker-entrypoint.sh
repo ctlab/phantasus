@@ -9,6 +9,9 @@ _term() {
 trap _term SIGINT SIGTERM SIGWINCH
 
 
+# fixes permission error on old docker versions (workaround from https://github.com/moby/moby/issues/6047#issuecomment-68608697)
+mv /var/log/apache2 /var/log/apache2.bak && mv /var/log/apache2.bak /var/log/apache2 
+
 chown -R $OCPU_USER /var/log/apache2
 chown -R $OCPU_USER /var/run/apache2
 chown -R $OCPU_USER /var/log/opencpu
