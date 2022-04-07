@@ -475,7 +475,7 @@ getCountsMetaPart <- function(counts_dir, collection_name, verbose){
         return()
     }
     DT_h5_meta <- data.table()
-    h5_files <- list.files(file.path(destdir), "\\.h5$", full.names = FALSE)
+    h5_files <- list.files(destdir, "\\.h5$", full.names = FALSE)
     if (!length(h5_files)) {
         return()
     }
@@ -483,8 +483,9 @@ getCountsMetaPart <- function(counts_dir, collection_name, verbose){
     for (input_file in h5_files) {
         if (input_file %in% h5_meta$file_name) {
             full_name <- file.path(destdir, input_file)
+            relative_path <- file.path(collection_name, input_file )
             h5_part <- data.table(accession = h5read(full_name, h5_meta[file_name == input_file, ]$sample_id),
-                                 file = full_name,
+                                 file = relative_path,
                                  collection_type = collection_name)
             DT_h5_meta <- rbindlist(l = list(DT_h5_meta, h5_part))
         }

@@ -248,6 +248,7 @@ loadCounts <- function(es, counts_dir) {
     }
     setorderv(x = sample_amount,cols = c("N","type_fac"),order = c(-1,1))
     destfile <- sample_amount[,.SD[1]]$file
+    destfile <- file.path(counts_dir, destfile)
     h5_meta <- fread(file.path(dirname(destfile), "meta.txt"), index = "file_name")[file_name == basename(destfile)]
     samples <- h5read(destfile, h5_meta$sample_id)
     sampleIndexes <- match(es$geo_accession,
