@@ -12,7 +12,7 @@ test_that("getCountsMetaPart provides correct part of meta.rda", {
     meta_file <- file.path(arch_dir, "meta.txt")
     h5_meta <- fread(meta_file, index = "file_name")
     files_in_txt <- file.path(arch_dir, h5_meta$file_name)
-    files_in_meta <- unique(metaPart$file)
+    files_in_meta <- file.path( counts_dir,unique(metaPart$file))
     expect_setequal(files_in_meta, files_in_txt)
     samples_in_meta <- sapply(files_in_txt, function(file) {
         sample_id <- h5_meta[file_name == basename(file)]$sample_id
