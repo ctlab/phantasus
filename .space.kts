@@ -53,6 +53,12 @@ job("build and test in latest preimage") {
         container(displayName = "Check js", image = "ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus-preimage") {
             shellScript {
                 content = """
+		    add-apt-repository -y  ppa:mozillateam/ppa
+		    echo '
+Package: *
+Pin: release o=LP-PPA-mozillateam
+Pin-Priority: 1001
+' | tee /etc/apt/preferences.d/mozilla-firefox
                     apt-get update && apt-get install -y --no-install-recommends nodejs npm firefox
                     bash inst/test_js.sh
                 """
