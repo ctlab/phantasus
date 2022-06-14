@@ -10,7 +10,10 @@ deseqAnalysis <- function (es, fieldValues) {
     dds <- DESeq2::DESeqDataSetFromMatrix(exprs(es.copy), pData(es.copy), design=~Comparison)
 
     populatedDds <- DESeq2::DESeq(dds)
-    de <- DESeq2::lfcShrink(populatedDds, contrast = c('Comparison', 'B', 'A'), cooksCutoff = FALSE)
+    de <- DESeq2::results(populatedDds, contrast = c('Comparison', 'B', 'A'), cooksCutoff = FALSE)
+    shr_values <- DESeq2::lfcShrink(populatedDds, coef = "Comparison_B_vs_A", type = "apeglm")
+    de$log2FoldChange <- shr_values$log2FoldChange
+    de$lfcSE <- shr_values$lfcSE
 
     deDf <- as.data.frame(de)
     toRemove <- intersect(colnames(fData(es)), colnames(deDf))
