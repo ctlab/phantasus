@@ -1,5 +1,5 @@
-commit 6540fe3531a34d55ecf4329f772224d0400621f8
-Author: clevermx <klevermx@gmail.com>
-Date:   Tue Nov 30 15:20:40 2021 +0300
+commit cc9c78fa376250e3b24399b25d8cff82bd680fdb
+Author: Alexey Sergushichev <alsergbox@gmail.com>
+Date:   Tue Jun 14 21:27:30 2022 +0300
 
-    delete debug code
+    increase timeout for tool waiting dialog
