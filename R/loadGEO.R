@@ -789,14 +789,15 @@ checkGSEType <- function (name, destDir) {
   GEO <- spl[1]
 
   briefData <- getBriefData(name, destDir)
-  types <- briefData$type
 
-  if (length(types) < 1) {
-    stop('No types in brief data')
+  gpl <- spl[2]
+  if (is.na(gpl)) {
+      gpl <- briefData$platform_id[1]
   }
 
-  supportedTypes <- c('Expression profiling by array', 'Expression profiling by high throughput sequencing')
-  return (all(types %in% supportedTypes))
+  gplBrief <- getBriefData(gpl, destDir)
+
+  return(as.numeric(gplBrief$data_row_count) <= 100000)
 }
 
 removeRepeatWords <- function(titles) {

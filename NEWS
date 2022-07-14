@@ -1,3 +1,5 @@
+CHANGES IN VERSION 1.17.5
+* All GEO datasets with <100K rows can be loaded
 CHANGES IN VERSION 1.17.4
 * Updated DESeq2 usage
 

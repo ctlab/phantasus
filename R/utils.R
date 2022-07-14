@@ -381,7 +381,7 @@ safeDownload <- function(url, dir, filename, ...) {
 }
 
 isValidExperimentID <- function(name) {
-    grepl("^(GSE|GDS)[0-9]+(-GPL[0-9]+)?$", name, ignore.case = TRUE)
+    grepl("^((GSE|GDS)[0-9]+(-GPL[0-9]+)?)|(GPL[0-9]+)$", name, ignore.case = TRUE)
 }
 
 
@@ -394,10 +394,15 @@ getGEODir <- function(name, destdir = tempdir()) {
     stub <- gsub("\\d{1,3}$", "nnn", GEO, perl = TRUE)
     gdsDirPath <- "%s/geo/datasets/%s/%s/soft"
     gseDirPath <- "%s/geo/series/%s/%s/matrix"
+    gplDirPath <- "%s/geo/platforms/%s/%s/soft"
     if (type == 'GSE') {
         fullGEODirPath <- file.path(sprintf(gseDirPath, destdir, stub, GEO))
-    } else {
+    } else if (type == "GDS") {
         fullGEODirPath <- file.path(sprintf(gdsDirPath, destdir, stub, GEO))
+    } else if (type == "GPL") {
+        fullGEODirPath <- file.path(sprintf(gplDirPath, destdir, stub, GEO))
+    } else {
+        stop("Unsupported GEO type: ", type)
     }
     dir.create(fullGEODirPath, showWarnings = FALSE, recursive = TRUE)
 
