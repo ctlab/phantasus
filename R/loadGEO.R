@@ -784,20 +784,28 @@ checkGPLs <- function(name) {
   })
 }
 
-checkGSEType <- function (name, destDir) {
+
+#' @param name GSE id, with optional GPL specification
+#' @param destDir path to cache directory
+#' @param combine function on how to combine results, when multiple platforms are present
+#' @return logical vector if the dataset is supported or not
+checkGSEType <- function (name, destDir, combine=any) {
   spl <- unlist(strsplit(name, "-", fixed=TRUE))
   GEO <- spl[1]
 
   briefData <- getBriefData(name, destDir)
 
-  gpl <- spl[2]
-  if (is.na(gpl)) {
-      gpl <- briefData$platform_id[1]
+  gpls <- spl[2]
+  if (is.na(gpls)) {
+      gpls <- briefData$platform_id
   }
 
-  gplBrief <- getBriefData(gpl, destDir)
+  gplsOK <- sapply(gpls, function(gpl) {
+      gplBrief <- getBriefData(gpl, destdir=destDir)
+      return(as.numeric(gplBrief$data_row_count) <= 100000)
+  })
 
-  return(as.numeric(gplBrief$data_row_count) <= 100000)
+  return(combine(gplsOK))
 }
 
 removeRepeatWords <- function(titles) {

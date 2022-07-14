@@ -131,6 +131,8 @@ test_that("getGPLAnnotation works with errorneous empty annotation files", {
 test_that("getGSEType works", {
     expect_true(checkGSEType('GSE53986', tempdir()))
     expect_true(checkGSEType('GSE99709', tempdir()))
-    expect_false(checkGSEType('GSE33356', tempdir()))
+    expect_true(checkGSEType('GSE33356', tempdir()))
+    expect_identical(checkGSEType('GSE33356', tempdir(), combine=identity),
+                     c(GPL570=TRUE, GPL6801=FALSE))
     expect_false(checkGSEType('GSE33356-GPL6801', tempdir()))
 })
