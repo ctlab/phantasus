@@ -228,17 +228,20 @@ updateARCHS4meta <- function(archDir = file.path(getOption("phantasusCacheDir"),
     DT_meta$gene_id <- "/meta/genes"
     genus <- tolower(sapply(strsplit(x = archs4files, split = "_"), function(x) x[1]))
     for (i_file in seq_along(archs4files)) {
-        file_info <- h5ls(file = file.path(archDir, archs4files[i_file]))
-        ver_field <- NA
-        if ("/info" %in% file_info$group) {
-          ver_field <- "/info/version"
-        } else if ("/meta/info" %in% file_info$group) {
-          ver_field <- "/meta/info/version"
+        cur_file <- file.path(archDir, archs4files[i_file])
+        h5f <- H5Fopen(cur_file, flags = "H5F_ACC_RDONLY")
+        arch_version <- if (H5Lexists(h5f, "info/version")) {
+            h5read(h5f, "info/version")
+        } else {
+            h5read(h5f, "meta/info/version")
         }
-        arch_ver <- as.numeric(h5read(file = file.path(archDir, archs4files[i_file]), name = ver_field))
-        if (arch_ver >= 9) {
-          DT_meta$sample_id[i_file] <- "/meta/samples/geo_accession"
-          DT_meta$gene_id[i_file] <-  "/meta/genes/genes"
+        arch_version <- as.integer(arch_version)
+        if (is.na(arch_version)) {
+            arch_version <- 8
+        }
+        if (arch_version >= 9) {
+            DT_meta$sample_id[i_file] <- "/meta/samples/geo_accession"
+            DT_meta$gene_id[i_file] <-  "/meta/genes/genes"
         }
         if (genus[i_file] %in% c("human", "mouse")) {
             DT_meta$gene_id_type[i_file] <- "Gene Symbol"
@@ -250,8 +253,8 @@ updateARCHS4meta <- function(archDir = file.path(getOption("phantasusCacheDir"),
             DT_meta$gene_id_type[i_file] <- "TAIR id"
             next
         } else if (genus[i_file] %in% c("saccharomyces")) {
-          DT_meta$gene_id_type[i_file] <- "ORF id"
-          next
+            DT_meta$gene_id_type[i_file] <- "ORF id"
+            next
         } else if (genus[i_file] %in% c("caenorhabditis")) {
             DT_meta$gene_id_type[i_file] <- "WormBase id"
             next
@@ -259,11 +262,16 @@ updateARCHS4meta <- function(archDir = file.path(getOption("phantasusCacheDir"),
             DT_meta$gene_id_type[i_file] <- "FlyBase id"
             next
         } else{
-          DT_meta$gene_id_type[i_file] <- "gene"
+            DT_meta$gene_id_type[i_file] <- "gene"
         }
+        H5Fclose(h5f)
     }
-    h5closeAll()
-    write.table(x = DT_meta, file = file.path(archDir, "meta.txt"), sep = "\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
+
+    write.table(x = DT_meta,
+                file = file.path(archDir, "meta.txt"),
+                sep = "\t",
+                col.names = TRUE, row.names = FALSE,
+                quote = FALSE)
 }
 #' Update DEE2 meta files
 #'
@@ -484,21 +492,23 @@ getCountsMetaPart <- function(counts_dir, collection_name, verbose){
     if (!length(h5_files)) {
         return()
     }
-    h5_meta <- fread(file.path(destdir,"meta.txt"), index = "file_name")
+    h5_meta <- fread(file.path(destdir, "meta.txt"), index = "file_name")
     for (input_file in h5_files) {
         if (input_file %in% h5_meta$file_name) {
             full_name <- file.path(destdir, input_file)
             relative_path <- file.path(collection_name, input_file )
-            h5_part <- data.table(accession = h5read(full_name, h5_meta[file_name == input_file, ]$sample_id),
+            h5f <- H5Fopen(full_name, flags = "H5F_ACC_RDONLY")
+            h5_part <- data.table(accession = h5read(h5f, h5_meta[file_name == input_file, ]$sample_id),
                                  file = relative_path,
                                  collection_type = collection_name)
+            H5Fclose(h5f)
             DT_h5_meta <- rbindlist(l = list(DT_h5_meta, h5_part))
-        }
-        else{
+        } else {
             if (verbose) {
                 message(paste0("!! ", file.path(destdir, input_file), " is ignored"))
             }
         }
+
     }
     return(DT_h5_meta)
 }
@@ -608,36 +618,56 @@ updateCountsMeta <- function(counts_dir =  file.path(getOption("phantasusCacheDi
 #' @import data.table
 #' @import rhdf5
 validateCountsCollection <- function(collectionDir, verbose=FALSE){
-    if (file.exists(file.path(collectionDir, "meta.txt"))) {
-        h5_meta <- fread(file.path(collectionDir, "meta.txt"), index = "file_name")
-        for (input_file  in h5_meta$file_name) {
-            full_path <- file.path(collectionDir, input_file)
-            h5_datasets <- h5ls(file = file.path(collectionDir, input_file), datasetinfo = FALSE)[c("group","name")]
-            h5_datasets <- paste(h5_datasets$group, h5_datasets$name, sep = "/")
-            if (!(h5_meta[file_name == input_file, ]$sample_id %in% h5_datasets && h5_meta[file_name == input_file, ]$gene_id %in% h5_datasets)) {
-                h5closeAll()
+    if (!file.exists(file.path(collectionDir, "meta.txt"))) {
+        if (verbose) {
+            message(paste0("metafile does not exist in ",  file.path(collectionDir)))
+        }
+        return(FALSE)
+    }
+
+    h5_meta <- fread(file.path(collectionDir, "meta.txt"), index = "file_name")
+    for (input_file  in h5_meta$file_name) {
+        full_path <- file.path(collectionDir, input_file)
+        cur_meta <- h5_meta[file_name == input_file, ]
+        if (nrow(cur_meta) > 1) {
+            if (verbose) {
+                message(paste0("two or more rows in meta file for ", full_path ))
+            }
+            return(FALSE)
+        }
+        h5f <- H5Fopen(full_path, flags = "H5F_ACC_RDONLY")
+
+        tryCatch({
+            is_sample_valid <- H5Lexists(h5f, name =  cur_meta$sample_id)
+
+            if(!is_sample_valid){
                 if (verbose) {
-                    message(paste0("ids in meta file don't match ids in ", full_path ))
+                    message(paste0("can't read sample_id in ", full_path ))
                 }
                 return(FALSE)
             }
-            gene_ids <- h5read(file = full_path, name = h5_meta[file_name == input_file, ]$gene_id)
+
+            gene_ids <- if (H5Lexists(h5f, name = cur_meta$gene_id)) {
+                h5read(h5f, name = cur_meta$gene_id)
+            } else NULL
+
+            if (length(gene_ids) == 0) {
+                if (verbose) {
+                    message(paste("can't read gene_id in ", full_path))
+                }
+                return(FALSE)
+            }
             if (length(gene_ids)  != length(unique(gene_ids))) {
                 if (verbose) {
                     message(paste("Non-unique gene ids in file", full_path))
                 }
-                h5closeAll()
                 return(FALSE)
             }
-        }
-        h5closeAll()
-        return(TRUE)
+        }, finally = {
+            H5Fclose(h5f)
+        })
     }
-    if (verbose) {
-        message(paste0("metafile does not exist in ",  file.path(collectionDir)))
-    }
-    h5closeAll()
-    return(FALSE)
+    return(TRUE)
 }
 
 

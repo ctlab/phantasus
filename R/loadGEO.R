@@ -250,24 +250,25 @@ loadCounts <- function(es, counts_dir) {
     destfile <- sample_amount[,.SD[1]]$file
     destfile <- file.path(counts_dir, destfile)
     h5_meta <- fread(file.path(dirname(destfile), "meta.txt"), index = "file_name")[file_name == basename(destfile)]
-    samples <- h5read(destfile, h5_meta$sample_id)
+    h5f <- H5Fopen(destfile, flags = "H5F_ACC_RDONLY")
+    samples <- h5read(h5f, h5_meta$sample_id)
     sampleIndexes <- match(es$geo_accession,
                            samples)
-    genes <- as.character(h5read(destfile, h5_meta$gene_id))
+    genes <- as.character(h5read(h5f, h5_meta$gene_id))
 
-    arch_version = tryCatch({
-                              as.integer(h5read(file = destfile, name = '/info/version'))
-                            },
-                            error = function(e) {
-                              as.integer(h5read(file = destfile, name = '/meta/info/version'))
-                            })
+    arch_version <- if (H5Lexists(h5f, "info/version")) {
+        h5read(h5f, "info/version")
+    } else {
+        h5read(h5f, "meta/info/version")
+    }
+    arch_version <- as.integer(arch_version)
     if (is.na(arch_version)) {
       arch_version <- 8
     }
     if (arch_version >= 9) {
       h5Indexes = list(stats::na.omit(sampleIndexes),
                        seq_len(length(genes)))
-      expression <- h5read(destfile,
+      expression <- h5read(h5f,
                            "data/expression",
                            index = h5Indexes)
       expression <- t(expression)
@@ -280,19 +281,19 @@ loadCounts <- function(es, counts_dir) {
       )
       if (!toupper(h5_meta$gene_id_type) == "GENE SYMBOL") {
         tryCatch({
-          fData(es2) <- cbind(fData(es2), "Gene symbol" = as.character(h5read(destfile, "meta/genes/gene_symbol")))
+          fData(es2) <- cbind(fData(es2), "Gene symbol" = as.character(h5read(h5f, "meta/genes/gene_symbol")))
         }, error = function(e) {})
       }
       if (!toupper(h5_meta$gene_id_type) == "ENSEMBLID") {
         tryCatch({
-          fData(es2) <- cbind(fData(es2), "ENSEMBLID" = as.character(h5read(destfile, "meta/genes/ensembl_gene_id")))
+          fData(es2) <- cbind(fData(es2), "ENSEMBLID" = as.character(h5read(h5f, "meta/genes/ensembl_gene_id")))
         }, error = function(e) {})
       }
     }
     else{
       h5Indexes <- list(seq_len(length(genes)),
                        stats::na.omit(sampleIndexes))
-      expression <- h5read(destfile,
+      expression <- h5read(h5f,
                            "data/expression",
                            index = h5Indexes)
       rownames(expression) <- genes
@@ -303,21 +304,21 @@ loadCounts <- function(es, counts_dir) {
                            experimentData = experimentData(es)
       )
       tryCatch({
-        fData(es2) <- cbind(fData(es2), "Gene ID" = as.character(h5read(destfile, "meta/gene_entrezid")))
+        fData(es2) <- cbind(fData(es2), "Gene ID" = as.character(h5read(h5f, "meta/gene_entrezid")))
       }, error = function(e) {})
       if (!toupper(h5_meta$gene_id_type) == "GENE SYMBOL" & !tolower(h5_meta$gene_id) == "/meta/genes") {
         tryCatch({
-          fData(es2) <- cbind(fData(es2), "Gene symbol" = as.character(h5read(destfile, "meta/genes")))
+          fData(es2) <- cbind(fData(es2), "Gene symbol" = as.character(h5read(h5f, "meta/genes")))
         }, error = function(e) {})
       }
       if (!toupper(h5_meta$gene_id_type) == "ENSEMBLID") {
         tryCatch({
-          fData(es2) <- cbind(fData(es2), "ENSEMBLID" = as.character(h5read(destfile, "meta/gene_ensemblid")))
+          fData(es2) <- cbind(fData(es2), "ENSEMBLID" = as.character(h5read(h5f, "meta/gene_ensemblid")))
         }, error = function(e) {})
       }
     }
     fData(es2) <- cbind(fData(es2), setNames(list(rownames(es2)), h5_meta$gene_id_type))
-    H5close()
+    H5Fclose(h5f)
     return(es2)
 }
 
