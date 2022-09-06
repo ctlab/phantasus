@@ -1,5 +1,5 @@
-commit cc9c78fa376250e3b24399b25d8cff82bd680fdb
-Author: Alexey Sergushichev <alsergbox@gmail.com>
-Date:   Tue Jun 14 21:27:30 2022 +0300
+commit ea258d0bbb4736ddf17c91727870bf18bf2d854c
+Author: Maksim Kleverov <klevermx@gmail.com>
+Date:   Tue Sep 6 16:37:19 2022 +0300
 
-    increase timeout for tool waiting dialog
+    fix lost log2FC and add GSEA errors

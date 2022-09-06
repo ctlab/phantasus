@@ -16968,7 +16968,7 @@ phantasus.gseaTool.prototype = {
     fullDataset.getESSession().then(function (esSession) {
       request.es = esSession;
 
-      ocpu.call('gseaPlot/print', request, function (session) {
+      var req = ocpu.call('gseaPlot/print', request, function (session) {
         if (promise.cancelled) {
           return;
         }
@@ -16979,9 +16979,11 @@ phantasus.gseaTool.prototype = {
         phantasus.BlobFromPath.getFileObject(absolutePath, function (blob) {
           promise.resolve(URL.createObjectURL(blob));
         });
-      }, false, "::es")
-        .fail(function () {
+      }, false, "::es");
+      req.fail(function () {
+
           promise.reject();
+          throw new Error("Could not create GSEA plot. Error: " + req.responseText);
         });
     })
 
@@ -20548,8 +20550,8 @@ phantasus.volcanoTool.prototype = {
           return parentDataset.rowIndices[idx];
         });
 
-        var logFC_a = _this.plotFields[0].array;
-        var pval_a = _this.plotFields[1].array;
+        var logFC_a = _this.plotFields[0].getArray();
+        var pval_a = _this.plotFields[1].getArray();
 
         _.range(0, idxs.length).map(function(i) {
           annotations.push({
@@ -20708,12 +20710,12 @@ phantasus.volcanoTool.prototype = {
     );
 
     var SigObj = _this.getSignificant(
-      _this.plotFields[0].array,
-      _this.plotFields[1].array
+      _this.plotFields[0].getArray(),
+      _this.plotFields[1].getArray()
     );
 
-    var logFC_a = _this.plotFields[0].array;
-    var pval_a = _this.plotFields[1].array;
+    var logFC_a = _this.plotFields[0].getArray();
+    var pval_a = _this.plotFields[1].getArray();
 
     data[0].x = SigObj["sig"].map(function(i) {
       return logFC_a[i];
