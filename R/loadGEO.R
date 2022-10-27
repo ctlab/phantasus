@@ -344,6 +344,12 @@ filterFeatureAnnotations <- function(es) {
                                            value = TRUE))
     }
 
+    if (length(setdiff(fvarsToKeep, "ID")) == 0) {
+        fvarsToKeep <- c(fvarsToKeep,
+                         setdiff(colnames(featureData(es)), fvarsToKeep))
+    }
+
+
     featureData(es) <- featureData(es)[, fvarsToKeep]
 
     if (!any(sapply(fData(es),
