@@ -100,8 +100,8 @@ server {
         proxy_cache_valid 200 201 1w;
         proxy_cache_key "$request_method$request_uri$request_body";
         proxy_no_cache $request_body_file;
-        proxy_buffers 8 32k;
-        proxy_buffer_size 64k;
+        proxy_buffers 8 512k;
+        proxy_buffer_size 256k;
         proxy_ignore_headers Cache-Control;
 
         proxy_cache_bypass $request_body_file $opencpu_bypass_cache;
