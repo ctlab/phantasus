@@ -15,6 +15,6 @@ shinyGAMAnalysis <- function(es) {
     httr::stop_for_status(r)
     key <- httr::content(r, as="text", encoding="UTF-8")
 
-    shinyGAMUrl <- sprintf("https://artyomovlab.wustl.edu/shiny/gam/?geneDE_key=%s", key)
+    shinyGAMUrl <- sprintf("https://artyomovlab.wustl.edu/shiny/gatom/?geneDE_key=%s", key)
     return(jsonlite::toJSON(shinyGAMUrl))
 }
