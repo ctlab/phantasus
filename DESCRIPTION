@@ -22,7 +22,7 @@ biocViews: GeneExpression, GUI, Visualization, DataRepresentation, Transcriptomi
             RNASeq, Microarray, Normalization, Clustering, DifferentialExpression,
             PrincipalComponent, ImmunoOncology
 Imports: ggplot2, protolite, Biobase, GEOquery, Rook, htmltools,
-        httpuv, jsonlite, limma, opencpu, assertthat, methods, httr, rhdf5,
+        httpuv, jsonlite, limma, edgeR, opencpu, assertthat, methods, httr, rhdf5,
         utils, parallel, stringr, fgsea (>= 1.9.4), svglite, gtable, stats,
         Matrix, pheatmap, scales, ccaPP, grid, grDevices,
         AnnotationDbi, DESeq2, data.table, curl

@@ -1,0 +1,26 @@
+#'
+#' @import Biobase
+#' @import limma
+#' @import edgeR
+#'
+tmmNormalization <- function(es, fieldName, logratioTrim, sumTrim) {
+    if (fieldName != "None"){
+        fieldValues <- es[[fieldName]]
+    } else {
+        fieldValues <- NULL
+    }
+    es.copy <- es
+    count_factors <- DGEList(counts = exprs(es.copy), group = fieldValues)
+    count_factors <- calcNormFactors(count_factors, logratioTrim = as.numeric(logratioTrim), sumTrim = as.numeric(sumTrim))
+    exprs(es.copy) <- cpm(count_factors)
+
+    assign("es", es.copy, envir = parent.frame())
+    f <- tempfile(pattern = "norm_counts", tmpdir = getwd(), fileext = ".bin")
+    data <- as.matrix(exprs(es.copy))
+    colnames(data) <- NULL
+    row.names(data) <- NULL
+    rownames <- rownames(es.copy)
+
+    writeBin(protolite::serialize_pb(list(data = data, colMetaNames = varLabels(es.copy))), f)
+   return( jsonlite::toJSON(f))
+}
