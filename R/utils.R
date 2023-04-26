@@ -425,7 +425,7 @@ getBriefData <- function(name, destdir = tempdir()) {
     if (file.exists(briefFile)) {
         message('Using cached brief file: ', briefFile)
     } else {
-        url <- sprintf("www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=%s&targ=self&form=text&view=brief", GEO)
+        url <- sprintf("https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=%s&targ=self&form=text&view=brief", GEO)
         message('Trying ', url)
         resp <- httr::GET(url)
         text <- httr::content(resp, "text", "UTF-8")
