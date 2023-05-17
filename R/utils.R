@@ -425,7 +425,7 @@ getBriefData <- function(name, destdir = tempdir()) {
     if (file.exists(briefFile)) {
         message('Using cached brief file: ', briefFile)
     } else {
-        url <- sprintf("www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=%s&targ=self&form=text&view=brief", GEO)
+        url <- sprintf("https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=%s&targ=self&form=text&view=brief", GEO)
         message('Trying ', url)
         resp <- httr::GET(url)
         text <- httr::content(resp, "text", "UTF-8")
@@ -689,6 +689,20 @@ checkBinValidity <- function(filePath, valid_from) {
   }
 
   return(TRUE)
+}
+
+getDesignMatrix <- function(designData){
+    designMatrix <- do.call(cbind, designData)
+    designRownames <- designMatrix[,"id"]
+
+    designMatrix <- subset(designMatrix, select = -c(id))
+    designMatrix <- apply(X = designMatrix, FUN = as.numeric, MARGIN =c(2))
+    colnames(designMatrix) [colnames(designMatrix) == "intercept"] <- "(Intercept)"
+    rownames(designMatrix) <- designRownames
+    if(qr(designMatrix)$rank < ncol(designMatrix)){
+        stop("Error: redundancy of model parameters appears. Try to exclude nested factors.")
+    }
+    return(designMatrix)
 }
 
 phantasusVersion <- function() {

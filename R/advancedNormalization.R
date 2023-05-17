@@ -27,25 +27,10 @@ tmmNormalization <- function(es, fieldName, logratioTrim, sumTrim) {
 
 
 
-voomNormalization <- function(es, fieldNames){
-    if (length(fieldNames) == 0 ){
-        design <- NULL
-    }
-    if (! "design" %in% ls()){
-        fieldNames <- unlist(fieldNames)
-        pdata <- pData(es)[,fieldNames]
-        pdata[,fieldNames] <-  lapply(fieldNames, function(x){
-            curFact <- as.factor(pdata[,x])
-            curFact
-        })
-        design <- model.matrix(~ 0 + ., data = pdata)
-        if(qr(design)$rank < ncol(design)){
-            stop("Error: redundancy of model parameters appears. Try to exclude nested factors.")
-        }
-    }
-
+voomNormalization <- function(es, designData){
+    designMatrix <- getDesignMatrix(designData)
     es.copy <- es
-    voom_counts <- voom(counts = exprs(es.copy), design = design)
+    voom_counts <- voom(counts = exprs(es.copy), design = designMatrix)
     exprs(es.copy) <- voom_counts$E
 
     assign("es", es.copy, envir = parent.frame())
