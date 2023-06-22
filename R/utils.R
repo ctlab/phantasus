@@ -189,14 +189,14 @@ updateARCHS4 <- function (cacheDir = file.path(getOption("phantasusCacheDir"), "
                  "arabidopsis" = "Arabidopsis_thaliana"
                )
     organism <- tolower(organism)
-    if (any(organism %in% c("all","human")) && (force || !file.exists(file.path(cacheDir, "human_matrix.h5")))) {
-        download.file(url = "https://s3.amazonaws.com/mssm-seq-matrix/human_matrix.h5",
-                      destfile = file.path(cacheDir, "human_matrix.h5"),
+    if (any(organism %in% c("all","human")) && (force || !file.exists(file.path(cacheDir, "human_gene_v2.2.h5")))) {
+        download.file(url = "https://s3.dev.maayanlab.cloud/archs4/files/human_gene_v2.2.h5",
+                      destfile = file.path(cacheDir, "human_gene_v2.2.h5"),
                       mode = "wb")
     }
-    if (any(organism  %in% c("all","mouse")) && (force || !file.exists(file.path(cacheDir, "mouse_matrix.h5")))) {
-        download.file(url = "https://s3.amazonaws.com/mssm-seq-matrix/mouse_matrix.h5",
-                      destfile = file.path(cacheDir, "mouse_matrix.h5"),
+    if (any(organism  %in% c("all","mouse")) && (force || !file.exists(file.path(cacheDir, "mouse_gene_v2.2.h5")))) {
+        download.file(url = "https://s3.dev.maayanlab.cloud/archs4/files/mouse_gene_v2.2.h5",
+                      destfile = file.path(cacheDir, "mouse_gene_v2.2.h5"),
                       mode = "wb")
     }
     for (sp in names(zoo_dict)){
@@ -222,10 +222,8 @@ updateARCHS4 <- function (cacheDir = file.path(getOption("phantasusCacheDir"), "
 #' @import data.table
 updateARCHS4meta <- function(archDir = file.path(getOption("phantasusCacheDir"), "counts/archs4")){
     archs4files <- list.files(archDir, pattern = '\\.h5$')
-    DT_meta <- data.frame(matrix(ncol = 4, nrow = length(archs4files), dimnames = list(NULL, c("file_name", "sample_id", 	"gene_id", "gene_id_type"))))
+    DT_meta <- data.frame(matrix(ncol = 5, nrow = length(archs4files), dimnames = list(NULL, c("file_name", "sample_id", "sample_dim",	"gene_id", "genes_annot"))))
     DT_meta$file_name <- archs4files
-    DT_meta$sample_id <- "/meta/Sample_geo_accession"
-    DT_meta$gene_id <- "/meta/genes"
     genus <- tolower(sapply(strsplit(x = archs4files, split = "_"), function(x) x[1]))
     for (i_file in seq_along(archs4files)) {
         cur_file <- file.path(archDir, archs4files[i_file])
@@ -235,35 +233,60 @@ updateARCHS4meta <- function(archDir = file.path(getOption("phantasusCacheDir"),
         } else {
             h5read(h5f, "meta/info/version")
         }
-        arch_version <- as.integer(arch_version)
-        if (is.na(arch_version)) {
-            arch_version <- 8
-        }
-        if (arch_version >= 9) {
-            DT_meta$sample_id[i_file] <- "/meta/samples/geo_accession"
-            DT_meta$gene_id[i_file] <-  "/meta/genes/genes"
-        }
+        gene_id_type <- NA
         if (genus[i_file] %in% c("human", "mouse")) {
-            DT_meta$gene_id_type[i_file] <- "Gene Symbol"
-            next
+            gene_id_type <- "Gene Symbol"
         } else if (genus[i_file] %in% c("rattus", "bos", "gallus", "danio")) {
-            DT_meta$gene_id_type[i_file] <- "ENSEMBLID"
-            next
+            gene_id_type <- "ENSEMBLID"
         } else if (genus[i_file] %in% c("arabidopsis")) {
-            DT_meta$gene_id_type[i_file] <- "TAIR id"
-            next
+            gene_id_type<- "TAIR id"
         } else if (genus[i_file] %in% c("saccharomyces")) {
-            DT_meta$gene_id_type[i_file] <- "ORF id"
-            next
+            gene_id_type <- "ORF id"
         } else if (genus[i_file] %in% c("caenorhabditis")) {
-            DT_meta$gene_id_type[i_file] <- "WormBase id"
-            next
+            gene_id_type <- "WormBase id"
         } else if (genus[i_file] %in% c("drosophila")) {
-            DT_meta$gene_id_type[i_file] <- "FlyBase id"
-            next
+            gene_id_type <- "FlyBase id"
         } else{
-            DT_meta$gene_id_type[i_file] <- "gene"
+            gene_id_type<- "gene"
         }
+        if (is.na(arch_version)) {
+            arch_version <- "8"
+        }
+        if (arch_version %in% c("7", "8")){
+            DT_meta$sample_id[i_file] <-  "/meta/Sample_geo_accession"
+            DT_meta$gene_id[i_file] <-  paste(gene_id_type, "/meta/genes", sep = ":")
+            DT_meta$sample_dim[i_file] = "columns"
+            annot_str <- "Gene ID:meta/gene_entrezid"
+            if (!toupper(gene_id_type) == "GENE SYMBOL") {
+              annot_str <- paste(annot_str, "Gene symbol:meta/genes", sep = ";")
+            }
+            if (!toupper(gene_id_type) == "ENSEMBLID") {
+                annot_str <- paste(annot_str, "ENSEMBLID:meta/gene_ensemblid", sep = ";")
+            }
+            DT_meta$genes_annot[i_file] = annot_str
+        }
+        if (arch_version %in% c("9", "10", "11")) {
+            DT_meta$sample_id[i_file] <- "/meta/samples/geo_accession"
+            DT_meta$gene_id[i_file] <-  paste(gene_id_type, "/meta/genes/genes", sep = ":")
+            DT_meta$sample_dim[i_file] = "rows"
+            annot_str <- ""
+            if (!toupper(gene_id_type) == "GENE SYMBOL") {
+                annot_str <-  "Gene symbol:meta/genes/gene_symbol"
+            }
+            if (!toupper(gene_id_type) == "ENSEMBLID") {
+                annot_str <- paste(annot_str, "ENSEMBLID:meta/genes/ensembl_gene_id", sep = ";")
+            }
+            DT_meta$genes_annot[i_file] = trimws(annot_str, which = "left", whitespace = ";")
+        }
+        if(arch_version %in% c("2.2")){
+            gene_id_type <- "ENSEMBLID"
+            DT_meta$sample_id[i_file] <- "/meta/samples/geo_accession"
+            DT_meta$gene_id[i_file] <-  paste(gene_id_type, "/meta/genes/ensembl_gene_id", sep = ":")
+            DT_meta$sample_dim[i_file] = "rows"
+            annot_str <- "Gene symbol:meta/genes/symbol"
+            DT_meta$genes_annot[i_file] = annot_str
+        }
+
         H5Fclose(h5f)
     }
 
@@ -283,32 +306,28 @@ updateARCHS4meta <- function(archDir = file.path(getOption("phantasusCacheDir"),
 #' @import data.table
 updateDEE2meta <- function(destDir = file.path(getOption("phantasusCacheDir"), "counts/dee2")){
     dee2files <- list.files(destDir, pattern = '\\.h5$')
-    DT_meta <- data.frame(matrix(ncol = 4, nrow = length(dee2files), dimnames = list(NULL, c("file_name", "sample_id", "gene_id", "gene_id_type"))))
+    DT_meta <- data.frame(matrix(ncol = 5, nrow = length(dee2files), dimnames = list(NULL, c("file_name", "sample_id", "sample_dim",	"gene_id", "genes_annot"))))
     DT_meta$file_name <- dee2files
+    DT_meta$sample_dim <- "rows"
     DT_meta$sample_id <- "/meta/samples/geo_accession"
-    DT_meta$gene_id <- "/meta/genes/ensembl_gene_id"
     genus <- sapply(strsplit(x = dee2files, split = "_"), function(x) x[1])
     for (i_file in 1:length(dee2files)) {
         if (genus[i_file] %in% c("hsapiens", "mmusculus", "drerio", "rattus")) {
-            DT_meta$gene_id_type[i_file] <- "ENSEMBLID"
-            next
+            gene_id_type <- "ENSEMBLID"
         } else if (genus[i_file] %in% c("athaliana", "ecoli")) {
-            DT_meta$gene_id_type[i_file] <- "Locus tag"
-
-            next
+            gene_id_type <- "Locus tag"
         } else if (genus[i_file] %in% c("scerevisiae")) {
-            DT_meta$gene_id_type[i_file] <- "Yeast id"
-            next
+            gene_id_type <- "Yeast id"
         } else if (genus[i_file] %in% c("dmelanogaster")){
-            DT_meta$gene_id_type[i_file] <- "FlyBase id"
-            next
+            gene_id_type <- "FlyBase id"
         } else if (genus[i_file] %in% c("celegans")) {
-            DT_meta$gene_id_type[i_file] <- "WormBase id"
-            next
+            gene_id_type <- "WormBase id"
         } else{
-            DT_meta$gene_id_type[i_file] <- "gene"
-            next
+            gene_id_type <- "gene"
         }
+        DT_meta$gene_id[i_file] <- paste(gene_id_type, "/meta/genes/ensembl_gene_id", sep = ":")
+
+        DT_meta$genes_annot[i_file]  <- "Gene symbol:/meta/genes/gene_symbol"
     }
     write.table(x = DT_meta, file = file.path(destDir, "meta.txt"), sep = "\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
 }
@@ -646,9 +665,15 @@ validateCountsCollection <- function(collectionDir, verbose=FALSE){
                 }
                 return(FALSE)
             }
-
-            gene_ids <- if (H5Lexists(h5f, name = cur_meta$gene_id)) {
-                h5read(h5f, name = cur_meta$gene_id)
+            gene_id <- strsplit(cur_meta$gene_id, split = ":")[[1]]
+            if (length(gene_id) != 2){
+                if (verbose){
+                    message(paste0("wrong gene id format for", full_path))
+                }
+                return(FALSE)
+            }
+            gene_ids <- if (H5Lexists(h5f, name = gene_id[2])) {
+                h5read(h5f, name = gene_id[2])
             } else NULL
 
             if (length(gene_ids) == 0) {

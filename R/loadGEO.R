@@ -39,6 +39,7 @@ loadGEO <- function(name, type = NA) {
         mirrorPath <- "https://ftp.ncbi.nlm.nih.gov"
     }
 
+
     geoDir <- getGEODir(name, cacheDir)
     binaryName <- paste0(name, '.bin')
     filePath <- file.path(geoDir, binaryName)
@@ -254,70 +255,38 @@ loadCounts <- function(es, counts_dir) {
     samples <- h5read(h5f, h5_meta$sample_id)
     sampleIndexes <- match(es$geo_accession,
                            samples)
-    genes <- as.character(h5read(h5f, h5_meta$gene_id))
 
-    arch_version <- if (H5Lexists(h5f, "info/version")) {
-        h5read(h5f, "info/version")
-    } else {
-        h5read(h5f, "meta/info/version")
-    }
-    arch_version <- as.integer(arch_version)
-    if (is.na(arch_version)) {
-      arch_version <- 8
-    }
-    if (arch_version >= 9) {
-      h5Indexes = list(stats::na.omit(sampleIndexes),
+    gene_id <- strsplit(h5_meta$gene_id, split = ":")[[1]]
+    genes <- as.character(h5read(h5f,gene_id[2]))
+
+    h5Indexes = list(stats::na.omit(sampleIndexes),
                        seq_len(length(genes)))
-      expression <- h5read(h5f,
-                           "data/expression",
+    expression <- h5read(h5f,
+                         "data/expression",
                            index = h5Indexes)
-      expression <- t(expression)
-      rownames(expression) <- genes
-      colnames(expression) <- colnames(es)[!is.na(sampleIndexes)]
-      es2 <- ExpressionSet(assayData = expression,
-                           phenoData = phenoData(es[, !is.na(sampleIndexes)]),
-                           annotation = annotation(es),
-                           experimentData = experimentData(es)
-      )
-      if (!toupper(h5_meta$gene_id_type) == "GENE SYMBOL") {
-        tryCatch({
-          fData(es2) <- cbind(fData(es2), "Gene symbol" = as.character(h5read(h5f, "meta/genes/gene_symbol")))
-        }, error = function(e) {})
-      }
-      if (!toupper(h5_meta$gene_id_type) == "ENSEMBLID") {
-        tryCatch({
-          fData(es2) <- cbind(fData(es2), "ENSEMBLID" = as.character(h5read(h5f, "meta/genes/ensembl_gene_id")))
-        }, error = function(e) {})
-      }
+    if (h5_meta$sample_dim == "rows"){
+        expression <- t(expression)
     }
-    else{
-      h5Indexes <- list(seq_len(length(genes)),
-                       stats::na.omit(sampleIndexes))
-      expression <- h5read(h5f,
-                           "data/expression",
-                           index = h5Indexes)
-      rownames(expression) <- genes
-      colnames(expression) <- colnames(es)[!is.na(sampleIndexes)]
-      es2 <- ExpressionSet(assayData = expression,
-                           phenoData = phenoData(es[, !is.na(sampleIndexes)]),
-                           annotation = annotation(es),
-                           experimentData = experimentData(es)
-      )
+    rownames(expression) <- genes
+    colnames(expression) <- colnames(es)[!is.na(sampleIndexes)]
+    es2 <- ExpressionSet(assayData = expression,
+                         phenoData = phenoData(es[, !is.na(sampleIndexes)]),
+                         annotation = annotation(es),
+                         experimentData = experimentData(es)
+     )
+    genes_annot <- strsplit(h5_meta$genes_annot, split = ";")[[1]]
+    genes_annot <- unlist( lapply(strsplit(genes_annot, split = ":"), function(annot){
+        setNames(annot[2], annot[1])
+    }))
+
+    genes_annot <- lapply(genes_annot, function(annot){
       tryCatch({
-        fData(es2) <- cbind(fData(es2), "Gene ID" = as.character(h5read(h5f, "meta/gene_entrezid")))
+          as.character(h5read(h5f, annot))
       }, error = function(e) {})
-      if (!toupper(h5_meta$gene_id_type) == "GENE SYMBOL" & !tolower(h5_meta$gene_id) == "/meta/genes") {
-        tryCatch({
-          fData(es2) <- cbind(fData(es2), "Gene symbol" = as.character(h5read(h5f, "meta/genes")))
-        }, error = function(e) {})
-      }
-      if (!toupper(h5_meta$gene_id_type) == "ENSEMBLID") {
-        tryCatch({
-          fData(es2) <- cbind(fData(es2), "ENSEMBLID" = as.character(h5read(h5f, "meta/gene_ensemblid")))
-        }, error = function(e) {})
-      }
-    }
-    fData(es2) <- cbind(fData(es2), setNames(list(rownames(es2)), h5_meta$gene_id_type))
+    })
+    genes_annot [[gene_id[1]]] <- rownames(es2)
+    genes_annot <- genes_annot[!unlist(lapply(genes_annot, is.null))]
+    fData(es2) <- cbind(fData(es2), genes_annot )
     H5Fclose(h5f)
     return(es2)
 }
