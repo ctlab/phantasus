@@ -3,7 +3,6 @@
 
 
 deseqAnalysis <- function (es, fieldValues, version = "One-factor design", contrast =  list('Comparison', 'A', 'B'), designFields = NULL, designData = NULL) {
-    save(es,fieldValues, version, contrast, designFields, designData, file =  "~/test_annot/deseq_param.rda")
     fieldValues <- replace(fieldValues, fieldValues == "", NA)
     de <- NULL
     contrast <- unlist(contrast)
