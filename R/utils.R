@@ -216,7 +216,7 @@ updateARCHS4 <- function (cacheDir = file.path(getOption("phantasusCacheDir"), "
 #'
 #' Creates \code{meta.txt} file, which describes typical archs4 and archs4Zoo files.
 #' @param archDir path to directory with arch4 .h5 files.
-#' @details This function produces very specific "hardcoded" \code{meta.txt} file for arch4 and archs4ZOO counts colletctions.
+#' @details This function produces very specific "hardcoded" \code{meta.txt} file for arch4 and archs4ZOO counts collections.
 #' See \code{\link{validateCountsCollection}} for more common information and \code{meta.txt}  file structure
 #' @seealso \code{\link{validateCountsCollection}}
 #' @import data.table
@@ -252,6 +252,13 @@ updateARCHS4meta <- function(archDir = file.path(getOption("phantasusCacheDir"),
         if (is.na(arch_version)) {
             arch_version <- "8"
         }
+        if (arch_version == "1"){
+            DT_meta$sample_id[i_file] <-  "/meta/Sample_geo_accession"
+            DT_meta$gene_id[i_file] <-  paste(gene_id_type, "/meta/genes", sep = ":")
+            DT_meta$sample_dim[i_file] = "columns"
+            annot_str <- ""
+            DT_meta$genes_annot[i_file] = annot_str
+        }
         if (arch_version %in% c("7", "8")){
             DT_meta$sample_id[i_file] <-  "/meta/Sample_geo_accession"
             DT_meta$gene_id[i_file] <-  paste(gene_id_type, "/meta/genes", sep = ":")
@@ -278,7 +285,7 @@ updateARCHS4meta <- function(archDir = file.path(getOption("phantasusCacheDir"),
             }
             DT_meta$genes_annot[i_file] = trimws(annot_str, which = "left", whitespace = ";")
         }
-        if(arch_version %in% c("2.2")){
+        if(arch_version %in% c("2.2" , "2.2.1")){
             gene_id_type <- "ENSEMBLID"
             DT_meta$sample_id[i_file] <- "/meta/samples/geo_accession"
             DT_meta$gene_id[i_file] <-  paste(gene_id_type, "/meta/genes/ensembl_gene_id", sep = ":")
@@ -630,8 +637,9 @@ updateCountsMeta <- function(counts_dir =  file.path(getOption("phantasusCacheDi
 #'  and a single \code{meta.txt}.  \code{meta.txt} is \code{.tsv}-like file where for each \code{.h5} exists a row wit columns:
 #' \describe{ \item{file_name}{ name of \code{.h5} file in \code{collectionDir}.}
 #'            \item{sample_id}{name of dataset in \code{file_name} which contains sample IDs (sample_geo_accession for example).}
-#'            \item{gene_id}{name of dataset in \code{file_name} which contains ids for genes. For correct work this dataset should contain unique values.}
-#'            \item{gene_id_type}{meaning of gene_id. This value determines name of gene annotation field in phantasus.}
+#'            \item{sample_dim}{which dimension of the expression matrix in \code{file_name} corresponds to samples. Should be one of \code{c("rows", "columns")} }
+#'            \item{gene_id}{name of dataset in \code{file_name} which contains ids for genes and the "meaning" for that ids( column name in result ES). For correct work this dataset should contain unique values. Example: ENSEMBLID:/meta/genes/ensembl_gene_id}
+#'            \item{genes_annot}{Names of datasets and their meanings to extract gene-related metadata from \code{file_name}. Can be empty or \code{gene_id}-like values separated with semicolon(;).}
 #'            }
 #'
 #' @import data.table

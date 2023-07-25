@@ -258,14 +258,18 @@ loadCounts <- function(es, counts_dir) {
 
     gene_id <- strsplit(h5_meta$gene_id, split = ":")[[1]]
     genes <- as.character(h5read(h5f,gene_id[2]))
-
     h5Indexes = list(stats::na.omit(sampleIndexes),
-                       seq_len(length(genes)))
-    expression <- h5read(h5f,
-                         "data/expression",
-                           index = h5Indexes)
+                     seq_len(length(genes)))
+    expression <- NULL
     if (h5_meta$sample_dim == "rows"){
+        expression <- h5read(h5f,
+                             "data/expression",
+                             index = h5Indexes)
         expression <- t(expression)
+    } else {
+        expression <- h5read(h5f,
+                             "data/expression",
+                             index = rev(h5Indexes))
     }
     rownames(expression) <- genes
     colnames(expression) <- colnames(es)[!is.na(sampleIndexes)]
