@@ -29,7 +29,11 @@ tmmNormalization <- function(es, fieldName, logratioTrim, sumTrim, convertCPM = 
 }
 
 
-
+#'
+#' @import Biobase
+#' @import limma
+#' @import edgeR
+#'
 voomNormalization <- function(es, designData, filterByExp = FALSE){
     designMatrix <- getDesignMatrix(designData)
     es.copy <- es
