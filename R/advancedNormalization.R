@@ -3,7 +3,7 @@
 #' @import limma
 #' @import edgeR
 #'
-tmmNormalization <- function(es, fieldName, logratioTrim, sumTrim, convertCPM = FALSE) {
+tmmNormalization <- function(es, fieldName, logratioTrim, sumTrim) {
     if (fieldName != "None"){
         fieldValues <- es[[fieldName]]
     } else {
@@ -12,10 +12,7 @@ tmmNormalization <- function(es, fieldName, logratioTrim, sumTrim, convertCPM = 
     es.copy <- es
     count_factors <- DGEList(counts = exprs(es.copy), group = fieldValues)
     count_factors <- calcNormFactors(count_factors, logratioTrim = as.numeric(logratioTrim), sumTrim = as.numeric(sumTrim))
-    if (convertCPM){
-        count_factors <- cpm(count_factors)
-    }
-    exprs(es.copy) <- count_factors
+    exprs(es.copy) <- cpm(count_factors)
 
     assign("es", es.copy, envir = parent.frame())
     f <- tempfile(pattern = "norm_counts", tmpdir = getwd(), fileext = ".bin")

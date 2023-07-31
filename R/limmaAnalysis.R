@@ -5,7 +5,8 @@ limmaAnalysisSimpleImpl <- function(es, fieldValues, contrast){
     es.copy <- es
     es.copy$Comparison <- fieldValues
     pData(es.copy)[,"Comparison"] <- as.factor(pData(es.copy)[,"Comparison"])
-    pData(es.copy)[,"Comparison"] <- relevel(pData(es.copy)[,"Comparison"], ref = "B")
+    pData(es.copy)[,"Comparison"] <- relevel(pData(es.copy)[,"Comparison"], ref = "Reference")
+    fData(es.copy) <- data.frame(row.names = rownames(es.copy))
     es.copy <- es.copy[, !is.na(fieldValues)]
 
     # Getting rid of check NOTEs
@@ -16,7 +17,7 @@ limmaAnalysisSimpleImpl <- function(es, fieldValues, contrast){
     fit <- lmFit(es.copy, es.design)
 
     A <- NULL; B <- NULL
-    fit2 <- contrasts.fit(fit, makeContrasts(ComparisonB - ComparisonA, levels = es.design))
+    fit2 <- contrasts.fit(fit, makeContrasts(ComparisonTarget - ComparisonReference, levels = es.design))
     fit2 <- eBayes(fit2)
     de <- topTable(fit2, adjust.method = "BH", number = Inf)
     de <- de[row.names(fData(es.copy)), ]
@@ -26,13 +27,14 @@ limmaAnalysisAdvancedImpl <- function(es, designData, contrast){
     ux_designMatrix <- getDesignMatrix(designData)
 
     es.copy <- es
-    colnames(ux_designMatrix) <-  gsub(pattern = "[^[:alnum:]_.]", replacement = ".", x = colnames(ux_designMatrix))
+    fData(es.copy) <- data.frame(row.names = rownames(es.copy))
+    colnames(ux_designMatrix) <-  make.names(colnames(ux_designMatrix))
+    target_level <- make.names(paste0(contrast[1],contrast[3]))
+    reference_level <-  make.names(paste0(contrast[1],contrast[2]))
 
-    contrast[2] <- gsub(pattern = "[^[:alnum:]_.]", replacement = ".", x = contrast[2])
-    contrast[3] <- gsub(pattern = "[^[:alnum:]_.]", replacement = ".", x = contrast[3])
 
     fit <- lmFit(es.copy, ux_designMatrix)
-    fit2 <- contrasts.fit(fit, makeContrasts(contrasts = paste0(contrast[1],contrast[3], "-" , contrast[1],contrast[2]), levels = ux_designMatrix))
+    fit2 <- contrasts.fit(fit, makeContrasts(contrasts = paste(reference_level,target_level, sep = "-"), levels = ux_designMatrix))
     fit2 <- eBayes(fit2)
     de <- topTable(fit2, adjust.method = "BH", number = Inf)
     de <- de[row.names(fData(es.copy)), ]
@@ -68,7 +70,7 @@ limmaAnalysisAdvancedImpl <- function(es, designData, contrast){
 #' data(es)
 #' limmaAnalysis(es, fieldValues = c("A", "A", "A", "B", "B"))
 #' }
-limmaAnalysis <- function (es, fieldValues, version = "One-factor design", contrast =  list('Comparison', 'A', 'B'), designData = NULL) {
+limmaAnalysis <- function (es, fieldValues, version = "One-factor design", contrast =  list('Comparison', 'Target', 'Reference'), designData = NULL) {
     fieldValues <- replace(fieldValues, fieldValues == "", NA)
     de <- NULL
     contrast <- unlist(contrast)
@@ -78,7 +80,7 @@ limmaAnalysis <- function (es, fieldValues, version = "One-factor design", contr
     if (version == "Advanced design"){
         de <- limmaAnalysisAdvancedImpl(es, designData, contrast)
     }
-    deDf <- as.data.frame(de)
+        deDf <- as.data.frame(de)
     toRemove <- intersect(colnames(fData(es)), colnames(deDf))
     fData(es)[, toRemove] <- NULL
 
