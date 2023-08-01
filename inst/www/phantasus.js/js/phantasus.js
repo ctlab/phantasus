@@ -48,23 +48,22 @@ phantasus.Util.loadTrackingCode = function () {
   if (phantasus.Util.TRACKING_ENABLED && typeof window !== 'undefined' && typeof navigator !== 'undefined' && navigator.onLine) {
     if (phantasus.Util.TRACKING_CODE_LOADED) {
       return;
-    } else if (typeof ga === 'undefined') {
+    } else {
+        console.log("loading analytics");
       phantasus.Util.TRACKING_CODE_LOADED = true;
-      (function (i, s, o, g, r, a, m) {
-        i['GoogleAnalyticsObject'] = r;
-        i[r] = i[r] || function () {
-          (i[r].q = i[r].q || []).push(arguments);
-        }, i[r].l = 1 * new Date();
-        a = s.createElement(o),
-          m = s.getElementsByTagName(o)[0];
-        a.async = 1;
-        a.src = g;
-        m.parentNode.insertBefore(a, m);
-      })(window, document, 'script', 'https://www.google-analytics.com/analytics.js', 'ga');
-    }
-    if (typeof ga !== 'undefined') {
-      ga('create', 'UA-53973555-1', 'auto', 'phantasus');
-      ga('phantasus.send', 'pageview');
+
+      var a = document.createElement('script');
+      var m = document.getElementsByTagName('script')[0];
+      a.async = 1;
+      a.src = 'https://www.googletagmanager.com/gtag/js?id=G-727Q0ZZHXL';
+      m.parentNode.insertBefore(a, m);
+        console.log("loaded?");
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-727Q0ZZHXL');
+      
     }
     phantasus.Util.TRACKING_CODE_LOADED = true;
   }
@@ -260,12 +259,28 @@ phantasus.Util.getFileName = function (fileOrUrl) {
 phantasus.Util.prefixWithZero = function (value) {
   return value < 10 ? '0' + value : value;
 };
+
+phantasus.Util.detectSeparator = function (line) {
+  var separators = ['\t', ',', ' '];
+  var separator = separators[0];
+  var rtrim = /\s+$/;
+  var headerLine = line.replace(rtrim, '');
+  for (var i = 0; i < separators.length; i++) {
+    var sep = separators[i];
+    var tokens = headerLine.split(new RegExp(sep));
+    if (tokens.length > 1) {
+      separator = sep;
+      break;
+    }
+  }
+  return separator;
+};
 phantasus.Util.getExtension = function (name) {
   name = '' + name;
   var dotIndex = name.lastIndexOf('.');
   if (dotIndex > 0) {
     var suffix = name.substring(dotIndex + 1).toLowerCase();
-    if (suffix === 'txt' || suffix === 'gz' || suffix === 'tsv') { // see if file is in
+    if (suffix === 'txt' || suffix === 'tsv' || suffix === 'csv' ) { // see if file is in
       // the form
       // name.gct.txt
       var newPath = name.substring(0, dotIndex);
@@ -2636,10 +2651,22 @@ phantasus.Array2dReaderInteractive.prototype = {
     var $el = $(html.join(''));
 
     phantasus.Util.readLines(fileOrUrl, true).done(function (lines) {
+
+      var separator = /\t/;
+      var testLine = lines[1];
+      var separators = ['\t', ',', ' '];
+      for (var i = 0; i < separators.length; i++) {
+        var sep = separators[i];
+        var tokens = testLine.split(new RegExp(sep));
+        if (tokens.length > 1) {
+          separator = sep;
+          break;
+        }
+      }
+
       // show in table
-      var tab = /\t/;
       for (var i = 0, nrows = lines.length; i < nrows; i++) {
-        lines[i] = lines[i].split(tab);
+        lines[i] = lines[i].split(separator);
       }
       var grid;
       var columns = [];
@@ -3909,6 +3936,50 @@ phantasus.GmtReader.prototype = {
   }
 };
 
+phantasus.GzReader = function (options) {
+    this.readOptions = options;
+};
+
+phantasus.GzReader.prototype = {
+  read: function (fileOrUrl, callback) {
+    var _this = this;
+    var name = phantasus.Util.getFileName(fileOrUrl);
+
+    var dotIndex = name.lastIndexOf('.');
+    if (dotIndex > 0) {
+    name = name.substring(0, dotIndex);
+    } 
+    phantasus.ArrayBufferReader.getArrayBuffer(fileOrUrl, function (err,
+                                                                   arrayBuffer) {
+      if (err) {
+        callback(err);
+      } else {
+        try {
+          _this._read(name, arrayBuffer,callback);
+        }
+        catch (x) {
+          callback(x);
+        }
+      }
+    });
+  },
+  _read: function (unGzName, binData, cb) {
+    const inflator = new pako.Inflate();
+    inflator.push(binData);
+    if (inflator.err) {
+        console.log(inflator.msg);
+    }
+    var unGzFile = new File( [inflator.result], unGzName);
+    var ext = phantasus.Util.getExtension(unGzName);
+    var datasetReader = null;
+    datasetReader = phantasus.DatasetUtil.getDatasetReader(ext, this.readOptions);
+    if (datasetReader == null) {
+      datasetReader = isFile ? (options.interactive ? new phantasus.Array2dReaderInteractive() : new phantasus.TxtReader()) : new phantasus.GctReader();
+    }
+    return datasetReader.read(unGzFile, cb);
+    }
+};
+
 phantasus.JsonDatasetReader = function () {
 
 };
@@ -5047,18 +5118,22 @@ phantasus.TxtReader.prototype = {
     if (dataRowStart == null) {
       dataRowStart = 1;
     }
-    var tab = /\t/;
-    var header = reader.readLine().trim().split(tab);
+    var headerLine = reader.readLine();
+    var separator = phantasus.Util.detectSeparator(headerLine);
     if (dataRowStart > 1) {
       for (var i = 1; i < dataRowStart; i++) {
         reader.readLine(); // skip
       }
     }
     var testLine = null;
+    var rtrim = /\s+$/;
+    var header = headerLine.trim().split(separator);
+
     if (dataColumnStart == null) { // try to figure out where data starts by finding 1st
       // numeric column
-      testLine = reader.readLine().trim();
-      var tokens = testLine.split(tab);
+      
+      testLine = reader.readLine().replace(rtrim, '');
+      var tokens = testLine.split(separator);
       for (var i = 1; i < tokens.length; i++) {
         var token = tokens[i];
         if (token === '' || token === 'NA' || token === 'NaN' || $.isNumeric(token)) {
@@ -5082,7 +5157,7 @@ phantasus.TxtReader.prototype = {
     if (testLine != null) {
       var array = new Float32Array(ncols);
       matrix.push(array);
-      var tokens = testLine.split(tab);
+      var tokens = testLine.split(separator);
       for (var j = 0; j < dataColumnStart; j++) {
         // row metadata
         arrayOfRowArrays[j].push(phantasus.Util.copyString(tokens[j]));
@@ -5093,11 +5168,11 @@ phantasus.TxtReader.prototype = {
       }
     }
     while ((s = reader.readLine()) !== null) {
-      s = s.trim();
+      s = s.replace(rtrim, '');
       if (s !== '') {
         var array = new Float32Array(ncols);
         matrix.push(array);
-        var tokens = s.split(tab);
+        var tokens = s.split(separator);
         for (var j = 0; j < dataColumnStart; j++) {
           // row metadata
           arrayOfRowArrays[j].push(phantasus.Util.copyString(tokens[j]));
@@ -6324,6 +6399,8 @@ phantasus.DatasetUtil.getDatasetReader = function (ext, options) {
     datasetReader = new phantasus.JsonDatasetReader();
   } else if (ext === 'gct') {
     datasetReader = new phantasus.GctReader();
+  } else if (ext === "gz" || ext === 'gzip'){
+    datasetReader = new phantasus.GzReader(options);
   }
   return datasetReader;
 };
@@ -7307,7 +7384,8 @@ phantasus.DatasetUtil.getMetadataRexp = function (metadata, featuresCount, parti
     if (ph_type === "integer"){
       curRexp["intValue"] = vecJ.getArray(); 
     } 
-    else if (ph_type === "real"){
+    else if (ph_type === "real" || ph_type === "number"){
+      curRexp["rclass"] = "REAL";
       curRexp["realValue"] = vecJ.getArray(); 
     }
     else if (ph_type === "logical"){
@@ -14833,7 +14911,7 @@ phantasus.ChartTool = function (chartOptions) {
   formBuilder.append({
     name: 'chart_type',
     type: 'bootstrap-select',
-    options: ["row profile", "column profile", 'boxplot']
+    options: ["row profile", "column profile", 'boxplot', 'histogram']
   });
   var rowOptions = [];
   var columnOptions = [];
@@ -14977,6 +15055,12 @@ phantasus.ChartTool = function (chartOptions) {
   });
 
   formBuilder.append({
+    name: 'avgRow',
+    type: 'checkbox',
+    title: 'Row averages'
+  });
+
+  formBuilder.append({
     name: "adjust_data",
     title: "Adjust Data",
     type: 'collapsed-checkboxes',
@@ -14997,15 +15081,15 @@ phantasus.ChartTool = function (chartOptions) {
 
   function setVisibility() {
     var chartType = formBuilder.getValue('chart_type');
-    formBuilder.setVisible('axis_label', chartType !== 'boxplot');
-    formBuilder.setVisible('color', chartType !== 'boxplot');
-    formBuilder.setVisible('tooltip', chartType !== 'boxplot');
-    formBuilder.setVisible('add_profile', chartType !== 'boxplot');
-    formBuilder.setVisible('show_points', chartType !== 'boxplot');
-    formBuilder.setVisible('show_lines', chartType !== 'boxplot');
-    formBuilder.setVisible('group_by', chartType === 'boxplot');
+    formBuilder.setVisible('axis_label', chartType === "row profile" || chartType === "column profile");
+    formBuilder.setVisible('color', chartType === "row profile" || chartType === "column profile");
+    formBuilder.setVisible('tooltip', chartType === "row profile" || chartType === "column profile");
+    formBuilder.setVisible('add_profile', chartType === "row profile" || chartType === "column profile");
+    formBuilder.setVisible('show_points', chartType === "row profile" || chartType === "column profile");
+    formBuilder.setVisible('show_lines', chartType === "row profile" || chartType === "column profile");
+    formBuilder.setVisible('group_by', chartType === 'boxplot' || chartType === 'histogram' );
     formBuilder.setVisible('box_show_points', chartType === 'boxplot');
-
+    formBuilder.setVisible('avgRow', chartType === 'histogram');
     if (chartType === 'column profile' || chartType === 'row profile') {
       formBuilder.setOptions('axis_label', chartType === 'column profile' ? rowOptions : columnOptions,
         true);
@@ -15487,6 +15571,94 @@ phantasus.ChartTool.prototype = {
       _this.$dialog.off('dialogresize');
     });
   },
+  _createDestPlot: function (options) {
+    var _this = this;
+    var showPoints = options.showPoints;
+    var myPlot = options.myPlot;
+    var datasets = options.datasets;
+    var colors = options.colors;
+    var ids = options.ids;
+    var histData = [];
+
+    for (var k = 0, ndatasets = datasets.length; k < ndatasets; k++) {
+      var dataset = datasets[k];
+      if (options.avgRow){
+        var values = new Float32Array(dataset.getRowCount());
+      } else {
+        var values = new Float32Array(dataset.getRowCount() * dataset.getColumnCount());
+      }
+      
+      var counter = 0;
+      for (var i = 0, nrows = dataset.getRowCount(); i < nrows; i++) {
+        let row_avg = 0;
+        for (var j = 0, ncols = dataset.getColumnCount(); j < ncols; j++) {
+          var value = dataset.getValue(i, j);
+          if (!isNaN(value)) {
+            if (!options.avgRow){
+              values[counter] = value;
+              counter++;
+            } else {
+              row_avg = row_avg + value
+            }
+          }
+        }
+        if (options.avgRow) {
+          values[counter] = row_avg / dataset.getColumnCount();
+          counter++;
+        }
+      }
+      if (counter !== values.length) {
+        values = values.slice(0, counter);
+      }
+      histData.push(values);
+    }
+
+    var $parent = $(myPlot).parent();
+    options.layout.width = $parent.width();
+    options.layout.height = this.$dialog.height() - 30;
+    options.layout.barmode = "overlay";
+    options.layout.xaxis = {title: "Value"};
+    options.layout.yaxis = {title: "Count"}
+    options.layout.showlegend = true;
+
+    var traces = histData.map(function (hist, index) {
+      var trace = {
+        x: hist,
+        type: 'histogram',
+        hoverinfo: 'x+y',
+        histnorm: "",
+        opacity: 0.5,
+        autobinx: true,
+        name: ids[index],
+        marker: {
+          color: colors[index]
+        }
+      };
+
+      if (showPoints === 'all') {
+        trace.pointpos = -1.8;
+        trace.jitter = 0.3;
+      }
+
+      return trace;
+    });
+
+    phantasus.ChartTool.newPlot(myPlot, traces, options.layout, options.config);
+
+    var resize = _.debounce(function () {
+      var width = $parent.width();
+      var height = _this.$dialog.height() - 30;
+      Plotly.relayout(myPlot, {
+        width: width,
+        height: height
+      });
+    }, 500);
+
+    this.$dialog.on('dialogresize', resize);
+    $(myPlot).on('remove', function () {
+      _this.$dialog.off('dialogresize');
+    });
+  },
   draw: function () {
     var _this = this;
     this.$chart.empty();
@@ -15501,6 +15673,7 @@ phantasus.ChartTool.prototype = {
     var showOutliers = this.formBuilder.getValue('show_outliers');
     var addProfile = this.formBuilder.getValue('add_profile');
     var adjustData = this.formBuilder.getValue('adjust_data');
+    var avgRow = this.formBuilder.getValue('avgRow');
 
     var axisLabel = this.formBuilder.getValue('axis_label');
     var colorBy = this.formBuilder.getValue('color');
@@ -15531,8 +15704,8 @@ phantasus.ChartTool.prototype = {
       dataset = this.project.getSelectedDataset({
         emptyToAll: false
       });
-    }
-
+    };
+    
     this.dataset = dataset;
     if (dataset.getRowCount() === 0 && dataset.getColumnCount() === 0) {
       $('<h4>Please select rows and columns in the heat map.</h4>')
@@ -15642,20 +15815,60 @@ phantasus.ChartTool.prototype = {
           ids.push(value);
           colors.push(uniqColors[value]);
         });
+
+        if (chartType === "boxplot"){
+          this._createBoxPlot({
+            showPoints: boxShowPoints,
+            myPlot: myPlot,
+            datasets: datasets,
+            colors: colors,
+            ids: ids,
+            layout: layout,
+            config: config
+          });
+        } 
+        if (chartType === "histogram"){
+          this._createDestPlot({
+            showPoints: boxShowPoints,
+            myPlot: myPlot,
+            datasets: datasets,
+            colors: colors,
+            ids: ids,
+            layout: layout,
+            config: config,
+            avgRow: avgRow
+          });
+        }
+
       } else {
         datasets.push(dataset);
         ids.push('');
       }
+      if (chartType === "boxplot"){
 
-      this._createBoxPlot({
-        showPoints: boxShowPoints,
-        myPlot: myPlot,
-        datasets: datasets,
-        colors: colors,
-        ids: ids,
-        layout: layout,
-        config: config
-      });
+
+        this._createBoxPlot({
+          showPoints: boxShowPoints,
+          myPlot: myPlot,
+          datasets: datasets,
+          colors: colors,
+          ids: ids,
+          layout: layout,
+          config: config
+        });
+      }
+      if (chartType === "histogram"){
+        this._createDestPlot({
+          showPoints: boxShowPoints,
+          myPlot: myPlot,
+          datasets: datasets,
+          colors: colors,
+          ids: ids,
+          layout: layout,
+          config: config,
+          avgRow: avgRow
+        });
+      }
     }
   }
 };
@@ -16053,15 +16266,26 @@ phantasus.DESeqTool = function () {
 
 phantasus.DESeqTool.prototype = {
   toString: function () {
-    return "DESeq2 (experimental)";
+    return "DESeq2";
   },
-  init: function (project, form) {
+  init: function (project, form, args) {
+    let $filter_div = form.$form.find('[name=filter_message]');
+    if ($filter_div.length){
+      $filter_div[0].parentElement.classList.remove('col-xs-offset-4');
+      $filter_div[0].parentElement.classList.add('col-xs-offset-1');
+      $filter_div[0].parentElement.classList.remove('col-xs-8');
+      $filter_div[0].parentElement.classList.add('col-xs-10');
+      return;
+    }
+
     var _this = this;
+    var dataset = project.getFullDataset();
+    var columnMeta = dataset.getColumnMetadata();
+    let fields = phantasus.MetadataUtil.getMetadataNames(columnMeta);
     var updateAB = function (fieldNames) {
       var ids = [];
       if (fieldNames != null) {
-        var vectors = phantasus.MetadataUtil.getVectors(project
-          .getFullDataset().getColumnMetadata(), fieldNames);
+        var vectors = phantasus.MetadataUtil.getVectors(columnMeta, fieldNames);
         var idToIndices = phantasus.VectorUtil
           .createValuesToIndicesMap(vectors);
         idToIndices.forEach(function (indices, id) {
@@ -16073,53 +16297,520 @@ phantasus.DESeqTool.prototype = {
       form.setOptions("class_b", ids);
     };
     var $field = form.$form.find("[name=field]");
+    var $class_a = form.$form.find("[name=class_a]");
+    var $class_b = form.$form.find("[name=class_b]");
+    var $add_data = form.$form.find("[name=add_data]");
+    var $byArea = form.$form.find("[name=byArea]");
+    var $designMatrix = form.$form.find('[name=designMatrix]');
+    var $showDesign = form.$form.find("[name=showDesign]");
+    var $contrastField = form.$form.find("[name=contrast_field]");
+    var $contrastA = form.$form.find("[name=contrast_a]");
+    var $contrastB = form.$form.find("[name=contrast_b]");
+    var $advText = form.$form.find("[name=advText]");
     $field.on("change", function (e) {
       updateAB($(this).val());
     });
     if ($field[0].options.length > 0) {
       $field.val($field[0].options[0].value);
-    }
+    };
     updateAB($field.val());
+
+    $add_data.on('click',  function (e) {
+      let $this = $(this);
+      $byArea.append(_this.getSelectorHtml(null, fields));
+      _this.reEvaluateAvailableOptions($byArea);
+      checkParams();
+      e.preventDefault();
+    });
+    let data = [];
+    let columns = [];
+    var grid = new Slick.Grid($designMatrix[0] , data, columns, {
+      enableCellNavigation: true,
+      headerRowHeight: 0,
+      showHeaderRow: false,
+      multiColumnSort: false,
+      multiSelect: false,
+      enableColumnReorder: false,
+      enableTextSelectionOnCells: true,
+      forceFitColumns: false,
+      topPanelHeight: 20
+    });
+    form.$form.on('change', '[name=by]', function(e){
+      _this.reEvaluateAvailableOptions($byArea);
+      _this.updateContrastFieldOptions($contrastField, $byArea, $contrastB, columnMeta);
+      checkParams();
+
+    });
+    form.$form.on('click', '[data-name=delete]', function (e) {
+      var $this = $(this);
+      var $row = $this.closest('.phantasus-entry');
+      $row.remove();
+      _this.reEvaluateAvailableOptions($byArea);
+      checkParams();
+      _this.updateContrastFieldOptions($contrastField, $byArea, $contrastB, columnMeta);
+
+      e.preventDefault();
+    });
+    form.$form.on('click', '[name=showDesign]', function (e) {
+      var $this = $(this);
+      if ($designMatrix[0].hidden) {
+        $designMatrix.show();
+        $designMatrix[0].hidden = false;
+        $this.text("Hide design matrix");
+      } else {
+        $designMatrix.hide();
+        $designMatrix[0].hidden = true;
+        $this.text("Show design matrix");
+      };
+      e.preventDefault();
+    });
+
+    const isDesignValid = ($container) =>{
+      if (!$container[0].hasAttribute("disabled")){
+        let selectElements = $container.find("[name=by]");
+        if (selectElements.length >= fields.length){
+          $add_data[0].setAttribute("disabled", true);
+          $add_data.parent().find("[data-name=add_data_help]")[0].textContent = "Nothing to add.";
+        } else {
+          $add_data[0].disabled = false;
+          $add_data.parent().find("[data-name=add_data_help]")[0].textContent  = "";
+        };
+        if (selectElements.length < 1){
+          $designMatrix.closest(".form-group")[0].classList.add('has-error');
+          return false;
+        } else {
+          $designMatrix.closest(".form-group")[0].classList.remove('has-error');
+          return true;
+        }
+     }
+     return true;
+   }
+   const isContrastValid = ($field, $a, $b) => {
+    if ( $contrastField[0].hasAttribute("disabled") ){
+      return true;
+    }
+    if ($a.val() && $b.val() && $a.val() === $b.val()){
+        $a.closest(".form-group")[0].classList.add('has-error');
+        $b.closest(".form-group")[0].classList.add('has-error');
+        return false;
+    }
+    $a.closest(".form-group")[0].classList.remove('has-error');
+    $b.closest(".form-group")[0].classList.remove('has-error');
+    if ($contrastField.val()){
+      return true;
+    } else {
+      return false;
+    }
+   }
+   const checkParams = () =>{
+    if (isDesignValid($byArea) && isContrastValid($contrastField, $contrastA, $contrastB)) {
+      document.getElementsByName("ok")[0].disabled = false;
+    } else{
+      document.getElementsByName("ok")[0].disabled = "disabled";
+    }
+   };
+    const debounce = (fn, delay = 500) => {
+      let timeoutId;
+      return (...args) => {
+        // cancel the previous timer
+        if (timeoutId) {
+            clearTimeout(timeoutId);
+        }
+        // setup a new timer
+        timeoutId = setTimeout(() => {
+            fn.apply(null, args)
+        }, delay);
+      };
+    };
+    $contrastB.on("change", function(e){
+      let hidden = $designMatrix[0].hidden;
+      let curRef = {};
+      curRef[$contrastField.val()] =  this.value;
+      if (hidden){
+        $designMatrix.show();
+      }
+      _this.updateDesignGrid(grid, $byArea, columnMeta, curRef);
+      if (hidden){
+        $designMatrix.hide();
+      }
+    });
+    form.$form.on('input', debounce(function (e) {
+      checkParams();
+    }));
+    $contrastField.on("change", function(e){
+      let selected_val = this.value;
+      _this.resetContrastAB($contrastA, $contrastB, selected_val, columnMeta );
+    });
+    var hide_element = function($el){
+      $el.closest(".form-group").hide();
+      $el.each(function(){
+        this.setAttribute("disabled", true);
+      });
+    };
+    var show_element = function($el) {
+      $el.closest(".form-group").show();
+      $el.each(function(){
+        this.removeAttribute("disabled");
+      });
+    };
+
+    var hide_advanced = function(){
+      show_element($field);
+      show_element($class_a);
+      show_element($class_b)
+      hide_element($add_data);
+      hide_element($designMatrix);
+      hide_element($showDesign);
+      hide_element($byArea);
+      hide_element($contrastField);
+      hide_element($contrastA);
+      hide_element($contrastB);
+      hide_element($advText);
+    };
+    var hide_basic = function() {
+      hide_element($field);
+      hide_element($class_a);
+      hide_element($class_b)
+      show_element($add_data);
+      show_element($designMatrix);
+      show_element($showDesign);
+      show_element($byArea);
+      show_element($contrastA);
+      show_element($contrastB);
+      show_element($contrastField);
+      show_element($advText);
+    };
+    
+    var $versionChooser = form.$form.find("[name=versionTabs]");
+    var $versionTabs = $versionChooser.find('li');
+    $versionTabs.on('click', function (e) {
+      $versionTabs.toggleClass('active', false);
+      var target = $(e.currentTarget);
+      var mode = target.text();
+      target.toggleClass('active', true);
+      if (mode === 'Advanced design') {
+        hide_basic();
+        checkParams();
+      } else {
+        hide_advanced();
+        checkParams();
+      }
+      e.preventDefault();
+    });
+    hide_advanced();
+    this.updateDesignGrid(grid, $byArea, columnMeta, undefined);
+    $designMatrix[0].parentElement.classList.remove('col-xs-offset-4');
+    $designMatrix[0].parentElement.classList.add('col-xs-offset-1');
+    $designMatrix[0].parentElement.classList.remove('col-xs-8');
+    $designMatrix[0].parentElement.classList.add('col-xs-10');
+    $designMatrix[0].setAttribute("style","height:320px");
+    $($designMatrix[0]).data('SlickGrid', grid);
+    $designMatrix.hide();
+    $designMatrix[0].hidden = true; 
+    $versionChooser[0].parentElement.classList.remove('col-xs-offset-4');
+    $versionChooser[0].parentElement.classList.remove('col-xs-8');
+    $versionChooser[0].parentElement.classList.add('col-xs-12');
+
+    $byArea[0].parentElement.classList.remove('col-xs-offset-4');
+    $byArea[0].parentElement.classList.remove('col-xs-8');
+    $byArea[0].parentElement.classList.add('col-xs-13');
+    $advText[0].parentElement.classList.remove('col-xs-offset-4');
+    $advText[0].parentElement.classList.remove('col-xs-8');
+    $advText[0].parentElement.classList.add('col-xs-11');
+    $advText[0].parentElement.classList.add('col-xs-offset-1');
   },
   gui: function (project) {
     var dataset = project.getFullDataset();
 
     if (_.size(project.getRowFilter().enabledFilters) > 0 || _.size(project.getColumnFilter().enabledFilters) > 0) {
-      phantasus.FormBuilder.showInModal({
-        title: 'Warning',
-        html: 'Your dataset is filtered.<br/>' + this.toString() + ' will apply to unfiltered dataset. Consider using New Heat Map tool.',
-        z: 10000
-      });
-    }
 
-    var fields = phantasus.MetadataUtil.getMetadataNames(dataset
-      .getColumnMetadata());
-    return [{
+      let html = [];
+      html.push('<div name="filter_message">');
+      html.push('Your dataset has been filtered, resulting in a partial view.');
+      html.push('<br/>To ensure consistency, consider removing any filters. Otherwise, the ' + this.toString() + ' tool will create a new dataset in a separate tab using the displayed data.');
+      html.push('<br/>Would you like to proceed with the current settings?');
+      html.push('</div>');
+      return [
+        {
+          name: "message",
+          type: "custom",
+          value: html.join('\n'),
+          showLabel: false
+        }
+      ];
+    };
+    var fields = phantasus.MetadataUtil.getMetadataNames(dataset.getColumnMetadata());
+    return [
+      { name:"versionTabs",
+        type: "nav-tabs",
+        options: ["One-factor design", "Advanced design"],
+        value: "One-factor design",
+        showLabel: false,
+      },
+      {
       name: "field",
       options: fields,
       type: "select",
       multiple: true
     }, {
       name: "class_a",
-      title: "Class A",
+      title: "Target level",
       options: [],
       value: "",
       type: "checkbox-list",
       multiple: true
     }, {
       name: "class_b",
-      title: "Class B",
+      title: "Reference level",
       options: [],
       value: "",
       type: "checkbox-list",
       multiple: true
+    },
+    {
+      name: "advText",
+      type: "custom",
+      value: '<div name="advText">Use column annotations to establish a design matrix and values for comparison.</div>',
+      showLabel:false
+    }
+    ,{
+      name: "byArea",
+      type: "select-list",
+      showLabel: false
+    },{
+      name: "add_data",
+      title: "add",
+      type: "button",
+      help: ""
+    },
+    { name: "showDesign",
+      title: "show design matrix",
+      type: "custom",
+      showLabel: false,
+      value: '<a name="showDesign" href="#">Show design matrix</a>'
+    },
+    {
+      name: "designMatrix",
+      type: "slick-table",
+      showLabel: false,
+      style: "width:100%;height:300px;"
+    },
+    {
+      name: "contrast_field",
+      title: "Factor of interest",
+      type: "select",
+      options: [],
+      multiple: false
+    },
+    {
+      name: "contrast_a",
+      title: "Target level",
+      type: "select",
+      options: [],
+      multiple: false
+    },
+    {
+      name: "contrast_b",
+      title: "Reference level",
+      type: "select",
+      options: [],
+      multiple: false
     }];
+  },
+  getSelectorHtml: function (selValue, fields) {
+    var html = [];
+    html.push('<div class="phantasus-entry col-xs-13">');
+    html.push('<div class="row"></div>')
+    html.push('<label class="col-xs-4 control-label">Factor</label>');
+    // field
+    html.push('<div class ="col-xs-8"><select style="max-width:150px;overflow-x:hidden; display: inline-block;margin-bottom: 5px; padding: 5px; line-height: normal; height: auto;" name="by" class="form-control input-sm">');
+    html.push('<option disabled selected value style="display: none">--select field--</option>');
+    _.each(fields, function (field) {
+      html.push('<option value="' + field + '"');
+      if (field === selValue) {
+        html.push(' selected');
+      }
+      html.push('>');
+      html.push(field);
+      html.push('</option>');
+    });
+    html.push('</select>');
+    html.push('&nbsp<button type="button" class="close" aria-label="Close" data-name="delete" style="float:none;"><span aria-hidden="true">×</span></button></div>');
+    
+    html.push('</div>'); // phantasus-entry
+    return html.join('');
+  },
+  reEvaluateAvailableOptions: function($container){
+    let selectElements = $container.find("[name=by]")
+    let selectedValues = [];
+    selectElements.each(function() {
+      let value = $(this).val();
+      value != null && selectedValues.push(value);
+    });
+    selectElements.each(function() {
+      let currentValue = $(this).val();
+      $(this).children('option')
+        .removeAttr("disabled")
+        .each(function() {
+          let value = this.value;
+          if (selectedValues.indexOf(value) >= 0 && currentValue != value) {
+            $(this).attr('disabled', "disabled");
+          }
+        });
+    });
+
+  },
+  updateContrastFieldOptions: function($contrast_field, $byContainer, $contrast_b, columnMeta){
+    let selectElements = $byContainer.find("[name=by]")
+    let selected_names = [];
+    let cur_contrast = $contrast_field.val();
+    selectElements.each(function() {
+      let value = $(this).val();
+      value != null && value != '' && selected_names.push(value);
+    });  
+    let existing_options = $contrast_field[0].options;
+    let remove_list = [];
+    for (let i = 0; i < existing_options.length; i++) {
+      const element = existing_options[i];
+      const fact_ind = selected_names.indexOf(element.value) 
+      if (fact_ind < 0 ){
+        remove_list.push(i);  
+      };
+      delete selected_names[fact_ind];
+    };
+    remove_list.forEach(function(x){
+      $contrast_field[0].remove(x);
+    });
+    selected_names.forEach(function(sel_name){
+      let factor_map =  phantasus.VectorUtil.createValuesToIndicesMap([columnMeta.getByName(sel_name)]);
+      if (sel_name && factor_map.n >= 2){
+        $contrast_field[0].add(new Option(sel_name, sel_name), undefined);
+      }
+    });
+    if (cur_contrast !== $contrast_field.val()){
+      $contrast_field.trigger("change");
+    } else {
+      $contrast_b.trigger("change");
+    }
+   
+  },
+  resetContrastAB: function($contrast_a, $contrast_b, field_value, columnMeta){
+    $contrast_a.empty();
+    $contrast_b.empty();
+    if (field_value){
+      let factor_map =  phantasus.VectorUtil.createValuesToIndicesMap([columnMeta.getByName(field_value)]);
+      factor_map.keys().forEach(function(key_value, ind){
+        $contrast_a[0].add(new Option(key_value, key_value), undefined);
+        $contrast_b[0].add(new Option(key_value, key_value), undefined);
+      });
+      $($contrast_b).children('option')[0].selected = "selected";
+      $($contrast_a).children('option')[1].selected = "selected";
+    }
+    $contrast_b.trigger("change");
+   
+
+  },
+  updateDesignGrid: function( grid, $selectListCont, columnMeta, curRef){
+    let selectElements = $selectListCont.find("[name=by]")
+    let selectedValues = [];
+    let factorNames = [];
+    let factorIndices = [];
+    selectElements.each(function() {
+      let value = $(this).val();
+      value != null && value != '' && selectedValues.push(value);
+    });
+    selectedValues.forEach(function(value,index) {
+      let factor_map =  phantasus.VectorUtil.createValuesToIndicesMap([columnMeta.getByName(value)]);
+      if (curRef[value]){
+        factor_map.remove(curRef[value]);
+      }else{
+        factor_map.remove(factor_map.keys()[0]);
+      }
+      factor_map.forEach(function(ind_list, key){
+        factorNames.push(value + "" + key);
+        factorIndices.push(ind_list);
+      });
+    });
+    
+    let id_column = undefined;
+    let id_values = [];
+    if (phantasus.MetadataUtil.indexOf(columnMeta, "geo_accession") !== -1 ){
+      id_values = columnMeta.getByName( "geo_accession").getArray();
+    };
+    if (id_values.length == 0){
+      for (let i = 1; i <= dataset.columns; i++) {
+        id_values.push(i);
+      };
+    };
+    id_column = "sample";
+    var columns = [ {
+      id: "id",
+      name: id_column,
+      field: "id",
+      width: 120,
+      cssClass: "design-grid"
+    }, {
+      id: "intercept",
+      name: "intercept",
+      field: "intercept",
+      width: 80,
+      cssClass: "design-grid factor"
+    }];
+    var data = [];
+    factorNames.forEach(function(fact_name){
+      columns.push({
+        id: fact_name,
+        name: fact_name,
+        field: fact_name,
+        width: 80,
+        cssClass: "design-grid factor"
+      });
+    });
+    for (let i = 0; i < columnMeta.itemCount; i++) {
+      data[i] = { 
+        id: id_values[i],
+        intercept:1
+        };
+      factorNames.forEach(function(fact_name){ data[i][fact_name] = 0}); 
+    };
+    factorNames.forEach(function(value,index){
+      factorIndices[index].forEach(function(sample){
+        data[sample][value]=1;
+      })
+    });
+    
+
+    grid.setData(data);
+    grid.setColumns(columns);
+    grid.invalidate();
+    grid.resizeCanvas();
   },
   execute: function (options) {
     var project = options.project;
-    var field = options.input.field;
-    var classA = options.input.class_a;
-    var classB = options.input.class_b;
+    var version = options.input.versionTabs;
+    if (!version){
+      let new_heatmap = (new phantasus.NewHeatMapTool()).execute({heatMap: options.heatMap, project: options.project});
+      new_heatmap.getActionManager().execute(this.toString());
+      return;
+    }
+
+    if (version === "One-factor design"){
+      var field = options.input.field;
+      var classA = options.input.class_a;
+      var classB = options.input.class_b;
+      var contrast = ["Comparison", "Target", "Reference"];
+      var designData = null;
+      var designFields = null;
+    } else {
+      var field = [options.input.contrast_field];
+      var classA = [{array: [options.input.contrast_a]}];
+      var classB = [{array: [options.input.contrast_b]}];
+      var contrast = [field, options.input.contrast_a, options.input.contrast_b]
+      var designData = options.input.designMatrix.getData();
+      var designFields = options.input.byArea;
+    }
+    
+
     var dataset = project.getFullDataset();
     var promise = $.Deferred();
 
@@ -16157,21 +16848,15 @@ phantasus.DESeqTool.prototype = {
         promise.reject();
         throw new Error(warning);
       }
-      v.setValue(i, columnInA ? "A" : (columnInB ? "B" : ""));
+      v.setValue(i, columnInA ? "Target" : (columnInB ? "Reference" : ""));
     }
 
     var vecArr = phantasus.VectorUtil.toArray(v);
     var count = _.countBy(vecArr);
-    if (count['A'] === 1 || count['B'] === 1) {
+    if (count['Target'] === 1 || count['Reference'] === 1) {
       promise.reject();
       throw new Error('Chosen classes have only single sample');
     }
-
-    project.trigger("trackChanged", {
-      vectors: [v],
-      display: ["color"],
-      columns: true
-    });
 
     var values = Array.apply(null, Array(project.getFullDataset().getColumnCount()))
       .map(String.prototype.valueOf, "");
@@ -16181,10 +16866,14 @@ phantasus.DESeqTool.prototype = {
     }
 
     dataset.getESSession().then(function (essession) {
-      var args = {
-        es: essession,
-        fieldValues: values
-      };
+        var args = {
+          es: essession,
+          fieldValues: values,
+          version: version,
+          contrast: contrast,
+          designFields: designFields,
+          designData: designData
+        };
 
       var req = ocpu.call("deseqAnalysis/print", args, function (session) {
         var r = new FileReader();
@@ -16215,10 +16904,14 @@ phantasus.DESeqTool.prototype = {
             });
 
             dataset.setESSession(Promise.resolve(session));
-            project.trigger("trackChanged", {
+            project.trigger("trackChanged", [{
               vectors: vs,
               display: []
-            });
+            }, {
+              vectors: [v],
+              display: ["color"],
+              columns: true
+            }]);
             promise.resolve();
           })
         };
@@ -17332,12 +18025,23 @@ phantasus.LimmaTool.prototype = {
     return "Limma";
   },
   init: function (project, form) {
+    let $filter_div = form.$form.find('[name=filter_message]');
+    if ($filter_div.length){
+      $filter_div[0].parentElement.classList.remove('col-xs-offset-4');
+      $filter_div[0].parentElement.classList.add('col-xs-offset-1');
+      $filter_div[0].parentElement.classList.remove('col-xs-8');
+      $filter_div[0].parentElement.classList.add('col-xs-10');
+      return;
+    }
+
     var _this = this;
+    var dataset = project.getFullDataset();
+    var columnMeta = dataset.getColumnMetadata();
+    let fields = phantasus.MetadataUtil.getMetadataNames(columnMeta);
     var updateAB = function (fieldNames) {
       var ids = [];
       if (fieldNames != null) {
-        var vectors = phantasus.MetadataUtil.getVectors(project
-          .getFullDataset().getColumnMetadata(), fieldNames);
+        var vectors = phantasus.MetadataUtil.getVectors(columnMeta, fieldNames);
         var idToIndices = phantasus.VectorUtil
           .createValuesToIndicesMap(vectors);
         idToIndices.forEach(function (indices, id) {
@@ -17349,53 +18053,509 @@ phantasus.LimmaTool.prototype = {
       form.setOptions("class_b", ids);
     };
     var $field = form.$form.find("[name=field]");
+    var $class_a = form.$form.find("[name=class_a]");
+    var $class_b = form.$form.find("[name=class_b]");
+    var $add_data = form.$form.find("[name=add_data]");
+    var $byArea = form.$form.find("[name=byArea]");
+    var $designMatrix = form.$form.find('[name=designMatrix]');
+    var $showDesign = form.$form.find("[name=showDesign]");
+    var $contrastField = form.$form.find("[name=contrast_field]");
+    var $contrastA = form.$form.find("[name=contrast_a]");
+    var $contrastB = form.$form.find("[name=contrast_b]");
+    var $advText = form.$form.find("[name=advText]");
     $field.on("change", function (e) {
       updateAB($(this).val());
     });
     if ($field[0].options.length > 0) {
       $field.val($field[0].options[0].value);
-    }
+    };
     updateAB($field.val());
+
+    $add_data.on('click',  function (e) {
+      let $this = $(this);
+      $byArea.append(_this.getSelectorHtml(null, fields));
+      _this.reEvaluateAvailableOptions($byArea);
+      checkParams();
+      e.preventDefault();
+    });
+    let data = [];
+    let columns = [];
+    var grid = new Slick.Grid($designMatrix[0] , data, columns, {
+      enableCellNavigation: true,
+      headerRowHeight: 0,
+      showHeaderRow: false,
+      multiColumnSort: false,
+      multiSelect: false,
+      enableColumnReorder: false,
+      enableTextSelectionOnCells: true,
+      forceFitColumns: false,
+      topPanelHeight: 20
+    });
+    form.$form.on('change', '[name=by]', function(e){
+      _this.reEvaluateAvailableOptions($byArea);
+      _this.updateContrastFieldOptions($contrastField, $byArea, $contrastB, columnMeta);
+      checkParams();
+
+    });
+    form.$form.on('click', '[data-name=delete]', function (e) {
+      var $this = $(this);
+      var $row = $this.closest('.phantasus-entry');
+      $row.remove();
+      _this.reEvaluateAvailableOptions($byArea);
+      checkParams();
+      _this.updateContrastFieldOptions($contrastField, $byArea, $contrastB, columnMeta);
+
+      e.preventDefault();
+    });
+    form.$form.on('click', '[name=showDesign]', function (e) {
+      var $this = $(this);
+      if ($designMatrix[0].hidden) {
+        $designMatrix.show();
+        $designMatrix[0].hidden = false;
+        $this.text("Hide design matrix");
+      } else {
+        $designMatrix.hide();
+        $designMatrix[0].hidden = true;
+        $this.text("Show design matrix");
+      };
+      e.preventDefault();
+    });
+
+    const isDesignValid = ($container) =>{
+      if (!$container[0].hasAttribute("disabled")){
+        let selectElements = $container.find("[name=by]");
+        if (selectElements.length >= fields.length){
+          $add_data.setAttribute("disabled", true);
+          $add_data.parent().find("[data-name=add_data_help]")[0].textContent = "Nothing to add.";
+        } else {
+          $add_data[0].disabled = false;
+          $add_data.parent().find("[data-name=add_data_help]")[0].textContent  = "";
+        };
+        if (selectElements.length < 1){
+          $designMatrix.closest(".form-group")[0].classList.add('has-error');
+          return false;
+        } else {
+          $designMatrix.closest(".form-group")[0].classList.remove('has-error');
+          return true;
+        }
+     }
+     return true;
+   }
+   const isContrastValid = ($field, $a, $b) => {
+    if ( $contrastField[0].hasAttribute("disabled") ){
+      return true;
+    }
+    if ($a.val() && $b.val() && $a.val() === $b.val()){
+        $a.closest(".form-group")[0].classList.add('has-error');
+        $b.closest(".form-group")[0].classList.add('has-error');
+        return false;
+    }
+    $a.closest(".form-group")[0].classList.remove('has-error');
+    $b.closest(".form-group")[0].classList.remove('has-error');
+    if ($contrastField.val()){
+      return true;
+    } else {
+      return false;
+    }
+   }
+   const checkParams = () =>{
+    if (isDesignValid($byArea) && isContrastValid($contrastField, $contrastA, $contrastB)) {
+      document.getElementsByName("ok")[0].disabled = false;
+    } else{
+      document.getElementsByName("ok")[0].disabled = "disabled";
+    }
+   };
+    const debounce = (fn, delay = 500) => {
+      let timeoutId;
+      return (...args) => {
+        // cancel the previous timer
+        if (timeoutId) {
+            clearTimeout(timeoutId);
+        }
+        // setup a new timer
+        timeoutId = setTimeout(() => {
+            fn.apply(null, args)
+        }, delay);
+      };
+    };
+    $contrastB.on("change", function(e){
+      let hidden = $designMatrix[0].hidden;
+      let curRef = {};
+      curRef[$contrastField.val()] =  this.value;
+      if (hidden){
+        $designMatrix.show();
+      }
+      _this.updateDesignGrid(grid, $byArea, columnMeta, curRef);
+      if (hidden){
+        $designMatrix.hide();
+      }
+    });
+    form.$form.on('input', debounce(function (e) {
+      checkParams();
+    }));
+    $contrastField.on("change", function(e){
+      let selected_val = this.value;
+      _this.resetContrastAB($contrastA, $contrastB, selected_val, columnMeta );
+    });
+    var hide_element = function($el){
+      $el.closest(".form-group").hide();
+      $el.each(function(){
+        this.setAttribute("disabled", true);
+      });
+    };
+    var show_element = function($el) {
+      $el.closest(".form-group").show();
+      $el.each(function(){
+        this.removeAttribute("disabled");
+      });
+    };
+
+    var hide_advanced = function(){
+      show_element($field);
+      show_element($class_a);
+      show_element($class_b)
+      hide_element($add_data);
+      hide_element($designMatrix);
+      hide_element($showDesign);
+      hide_element($byArea);
+      hide_element($contrastField);
+      hide_element($contrastA);
+      hide_element($contrastB);
+      hide_element($advText);
+    };
+    var hide_basic = function() {
+      hide_element($field);
+      hide_element($class_a);
+      hide_element($class_b)
+      show_element($add_data);
+      show_element($designMatrix);
+      show_element($showDesign);
+      show_element($byArea);
+      show_element($contrastA);
+      show_element($contrastB);
+      show_element($contrastField);
+      show_element($advText);
+    };
+    
+    var $versionChooser = form.$form.find("[name=versionTabs]");
+    var $versionTabs = $versionChooser.find('li');
+    $versionTabs.on('click', function (e) {
+      $versionTabs.toggleClass('active', false);
+      var target = $(e.currentTarget);
+      var mode = target.text();
+      target.toggleClass('active', true);
+      if (mode === 'Advanced design') {
+        hide_basic();
+        checkParams();
+      } else {
+        hide_advanced();
+        checkParams();
+      }
+      e.preventDefault();
+    });
+    hide_advanced();
+    this.updateDesignGrid(grid, $byArea, columnMeta, undefined);
+    $designMatrix[0].parentElement.classList.remove('col-xs-offset-4');
+    $designMatrix[0].parentElement.classList.add('col-xs-offset-1');
+    $designMatrix[0].parentElement.classList.remove('col-xs-8');
+    $designMatrix[0].parentElement.classList.add('col-xs-10');
+    $designMatrix[0].setAttribute("style","height:320px");
+    $($designMatrix[0]).data('SlickGrid', grid);
+    $designMatrix.hide();
+    $designMatrix[0].hidden = true; 
+    $versionChooser[0].parentElement.classList.remove('col-xs-offset-4');
+    $versionChooser[0].parentElement.classList.remove('col-xs-8');
+    $versionChooser[0].parentElement.classList.add('col-xs-12');
+
+    $byArea[0].parentElement.classList.remove('col-xs-offset-4');
+    $byArea[0].parentElement.classList.remove('col-xs-8');
+    $byArea[0].parentElement.classList.add('col-xs-13');
+    $advText[0].parentElement.classList.remove('col-xs-offset-4');
+    $advText[0].parentElement.classList.remove('col-xs-8');
+    $advText[0].parentElement.classList.add('col-xs-11');
+    $advText[0].parentElement.classList.add('col-xs-offset-1');
   },
   gui: function (project) {
     var dataset = project.getFullDataset();
 
     if (_.size(project.getRowFilter().enabledFilters) > 0 || _.size(project.getColumnFilter().enabledFilters) > 0) {
-      phantasus.FormBuilder.showInModal({
-        title: 'Warning',
-        html: 'Your dataset is filtered.<br/>' + this.toString() + ' will apply to unfiltered dataset. Consider using New Heat Map tool.',
-        z: 10000
-      });
-    }
 
-    var fields = phantasus.MetadataUtil.getMetadataNames(dataset
-      .getColumnMetadata());
-    return [{
+      let html = [];
+      html.push('<div name="filter_message">');
+      html.push('Your dataset has been filtered, resulting in a partial view.');
+      html.push('<br/>To ensure consistency, consider removing any filters. Otherwise, the ' + this.toString() + ' tool will create a new dataset in a separate tab using the displayed data.');
+      html.push('<br/>Would you like to proceed with the current settings?');
+      html.push('</div>');
+      return [
+        {
+          name: "message",
+          type: "custom",
+          value: html.join('\n'),
+          showLabel: false
+        }
+      ];
+    };
+    var fields = phantasus.MetadataUtil.getMetadataNames(dataset.getColumnMetadata());
+    return [
+      { name:"versionTabs",
+        type: "nav-tabs",
+        options: ["One-factor design", "Advanced design"],
+        value: "One-factor design",
+        showLabel: false,
+      },
+      {
       name: "field",
       options: fields,
       type: "select",
       multiple: true
     }, {
       name: "class_a",
-      title: "Class A",
+      title: "Target level",
       options: [],
       value: "",
       type: "checkbox-list",
       multiple: true
     }, {
       name: "class_b",
-      title: "Class B",
+      title: "Reference level",
       options: [],
       value: "",
       type: "checkbox-list",
       multiple: true
+    },
+    {
+      name: "advText",
+      type: "custom",
+      value: '<div name="advText">Use column annotations to establish a design matrix and values for comparison.</div>',
+      showLabel:false
+    },    
+    {
+      name: "byArea",
+      type: "select-list",
+      showLabel: false
+    },{
+      name: "add_data",
+      title: "add",
+      type: "button",
+      help: ""
+    },
+    { name: "showDesign",
+      title: "show design matrix",
+      type: "custom",
+      showLabel: false,
+      value: '<a name="showDesign" href="#">Show design matrix</a>'
+    },
+    {
+      name: "designMatrix",
+      type: "slick-table",
+      showLabel: false,
+      style: "width:100%;height:300px;"
+    },
+    {
+      name: "contrast_field",
+      title: "Factor of interest",
+      type: "select",
+      options: [],
+      multiple: false
+    },
+    {
+      name: "contrast_a",
+      title: "Target level",
+      type: "select",
+      options: [],
+      multiple: false
+    },
+    {
+      name: "contrast_b",
+      title: "Reference level",
+      type: "select",
+      options: [],
+      multiple: false
     }];
+  },
+  getSelectorHtml: function (selValue, fields) {
+    var html = [];
+    html.push('<div class="phantasus-entry col-xs-13">');
+    html.push('<div class="row"></div>')
+    html.push('<label class="col-xs-4 control-label">Factor</label>');
+    // field
+    html.push('<div class ="col-xs-8"><select style="max-width:150px;overflow-x:hidden; display: inline-block;margin-bottom: 5px; padding: 5px; line-height: normal; height: auto;" name="by" class="form-control input-sm">');
+    html.push('<option disabled selected value style="display: none">--select field--</option>');
+    _.each(fields, function (field) {
+      html.push('<option value="' + field + '"');
+      if (field === selValue) {
+        html.push(' selected');
+      }
+      html.push('>');
+      html.push(field);
+      html.push('</option>');
+    });
+    html.push('</select>');
+    html.push('&nbsp<button type="button" class="close" aria-label="Close" data-name="delete" style="float:none;"><span aria-hidden="true">×</span></button></div>');
+    
+    html.push('</div>'); // phantasus-entry
+    return html.join('');
+  },
+  reEvaluateAvailableOptions: function($container){
+    let selectElements = $container.find("[name=by]")
+    let selectedValues = [];
+    selectElements.each(function() {
+      let value = $(this).val();
+      value != null && selectedValues.push(value);
+    });
+    selectElements.each(function() {
+      let currentValue = $(this).val();
+      $(this).children('option')
+        .removeAttr("disabled")
+        .each(function() {
+          let value = this.value;
+          if (selectedValues.indexOf(value) >= 0 && currentValue != value) {
+            $(this).attr('disabled', "disabled");
+          }
+        });
+    });
+
+  },
+  updateContrastFieldOptions: function($contrast_field, $byContainer, $contrast_b, columnMeta){
+    let selectElements = $byContainer.find("[name=by]")
+    let selected_names = [];
+    let cur_contrast = $contrast_field.val();
+    selectElements.each(function() {
+      let value = $(this).val();
+      value != null && value != '' && selected_names.push(value);
+    });  
+    let existing_options = $contrast_field[0].options;
+    let remove_list = [];
+    for (let i = 0; i < existing_options.length; i++) {
+      const element = existing_options[i];
+      const fact_ind = selected_names.indexOf(element.value) 
+      if (fact_ind < 0 ){
+        remove_list.push(i);  
+      };
+      delete selected_names[fact_ind];
+    };
+    remove_list.forEach(function(x){
+      $contrast_field[0].remove(x);
+    });
+    selected_names.forEach(function(sel_name){
+      let factor_map =  phantasus.VectorUtil.createValuesToIndicesMap([columnMeta.getByName(sel_name)]);
+      if (sel_name && factor_map.n >= 2){
+        $contrast_field[0].add(new Option(sel_name, sel_name), undefined);
+      }
+    });
+    if (cur_contrast !== $contrast_field.val()){
+      $contrast_field.trigger("change");
+    } else {
+      $contrast_b.trigger("change");
+    }
+   
+  },
+  resetContrastAB: function($contrast_a, $contrast_b, field_value, columnMeta){
+    $contrast_a.empty();
+    $contrast_b.empty();
+    if (field_value){
+      let factor_map =  phantasus.VectorUtil.createValuesToIndicesMap([columnMeta.getByName(field_value)]);
+      factor_map.keys().forEach(function(key_value, ind){
+        $contrast_a[0].add(new Option(key_value, key_value), undefined);
+        $contrast_b[0].add(new Option(key_value, key_value), undefined);
+      });
+      $($contrast_b).children('option')[0].selected = "selected";
+      $($contrast_a).children('option')[1].selected = "selected";
+    }
+    $contrast_b.trigger("change");
+   
+
+  },
+  updateDesignGrid: function( grid, $selectListCont, columnMeta, curRef){
+    let selectElements = $selectListCont.find("[name=by]")
+    let selectedValues = [];
+    let factorNames = [];
+    let factorIndices = [];
+    selectElements.each(function() {
+      let value = $(this).val();
+      value != null && value != '' && selectedValues.push(value);
+    });
+    selectedValues.forEach(function(value,index) {
+      let factor_map =  phantasus.VectorUtil.createValuesToIndicesMap([columnMeta.getByName(value)]);
+      if (index !== 0){
+        factor_map.remove(factor_map.keys()[0]);
+      };
+      factor_map.forEach(function(ind_list, key){
+        factorNames.push(value + "" + key);
+        factorIndices.push(ind_list);
+      });
+    });
+    
+    let id_column = undefined;
+    let id_values = [];
+    if (phantasus.MetadataUtil.indexOf(columnMeta, "geo_accession") !== -1 ){
+      id_values = columnMeta.getByName( "geo_accession").getArray();
+    };
+    if (id_values.length == 0){
+      for (let i = 1; i <= dataset.columns; i++) {
+        id_values.push(i);
+      };
+    };
+    id_column = "sample";
+    var columns = [ {
+      id: "id",
+      name: id_column,
+      field: "id",
+      width: 120,
+      cssClass: "design-grid"
+    }];
+    var data = [];
+    factorNames.forEach(function(fact_name){
+      columns.push({
+        id: fact_name,
+        name: fact_name,
+        field: fact_name,
+        width: 80,
+        cssClass: "design-grid factor"
+      });
+    });
+    for (let i = 0; i < columnMeta.itemCount; i++) {
+      data[i] = { 
+        id: id_values[i]
+        };
+      factorNames.forEach(function(fact_name){ data[i][fact_name] = 0}); 
+    };
+    factorNames.forEach(function(value,index){
+      factorIndices[index].forEach(function(sample){
+        data[sample][value]=1;
+      })
+    });
+    
+
+    grid.setData(data);
+    grid.setColumns(columns);
+    grid.invalidate();
+    grid.resizeCanvas();
   },
   execute: function (options) {
     var project = options.project;
-    var field = options.input.field;
-    var classA = options.input.class_a;
-    var classB = options.input.class_b;
+    var version = options.input.versionTabs;
+    if (!version){
+      let new_heatmap = (new phantasus.NewHeatMapTool()).execute({heatMap: options.heatMap, project: options.project});
+      new_heatmap.getActionManager().execute(this.toString());
+      return;
+    }
+
+    if (version === "One-factor design"){
+      var field = options.input.field;
+      var classA = options.input.class_a;
+      var classB = options.input.class_b;
+      var contrast = ["Comparison", "Reference", "Target"];
+      var designData = null;
+    } else {
+      var field = [options.input.contrast_field];
+      var classA = [{array: [options.input.contrast_a]}];
+      var classB = [{array: [options.input.contrast_b]}];
+      var contrast = [field, options.input.contrast_a, options.input.contrast_b]
+      var designData = options.input.designMatrix.getData();
+    }
+    
+
     var dataset = project.getFullDataset();
     var promise = $.Deferred();
 
@@ -17430,16 +18590,18 @@ phantasus.LimmaTool.prototype = {
       var columnInB = checkCortege(vs, classB, i);
       if (columnInA && columnInB) {
         var warning = "Chosen classes have intersection in column " + i;
+        promise.reject();
         throw new Error(warning);
       }
-      v.setValue(i, columnInA ? "A" : (columnInB ? "B" : ""));
+      v.setValue(i, columnInA ? "Target" : (columnInB ? "Reference" : ""));
     }
 
-    project.trigger("trackChanged", {
-      vectors: [v],
-      display: ["color"],
-      columns: true
-    });
+    var vecArr = phantasus.VectorUtil.toArray(v);
+    var count = _.countBy(vecArr);
+    if (count['Target'] === 1 || count['Reference'] === 1) {
+      promise.reject();
+      throw new Error('Chosen classes have only single sample');
+    }
 
     var values = Array.apply(null, Array(project.getFullDataset().getColumnCount()))
       .map(String.prototype.valueOf, "");
@@ -17449,10 +18611,13 @@ phantasus.LimmaTool.prototype = {
     }
 
     dataset.getESSession().then(function (essession) {
-      var args = {
-        es: essession,
-        fieldValues: values
-      };
+        var args = {
+          es: essession,
+          fieldValues: values,
+          version: version,
+          contrast: contrast,
+          designData: designData
+        };
 
       var req = ocpu.call("limmaAnalysis/print", args, function (session) {
         var r = new FileReader();
@@ -17481,12 +18646,16 @@ phantasus.LimmaTool.prototype = {
               }
 
             });
-            // alert("Limma finished successfully");
+
             dataset.setESSession(Promise.resolve(session));
-            project.trigger("trackChanged", {
+            project.trigger("trackChanged", [{
               vectors: vs,
               display: []
-            });
+            }, {
+              vectors: [v],
+              display: ["color"],
+              columns: true
+            }]);
             promise.resolve();
           })
         };
@@ -17611,7 +18780,7 @@ phantasus.MarkerSelection.prototype = {
       },
       {
         name: 'class_a',
-        title: 'Class A',
+        title: 'Target level',
         options: [],
         value: '',
         type: 'checkbox-list',
@@ -17619,7 +18788,7 @@ phantasus.MarkerSelection.prototype = {
       },
       {
         name: 'class_b',
-        title: 'Class B',
+        title: 'Reference level',
         options: [],
         value: '',
         type: 'checkbox-list',
@@ -17644,14 +18813,14 @@ phantasus.MarkerSelection.prototype = {
     var classA = options.input.class_a;
     var classB = options.input.class_b;
     if (classA.length === 0 && classB.length === 0) {
-      throw 'No samples in class A and class B';
+      throw 'No samples were selected as reference and target levels';
     }
 
     if (classA.length === 0) {
-      throw 'No samples in class A';
+      throw 'No samples in target level';
     }
     if (classB.length === 0) {
-      throw 'No samples in class B';
+      throw 'No samples reference level';
     }
     for (var i = 0; i < classA.length; i++) {
       var val = classA[i];
@@ -17705,7 +18874,7 @@ phantasus.MarkerSelection.prototype = {
     }
     for (var i = 0; i < bIndices.length; i++) {
       if (classASet[bIndices[i]]) {
-        throw 'The sample was found in class A and class B';
+        throw 'The sample was found in the reference level group and the target level group.';
       }
     }
     var isFishy = f.toString() === phantasus.FisherExact.toString();
@@ -17739,10 +18908,10 @@ phantasus.MarkerSelection.prototype = {
     var comparisonVector = dataset.getColumnMetadata().add('Comparison');
 
     for (var i = 0; i < aIndices.length; i++) {
-      comparisonVector.setValue(aIndices[i], 'A');
+      comparisonVector.setValue(aIndices[i], 'Target');
     }
     for (var i = 0; i < bIndices.length; i++) {
-      comparisonVector.setValue(bIndices[i], 'B');
+      comparisonVector.setValue(bIndices[i], 'Reference');
     }
 
     function done(result) {
@@ -18225,6 +19394,7 @@ phantasus.NewHeatMapTool.prototype = {
       parent: heatMap,
       symmetric: project.isSymmetric() && dataset.getColumnCount() === dataset.getRowCount()
     });
+    return(heatmap);
   }
 };
 
@@ -19987,6 +21157,217 @@ phantasus.SimilarityMatrixTool.prototype = {
   }
 };
 
+phantasus.tmmNormalizationTool = function () {
+};
+phantasus.tmmNormalizationTool.prototype = {
+  toString: function () {
+    return "TMM: Trimmed Mean of M-values";
+  },
+  init: function (project, form) {
+    let $filter_div = form.$form.find('[name=filter_message]');
+    if ($filter_div.length){
+      $filter_div[0].parentElement.classList.remove('col-xs-offset-4');
+      $filter_div[0].parentElement.classList.add('col-xs-offset-1');
+      $filter_div[0].parentElement.classList.remove('col-xs-8');
+      $filter_div[0].parentElement.classList.add('col-xs-10');
+      return;
+    }
+    var $field = form.$form.find("[name=reference_variable]");
+    if ($field[0].options.length > 0) {
+      $field.val($field[0].options[0].value);
+    }
+    $field.on('change', function (e) {
+        const val = $(this).val();
+        if (val !== 'None'){
+            let dataset = project
+            .getFullDataset();
+            const vector =  dataset.getColumnMetadata().getByName(val).array;
+            if (vector.length < dataset.columns){
+                    phantasus.FormBuilder.showInModal({
+                      title: 'Warning',
+                      html: 'Selected variable contains empty strings. Trimmed Mean of M-values normalization will assign the same group to the samples with such values.',
+                      z: 10000
+                    });
+            };
+        }
+      });
+    const debounce = (fn, delay = 500) => {
+        let timeoutId;
+        return (...args) => {
+            // cancel the previous timer
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+            // setup a new timer
+            timeoutId = setTimeout(() => {
+                fn.apply(null, args)
+            }, delay);
+        };
+    };
+    var $logratioTrim = form.$form.find("[name=logratioTrim]");
+    var $sumTrim = form.$form.find("[name=sumTrim]");
+    const checkParam = (cur_element) =>{
+        const val = cur_element.val();
+        if (val === "" || val <0 || val > 0.5){
+            cur_element.parent().parent()[0].classList.add('has-error');
+            document.getElementsByName("ok")[0].disabled = "disabled";
+        } else {
+            cur_element.parent().parent()[0].classList.remove('has-error');
+            document.getElementsByName("ok")[0].disabled = false;
+        }
+    }
+    form.$form.on('input', debounce(function (e) {
+        switch (e.target.name) {
+            case 'logratioTrim':
+                checkParam($logratioTrim);
+                break;
+            case 'sumTrim':
+                checkParam($sumTrim);
+                break;
+        };
+    }));
+
+
+  },
+  gui: function (project) {
+    var dataset = project.getFullDataset();
+    if (_.size(project.getRowFilter().enabledFilters) > 0 || _.size(project.getColumnFilter().enabledFilters) > 0) {
+
+      let html = [];
+      html.push('<div name="filter_message">');
+      html.push('Your dataset has been filtered, resulting in a partial view.');
+      html.push('<br/>To ensure consistency, consider removing any filters. Otherwise, the TMM tool will create a new heatmap in a separate tab using displayed data.');
+      html.push('<br/>Would you like to proceed with the current settings?');
+      html.push('</div>');
+      return [
+        {
+          name: "message",
+          type: "custom",
+          value: html.join('\n'),
+          showLabel: false
+        }
+      ];
+    };
+    var fields = phantasus.MetadataUtil.getMetadataNames(dataset
+      .getColumnMetadata());
+    fields.unshift("None")
+    return [{
+            name: "reference_variable",
+            options: fields,
+            type: "select",
+            multiple: false,
+            help: ''
+            }, {
+            name: "logratioTrim",
+            min: 0,
+            max: 0.5,
+            step:0.01,
+            value: 0.3,
+            type: 'number',
+            help: 'The fraction (0 to 0.5) of observations to be trimmed from each tail of the distribution of log-ratios (M-values) before computing the mean.'
+            }, {
+            name: "sumTrim",
+            type: "number",
+            value: 0.05,
+            min: 0,
+            max: 0.5,
+            step:0.01,
+            help: 'The fraction (0 to 0.5) of observations to be trimmed from each tail of the distribution of A-values before computing the mean.'
+            }];
+  },
+  execute: function (options) {
+
+    if (!options.input.logratioTrim){
+      let new_heatmap = (new phantasus.NewHeatMapTool()).execute({heatMap: options.heatMap, project: options.project});
+      new_heatmap.getActionManager().execute(this.toString());
+      return;
+    }
+    var d = $.Deferred();
+    let project = options.project;
+    let field = options.input.reference_variable;
+    let logratioTrim = options.input.logratioTrim;
+    let sumTrim = options.input.sumTrim;
+    let heatMap = options.heatMap;
+
+    // console.log(dataset);
+    let oldDataset = project.getSortedFilteredDataset();
+    var sortedFilteredDataset = phantasus.DatasetUtil.copy(oldDataset);
+    var dataset = sortedFilteredDataset;
+    var currentSessionPromise = dataset.getESSession();
+    dataset.setESSession(new Promise(function (resolve, reject) {
+        if (currentSessionPromise){
+            currentSessionPromise.then(function (essession) {
+                var args = {
+                    es: essession,
+                    fieldName: field,
+                    logratioTrim: logratioTrim,
+                    sumTrim: sumTrim 
+                  };
+                
+
+                  var req = ocpu.call("tmmNormalization/print", args, function (newSession) {
+                    let r = new FileReader();
+                    let filePath = phantasus.Util.getFilePath(newSession, JSON.parse(newSession.txt)[0]);
+                    r.onload = function (e) {
+                        let contents = e.target.result;
+                        protobuf.load("./message.proto", function (error, root) {
+                          if (error) {
+                            alert(error);
+                          }
+                          let REXP = root.lookupType("REXP");
+                          let rclass = REXP.RClass;
+                          let res = REXP.decode(new Uint8Array(contents));
+                          let jsondata = phantasus.Util.getRexpData(res, rclass);
+    
+                          let  flatData = jsondata.data.values;
+                          let nrowData = jsondata.data.dim[0];
+                          var ncolData = jsondata.data.dim[1];
+                          let metaNames = jsondata.colMetaNames.values;
+                          
+    
+                          for (let i = 0; i < nrowData; i++) {
+                            for (let j = 0; j < ncolData; j++) {
+                              dataset.setValue(i,j,flatData[i + j * nrowData]);
+                            }
+                          }
+    
+                          // alert("Limma finished successfully");
+                          resolve(newSession);
+                          d.resolve(dataset);
+                          
+                        });
+                      };
+                      phantasus.BlobFromPath.getFileObject(filePath, function (file) {
+                        r.readAsArrayBuffer(file);
+                      });
+                  }, false, "::es");
+                req.fail(function () {
+                    reject();
+                    d.reject();
+                    throw new Error("Trimmed Mean of M-values normalization failed dataset failed. See console");
+                  });
+
+            });
+        }
+        
+
+  
+
+    }));
+    
+    d.done(function (newDataset) {
+        new phantasus.HeatMap({
+            name: heatMap.getName(),
+            dataset: newDataset,
+            parent: heatMap,
+            inheritFromParent: false,
+            symmetric: false
+        }); 
+    })
+    return d;
+  }
+};
+
 phantasus.TransposeTool = function () {
 };
 phantasus.TransposeTool.prototype = {
@@ -20799,6 +22180,390 @@ phantasus.volcanoTool.newPlot = function(myPlot, traces, layout, config) {
 
 phantasus.volcanoTool.react = function(myPlot, traces, layout, config) {
   return Plotly.react(myPlot, traces, layout, config);
+};
+
+phantasus.voomNormalizationTool = function () {
+};
+
+
+
+
+phantasus.voomNormalizationTool.prototype = {
+  toString: function () {
+    return "Voom: Mean-variance modelling at the observational level";
+  },
+  init: function (project, form) {
+    let $filter_div = form.$form.find('[name=filter_message]');
+    if ($filter_div.length){
+      $filter_div[0].parentElement.classList.remove('col-xs-offset-4');
+      $filter_div[0].parentElement.classList.add('col-xs-offset-1');
+      $filter_div[0].parentElement.classList.remove('col-xs-8');
+      $filter_div[0].parentElement.classList.add('col-xs-10');
+      return;
+    }
+
+    var _this = this;
+    var dataset = project.getFullDataset();
+    var $add_data = form.$form.find("[name=add_data]");
+    var $byArea = form.$form.find("[name=byArea]");
+    var $designMatrix = form.$form.find('.slick-table')[0];
+    var $showDesign = form.$form.find("[name=showDesign]");
+    var columnMeta = dataset.getColumnMetadata();
+    let fields = phantasus.MetadataUtil.getMetadataNames(columnMeta);
+    let geo = fields.indexOf("geo_accession");
+    if (geo > 0){
+      fields.splice(geo,1);
+    }
+    form.$form.prepend('<div class="form-group"><div class="col-xs-10 col-xs-offset-1">Use column annotations to modify design matrix. By default all samples are treated as replicates.</div></div>');   
+    form.$form.prepend("");
+    const checkDesignLength = ($container) =>{
+      let selectElements = $container.find("[name=add_databy]");
+      if (selectElements.length >= fields.length){
+        $add_data[0].disabled = "disabled";
+        $add_data.parent().find("[data-name=add_data_help]")[0].textContent = "Nothing to add.";
+      } else {
+        $add_data[0].disabled = false;
+        $add_data.parent().find("[data-name=add_data_help]")[0].textContent  = "";
+      }
+    };
+    checkDesignLength($byArea);
+    $add_data.on('click',  function (e) {
+      let $this = $(this);
+      $byArea.append(_this.getSelectorHtml(null, fields));
+      _this.reEvaluateAvailableOptions($byArea);
+      checkDesignLength($byArea);
+      e.preventDefault();
+    });
+    let data = [];
+    let columns = [];
+    var grid = new Slick.Grid($designMatrix , data, columns, {
+      enableCellNavigation: true,
+      headerRowHeight: 0,
+      showHeaderRow: false,
+      multiColumnSort: false,
+      multiSelect: false,
+      enableColumnReorder: false,
+      enableTextSelectionOnCells: true,
+      forceFitColumns: false,
+      topPanelHeight: 20
+    });
+
+
+
+    this.updateDesignGrid(grid, $byArea, columnMeta);
+    form.$form.on('change', '[name=by]',function(e){
+      _this.reEvaluateAvailableOptions($byArea);
+      _this.updateDesignGrid(grid, $byArea, columnMeta);
+
+    });
+    form.$form.on('click', '[data-name=delete]', function (e) {
+      var $this = $(this);
+      var $row = $this.closest('.phantasus-entry');
+      $row.remove();
+      _this.reEvaluateAvailableOptions($byArea);
+      checkDesignLength($byArea);
+      _this.updateDesignGrid(grid, $byArea, columnMeta);
+      e.preventDefault();
+    });
+    let $filter_exp = form.$form.find("[name=filterByExp]")[0].closest(".checkbox");
+
+    $filter_exp.parentElement.classList.remove('col-xs-offset-4');
+    $filter_exp.parentElement.classList.add('col-xs-offset-1');
+    $filter_exp.parentElement.classList.remove('col-xs-8');
+    $filter_exp.parentElement.classList.add('col-xs-10');
+
+
+    $byArea[0].parentElement.classList.remove('col-xs-offset-4');
+    $byArea[0].parentElement.classList.remove('col-xs-8');
+    $byArea[0].parentElement.classList.add('col-xs-13');
+
+
+    $designMatrix.parentElement.classList.remove('col-xs-offset-4');
+    $designMatrix.parentElement.classList.add('col-xs-offset-1');
+    $designMatrix.parentElement.classList.remove('col-xs-8');
+    $designMatrix.parentElement.classList.add('col-xs-10');
+    $designMatrix.setAttribute("style","height:320px");
+    $($designMatrix).data('SlickGrid', grid);
+    $($designMatrix).hide();
+    $designMatrix.hiden = true;
+    form.$form.on('click', '[data-name=showDesignLink]', function (e) {
+      var $this = $(this);
+      if ($designMatrix.hiden) {
+        $($designMatrix).show();
+        $designMatrix.hiden = false;
+        $this.text("Hide design matrix");
+      } else{
+        $($designMatrix).hide();
+        $designMatrix.hiden = true;
+        $this.text("Show design matrix");
+      }
+  ;
+      e.preventDefault();
+    });
+
+  },
+  gui: function (project) {
+  
+
+    if (_.size(project.getRowFilter().enabledFilters) > 0 || _.size(project.getColumnFilter().enabledFilters) > 0) {
+
+      let html = [];
+      html.push('<div name="filter_message">');
+      html.push('Your dataset has been filtered, resulting in a partial view.');
+      html.push('<br/>To ensure consistency, consider removing any filters. Otherwise, the voom tool will create a new heatmap in a separate tab using displayed data.');
+      html.push('<br/>Would you like to proceed with the current settings?');
+      html.push('</div>');
+      
+      return [
+        {
+          name: "message",
+          type: "custom",
+          value: html.join('\n'),
+          showLabel: false
+        }
+      ];
+    };
+    return [ 
+      {
+        name: "byArea",
+        type: "select-list",
+        showLabel: false
+      },
+      {
+        name: "add_data",
+        title: "add",
+        type: "button",
+        help: ""
+      },
+      { name: "showDesign",
+        title: "show design matrix",
+        type: "custom",
+        showLabel: false,
+        value: '<a data-name="showDesignLink" href="#">Show design matrix</a>'
+      },
+      {
+        name: "designMatrix",
+        type: "slick-table",
+        showLabel: false,
+        style: "width:100%;height:300px;"
+      },
+      {
+        name: "filterByExp",
+        title: "Automatically filter out lowly expressed genes",
+        type: "checkbox"
+      }
+    ];
+  },
+  getSelectorHtml: function (selValue, fields) {
+    var html = [];
+    html.push('<div class="phantasus-entry col-xs-13">');
+    html.push('<div class="row"></div>')
+    html.push('<label class="col-xs-4 control-label">Factor</label>');
+    // field
+    html.push('<div class ="col-xs-8"><select style="max-width:150px;overflow-x:hidden; display: inline-block;margin-bottom: 5px; padding: 5px; line-height: normal; height: auto;" name="by" class="form-control input-sm">');
+    html.push('<option disabled selected value style="display: none">--select field--</option>');
+    _.each(fields, function (field) {
+      html.push('<option value="' + field + '"');
+      if (field === selValue) {
+        html.push(' selected');
+      }
+      html.push('>');
+      html.push(field);
+      html.push('</option>');
+    });
+    html.push('</select>');
+    html.push('&nbsp<button type="button" class="close" aria-label="Close" data-name="delete" style="float:none;"><span aria-hidden="true">×</span></button></div>');
+    
+    html.push('</div>'); // phantasus-entry
+    return html.join('');
+  },
+  reEvaluateAvailableOptions: function($container){
+    let selectElements = $container.find("[name=by]")
+    let selectedValues = [];
+    selectElements.each(function() {
+      let value = $(this).val();
+      value != null && selectedValues.push(value);
+    });
+    selectElements.each(function() {
+      let currentValue = $(this).val();
+      $(this).children('option')
+        .removeAttr("disabled")
+        .each(function() {
+          let value = this.value;
+          if (selectedValues.indexOf(value) >= 0 && currentValue != value) {
+            $(this).attr('disabled', "disabled");
+          }
+        });
+    });
+
+  },
+  updateDesignGrid: function( grid, $selectListCont, columnMeta){
+    let selectElements = $selectListCont.find("[name=by]")
+    let selectedValues = [];
+    let factorNames = [];
+    let factorIndices = [];
+    selectElements.each(function() {
+      let value = $(this).val();
+      value != null && value != '' && selectedValues.push(value);
+    });
+    selectedValues.forEach(function(value,index) {
+      let factor_map =  phantasus.VectorUtil.createValuesToIndicesMap([columnMeta.getByName(value)]);
+      if (index !== 0){
+        factor_map.remove(factor_map.keys()[0]);
+      };
+      factor_map.forEach(function(ind_list, key){
+        factorNames.push(value + "" +key);
+        factorIndices.push(ind_list);
+      });
+    });
+    let id_column = undefined;
+    let id_values = [];
+    if (phantasus.MetadataUtil.indexOf(columnMeta, "geo_accession") !== -1 ){
+      id_values = columnMeta.getByName( "geo_accession").getArray();
+    };
+    if (id_values.length == 0){
+      for (let i = 1; i <= dataset.columns; i++) {
+        id_values.push(i);
+      };
+    };
+    id_column = "sample";
+    var columns = [ {
+      id: "id",
+      name: id_column,
+      field: "id",
+      width: 120,
+      cssClass: "design-grid"
+    }];
+    var data = [];
+    if (factorNames.length === 0){
+      columns.push({
+        id: "intercept",
+        name: "intercept",
+        field: "intercept",
+        width: 80,
+        cssClass: "design-grid factor"
+      });
+      for (let i = 0; i < columnMeta.itemCount; i++) {
+        data[i] = {
+          id: id_values[i],
+          intercept:1
+        };
+      };
+    } else {
+      factorNames.forEach(function(fact_name){
+        columns.push({
+          id: fact_name,
+          name: fact_name,
+          field: fact_name,
+          width: 80,
+          cssClass: "design-grid factor"
+        });
+      });
+      for (let i = 0; i < columnMeta.itemCount; i++) {
+        data[i] = { id: id_values[i]};
+        factorNames.forEach(function(fact_name){ data[i][fact_name] = 0}); 
+      };
+      factorNames.forEach(function(value,index){
+        factorIndices[index].forEach(function(sample){
+          data[sample][value]=1;
+        })
+      });
+     
+
+    }
+    grid.setData(data);
+    grid.setColumns(columns);
+    grid.resizeCanvas();
+    grid.invalidate();
+
+  },
+  execute: function (options) {
+
+    if (!options.input.designMatrix){
+      let new_heatmap = (new phantasus.NewHeatMapTool()).execute({heatMap: options.heatMap, project: options.project});
+      new_heatmap.getActionManager().execute(this.toString());
+      return;
+    }
+
+    var d = $.Deferred();
+    let project = options.project;
+    let selectedFields = options.input.byArea;
+    let designData = options.input.designMatrix.getData();
+    let heatMap = options.heatMap;
+
+    // console.log(dataset);
+    let oldDataset = project.getSortedFilteredDataset();
+    var dataset = phantasus.DatasetUtil.copy(oldDataset);
+    var currentSessionPromise = dataset.getESSession();
+    dataset.setESSession(new Promise(function (resolve, reject) {
+        if (currentSessionPromise){
+            currentSessionPromise.then(function (essession) {
+                var args = {
+                    es: essession,
+                    designData: designData,
+                  };
+                if (options.input.filterByExp){
+                  args.filterByExp = options.input.filterByExp
+                }  
+                var req = ocpu.call("voomNormalization/print", args, function (newSession) {
+                    let r = new FileReader();
+                    let filePath = phantasus.Util.getFilePath(newSession, JSON.parse(newSession.txt)[0]);
+                    r.onload = function (e) {
+                        let contents = e.target.result;
+                        protobuf.load("./message.proto", function (error, root) {
+                          if (error) {
+                            alert(error);
+                          }
+                          let REXP = root.lookupType("REXP");
+                          let rclass = REXP.RClass;
+                          let res = REXP.decode(new Uint8Array(contents));
+                          let jsondata = phantasus.Util.getRexpData(res, rclass);
+    
+                          let  flatData = jsondata.data.values;
+                          let nrowData = jsondata.data.dim[0];
+                          var ncolData = jsondata.data.dim[1];
+                          let keepIndexes = jsondata.keep.values;
+                          if (nrowData < dataset.getRowCount()){
+                            dataset = new phantasus.SlicedDatasetView(dataset, keepIndexes);
+                          }
+                          for (let i = 0; i < nrowData; i++) {
+                            for (let j = 0; j < ncolData; j++) {
+                              dataset.setValue(i,j,flatData[i + j * nrowData]);
+                            }
+                          }
+                          resolve(newSession);
+                          d.resolve(dataset);
+                          
+                        });
+                      };
+                      phantasus.BlobFromPath.getFileObject(filePath, function (file) {
+                        r.readAsArrayBuffer(file);
+                      });
+                }, false, "::es");
+                req.fail(function () {
+                    d.reject();
+                    throw (new Error("Voom normalization failed." + _.first(req.responseText.split('\n'))));
+                  });
+
+            });
+        }
+        
+
+  
+
+    }));
+    
+    d.done(function (newDataset) {
+        new phantasus.HeatMap({
+            name: heatMap.getName(),
+            dataset: newDataset,
+            parent: heatMap,
+            inheritFromParent: false,
+            symmetric: false
+        }); 
+    })
+    return d;
+  }
 };
 
 phantasus.aboutDataset = function (options) {
@@ -22393,11 +24158,17 @@ phantasus.ActionManager = function () {
       'From file', 'From database']
   });
 
+  this.add ({
+    name: 'Advanced normalization',
+    children: [
+      phantasus.tmmNormalizationTool.prototype.toString(),
+      phantasus.voomNormalizationTool.prototype.toString()]
+  });
   this.add({
     name: 'Differential expression',
     children: [
       'Limma',
-      'DESeq2 (experimental)',
+      'DESeq2',
       'Marker Selection'],
     icon: 'fa fa-list'
   });
@@ -23249,7 +25020,7 @@ phantasus.ActionManager = function () {
     new phantasus.NearestNeighbors(), new phantasus.AdjustDataTool(),
     new phantasus.CollapseDatasetTool(), new phantasus.CreateAnnotation(), new phantasus.SimilarityMatrixTool(),
     new phantasus.TransposeTool(), new phantasus.TsneTool(),
-    new phantasus.KmeansTool(), new phantasus.LimmaTool(), new phantasus.DESeqTool()].forEach(function (tool) {
+    new phantasus.KmeansTool(), new phantasus.LimmaTool(), new phantasus.DESeqTool(), new phantasus.tmmNormalizationTool(), new phantasus.voomNormalizationTool()].forEach(function (tool) {
     _this.add({
       ellipsis: false,
       name: tool.toString(),
@@ -26502,6 +28273,26 @@ phantasus.FormBuilder.getValue = function ($element) {
 
     return result;
   }
+  if($element.data('type') === 'select-list'){
+    var result = [];
+    $element.find('select').each(function (a, select) {
+      var $select = $(select);
+
+      if ($select.val()) {
+        result.push($select.val());
+      }
+    });
+    return result;
+  }
+  if ($element.data('type') === "nav-tab"){
+    let sel_tab = $element.find('.active a');
+    return sel_tab.text();
+  }
+  if($element.data('type') === 'slick-table'){
+ 
+    var result = $($element).data('SlickGrid');
+    return result;
+  }
   return $element.attr('type') === 'checkbox' ? $element.prop('checked') : $element.val();
 };
 
@@ -26670,6 +28461,21 @@ phantasus.FormBuilder.prototype = {
       html.push('</label></div>');
     } else if ('checkbox-list' === type) {
       html.push('<div name="' + name + '" class="checkbox-list"><div>');
+    }  else if ('select-list' === type){
+      html.push('<div name="' + name + '" class="select-list"  data-type="select-list"><div>');
+    } else if ('slick-table' === type){
+      html.push('<div name="' + name + '" class="slick-table"  data-type="slick-table" style="' + style + '" ><div>');
+    } else if ('nav-tabs' === type){
+      html.push('<ul class="nav nav-tabs" name="' + name + '" data-type="nav-tab">');
+      _.each(field.options, function (tab) {
+        if (tab == value){
+          html.push('<li class="active">');
+        } else {
+          html.push('<li>');
+        }
+        html.push('<a>' + tab + '</a></li>');
+      });
+      html.push("</ul>");
     } else if ('triple-select' === type) {
       html.push('<h5 style="margin-top: 5px; margin-bottom: 5px;">' + name + ':</h5>');
       html.push('<select style="' + field.comboboxStyle + '" name="' + field.firstName + '" id="' + id
@@ -27157,7 +28963,12 @@ phantasus.FormBuilder.prototype = {
     if ($v.length === 0) {
       $v = this.$form.find('[data-name=' + name + ']');
     }
-    return phantasus.FormBuilder.getValue($v);
+    if ($v.length >0 && !$v[0].hasAttribute("disabled")){
+      return phantasus.FormBuilder.getValue($v);
+    } else {
+      return undefined;
+    }
+    
   },
   setOptions: function (name, options, selectFirst) {
     var $select = this.$form.find('[name=' + name + ']');
@@ -32906,6 +34717,7 @@ phantasus.HeatMap = function (options) {
           'Annotate',
           'Create Calculated Annotation',
           'Adjust',
+          'Advanced normalization',
           'Collapse',
           'Similarity Matrix',
           'Transpose',
@@ -33376,7 +35188,11 @@ phantasus.HeatMap.showTool = function (tool, heatMap, callback) {
       });
       var input = {};
       _.each(gui, function (item) {
-        input[item.name] = formBuilder.getValue(item.name);
+        let item_value = formBuilder.getValue(item.name);
+        if (item_value){
+          input[item.name] = item_value;
+        }
+       
       });
       // give ui a chance to update
 
@@ -33394,7 +35210,7 @@ phantasus.HeatMap.showTool = function (tool, heatMap, callback) {
             value.terminate();
             phantasus.FormBuilder.showInModal({
               title: 'Error',
-              html: e,
+              html: '<div class="error-msg">' + e + '</div>',
               close: 'Close',
               focus: heatMap.getFocusEl(),
               appendTo: heatMap.getContentEl()
@@ -33465,7 +35281,8 @@ phantasus.HeatMap.showTool = function (tool, heatMap, callback) {
       input: {}
     });
     if (callback) {
-      callback({});
+      callback({heatMap: heatMap,
+        project: heatMap.getProject()});
     }
   }
 };
@@ -34756,22 +36573,28 @@ phantasus.HeatMap.prototype = {
         phantasus.DatasetUtil.toESSessionPromise(dataset);
       }
     });
-    this.getProject().on('trackChanged', function (e) {
-      var columns = e.columns;
-      _.each(e.vectors, function (v, i) {
-        var index = _this.getTrackIndex(v.getName(), columns);
-        if (index === -1) {
-          _this.addTrack(v.getName(), columns, e.display[i]);
-        } else {
-          // repaint
-          var track = _this.getTrackByIndex(index, columns);
-          var display = e.display[i];
-          if (display) {
-            track.settingFromConfig(display);
+    this.getProject().on('trackChanged', function (e_array) {
+      if (!e_array.length){
+        e_array = [e_array];
+      }
+      e_array.forEach(function(e) {
+        var columns = e.columns;
+        _.each(e.vectors, function (v, i) {
+          var index = _this.getTrackIndex(v.getName(), columns);
+          if (index === -1) {
+            _this.addTrack(v.getName(), columns, e.display[i]);
+          } else {
+            // repaint
+            var track = _this.getTrackByIndex(index, columns);
+            var display = e.display[i];
+            if (display) {
+              track.settingFromConfig(display);
+            }
+            track.setInvalid(true);
           }
-          track.setInvalid(true);
-        }
+        });
       });
+
       _this.revalidate();
     });
     this.getProject().on('rowTrackRemoved', function (e) {

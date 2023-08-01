@@ -54,7 +54,8 @@
     "protobufjs": "~6.10.2",
     "requirejs": "^2.3.4",
     "serve-static": "^1.12.3",
-    "whatwg-fetch": "^2.0.3"
+    "whatwg-fetch": "^2.0.3",
+    "pako":"^2.1.0"
   },
   "dependencies": {
     "grunt-cli": "^1.2.0",
