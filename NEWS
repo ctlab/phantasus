@@ -1,3 +1,8 @@
+CHANGES IN VERSION 1.19.5
+* Advanced normalizations: TMM & voom
+* Complex differential expression design for limma & DESeq2
+* Rework of count meta files (breaks backward compatibility)
+
 CHANGES IN VERSION 1.19.3
 * Shiny GAM -> Shiny GATOM
 
