@@ -4,7 +4,13 @@
 \alias{limmaAnalysis}
 \title{Differential Expression analysis.}
 \usage{
-limmaAnalysis(es, fieldValues)
+limmaAnalysis(
+  es,
+  fieldValues,
+  version = "One-factor design",
+  contrast = list("Comparison", "A", "B"),
+  designData = NULL
+)
 }
 \arguments{
 \item{es}{ExpressionSet object. It should be normalized for
@@ -12,6 +18,12 @@ more accurate analysis.}
 
 \item{fieldValues}{Vector of comparison values, mapping
 categories' names to columns/samples}
+
+\item{version}{name of the limma analysis implementation. Should be "One-factor design" or "Advanced design"}
+
+\item{contrast}{a character vector with exactly three elements: the name of a factor in the design formula, the name of the numerator level for the fold change, and the name of the denominator level for the fold change}
+
+\item{designData}{data.frame with design matrix}
 }
 \value{
 Name of the file containing serialized de-matrix.

@@ -724,6 +724,20 @@ checkBinValidity <- function(filePath, valid_from) {
   return(TRUE)
 }
 
+getDesignMatrix <- function(designData){
+    designMatrix <- do.call(cbind, designData)
+    designRownames <- designMatrix[,"id"]
+
+    designMatrix <- subset(designMatrix, select = -c(id))
+    designMatrix <- apply(X = designMatrix, FUN = as.numeric, MARGIN =c(2))
+    colnames(designMatrix) [colnames(designMatrix) == "intercept"] <- "(Intercept)"
+    rownames(designMatrix) <- designRownames
+    if(qr(designMatrix)$rank < ncol(designMatrix)){
+        stop("Error: redundancy of model parameters appears. Try to exclude nested factors.")
+    }
+    return(designMatrix)
+}
+
 phantasusVersion <- function() {
   jsonlite::toJSON(as.character(utils::packageVersion("phantasus")))
 }
