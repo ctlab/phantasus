@@ -33,14 +33,14 @@
 #' \dontrun{
 #' servePhantasus()
 #' }
-servePhantasus <- function(host = '0.0.0.0',
-                           port = 8000,
+servePhantasus <- function(host = getPhantasusConf("host"),
+                           port = getPhantasusConf("port"),
                            staticRoot = system.file("www/phantasus.js",
                                                     package = "phantasus"),
-                           cacheDir = tempdir(),
-                           preloadedDir = NULL,
-                           openInBrowser = TRUE,
-                           quiet=TRUE) {
+                           cacheDir = getPhantasusConf("local_cache")$cache_root,
+                           preloadedDir = getPhantasusConf("preloaded_dir"),
+                           openInBrowser =  getPhantasusConf("open_in_browser"),
+                           quiet=getPhantasusConf("quiet")) {
     cacheDir <- normalizePath(cacheDir)
     preloadedDir <- if (is.null(preloadedDir))
         NULL
@@ -51,9 +51,9 @@ servePhantasus <- function(host = '0.0.0.0',
             phantasusPreloadedDir = preloadedDir)
 
     selfCheck()
-    annotationDBMeta(cacheDir)
-    FGSEAmeta(cacheDir)
-    updateCountsMeta(file.path(cacheDir, "counts"))
+    annotationDBMeta(getPhantasusConf("local_cache")$annot_db)
+    FGSEAmeta(getPhantasusConf("local_cache")$fgsea_pathways)
+    updateCountsMeta(getPhantasusConf("local_cache")$rnaseq_counts)
     if (!opencpu:::win_or_mac()) {
         run_worker <- NULL
     } else {

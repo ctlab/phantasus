@@ -57,6 +57,8 @@ convertByAnnotationDB <- function (es, dbName, columnName, columnType, keyType, 
 #' \code{createES} Function reads an rds file containing meta information of provded
 #' sqlite files for AnnotationDB
 #'
+#' @param annotDir  Full path to annotationDb directory.
+#'
 #' @return meta info in JSON
 #' @importFrom utils read.table
 #' @examples
@@ -64,9 +66,7 @@ convertByAnnotationDB <- function (es, dbName, columnName, columnType, keyType, 
 #' queryAnnotationDBMeta()
 #' }
 #'
-queryAnnotationDBMeta <- function () {
-    cacheDir <- getOption("phantasusCacheDir")
-    annotDir <- paste(cacheDir, "annotationdb", sep = .Platform$file.sep)
+queryAnnotationDBMeta <- function (annotDir) {
     columnFiles <- list.files(annotDir, '.selected_fields.txt', full.names = TRUE)
     metaList <- list()
     for(columnFile in columnFiles) {

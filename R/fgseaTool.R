@@ -1,15 +1,12 @@
 availableFGSEADatabases <- function () {
-    cacheDir <- getOption("phantasusCacheDir")
-
-    dbDir <- file.path(cacheDir, 'fgsea')
+    dbDir <- getPhantasusConf("local_cache")$fgsea_pathways
     metaFile <- file.path(dbDir, 'fgsea.txt')
     meta = read.table(metaFile, header = TRUE, sep = '\t')
 
     return (jsonlite::toJSON(meta))
 }
 
-FGSEAmeta <- function (cacheDir) {
-    dbDir <- file.path(cacheDir, 'fgsea')
+FGSEAmeta <- function (dbDir) {
     if (!dir.exists(dbDir)) {
         return()
     }
@@ -34,9 +31,7 @@ FGSEAmeta <- function (cacheDir) {
 }
 
 performFGSEA <- function (dbName, ranks) {
-    cacheDir <- getOption("phantasusCacheDir")
-
-    dbDir <- file.path(cacheDir, 'fgsea')
+    dbDir <- getPhantasusConf("local_cache")$fgsea_pathways
     dbFile <- file.path(dbDir, dbName)
     if (!file.exists(dbFile)) {
         stop('Invalid DB name supplied')
@@ -61,9 +56,7 @@ performFGSEA <- function (dbName, ranks) {
 }
 
 queryPathway <- function (dbName, pathwayName) {
-    cacheDir <- getOption("phantasusCacheDir")
-
-    dbDir <- file.path(cacheDir, 'fgsea')
+    dbDir <- getPhantasusConf("local_cache")$fgsea_pathways
     dbFile <- file.path(dbDir, dbName)
     if (!file.exists(dbFile)) {
         stop('Invalid DB name supplied')
