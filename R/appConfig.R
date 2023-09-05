@@ -2,7 +2,6 @@
 
 #' Setup phantasus.
 #' Read user config file ( or create default one) and fill \code{cache_root} using sources in \code{file}
-#' @param cache_root path to cache folder
 #' @param setup_name  name of config from \code{file}. If unset or not existed, "default".
 #' @param file Location of the config file
 setupPhantasus <- function(
@@ -29,11 +28,17 @@ setupPhantasus <- function(
     Sys.setenv(R_CONFIG_ACTIVE = "default")
 
     user_conf <- getPhantasusConf()
-    message(paste("curent configuration: ", Sys.getenv("R_CONFIG_ACTIVE")))
+    message(paste("Current configuration: ", Sys.getenv("R_CONFIG_ACTIVE")))
     user_conf
+    default_timeout <- getOption("timeout")
+    options(timeout = max(1000, default_timeout))
 
+    configureGEOcache(user_conf = user_conf )
+    configureAnnotDB(user_conf = user_conf, setup_config = setup_config )
+    configureFGSEA(user_conf = user_conf, setup_config = setup_config )
+    configureRnaseqCounts(user_conf = user_conf, setup_config = setup_config )
 
-
+    options(timeout =  default_timeout)
 }
 
 
@@ -76,9 +81,8 @@ configureAnnotDB <- function(user_conf, setup_config){
         message("! AnnotationDB folder exists and is treated as already configured !")
         return()
     }
-    dir.create(local_path, showWarnings = FALSE, recursive = TRUE)
-    menu_choices = c("Leave empty")
-    actions <- c(function() {message("Leaved empty")})
+    menu_choices = c("Keep empty")
+    actions <- c(function() {message("Kept empty")})
     dbFiles <- list.files(local_path, recursive = FALSE)
     mm_pkg <- system.file(package='org.Mm.eg.db')
     hs_pkg <- system.file(package='org.Hs.eg.db')
@@ -106,7 +110,7 @@ configureAnnotDB <- function(user_conf, setup_config){
         })
     }
     if (!length(setup_config$annot_db) == 0){
-        file_index <- getFileIndexDF(url = setup_config$annot_db, pattern = "txt|sqlite" )
+        file_index <- getFileIndexDF(base_url = setup_config$annot_db, pattern = "txt|sqlite" )
         total_size <- round(sum(as.numeric(fs::fs_bytes(file_index$Size))) / 2^20, digits = 0)
         menu_choices <- c(menu_choices,  paste("Try to download from external source (~", total_size, "MB)"))
         actions <- c(actions, function(){
@@ -117,6 +121,11 @@ configureAnnotDB <- function(user_conf, setup_config){
     }
 
     menu_res <- menu(choices = menu_choices, graphics = FALSE, title = "Choose how to set up the AnnotationDB folder: ")
+    if (menu_res == 0){
+        message("Canceled")
+        return()
+    }
+    dir.create(local_path, recursive = TRUE)
     actions[[menu_res]]()
 }
 
@@ -128,39 +137,50 @@ configureFGSEA <- function(user_conf, setup_config){
         message("! FGSEA folder exists and is treated as already configured !")
         return()
     }
-    dir.create(local_path, showWarnings = FALSE, recursive = TRUE)
 
-    if (length(curConf$external_sources$fgsea_pathways) != 0){
+    menu_choices = c("Keep empty")
+    actions <- c(function() {message("Kept empty")})
+    if (length(setup_config$fgsea_pathways) != 0){
         message("External source for FGSEA pathways is scpecified.")
-        file_index <- getFileIndexDF(url = setup_config$annot_db, pattern = "txt|rds" )
-        total_size <- round(sum(as.numeric(fs::fs_bytes(file_index$Size))) / 2^20, digits = 2)
-        msg <-  paste("Would you like to download files from external source? (~", total_size, "MB)" )
-        tryLoad <- askYesNo(msg = msg, default = FALSE)
-        if(tryLoad){
+        file_index <- getFileIndexDF(base_url = setup_config$fgsea_pathways, pattern = "txt|rds" )
+        total_size <- round(sum(as.numeric(fs::fs_bytes(file_index$size))) / 2^20, digits = 2)
+        menu_choices = c(menu_choices, paste0("Download files from external source? (~", total_size, "MB)"))
+
+        actions <- c(actions, function(){
             loadAllFiles(url = setup_config$fgsea_pathways,
                          destdir = local_path,
                          file_df = file_index)
-        }
+        } )
     }
+    menu_res <- menu(choices = menu_choices, graphics = FALSE, title = "Choose how to set up the FGSEA pathways folder: ")
+    if (menu_res == 0){
+        message("Canceled")
+        return()
+    }
+    dir.create(local_path, recursive = TRUE)
+    actions[[menu_res]]()
+
 }
 
-configureRnaseqCounts <- function(curConf){
+configureRnaseqCounts <- function(user_conf, setup_config){
     message("Configure RNA-seq counts...")
-    local_path <- curConf$local_cache$rnaseq_counts
-    if (length(local_path) == 0){
-        local_path <- file.path(curConf$local_cache$cache_root, "counts")
+    local_path <- user_conf$cache_folders$rnaseq_counts
+    if (dir.exists(local_path)){
+        message("! RNA-seq counts folder exists and is treated as already configured !")
+        return()
     }
-    if (!dir.exists(local_path)){
-        dir.create(local_path)
-    }
-    if (length(curConf$external_sources$rnaseq_counts) == 0){
+    if (length(setup_config$rnaseq_counts) == 0){
         message("! Only local RNA-seq counts will be used !")
         return()
     }
+
     message("External source for RNA-seq counts is scpecified.")
-    req <- httr::GET(curConf$external_sources$rnaseq_counts)
+    menu_choices = c("Keep empty")
+    actions <- c(function() {message("Kept empty")})
+
+    req <- httr::GET(setup_config$rnaseq_counts)
     if(req$headers$server == "Highly Scalable Data Service (HSDS)"){
-        message(paste(curConf$external_sources$rnaseq_counts, "response as HSDS server"))
+        message(paste(setup_config$rnaseq_counts, "response as HSDS server"))
         phantasus_lite <- system.file(package='phantasus-lite')
         if (nchar(phantasus_lite) == 0){
             message("phantasus-lite package is not installed. HSDS will be ignored")
@@ -168,51 +188,54 @@ configureRnaseqCounts <- function(curConf){
         }
         use_hsds <- askYesNo(msg = "Would you like to use it as RNA-seq counts source?", default = FALSE)
         if (use_hsds){
-            options(UseHSDS = TRUE)
+            message("not implemented yet")
+            #options(UseHSDS = TRUE)
         }
     } else {
-        message(paste(curConf$external_sources$rnaseq_counts, "is not HSDS server and is teated as file storage."))
-        count_files <- list.files(local_path, recursive = TRUE,
-                                  pattern = '\\.h5$')
-        if(length(count_files)){
-            message("! Local RNA-seq counts folder is not empty and is treated as already configured !")
-            return()
-        }
-        message("! ATTENTION: The size of RNA-seq count files may exeed 100 GB in total ! ")
-        tryLoad <- askYesNo(msg = "Would you like to download files from external source?", default = FALSE)
-        if (tryLoad) {
-            loadAllFiles( url = curConf$external_sources$rnaseq_counts,
-                          destdir = local_path ,
-                          pattern = "txt|h5")
-        }
+        #message(paste(setup_config$rnaseq_counts, "is not HSDS server and is teated as file storage."))
+        file_index <- getFileIndexDF(base_url = setup_config$rnaseq_counts, pattern = "txt|h5" )
+        total_size <- round(sum(as.numeric(fs::fs_bytes(file_index$size))) / 2^20, digits = 2)
+        menu_choices = c(menu_choices, paste0("Download files from external source? (~", total_size, "MB)"))
+
+        actions <- c(actions, function(){
+            loadAllFiles(url = setup_config$rnaseq_counts,
+                         destdir = local_path,
+                         file_df = file_index)
+        } )
     }
+    menu_res <- menu(choices = menu_choices, graphics = FALSE, title = "Choose how to set up the RNA-seq counts folder: ")
+    if (menu_res == 0){
+        message("Canceled")
+        return()
+    }
+    dir.create(local_path, recursive = TRUE)
+    actions[[menu_res]]()
 }
 
-getFileIndexDF <- function(url, pattern){
-    req <- httr::GET(url)
+getFileIndexDF <- function(base_url, pattern, location = "/"){
+    req <- httr::GET(paste0(base_url, location))
     text <- httr::content(req, "text", encoding = "UTF-8")
-    index_df <-  na.omit(XML::readHTMLTable(text, skip = c(1,2), as.data.frame = TRUE, trim = TRUE )[[1]])
-    file_df <- index_df[grepl(pattern = pattern, x = index_df$Name) & index_df$Size != "-",]
+    index_df <-  data.table(na.omit(XML::readHTMLTable(text, skip = c(1,2), as.data.frame = TRUE, trim = TRUE )[[1]]))
+    file_df <- index_df[grepl(pattern = pattern, x = index_df$Name) & index_df$Size != "-", .(file = paste0(location, Name), date = `Last modified`, size = Size)]
+
+    for (dir in index_df[index_df$Size == "-",]$Name){
+        local_dir <- paste0(location, dir)
+        file_df <- rbind(file_df, getFileIndexDF(base_url, pattern, local_dir ))
+    }
+
     return(file_df)
 }
 
 loadAllFiles <- function(url, file_df, destdir ){
     message(paste("Trying download from", url))
-    if (!dir.exists(destdir)){
-        dir.create(destdir)
-    }
-    for (file in file_df$Name) {
+    for (file in file_df$file) {
+        target_file <- file.path(destdir,file)
+        dir.create(dirname(target_file), recursive = TRUE, showWarnings = FALSE)
         safeDownload(
             url = paste(url, file, sep = "/"),
-            filename = file,
-            dir = destdir
+            filename = basename(target_file),
+            dir = dirname(target_file)
         )
-    }
-    for (dir in index_df[index_df$Size == "-",]$Name){
-        local_dir <- file.path(destdir, dir)
-        loadAllFiles(url = paste(url, dir, sep ="/"),
-                     destdir = local_dir,
-                     pattern = pattern )
     }
 }
 
@@ -220,10 +243,10 @@ loadAllFiles <- function(url, file_df, destdir ){
 create_user_conf <- function( cache_root, geo_mirrors){
 
     cache_folders = list (
-        geo_path = "file.path(cache_root, 'geo')",
-        rnaseq_counts = "file.path(cache_root, 'counts')",
-        annot_db  = "file.path(cache_root, 'annotationdb')",
-        fgsea_pathways = "file.path(cache_root, 'fgsea')"
+        geo_path = "file.path(cache_root, 'geo/')",
+        rnaseq_counts = "file.path(cache_root, 'counts/')",
+        annot_db  = "file.path(cache_root, 'annotationdb/')",
+        fgsea_pathways = "file.path(cache_root, 'fgsea/')"
     )
     for (i in seq_along(cache_folders)){
         attr(cache_folders[[i]], "tag") <- "!expr"
