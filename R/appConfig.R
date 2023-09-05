@@ -110,47 +110,37 @@ configureAnnotDB <- function(user_conf, setup_config){
         total_size <- round(sum(as.numeric(fs::fs_bytes(file_index$Size))) / 2^20, digits = 0)
         menu_choices <- c(menu_choices,  paste("Try to download from external source (~", total_size, "MB)"))
         actions <- c(actions, function(){
-            loadAllFiles(url = curConf$external_sources$annot_db,
-                         file_df = file_index$Name ,
+            loadAllFiles(url = setup_config$annot_db,
+                         file_df = file_index,
                          destdir = local_path)
         } )
     }
 
-    if (length(setup_config$annot_db) == 0){
-
-    } else {
-        message("External source for AnnotationDB is scpecified. Local packages will be ignored.")
-        msg <- "Would you like to download files from external source (may take a while)?"
-        tryLoad <- askYesNo(msg = msg, default = FALSE)
-        if (tryLoad) {
-            loadAllFiles( url = curConf$external_sources$annot_db,
-                          destdir = local_path ,
-                          pattern = "txt|sqlite")
-        }
-    }
+    menu_res <- menu(choices = menu_choices, graphics = FALSE, title = "Choose how to set up the AnnotationDB folder: ")
+    actions[[menu_res]]()
 }
 
 
-configureFGSEA <- function(curConf){
+configureFGSEA <- function(user_conf, setup_config){
     message("Configure FGSEA pathways...")
-    local_path <- curConf$local_cache$fgsea_pathways
-    if (length(local_path) == 0){
-        local_path <- file.path(curConf$local_cache$cache_root, "fgsea")
-    }
-    if (!dir.exists(local_path)){
-        dir.create(local_path)
-    }
-    fgseaFiles <- list.files(local_path, recursive = FALSE)
-    if (length(fgseaFiles) > 0) {
-        message("! Local fgsea folder is not empty and is treated as already configured !")
+    local_path <- user_conf$cache_folders$fgsea_pathways
+    if (dir.exists(local_path)){
+        message("! FGSEA folder exists and is treated as already configured !")
         return()
     }
+    dir.create(local_path, showWarnings = FALSE, recursive = TRUE)
+
     if (length(curConf$external_sources$fgsea_pathways) != 0){
         message("External source for FGSEA pathways is scpecified.")
-
-        loadAllFiles(url = curConf$external_sources$fgsea_pathways,
-                     destdir = local_path,
-                     pattern = "txt|rds")
+        file_index <- getFileIndexDF(url = setup_config$annot_db, pattern = "txt|rds" )
+        total_size <- round(sum(as.numeric(fs::fs_bytes(file_index$Size))) / 2^20, digits = 2)
+        msg <-  paste("Would you like to download files from external source? (~", total_size, "MB)" )
+        tryLoad <- askYesNo(msg = msg, default = FALSE)
+        if(tryLoad){
+            loadAllFiles(url = setup_config$fgsea_pathways,
+                         destdir = local_path,
+                         file_df = file_index)
+        }
     }
 }
 
@@ -207,6 +197,7 @@ getFileIndexDF <- function(url, pattern){
 }
 
 loadAllFiles <- function(url, file_df, destdir ){
+    message(paste("Trying download from", url))
     if (!dir.exists(destdir)){
         dir.create(destdir)
     }
