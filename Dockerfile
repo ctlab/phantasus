@@ -19,7 +19,7 @@ RUN cp -r /root/phantasus/inst/configs/opencpu  /etc/
 RUN cp -r /root/phantasus/inst/configs/apache2  /etc/
 RUN cp /root/phantasus/inst/configs/index.html /var/www/html/
 RUN cp -f /root/phantasus/inst/docker-entrypoint.sh /usr/bin/docker-entrypoint.sh
-RUN rm -rf /root/phantasus/inst
+
 
 RUN a2dissite default-ssl.conf
 RUN a2dissite 000-default.conf
@@ -32,9 +32,12 @@ RUN echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
 RUN echo "LANG=en_US.UTF-8" > /etc/locale.conf
 RUN locale-gen en_US.UTF-8
 
-RUN mkdir -p /var/phantasus/cache && chown www-data /var/phantasus/cache 
-RUN mkdir -p /var/phantasus/preloaded && chown www-data /var/phantasus/preloaded 
-RUN mkdir -p /var/phantasus/ocpu-root && chown www-data /var/phantasus/ocpu-root 
+RUN mkdir -p /var/phantasus/cache && chown www-data /var/phantasus/cache
+RUN mkdir -p /var/phantasus/preloaded && chown www-data /var/phantasus/preloaded
+RUN mkdir -p /var/phantasus/ocpu-root/ocpu-temp/.config/R/phantasus && \
+cp /root/phantasus/inst/configs/user.conf /var/phantasus/ocpu-root/ocpu-temp/.config/R/phantasus && \
+chown -R www-data /var/phantasus/ocpu-root
+RUN rm -rf /root/phantasus/inst
 
 RUN rm /var/log/apache2/access.log /var/log/apache2/error.log /var/log/opencpu/apache_access.log /var/log/opencpu/apache_error.log
 ENV OCPU_USER=www-data

@@ -1,6 +1,16 @@
 availableFGSEADatabases <- function () {
-    dbDir <- getPhantasusConf("local_cache")$fgsea_pathways
+    dbDir <- getPhantasusConf("cache_folders")$fgsea_pathways
+    if (is.null(dbDir)){
+        stop("Current Phantasus configuration doesn't support FGSEA methods. 'fgsea_pathways' setting for cache folders is missed.")
+    }
+    if (! dir.exists(dbDir)){
+        stop("Current Phantasus configuration doesn't support FGSEA methods. FGSEA pathways folder does not exist.")
+    }
     metaFile <- file.path(dbDir, 'fgsea.txt')
+
+    if (!file.exitst(metaFile)){
+        stop("FGSEA pathways folder was not properly configured. meta file is missed.")
+    }
     meta = read.table(metaFile, header = TRUE, sep = '\t')
 
     return (jsonlite::toJSON(meta))

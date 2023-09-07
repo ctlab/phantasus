@@ -4,6 +4,7 @@
 #' Read user config file ( or create default one) and fill \code{cache_root} using sources in \code{file}
 #' @param setup_name  name of config from \code{file}. If unset or not existed, "default".
 #' @param file Location of the config file
+#' @export
 setupPhantasus <- function(
         setup_name = "default",
         file = system.file("configs/setup.yml", package = "phantasus")) {
@@ -47,12 +48,16 @@ setupPhantasus <- function(
 #' @param value Value to retrieve from the config file.
 #' @param configName R_CONFIG_ACTIVE value. If unset, "default".
 #' @param file Location of the config file
+#' @export
 getPhantasusConf <-  function(
         value = NULL,
         configName = Sys.getenv("R_CONFIG_ACTIVE"),
         # Modify this if your config file is somewhere else
         file = file.path(tools::R_user_dir(package = "phantasus", which = "config"), "user.conf")
 ) {
+    if (!file.exists(file)){
+        stopPhantasus()
+    }
     config::get(
         value = value,
         config = configName,
@@ -95,14 +100,14 @@ configureAnnotDB <- function(user_conf, setup_config){
         actions = c(actions, function(){
             if (nchar(mm_pkg)){
                 library(org.Mm.eg.db)
-                mm_res <- file.copy(org.Mm.eg_dbfile(), file.path(local_path, "org.Mm.eg.db"))
+                mm_res <- file.copy(org.Mm.eg_dbfile(), file.path(local_path, "org.Mm.eg.sqlite"))
                 if (mm_res) {
                     message(paste("! Use copy of :", org.Mm.eg_dbfile()))
                 }
             }
             if (nchar(hs_pkg)){
                 library(org.Hs.eg.db)
-                hs_res <- file.copy(org.Hs.eg_dbfile(), file.path(local_path, "org.Hs.eg.db"))
+                hs_res <- file.copy(org.Hs.eg_dbfile(), file.path(local_path, "org.Hs.eg.sqlite"))
                 if (hs_res) {
                     message(paste("! Use copy of :",org.Hs.eg_dbfile()))
                 }
@@ -111,19 +116,22 @@ configureAnnotDB <- function(user_conf, setup_config){
     }
     if (!length(setup_config$annot_db) == 0){
         file_index <- getFileIndexDF(base_url = setup_config$annot_db, pattern = "txt|sqlite" )
-        total_size <- round(sum(as.numeric(fs::fs_bytes(file_index$Size))) / 2^20, digits = 0)
-        menu_choices <- c(menu_choices,  paste("Try to download from external source (~", total_size, "MB)"))
+        total_size <- round(sum(as.numeric(fs::fs_bytes(file_index$size))) / 2^20, digits = 0)
+        menu_choices <- c(menu_choices,  paste("Download files from the ctlab Phantasus mirror (~", total_size, "MB)"))
         actions <- c(actions, function(){
             loadAllFiles(url = setup_config$annot_db,
                          file_df = file_index,
                          destdir = local_path)
         } )
     }
-
-    menu_res <- menu(choices = menu_choices, graphics = FALSE, title = "Choose how to set up the AnnotationDB folder: ")
-    if (menu_res == 0){
-        message("Canceled")
-        return()
+    if (length(menu_choices) > 1){
+        menu_res <- menu(choices = menu_choices, graphics = FALSE, title = "Choose how to set up the AnnotationDB folder: ")
+        if (menu_res == 0){
+            message("Canceled")
+            return()
+        }
+    }else{
+        menu_res <- 1
     }
     dir.create(local_path, recursive = TRUE)
     actions[[menu_res]]()
@@ -144,7 +152,7 @@ configureFGSEA <- function(user_conf, setup_config){
         message("External source for FGSEA pathways is scpecified.")
         file_index <- getFileIndexDF(base_url = setup_config$fgsea_pathways, pattern = "txt|rds" )
         total_size <- round(sum(as.numeric(fs::fs_bytes(file_index$size))) / 2^20, digits = 2)
-        menu_choices = c(menu_choices, paste0("Download files from external source? (~", total_size, "MB)"))
+        menu_choices = c(menu_choices, paste0("Download files from the ctlab Phantasus mirror (~", total_size, "MB)"))
 
         actions <- c(actions, function(){
             loadAllFiles(url = setup_config$fgsea_pathways,
@@ -152,10 +160,14 @@ configureFGSEA <- function(user_conf, setup_config){
                          file_df = file_index)
         } )
     }
-    menu_res <- menu(choices = menu_choices, graphics = FALSE, title = "Choose how to set up the FGSEA pathways folder: ")
-    if (menu_res == 0){
-        message("Canceled")
-        return()
+    if (length(menu_choices) > 1){
+        menu_res <- menu(choices = menu_choices, graphics = FALSE, title = "Choose how to set up the FGSEA pathways folder: ")
+        if (menu_res == 0){
+            message("Canceled")
+            return()
+        }
+    }else{
+        menu_res <- 1
     }
     dir.create(local_path, recursive = TRUE)
     actions[[menu_res]]()
@@ -195,7 +207,7 @@ configureRnaseqCounts <- function(user_conf, setup_config){
         #message(paste(setup_config$rnaseq_counts, "is not HSDS server and is teated as file storage."))
         file_index <- getFileIndexDF(base_url = setup_config$rnaseq_counts, pattern = "txt|h5" )
         total_size <- round(sum(as.numeric(fs::fs_bytes(file_index$size))) / 2^20, digits = 2)
-        menu_choices = c(menu_choices, paste0("Download files from external source? (~", total_size, "MB)"))
+        menu_choices = c(menu_choices, paste0("Download files from the ctlab Phantasus mirror (~", total_size, "MB)"))
 
         actions <- c(actions, function(){
             loadAllFiles(url = setup_config$rnaseq_counts,
@@ -203,10 +215,14 @@ configureRnaseqCounts <- function(user_conf, setup_config){
                          file_df = file_index)
         } )
     }
-    menu_res <- menu(choices = menu_choices, graphics = FALSE, title = "Choose how to set up the RNA-seq counts folder: ")
-    if (menu_res == 0){
-        message("Canceled")
-        return()
+    if (length(menu_choices) >1){
+        menu_res <- menu(choices = menu_choices, graphics = FALSE, title = "Choose how to set up the RNA-seq counts folder: ")
+        if (menu_res == 0){
+            message("Canceled")
+            return()
+        }
+    }else{
+        menu_res <- 1
     }
     dir.create(local_path, recursive = TRUE)
     actions[[menu_res]]()

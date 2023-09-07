@@ -26,13 +26,13 @@
 #' @import Biobase
 #' @import GEOquery
 loadGEO <- function(name, type = NA) {
-    cacheDir <- getPhantasusConf("local_cache")$cache_root
+    cacheDir <- getPhantasusConf("cache_folders")$geo_path
 
     if (!dir.exists(cacheDir)) {
         dir.create(cacheDir)
     }
 
-    mirrorPath <- getPhantasusConf("external_sources")$geo_mirrors
+    mirrorPath <- getPhantasusConf("geo_mirrors")
 
 
     geoDir <- getGEODir(name, cacheDir)
@@ -61,7 +61,7 @@ loadGEO <- function(name, type = NA) {
     }
 
 
-    urls <- c(urls, unlist(strsplit(filePath, cacheDir, fixed = TRUE))[2])
+    urls <- c(urls, paste0("/geo/",unlist(strsplit(filePath, cacheDir, fixed = TRUE))[2]))
     jsonlite::toJSON(urls)
 }
 
@@ -86,8 +86,8 @@ loadGEO <- function(name, type = NA) {
 #' getGDS('GDS4922')
 #'
 #' @export
-getGDS <- function(name, destdir = getPhantasusConf("local_cache")$cache_root,
-                   mirrorPath = getPhantasusConf("external_sources")$geo_mirrors) {
+getGDS <- function(name, destdir = getPhantasusConf("cache_folders")$geo_path,
+                   mirrorPath = getPhantasusConf("geo_mirrors")) {
     stub <- gsub("\\d{1,3}$", "nnn", name, perl = TRUE)
     filename <- sprintf("%s.soft.gz", name)
     gdsurl <- "%s/geo/datasets/%s/%s/soft/%s"
@@ -97,12 +97,15 @@ getGDS <- function(name, destdir = getPhantasusConf("local_cache")$cache_root,
 
     infile <- file.exists(destfile)
 
+    # Several GEO mirrors supported, but use only one for now.
+    mirrorPath <- head(mirrorPath,1)
+
     if (!infile) {
         tempDestFile <- tempfile(paste0(filename, ".load"), tmpdir=fullGEODirPath)
-        for (url in gdsurl){
+        for (url in sprintf(gdsurl, mirrorPath,
+                            stub, name, filename)){
             tryCatch({
-                utils::download.file(sprintf(url, mirrorPath,
-                                             stub, name, filename),
+                utils::download.file(url,
                                      destfile = tempDestFile,
                                      method="libcurl")
                 file.rename(tempDestFile, destfile)
@@ -417,8 +420,8 @@ filterPhenoAnnotations <- function(es) {
 #'
 #' @export
 #' @import rhdf5
-getGSE <- function(name, destdir = getPhantasusConf("local_cache")$cache_root,
-                   mirrorPath = getPhantasusConf("external_sources")$geo_mirrors) {
+getGSE <- function(name, destdir = getPhantasusConf("cache_folders")$geo_path,
+                   mirrorPath = getPhantasusConf("geo_mirrors")) {
     if (!isValidExperimentID(name)) {
       stop(name, " does not look like a valid GEO Series ID")
     }
@@ -437,6 +440,8 @@ getGSE <- function(name, destdir = getPhantasusConf("local_cache")$cache_root,
 
     infile <- file.exists(destfile)
 
+    # Several GEO mirrors supported, but use only one for now.
+    mirrorPath <- head(mirrorPath,1)
     if (!infile) {
         tempDestFile <- tempfile(paste0(filename, ".load"), tmpdir=fullGEODirPath)
         for (url in  sprintf(gseurl, mirrorPath,
@@ -486,8 +491,8 @@ getGSE <- function(name, destdir = getPhantasusConf("local_cache")$cache_root,
 
     ess <- lapply(ess, filterFeatureAnnotations)
     archs4_files <- getArchs4Files(destdir)
-    if (dir.exists(getPhantasusConf("local_cache")$rnaseq_counts)){
-      ess <- lapply(ess, loadCounts, counts_dir = getPhantasusConf("local_cache")$rnaseq_counts)
+    if (dir.exists(getPhantasusConf("cache_folders")$rnaseq_counts)){
+      ess <- lapply(ess, loadCounts, counts_dir = getPhantasusConf("cache_folders")$rnaseq_counts)
     }
     if (length(archs4_files) > 0)  {
         ess <- lapply(ess, loadFromARCHS4, archs4_files=archs4_files)
@@ -530,8 +535,8 @@ getGSE <- function(name, destdir = getPhantasusConf("local_cache")$cache_root,
 #' getES('GDS4922')
 #'
 #' @export
-getES <- function(name, type = NA, destdir = getPhantasusConf("local_cache")$cache_root,
-                  mirrorPath = getPhantasusConf("external_sources")$geo_mirrors) {
+getES <- function(name, type = NA, destdir = getPhantasusConf("cache_folders")$geo_path,
+                  mirrorPath = getPhantasusConf("geo_mirrors")) {
     if (is.na(type)) {
         type <- substr(name, 1, 3)
     }
@@ -597,7 +602,7 @@ listCachedESs <- function(destdir) {
 #'
 #' @export
 reparseCachedESs <- function(destdir,
-                                mirrorPath = getPhantasusConf("external_sources")$geo_mirrors) {
+                                mirrorPath = getPhantasusConf("geo_mirrors")) {
     toReparse <- listCachedESs(destdir)
 
     for (path in toReparse) {
@@ -648,12 +653,10 @@ checkGPLsFallback <- function(name) {
         return(jsonlite::toJSON(gpls))
     }
 
-    mirrorPath <-  getPhantasusConf("external_sources")$geo_mirrors
+    mirrorPath <-  getPhantasusConf("geo_mirrors")
 
-    cacheDir <- getPhantasusConf("local_cache")$cache_root
-    if (!dir.exists(cacheDir)) {
-      dir.create(cacheDir)
-    }
+    cacheDir <- getPhantasusConf("cache_folders")$geo_path
+
 
     type <- substr(name, 1, 3)
     assertthat::assert_that( (type == "GDS" || type == "GSE")
@@ -665,8 +668,11 @@ checkGPLsFallback <- function(name) {
     url <- sprintf(gdsurl, mirrorPath,
                    if (type == "GDS") "datasets" else "series", stub, name)
 
-    cachePath <- paste0(sprintf(gdsurl, cacheDir,
-                        if (type == "GDS") "datasets" else "series", stub, name), "gpls")
+    cachePath <- paste0(cacheDir,
+                        if (type == "GDS") "datasets" else "series",
+                        stub,
+                        name,
+                        "gpls")
 
     dir.create(dirname(cachePath), recursive = TRUE, showWarnings = FALSE)
 
@@ -732,7 +738,7 @@ checkGPLs <- function(name) {
     return(jsonlite::toJSON(gpls))
   }
 
-  cacheDir <- getPhantasusConf("local_cache")$cache_root
+  cacheDir <- getPhantasusConf("cache_folders")$geo_path
 
   GEOdir <- dirname(getGEODir(GEO, cacheDir))
   GPLCacheFile <- file.path(GEOdir, 'gpls')
@@ -869,10 +875,10 @@ inferCondition <- function(es) {
 }
 
 
-downloadGPL <- function (GPL, destdir = getPhantasusConf("local_cache")$cache_root) {
+downloadGPL <- function (GPL, destdir = getPhantasusConf("cache_folders")$geo_path) {
   GPL <- toupper(GPL)
   stub = gsub('\\d{1,3}$','nnn',GPL,perl=TRUE)
-  GPLDirPath <- '%s/geo/platforms/%s/%s/annot'
+  GPLDirPath <- '%s/platforms/%s/%s/annot'
   fullGPLDirPath <- file.path(sprintf(GPLDirPath, destdir, stub, GPL))
 
   cachedFile <- file.path(fullGPLDirPath, paste0(GPL, ".annot.gz"))
@@ -901,7 +907,7 @@ downloadGPL <- function (GPL, destdir = getPhantasusConf("local_cache")$cache_ro
     }
   }
 
-  mirrorPath <- getPhantasusConf("external_sources")$geo_mirrors
+  mirrorPath <- getPhantasusConf("geo_mirrors")
   annotPath <- paste0(mirrorPath,  '/geo/platforms/%s/%s/annot/%s')
   annotURL <- sprintf(annotPath,stub,GPL,paste0(GPL,'.annot.gz'))
   dir.create(fullGPLDirPath, showWarnings = FALSE, recursive = TRUE)
@@ -962,7 +968,7 @@ downloadGPL <- function (GPL, destdir = getPhantasusConf("local_cache")$cache_ro
   return(targetFile)
 }
 
-getGPLAnnotation <- function (GPL, destdir = getPhantasusConf("local_cache")$cache_root) {
+getGPLAnnotation <- function (GPL, destdir = getPhantasusConf("cache_folders")$geo_path) {
     filename <- downloadGPL(GPL, destdir)
     # ret <- parseGEO(filename)
 
@@ -976,7 +982,7 @@ getGPLAnnotation <- function (GPL, destdir = getPhantasusConf("local_cache")$cac
     return(ret)
 }
 
-annotateFeatureData <- function (es, destdir = getPhantasusConf("local_cache")$cache_root) {
+annotateFeatureData <- function (es, destdir = getPhantasusConf("cache_folders")$geo_path) {
     platform <- as.character(es$platform_id)[1]
     platformParsed <- getGPLAnnotation(platform, destdir)
 

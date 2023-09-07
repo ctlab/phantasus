@@ -178,7 +178,7 @@ writeToList <- function(es) {
 #' Also can be a genus. Possible genus: \enumerate{ \item drosophila \item gallus \item bos \item caenorhabditis
 #' \item danio \item rattus \item saccharomyces \item arabidopsis}
 #' @param force logical value which let function replace current files
-updateARCHS4 <- function (cacheDir = file.path(getPhantasusConf("local_cache")$rnaseq_counts, "archs4"), organism = c("all"), force = FALSE){
+updateARCHS4 <- function (cacheDir = file.path(getPhantasusConf("cache_folders")$rnaseq_counts, "archs4"), organism = c("all"), force = FALSE){
     zoo_dict <- c("drosophila" = "Drosophila_melanogaster",
                  "bos" = "Bos_taurus",
                  "caenorhabditis" = "Caenorhabditis_elegans",
@@ -220,7 +220,7 @@ updateARCHS4 <- function (cacheDir = file.path(getPhantasusConf("local_cache")$r
 #' See \code{\link{validateCountsCollection}} for more common information and \code{meta.txt}  file structure
 #' @seealso \code{\link{validateCountsCollection}}
 #' @import data.table
-updateARCHS4meta <- function(archDir = file.path(getPhantasusConf("local_cache")$rnaseq_counts, "archs4")){
+updateARCHS4meta <- function(archDir = file.path(getPhantasusConf("cache_folders")$rnaseq_counts, "archs4")){
     archs4files <- list.files(archDir, pattern = '\\.h5$')
     DT_meta <- data.frame(matrix(ncol = 5, nrow = length(archs4files), dimnames = list(NULL, c("file_name", "sample_id", "sample_dim",	"gene_id", "genes_annot"))))
     DT_meta$file_name <- archs4files
@@ -311,7 +311,7 @@ updateARCHS4meta <- function(archDir = file.path(getPhantasusConf("local_cache")
 #' See \code{\link{validateCountsCollection}} for more common information and \code{meta.txt}  file structure
 #' @seealso \code{\link{validateCountsCollection}}
 #' @import data.table
-updateDEE2meta <- function(destDir = file.path(getPhantasusConf("local_cache")$rnaseq_counts, "dee2")){
+updateDEE2meta <- function(destDir = file.path(getPhantasusConf("cache_folders")$rnaseq_counts, "dee2")){
     dee2files <- list.files(destDir, pattern = '\\.h5$')
     DT_meta <- data.frame(matrix(ncol = 5, nrow = length(dee2files), dimnames = list(NULL, c("file_name", "sample_id", "sample_dim",	"gene_id", "genes_annot"))))
     DT_meta$file_name <- dee2files
@@ -339,8 +339,11 @@ updateDEE2meta <- function(destDir = file.path(getPhantasusConf("local_cache")$r
     write.table(x = DT_meta, file = file.path(destDir, "meta.txt"), sep = "\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
 }
 
+stopPhantasus <- function(){
+    stop("Phantasus is not configured. Run phantasus::setupPhantasus() to complete setup.")
+}
 selfCheck <- function(verbose = FALSE) {
-    cacheDir = getPhantasusConf("local_cache")$cache_root
+    cacheDir = getPhantasusConf("cache_root")
     preloadedDir = getPhantasusConf("preloaded_dir")
     if (!is.null(preloadedDir) && dir.exists(preloadedDir)) {
         preloadedFiles <- list.files(preloadedDir, pattern = "\\.(gct|rda)$")
@@ -352,8 +355,7 @@ selfCheck <- function(verbose = FALSE) {
     } else {
         message('!!! Preloaded dir is not set')
     }
-
-    h5counts <- list.files(getPhantasusConf("local_cache")$rnaseq_counts, recursive = TRUE,
+    h5counts <- list.files(getPhantasusConf("cache_folders")$rnaseq_counts, recursive = TRUE,
                            pattern = '\\.h5$')
     archs4Files <- list.files(file.path(cacheDir, "archs4"),
                               pattern = '\\.h5$')
@@ -378,7 +380,7 @@ selfCheck <- function(verbose = FALSE) {
             message('!!! No counts provided RNA-seq will load without matrices')
         }
     }
-    annotDir <- getPhantasusConf("local_cache")$annot_db
+    annotDir <- getPhantasusConf("cache_folders")$annot_db
     dbFiles <- list.files(annotDir, pattern = '\\.sqlite$')
     if (length(dbFiles)) {
         message(paste(length(dbFiles), 'annotationDb are available'))
@@ -390,7 +392,7 @@ selfCheck <- function(verbose = FALSE) {
         message('!!! No annotationDb provided')
     }
 
-    fgseaDir <-  getPhantasusConf("local_cache")$fgsea_pathways
+    fgseaDir <-  getPhantasusConf("cache_folders")$fgsea_pathways
     fgseaFiles <- list.files(fgseaDir, '\\.rds$', full.names = FALSE)
     if (length(fgseaFiles)) {
         message(paste(length(fgseaFiles), 'fgsea tables are available'))
@@ -419,16 +421,16 @@ isValidExperimentID <- function(name) {
 }
 
 
-getGEODir <- function(name, destdir = tempdir()) {
+getGEODir <- function(name, destdir = file.path(tempdir(), "geo")) {
     if (!isValidExperimentID(name)) {
         stop(name, " does not look like a valid GEO Series ID")
     }
     type <- substr(name, 1, 3)
     GEO <- unlist(strsplit(name, "-"))[1]
     stub <- gsub("\\d{1,3}$", "nnn", GEO, perl = TRUE)
-    gdsDirPath <- "%s/geo/datasets/%s/%s/soft"
-    gseDirPath <- "%s/geo/series/%s/%s/matrix"
-    gplDirPath <- "%s/geo/platforms/%s/%s/soft"
+    gdsDirPath <- "%s/datasets/%s/%s/soft"
+    gseDirPath <- "%s/series/%s/%s/matrix"
+    gplDirPath <- "%s/platforms/%s/%s/soft"
     if (type == 'GSE') {
         fullGEODirPath <- file.path(sprintf(gseDirPath, destdir, stub, GEO))
     } else if (type == "GDS") {
@@ -554,7 +556,7 @@ getCountsMetaPart <- function(counts_dir, collection_name, verbose){
 #' \code{meta.rda} is \code{data.table} which is a result of union \code{data.table}s produced by \code{\link{getCountsMetaPart}} for each collection
 #' @seealso {\code{\link{validateCountsCollection}},\code{\link{updateCountsMeta}}}
 #'  @import data.table
-updateCountsMeta <- function(counts_dir =  getPhantasusConf("local_cache")$rnaseq_counts, force = FALSE, verbose = FALSE){
+updateCountsMeta <- function(counts_dir =  getPhantasusConf("cache_folders")$rnaseq_counts, force = FALSE, verbose = FALSE){
     if (!dir.exists(counts_dir)) {
         message(paste0('Counts directory ', counts_dir, " does not extist" ))
         return()

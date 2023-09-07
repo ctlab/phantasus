@@ -2,15 +2,11 @@ context("Load GEO and its utils")
 library(jsonlite)
 library(Biobase)
 library(data.table)
-
+Sys.setenv(R_USER_CONFIG_DIR = system.file("/testdata/config", package = "phantasus"))
 test_that("loadGEO finishes with result", {
-    options(phantasusMirrorPath = "https://genome.ifmo.ru/files/software/phantasus",
-            phantasusCacheDir = tempdir())
-
-    cacheDir <- getOption("phantasusCacheDir")
     x <- loadGEO("GSE27112")
     expect_is(x, "json")
-
+    cacheDir <- getPhantasusConf("cache_root")
     binPath <- file.path(cacheDir, fromJSON(x))
     ess <- protolite::unserialize_pb(readBin(binPath, what="raw", n=100000000))$ess
     expect_equal(length(ess), 2)
@@ -28,7 +24,6 @@ test_that("loadGEO finishes with result", {
 
     expect_error(loadGEO("WRONGNAME"))
 
-    options(phantasusMirrorPath = NULL, phantasusCacheDir = NULL)
 })
 
 test_that("getGDS adds id field for GDS datasets", {
@@ -38,18 +33,17 @@ test_that("getGDS adds id field for GDS datasets", {
 
 test_that("filterPhenoAnnotations saves colnames", {
     cacheDir <- tempdir()
-    es <- getES("GSE53986", destdir = cacheDir)[[1]]
+    es <- getES("GSE53986", destdir = cacheDir,  mirrorPath = "https://ftp.ncbi.nlm.nih.gov")[[1]]
     expect_true(all(colnames(es) == colnames(exprs(es))))
 })
 
 test_that("reparseCachedGSEs works", {
     cacheDir <- tempdir()
-    getES("GSE14308", destdir = cacheDir)
-    expect_true("GSE14308" %in% reparseCachedESs(destdir = cacheDir))
+    getES("GSE14308", destdir = cacheDir, mirrorPath = "https://ftp.ncbi.nlm.nih.gov")
+    expect_true("GSE14308" %in% reparseCachedESs(destdir = cacheDir, mirrorPath = "https://ftp.ncbi.nlm.nih.gov"))
 })
 
 test_that("checkGPLs counts gpls correctly", {
-    options(phantasusMirrorPath = "https://genome.ifmo.ru/files/software/phantasus")
 
     expect_equal(fromJSON(checkGPLs("GSE14308")), c("GSE14308"))
     expect_equal(fromJSON(checkGPLs("GDS4885")), c("GDS4885"))
@@ -58,15 +52,12 @@ test_that("checkGPLs counts gpls correctly", {
     expect_warning(checkGPLs("GSE101"))
     expect_warning(checkGPLs("GSE201"))
 
-    options(phantasusMirrorPath = NULL)
 })
 
 test_that("checkGPLs works with fully specified name", {
-    options(phantasusMirrorPath = "https://genome.ifmo.ru/files/software/phantasus")
 
     expect_equal(fromJSON(checkGPLs("GSE27112-GPL6885")), c("GSE27112-GPL6885"))
 
-    options(phantasusMirrorPath = NULL)
 })
 
 # TODO: adapt to new checkGPLs
@@ -84,7 +75,7 @@ test_that("checkGPLs works with fully specified name", {
 #})
 
 test_that("getGSE works with ARCHS4", {
-    ess <- getGSE("GSE99709", destdir=system.file("testdata", package="phantasus"))
+    ess <- getGSE("GSE99709", destdir=system.file("testdata", package="phantasus"), mirrorPath = "https://ftp.ncbi.nlm.nih.gov")
     expect_gt(nrow(ess[[1]]), 0)
     expect_gt(ncol(ess[[1]]), 0)
 })

@@ -37,7 +37,7 @@ servePhantasus <- function(host = getPhantasusConf("host"),
                            port = getPhantasusConf("port"),
                            staticRoot = system.file("www/phantasus.js",
                                                     package = "phantasus"),
-                           cacheDir = getPhantasusConf("local_cache")$cache_root,
+                           cacheDir = getPhantasusConf("cache_root"),
                            preloadedDir = getPhantasusConf("preloaded_dir"),
                            openInBrowser =  getPhantasusConf("open_in_browser"),
                            quiet=getPhantasusConf("quiet")) {
@@ -47,13 +47,21 @@ servePhantasus <- function(host = getPhantasusConf("host"),
     else
         normalizePath(preloadedDir)
 
+    if (!dir.exists(cacheDir)){
+        stopPhantasus()
+    }
+    for (folder in getPhantasusConf("cache_folders")) {
+        if (!dir.exists(folder)){
+            stopPhantasus()
+        }
+    }
     options(phantasusCacheDir = cacheDir,
             phantasusPreloadedDir = preloadedDir)
 
     selfCheck()
-    annotationDBMeta(getPhantasusConf("local_cache")$annot_db)
-    FGSEAmeta(getPhantasusConf("local_cache")$fgsea_pathways)
-    updateCountsMeta(getPhantasusConf("local_cache")$rnaseq_counts)
+    annotationDBMeta(getPhantasusConf("cache_folders")$annot_db)
+    FGSEAmeta(getPhantasusConf("cache_folders")$fgsea_pathways)
+    updateCountsMeta(getPhantasusConf("cache_folders")$rnaseq_counts)
     if (!opencpu:::win_or_mac()) {
         run_worker <- NULL
     } else {
@@ -144,7 +152,7 @@ servePhantasus <- function(host = getPhantasusConf("host"),
         }
 
         app <- Rook::URLMap$new(`/phantasus/ocpu` = opencpu:::rookhandler("/phantasus/ocpu", worker_cb=run_worker),
-                                `/phantasus/geo` = subPathStatic(cacheDir, '/phantasus/'),
+                                `/phantasus/geo` = subPathStatic(getPhantasusConf("cache_folders")$geo_path, '/phantasus/geo'),
                                 `/phantasus/preloaded` = subPathStatic(cacheDir, '/phantasus/'),
                                 `/phantasus/?` = subPathStatic(staticRoot, '/phantasus/'),
                                 `/?` = Rook::Redirect("/phantasus/index.html"))
