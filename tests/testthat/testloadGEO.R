@@ -4,6 +4,8 @@ library(Biobase)
 library(data.table)
 Sys.setenv(R_USER_CONFIG_DIR = system.file("/testdata/config", package = "phantasus"))
 test_that("loadGEO finishes with result", {
+    old_conf <- Sys.getenv("R_CONFIG_ACTIVE")
+    Sys.setenv(R_CONFIG_ACTIVE = "default")
     x <- loadGEO("GSE27112")
     expect_is(x, "json")
     cacheDir <- getPhantasusConf("cache_root")
@@ -23,41 +25,52 @@ test_that("loadGEO finishes with result", {
     expect_is(loadGEO("GDS4885"), "json")
 
     expect_error(loadGEO("WRONGNAME"))
+    Sys.setenv(R_CONFIG_ACTIVE = old_conf)
 
 })
 
 test_that("getGDS adds id field for GDS datasets", {
+    old_conf <- Sys.getenv("R_CONFIG_ACTIVE")
+    Sys.setenv(R_CONFIG_ACTIVE = "default")
     a <- getGDS("GDS4885")[[1]]
     expect_true("id" %in% tolower(fvarLabels(a)))
+    Sys.setenv(R_CONFIG_ACTIVE = old_conf)
 })
 
 test_that("filterPhenoAnnotations saves colnames", {
-    cacheDir <- tempdir()
-    es <- getES("GSE53986", destdir = cacheDir,  mirrorPath = "https://ftp.ncbi.nlm.nih.gov")[[1]]
+    old_conf <- Sys.getenv("R_CONFIG_ACTIVE")
+    Sys.setenv(R_CONFIG_ACTIVE = "test_real_geo")
+    es <- getES("GSE53986")[[1]]
     expect_true(all(colnames(es) == colnames(exprs(es))))
+    Sys.setenv(R_CONFIG_ACTIVE = old_conf)
 })
 
 test_that("reparseCachedGSEs works", {
-    cacheDir <- tempdir()
-    getES("GSE14308", destdir = cacheDir, mirrorPath = "https://ftp.ncbi.nlm.nih.gov")
-    expect_true("GSE14308" %in% reparseCachedESs(destdir = cacheDir, mirrorPath = "https://ftp.ncbi.nlm.nih.gov"))
+    old_conf <- Sys.getenv("R_CONFIG_ACTIVE")
+    Sys.setenv(R_CONFIG_ACTIVE = "test_real_geo")
+    getES("GSE14308")
+    expect_true("GSE14308" %in% reparseCachedESs(destdir = getPhantasusConf("cache_folders")$geo_path))
+    Sys.setenv(R_CONFIG_ACTIVE = old_conf)
 })
 
 test_that("checkGPLs counts gpls correctly", {
-
+    old_conf <- Sys.getenv("R_CONFIG_ACTIVE")
+    Sys.setenv(R_CONFIG_ACTIVE = "default")
     expect_equal(fromJSON(checkGPLs("GSE14308")), c("GSE14308"))
     expect_equal(fromJSON(checkGPLs("GDS4885")), c("GDS4885"))
     expect_length(fromJSON(checkGPLs("GSE27112")), 2)
     expect_length(fromJSON(checkGPLs("GSE10000")), 2)
     expect_warning(checkGPLs("GSE101"))
     expect_warning(checkGPLs("GSE201"))
+    Sys.setenv(R_CONFIG_ACTIVE = old_conf)
 
 })
 
 test_that("checkGPLs works with fully specified name", {
-
+    old_conf <- Sys.getenv("R_CONFIG_ACTIVE")
+    Sys.setenv(R_CONFIG_ACTIVE = "default")
     expect_equal(fromJSON(checkGPLs("GSE27112-GPL6885")), c("GSE27112-GPL6885"))
-
+    Sys.setenv(R_CONFIG_ACTIVE = old_conf)
 })
 
 # TODO: adapt to new checkGPLs

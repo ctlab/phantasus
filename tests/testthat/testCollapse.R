@@ -61,9 +61,11 @@ test_that("Collapse dataset by columns", {
 })
 
 test_that("Collapse strip unannotated rows", {
-    cacheDir <- tempdir()
-    ess <- getGSE('GSE53986',  destdir = cacheDir,  mirrorPath = "https://ftp.ncbi.nlm.nih.gov")[[1]]
-    unstripped <- collapseDatasetImpl(ess, selectOne = TRUE, fn = median, fields = c('ENTREZ_GENE_ID'), removeEmpty = FALSE)
-    stripped <- collapseDatasetImpl(ess, selectOne = TRUE, fn = median, fields = c('ENTREZ_GENE_ID'), removeEmpty = TRUE)
+    old_conf <- Sys.getenv("R_CONFIG_ACTIVE")
+    Sys.setenv(R_CONFIG_ACTIVE = "test_real_geo")
+    ess <- getGSE('GSE53986')[[1]]
+    unstripped <- collapseDatasetImpl(ess, selectOne = TRUE, fn = median, fields = c('Gene ID'), removeEmpty = FALSE)
+    stripped <- collapseDatasetImpl(ess, selectOne = TRUE, fn = median, fields = c('Gene ID'), removeEmpty = TRUE)
     expect_equal(nrow(stripped) + 1, nrow(unstripped))
+    Sys.setenv(R_CONFIG_ACTIVE = old_conf)
 })
