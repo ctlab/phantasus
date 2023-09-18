@@ -83,7 +83,7 @@ loadGEO <- function(name, type = NA) {
 #'     in \code{name} variable GEO identifier.
 #'
 #' @examples
-#' getGDS('GDS4922')
+#' getGDS('GDS4922', destdir = tempdir(), mirrorPath = "https://ftp.ncbi.nlm.nih.gov")
 #'
 #' @export
 getGDS <- function(name, destdir = getPhantasusConf("cache_folders")$geo_path,
@@ -312,7 +312,9 @@ filterFeatureAnnotations <- function(es) {
 
     if ("Gene ID" %in% fvarLabels(es)) {
         fvarsToKeep <- c(fvarsToKeep, "Gene ID")
-    } else if ("ID" %in% fvarLabels(es)) {
+    } else if ("ENTREZ_GENE_ID" %in%  fvarLabels(es)){
+        fvarsToKeep <- c(fvarsToKeep, "ENTREZ_GENE_ID")
+    }else if ("ID" %in% fvarLabels(es)) {
         fvarsToKeep <- c(fvarsToKeep, "ID")
     } else {
         fvarsToKeep <- c(fvarsToKeep, grep("entrez",
@@ -416,7 +418,7 @@ filterPhenoAnnotations <- function(es) {
 #'     getGSE('GSE14308', destdir = 'cache')
 #'     getGSE('GSE27112')
 #' }
-#' getGSE('GSE53986')
+#' getGSE('GSE53986', destdir = tempdir(), mirrorPath = "https://ftp.ncbi.nlm.nih.gov")
 #'
 #' @export
 #' @import rhdf5
@@ -532,7 +534,7 @@ getGSE <- function(name, destdir = getPhantasusConf("cache_folders")$geo_path,
 #'     getES('GSE14308', type = 'GSE', destdir = 'cache')
 #'     getES('GSE27112')
 #' }
-#' getES('GDS4922')
+#' getES('GDS4922', destdir = tempdir(), mirrorPath = "https://ftp.ncbi.nlm.nih.gov")
 #'
 #' @export
 getES <- function(name, type = NA, destdir = getPhantasusConf("cache_folders")$geo_path,
@@ -598,7 +600,7 @@ listCachedESs <- function(destdir) {
 #' @return vector of previously cached GSE IDs
 #'
 #' @examples
-#' reparseCachedESs(destdir=tempdir())
+#' reparseCachedESs(destdir=tempdir(), "https://ftp.ncbi.nlm.nih.gov")
 #'
 #' @export
 reparseCachedESs <- function(destdir,

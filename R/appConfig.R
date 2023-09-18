@@ -125,7 +125,7 @@ configureAnnotDB <- function(user_conf, setup_config){
         } )
     }
     if (length(menu_choices) > 1){
-        menu_res <- menu(choices = menu_choices, graphics = FALSE, title = "Choose how to set up the AnnotationDB folder: ")
+        menu_res <- utils::menu(choices = menu_choices, graphics = FALSE, title = "Choose how to set up the AnnotationDB folder: ")
         if (menu_res == 0){
             message("Canceled")
             return()
@@ -161,7 +161,7 @@ configureFGSEA <- function(user_conf, setup_config){
         } )
     }
     if (length(menu_choices) > 1){
-        menu_res <- menu(choices = menu_choices, graphics = FALSE, title = "Choose how to set up the FGSEA pathways folder: ")
+        menu_res <- utils::menu(choices = menu_choices, graphics = FALSE, title = "Choose how to set up the FGSEA pathways folder: ")
         if (menu_res == 0){
             message("Canceled")
             return()
@@ -216,7 +216,7 @@ configureRnaseqCounts <- function(user_conf, setup_config){
         } )
     }
     if (length(menu_choices) >1){
-        menu_res <- menu(choices = menu_choices, graphics = FALSE, title = "Choose how to set up the RNA-seq counts folder: ")
+        menu_res <- utils::menu(choices = menu_choices, graphics = FALSE, title = "Choose how to set up the RNA-seq counts folder: ")
         if (menu_res == 0){
             message("Canceled")
             return()

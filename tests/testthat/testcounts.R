@@ -87,7 +87,7 @@ test_that("loadCounts returns result", {
     expect_gt(nrow(ess[[1]]), 0)
     expect_gt(ncol(ess[[1]]), 0)
     setwd(real_wd)
-    unlink(tmp_dir, recursive = TRUE)
+    unlink(tmp_counts, recursive = TRUE)
 
 })
 

@@ -8,7 +8,7 @@ availableFGSEADatabases <- function () {
     }
     metaFile <- file.path(dbDir, 'fgsea.txt')
 
-    if (!file.exitst(metaFile)){
+    if (!file.exists(metaFile)){
         stop("FGSEA pathways folder was not properly configured. meta file is missed.")
     }
     meta = read.table(metaFile, header = TRUE, sep = '\t')
