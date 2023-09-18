@@ -29,6 +29,7 @@ ExpressionSet object wrapped in list, that was available by given
     to GEO Dataset identifier.
 }
 \examples{
-getGDS('GDS4922', destdir = tempdir(), mirrorPath = "https://ftp.ncbi.nlm.nih.gov")
-
+\dontrun{
+   getGDS('GDS4922', destdir = tempdir(), mirrorPath = "https://ftp.ncbi.nlm.nih.gov")
+}
 }

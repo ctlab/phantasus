@@ -37,7 +37,7 @@ List of ExpressionSet objects, that were available by given
 \dontrun{
     getES('GSE14308', type = 'GSE', destdir = 'cache')
     getES('GSE27112')
+    getES('GDS4922')
 }
-getES('GDS4922', destdir = tempdir(), mirrorPath = "https://ftp.ncbi.nlm.nih.gov")
 
 }

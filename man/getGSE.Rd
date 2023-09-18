@@ -32,7 +32,7 @@ List of ExpressionSet objects, that were available by given
 \dontrun{
     getGSE('GSE14308', destdir = 'cache')
     getGSE('GSE27112')
+    getGSE('GSE53986')
 }
-getGSE('GSE53986', destdir = tempdir(), mirrorPath = "https://ftp.ncbi.nlm.nih.gov")
 
 }

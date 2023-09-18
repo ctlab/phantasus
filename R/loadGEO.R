@@ -83,8 +83,9 @@ loadGEO <- function(name, type = NA) {
 #'     in \code{name} variable GEO identifier.
 #'
 #' @examples
-#' getGDS('GDS4922', destdir = tempdir(), mirrorPath = "https://ftp.ncbi.nlm.nih.gov")
-#'
+#' \dontrun{
+#'    getGDS('GDS4922', destdir = tempdir(), mirrorPath = "https://ftp.ncbi.nlm.nih.gov")
+#' }
 #' @export
 getGDS <- function(name, destdir = getPhantasusConf("cache_folders")$geo_path,
                    mirrorPath = getPhantasusConf("geo_mirrors")) {
@@ -417,8 +418,8 @@ filterPhenoAnnotations <- function(es) {
 #' \dontrun{
 #'     getGSE('GSE14308', destdir = 'cache')
 #'     getGSE('GSE27112')
+#'     getGSE('GSE53986')
 #' }
-#' getGSE('GSE53986', destdir = tempdir(), mirrorPath = "https://ftp.ncbi.nlm.nih.gov")
 #'
 #' @export
 #' @import rhdf5
@@ -533,8 +534,8 @@ getGSE <- function(name, destdir = getPhantasusConf("cache_folders")$geo_path,
 #' \dontrun{
 #'     getES('GSE14308', type = 'GSE', destdir = 'cache')
 #'     getES('GSE27112')
+#'     getES('GDS4922')
 #' }
-#' getES('GDS4922', destdir = tempdir(), mirrorPath = "https://ftp.ncbi.nlm.nih.gov")
 #'
 #' @export
 getES <- function(name, type = NA, destdir = getPhantasusConf("cache_folders")$geo_path,
