@@ -4,7 +4,11 @@
 \alias{getGSE}
 \title{Load ExpressionSet from GEO Series}
 \usage{
-getGSE(name, destdir = tempdir(), mirrorPath = "https://ftp.ncbi.nlm.nih.gov")
+getGSE(
+  name,
+  destdir = getPhantasusConf("cache_folders")$geo_path,
+  mirrorPath = getPhantasusConf("geo_mirrors")
+)
 }
 \arguments{
 \item{name}{String, containing GEO identifier of the dataset.
@@ -29,6 +33,6 @@ List of ExpressionSet objects, that were available by given
     getGSE('GSE14308', destdir = 'cache')
     getGSE('GSE27112')
 }
-getGSE('GSE53986')
+getGSE('GSE53986', destdir = tempdir(), mirrorPath = "https://ftp.ncbi.nlm.nih.gov")
 
 }

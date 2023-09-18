@@ -5,7 +5,7 @@
 \title{Update ARCHS4 meta files}
 \usage{
 updateARCHS4meta(
-  archDir = file.path(getOption("phantasusCacheDir"), "counts/archs4")
+  archDir = file.path(getPhantasusConf("cache_folders")$rnaseq_counts, "archs4")
 )
 }
 \arguments{
@@ -15,7 +15,7 @@ updateARCHS4meta(
 Creates \code{meta.txt} file, which describes typical archs4 and archs4Zoo files.
 }
 \details{
-This function produces very specific "hardcoded" \code{meta.txt} file for arch4 and archs4ZOO counts colletctions.
+This function produces very specific "hardcoded" \code{meta.txt} file for arch4 and archs4ZOO counts collections.
 See \code{\link{validateCountsCollection}} for more common information and \code{meta.txt}  file structure
 }
 \seealso{

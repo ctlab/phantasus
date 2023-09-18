@@ -5,7 +5,7 @@
 \title{Update archs4 files.}
 \usage{
 updateARCHS4(
-  cacheDir = file.path(getOption("phantasusCacheDir"), "counts/archs4"),
+  cacheDir = file.path(getPhantasusConf("cache_folders")$rnaseq_counts, "archs4"),
   organism = c("all"),
   force = FALSE
 )

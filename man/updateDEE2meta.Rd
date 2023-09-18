@@ -5,7 +5,7 @@
 \title{Update DEE2 meta files}
 \usage{
 updateDEE2meta(
-  destDir = file.path(getOption("phantasusCacheDir"), "counts/dee2")
+  destDir = file.path(getPhantasusConf("cache_folders")$rnaseq_counts, "dee2")
 )
 }
 \arguments{

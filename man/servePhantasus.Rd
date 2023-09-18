@@ -5,13 +5,13 @@
 \title{Serve phantasus.}
 \usage{
 servePhantasus(
-  host = "0.0.0.0",
-  port = 8000,
+  host = getPhantasusConf("host"),
+  port = getPhantasusConf("port"),
   staticRoot = system.file("www/phantasus.js", package = "phantasus"),
-  cacheDir = tempdir(),
-  preloadedDir = NULL,
-  openInBrowser = TRUE,
-  quiet = TRUE
+  cacheDir = getPhantasusConf("cache_root"),
+  preloadedDir = getPhantasusConf("preloaded_dir"),
+  openInBrowser = getPhantasusConf("open_in_browser"),
+  quiet = getPhantasusConf("quiet")
 )
 }
 \arguments{

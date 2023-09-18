@@ -32,7 +32,7 @@
 \title{Update meta-data for counts collections}
 \usage{
 updateCountsMeta(
-  counts_dir = file.path(getOption("phantasusCacheDir"), "counts"),
+  counts_dir = getPhantasusConf("cache_folders")$rnaseq_counts,
   force = FALSE,
   verbose = FALSE
 )

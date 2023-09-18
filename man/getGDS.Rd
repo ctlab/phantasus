@@ -4,7 +4,11 @@
 \alias{getGDS}
 \title{Load ExpressionSet from GEO Datasets}
 \usage{
-getGDS(name, destdir = tempdir(), mirrorPath = "https://ftp.ncbi.nlm.nih.gov")
+getGDS(
+  name,
+  destdir = getPhantasusConf("cache_folders")$geo_path,
+  mirrorPath = getPhantasusConf("geo_mirrors")
+)
 }
 \arguments{
 \item{name}{String, containing GEO identifier of the dataset.
@@ -25,6 +29,6 @@ ExpressionSet object wrapped in list, that was available by given
     to GEO Dataset identifier.
 }
 \examples{
-getGDS('GDS4922')
+getGDS('GDS4922', destdir = tempdir(), mirrorPath = "https://ftp.ncbi.nlm.nih.gov")
 
 }

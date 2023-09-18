@@ -8,7 +8,7 @@ limmaAnalysis(
   es,
   fieldValues,
   version = "One-factor design",
-  contrast = list("Comparison", "A", "B"),
+  contrast = list("Comparison", "Target", "Reference"),
   designData = NULL
 )
 }
