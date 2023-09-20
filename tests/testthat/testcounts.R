@@ -36,7 +36,7 @@ test_that("updateCountsMeta works with priorities", {
         stop("test directory for counts does not exist")
     }
     destdir <- file.path(tempdir(), "test_counts")
-    dir.create(destdir)
+    dir.create(destdir, recursive = TRUE)
     tmp_path <- file.path(destdir, "archs4")
     dir.create(tmp_path)
     files <- list.files(real_path, pattern = "(.+\\.h5)|(meta.txt)", full.names = TRUE)
