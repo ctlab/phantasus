@@ -3,6 +3,7 @@ context("GCT")
 test_that("write.gct and read.gct work", {
     load(file = system.file("testdata/GSE27112-GPL6103.rda", package="phantasus"))
     gctFile <- tempfile(fileext = ".gct")
+    dir.create(dirname(gctFile), recursive = TRUE)
     write.gct(es, gctFile)
     es2 <- read.gct(gctFile)
     expect_equal(dim(es2), dim(es))
