@@ -1,5 +1,5 @@
 context('Collapse dataset')
-
+Sys.setenv(R_USER_CONFIG_DIR = system.file("/testdata/config", package = "phantasus"))
 test_that("Collapse dataset selectOne works correctly", {
     es <- read.gct(system.file("testdata/collapse_dataset_one.gct", package="phantasus"))
     newEs <- collapseDatasetImpl(es, selectOne = TRUE, fn = median, fields = c('Gene ID'), removeEmpty = FALSE)
