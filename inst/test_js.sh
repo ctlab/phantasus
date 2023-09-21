@@ -7,8 +7,9 @@ cp -r ./inst/testdata/config inst/www/phantasus.js/jasmine/cache/
 cd inst/www/phantasus.js/
 npm install karma --save-dev
 npm install
-R -e "Sys.setenv(R_USER_CONFIG_DIR = 'jasmine/cache/config',
-                 R_CONFIG_ACTIVE = 'test_js')"
+export R_USER_CONFIG_DIR=jasmine/cache/config
+export R_CONFIG_ACTIVE=test_js
+
 R -e "phantasus::getES('GSE53986')"
 
 touch server.log
