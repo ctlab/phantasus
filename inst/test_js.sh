@@ -3,7 +3,7 @@ R -e "devtools::install('.', upgrade=FALSE)"
 
 mkdir -p inst/www/phantasus.js/jasmine/cache
 cp "./inst/testdata/GSE27112-GPL6103.rda" inst/www/phantasus.js/jasmine/cache
-cp ./inst/testdata/config inst/www/phantasus.js/jasmine/cache/
+cp -r ./inst/testdata/config inst/www/phantasus.js/jasmine/cache/
 cd inst/www/phantasus.js/
 npm install karma --save-dev
 npm install
