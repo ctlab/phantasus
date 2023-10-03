@@ -30,6 +30,6 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.1
-Suggests: testthat, BiocStyle, knitr, rmarkdown, phantasusLite
+Suggests: testthat, BiocStyle, knitr, rmarkdown
 VignetteBuilder: knitr
 NeedsCompilation: no
