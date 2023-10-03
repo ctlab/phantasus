@@ -25,11 +25,11 @@ Imports: ggplot2, protolite, Biobase, GEOquery, Rook, htmltools,
         httpuv, jsonlite, limma, edgeR, opencpu, assertthat, methods, httr, rhdf5,
         utils, parallel, stringr, fgsea (>= 1.9.4), svglite, gtable, stats,
         Matrix, pheatmap, scales, ccaPP, grid, grDevices,
-        AnnotationDbi, DESeq2, data.table, curl, config
+        AnnotationDbi, DESeq2, data.table, curl, config (>= 0.3.2)
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.1
-Suggests: testthat, BiocStyle, knitr, rmarkdown
+Suggests: testthat, BiocStyle, knitr, rmarkdown, phantasusLite
 VignetteBuilder: knitr
 NeedsCompilation: no

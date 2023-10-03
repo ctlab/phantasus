@@ -16,21 +16,27 @@ setupPhantasus <- function(
     user_conf_file <- file.path(user_conf_dir, "user.conf")
     cache_root = NULL
     if (!file.exists(user_conf_file)){
-        cache_root = readline("Enter cache root folder for Phantasus  or leave blank for default (R tempdir):")
+        default_cache <- tools::R_user_dir("phantasus", which = "cache")
+        if (interactive()){
+            message("Specify the cache root for Phantasus. \n This folder will contain all Phantasus-related files: \n - GEO cache files \n - Annotation databases \n - FGSEA pathways \n - RNA-seq counts")
+            cache_root <- readline(paste0("Enter path or leave blank for default (", default_cache, "):"))
+        }
         if (nchar(cache_root)==0){
-            cache_root = tempdir()
-            }
-        user_conf <- create_user_conf(cache_root = cache_root, setup_config$geo_mirrors)
-
+            cache_root <- default_cache
+        }
+        user_conf <- create_user_conf(cache_root = cache_root, setup_config)
         dir.create(user_conf_dir,showWarnings = FALSE, recursive = FALSE)
+        message(paste("Create user configuration file:", user_conf_file))
         cat(user_conf, file = user_conf_file)
+
+    } else{
+        message(paste("Use existed confi=guration file:", user_conf_file))
     }
     user_conf <- getPhantasusConf()
     Sys.setenv(R_CONFIG_ACTIVE = "default")
 
     user_conf <- getPhantasusConf()
     message(paste("Current configuration: ", Sys.getenv("R_CONFIG_ACTIVE")))
-    user_conf
     default_timeout <- getOption("timeout")
     options(timeout = max(1000, default_timeout))
 
@@ -40,6 +46,9 @@ setupPhantasus <- function(
     configureRnaseqCounts(user_conf = user_conf, setup_config = setup_config )
 
     options(timeout =  default_timeout)
+    if (file.exists(user_conf_file)){
+        message(paste("! Successfully setup configuration file:", user_conf_file, "!"))
+    }
 }
 
 
@@ -96,7 +105,7 @@ configureAnnotDB <- function(user_conf, setup_config){
         message("Found local annotation databases:")
         message(paste ("\t" , mm_pkg))
         message(paste ("\t" , hs_pkg))
-        menu_choices = c(menu_choices, "Use local databases")
+        menu_choices = c(menu_choices, "Use local databases listed above")
         actions = c(actions, function(){
             if (nchar(mm_pkg)){
                 library(org.Mm.eg.db)
@@ -124,14 +133,14 @@ configureAnnotDB <- function(user_conf, setup_config){
                          destdir = local_path)
         } )
     }
-    if (length(menu_choices) > 1){
+    if ((!interactive()) | length(menu_choices) == 1){
+        menu_res <- 1
+    } else{
         menu_res <- utils::menu(choices = menu_choices, graphics = FALSE, title = "Choose how to set up the AnnotationDB folder: ")
         if (menu_res == 0){
             message("Canceled")
             return()
         }
-    }else{
-        menu_res <- 1
     }
     dir.create(local_path, recursive = TRUE)
     actions[[menu_res]]()
@@ -160,14 +169,14 @@ configureFGSEA <- function(user_conf, setup_config){
                          file_df = file_index)
         } )
     }
-    if (length(menu_choices) > 1){
+    if ((!interactive()) | length(menu_choices) == 1){
+        menu_res <- 1
+    } else{
         menu_res <- utils::menu(choices = menu_choices, graphics = FALSE, title = "Choose how to set up the FGSEA pathways folder: ")
         if (menu_res == 0){
             message("Canceled")
             return()
         }
-    }else{
-        menu_res <- 1
     }
     dir.create(local_path, recursive = TRUE)
     actions[[menu_res]]()
@@ -176,56 +185,61 @@ configureFGSEA <- function(user_conf, setup_config){
 
 configureRnaseqCounts <- function(user_conf, setup_config){
     message("Configure RNA-seq counts...")
-    local_path <- user_conf$cache_folders$rnaseq_counts
-    if (dir.exists(local_path)){
+    selected_path <- user_conf$cache_folders$rnaseq_counts
+    options(PhantasusUseHSD = NULL)
+    if (nchar(selected_path) == 0){
+        stop("!Configuration failed: RNA-seq counts path should be specified !")
+        return()
+    }
+    if (dir.exists(selected_path)){
         message("! RNA-seq counts folder exists and is treated as already configured !")
         return()
     }
-    if (length(setup_config$rnaseq_counts) == 0){
-        message("! Only local RNA-seq counts will be used !")
+
+    if(!startsWith( x = selected_path, prefix = "http")){
+        message("! RNA-seq count path looks like local path !")
+        configured <- dir.create(selected_path, recursive = TRUE)
+        if (configured){
+            message("RNA-seq counts configured")
+        } else {
+            stop("Configuration failed: Fail to create RNA-seq count directory")
+        }
         return()
     }
-
-    message("External source for RNA-seq counts is scpecified.")
-    menu_choices = c("Keep empty")
-    actions <- c(function() {message("Kept empty")})
-
-    req <- httr::GET(setup_config$rnaseq_counts)
-    if(req$headers$server == "Highly Scalable Data Service (HSDS)"){
-        message(paste(setup_config$rnaseq_counts, "response as HSDS server"))
-        phantasus_lite <- system.file(package='phantasus-lite')
-        if (nchar(phantasus_lite) == 0){
-            message("phantasus-lite package is not installed. HSDS will be ignored")
-            return()
-        }
-        use_hsds <- askYesNo(msg = "Would you like to use it as RNA-seq counts source?", default = FALSE)
-        if (use_hsds){
-            message("not implemented yet")
-            #options(UseHSDS = TRUE)
-        }
-    } else {
-        #message(paste(setup_config$rnaseq_counts, "is not HSDS server and is teated as file storage."))
-        file_index <- getFileIndexDF(base_url = setup_config$rnaseq_counts, pattern = "txt|h5" )
-        total_size <- round(sum(as.numeric(fs::fs_bytes(file_index$size))) / 2^20, digits = 2)
-        menu_choices = c(menu_choices, paste0("Download files from the ctlab Phantasus mirror (~", total_size, "MB)"))
-
-        actions <- c(actions, function(){
-            loadAllFiles(url = setup_config$rnaseq_counts,
-                         destdir = local_path,
-                         file_df = file_index)
-        } )
+    message("! RNA-seq counts path looks like web URL !")
+    if( !isHSDS(selected_path)){
+        message("Resource doesn't espond as HSDS server")
+        stop("Configuration failed: RNA-seq count path should be local diractory or HSDS server")
     }
-    if (length(menu_choices) >1){
-        menu_res <- utils::menu(choices = menu_choices, graphics = FALSE, title = "Choose how to set up the RNA-seq counts folder: ")
-        if (menu_res == 0){
-            message("Canceled")
-            return()
-        }
-    }else{
-        menu_res <- 1
+    message(paste(selected_path, "response as HSDS server"))
+    phantasus_lite <- system.file(package='phantasusLite')
+    if (nchar(phantasus_lite) == 0){
+        message("phantasus-lite package is not installed. HSDS will be ignored")
+        stop("Configuration failed: Install phantasusLite package to use HSDS server")
     }
-    dir.create(local_path, recursive = TRUE)
+    menu_choices = c("Yes")
+    actions <- c(function() {
+        options(PhantasusUseHSDS = TRUE)
+        message("HSDS server will be used as source of RNA-seq counts")
+        })
+
+    menu_choices <- c(menu_choices, "No")
+    actions <- c(actions, function() {
+        options(PhantasusUseHSDS = FALSE)
+        message("HSDS server will be ignored")
+    })
+    if (!interactive()){
+        actions[1]
+        return()
+    }
+    menu_res <- utils::menu(choices = menu_choices, graphics = FALSE, title = "Would you like to use HSDS server as source of RNA-seq counts?")
+    if (menu_res == 0){
+        message("Canceled")
+        actions[2]
+        return()
+    }
     actions[[menu_res]]()
+
 }
 
 getFileIndexDF <- function(base_url, pattern, location = "/"){
@@ -238,17 +252,17 @@ getFileIndexDF <- function(base_url, pattern, location = "/"){
         local_dir <- paste0(location, dir)
         file_df <- rbind(file_df, getFileIndexDF(base_url, pattern, local_dir ))
     }
-
     return(file_df)
 }
 
 loadAllFiles <- function(url, file_df, destdir ){
     message(paste("Trying download from", url))
+    url <- trimws(url, which = "right", whitespace = "/")
     for (file in file_df$file) {
         target_file <- file.path(destdir,file)
         dir.create(dirname(target_file), recursive = TRUE, showWarnings = FALSE)
         safeDownload(
-            url = paste(url, file, sep = "/"),
+            url = paste(url, file),
             filename = basename(target_file),
             dir = dirname(target_file)
         )
@@ -256,23 +270,29 @@ loadAllFiles <- function(url, file_df, destdir ){
 }
 
 
-create_user_conf <- function( cache_root, geo_mirrors){
+create_user_conf <- function( cache_root, setup_config){
 
     cache_folders = list (
         geo_path = "file.path(cache_root, 'geo/')",
-        rnaseq_counts = "file.path(cache_root, 'counts/')",
         annot_db  = "file.path(cache_root, 'annotationdb/')",
         fgsea_pathways = "file.path(cache_root, 'fgsea/')"
     )
     for (i in seq_along(cache_folders)){
         attr(cache_folders[[i]], "tag") <- "!expr"
     }
+    if ( is.null(setup_config$rnaseq_counts) | length(setup_config$rnaseq_counts) == 0){
+        cache_folders$rnaseq_counts <- "file.path(cache_root, 'counts/')"
+        attr(cache_folders$rnaseq_counts, "tag") <- "!expr"
+    } else{
+        cache_folders$rnaseq_counts <- setup_config$rnaseq_counts
+    }
+
     static_root <- "system.file('www/phantasus.js', package = 'phantasus')"
     attr(static_root, "tag") <- "!expr"
-    geo_mirrors <- if (length(geo_mirrors) == 0){
+    geo_mirrors <- if (length(setup_config$geo_mirrors) == 0){
                        list(true_geo = "https://ftp.ncbi.nlm.nih.gov")
                     } else {
-                       geo_mirrors
+                        setup_config$geo_mirrors
                     }
     for (i in seq_along(geo_mirrors)) {
         attr(geo_mirrors[[i]], "quoted") <- TRUE
@@ -282,8 +302,6 @@ create_user_conf <- function( cache_root, geo_mirrors){
                           list(
                                 host = "0.0.0.0",
                                 port = "8000",
-                                open_in_browser = TRUE,
-                                quiet = TRUE,
                                 preloaded_dir = NULL,
                                 static_root = static_root,
                                 cache_root = cache_root,

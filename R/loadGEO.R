@@ -494,8 +494,16 @@ getGSE <- function(name, destdir = getPhantasusConf("cache_folders")$geo_path,
 
     ess <- lapply(ess, filterFeatureAnnotations)
     archs4_files <- getArchs4Files(destdir)
-    if (dir.exists(getPhantasusConf("cache_folders")$rnaseq_counts)){
-      ess <- lapply(ess, loadCounts, counts_dir = getPhantasusConf("cache_folders")$rnaseq_counts)
+    useHSDS <- getOption("PhantasusUseHSDS")
+    counts_path <- getPhantasusConf("cache_folders")$rnaseq_counts
+    if (is.null(useHSDS)){
+        if (dir.exists(counts_path)){
+            ess <- lapply(ess, loadCounts, counts_dir = counts_path)
+        }
+    } else{
+        if (useHSDS == TRUE){
+            ess <- lapply(ess, phantasusLite::loadCountsFromHSDS, url = counts_path)
+        }
     }
     if (length(archs4_files) > 0)  {
         ess <- lapply(ess, loadFromARCHS4, archs4_files=archs4_files)

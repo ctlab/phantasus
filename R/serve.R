@@ -10,7 +10,6 @@
 #' @param staticRoot Path to static files with phantasus.js
 #'     (on local file system).
 #'
-#' @param cacheDir Full path to cache directory.
 #'
 #' @param preloadedDir Full path to directory with preloaded files.
 #'
@@ -35,25 +34,21 @@
 #' }
 servePhantasus <- function(host = getPhantasusConf("host"),
                            port = getPhantasusConf("port"),
-                           staticRoot = system.file("www/phantasus.js",
-                                                    package = "phantasus"),
-                           cacheDir = getPhantasusConf("cache_root"),
+                           staticRoot = getPhantasusConf("static_root"),
                            preloadedDir = getPhantasusConf("preloaded_dir"),
-                           openInBrowser =  getPhantasusConf("open_in_browser"),
-                           quiet=getPhantasusConf("quiet")) {
-    cacheDir <- normalizePath(cacheDir)
+                           openInBrowser = TRUE,
+                           quiet=TRUE) {
+    if (nchar(staticRoot) == 0){
+        staticRoot = system.file("www/phantasus.js", package = "phantasus")
+    }
+    cacheDir <- normalizePath(getPhantasusConf("cache_root"))
     preloadedDir <- if (is.null(preloadedDir))
         NULL
     else
         normalizePath(preloadedDir)
 
-    if (!dir.exists(cacheDir)){
+    if (!dir.exists(cacheDir) | !areCacheFoldersValid() ){
         stopPhantasus()
-    }
-    for (folder in getPhantasusConf("cache_folders")) {
-        if (!dir.exists(folder)){
-            stopPhantasus()
-        }
     }
     options(phantasusCacheDir = cacheDir,
             phantasusPreloadedDir = preloadedDir)
@@ -61,7 +56,9 @@ servePhantasus <- function(host = getPhantasusConf("host"),
     selfCheck()
     annotationDBMeta(getPhantasusConf("cache_folders")$annot_db)
     FGSEAmeta(getPhantasusConf("cache_folders")$fgsea_pathways)
-    updateCountsMeta(getPhantasusConf("cache_folders")$rnaseq_counts)
+    if (is.null(getOption("PhantasusUseHSDS"))){
+        updateCountsMeta(getPhantasusConf("cache_folders")$rnaseq_counts)
+    }
     if (!opencpu:::win_or_mac()) {
         run_worker <- NULL
     } else {

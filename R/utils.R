@@ -342,6 +342,34 @@ updateDEE2meta <- function(destDir = file.path(getPhantasusConf("cache_folders")
 stopPhantasus <- function(){
     stop("Phantasus is not configured. Run phantasus::setupPhantasus() to complete setup.")
 }
+
+areCacheFoldersValid <- function(){
+    cache_folders <- getPhantasusConf("cache_folders")
+    for (folder in cache_folders[names(cache_folders) != "rnaseq_counts"]) {
+        if (!dir.exists(folder)){
+            return(FALSE)
+        }
+    }
+    counts_source <- getPhantasusConf("cache_folders")$rnaseq_counts
+    useHSDS <- getOption("PhantasusUseHSDS")
+    if (nchar(counts_source) == 0){
+        return(FALSE)
+    }
+    if ( is.null(useHSDS)){
+        if (!dir.exists(counts_source)){
+            return(FALSE)
+        } else {
+            return(TRUE)
+        }
+    }
+    valid_hsds <- tryCatch(expr = isHSDS(getPhantasusConf("cache_folders")$rnaseq_counts),
+                           error = FALSE)
+    if(valid_hsds){
+        return(TRUE)
+    } else{
+        return(FALSE)
+    }
+}
 selfCheck <- function(verbose = FALSE) {
     cacheDir = getPhantasusConf("cache_root")
     preloadedDir = getPhantasusConf("preloaded_dir")
@@ -353,10 +381,19 @@ selfCheck <- function(verbose = FALSE) {
             message(" ")
         }
     } else {
-        message('!!! Preloaded dir is not set')
+        message('Preloaded dir is not set')
     }
-    h5counts <- list.files(getPhantasusConf("cache_folders")$rnaseq_counts, recursive = TRUE,
-                           pattern = '\\.h5$')
+    use_hsds <- getOption("PhantasusUseHSDS")
+    h5counts <- list()
+    if (is.null(use_hsds)){
+        h5counts <- list.files(getPhantasusConf("cache_folders")$rnaseq_counts, recursive = TRUE,
+                               pattern = '\\.h5$')
+    } else if (use_hsds == TRUE) {
+        if (nchar(system.file(package = "phantasusLite")) == 0){
+            stopPhantasus()
+        }
+        h5counts <- getHSDSFileList(getPhantasusConf("cache_folders")$rnaseq_counts)
+    }
     archs4Files <- list.files(file.path(cacheDir, "archs4"),
                               pattern = '\\.h5$')
     if (length(h5counts)) {
@@ -405,6 +442,16 @@ selfCheck <- function(verbose = FALSE) {
     }
 }
 
+isHSDS <- function(url){
+    if(!startsWith( x = url, prefix = "http")){
+        return(FALSE)
+    }
+    req <- httr::GET(url)
+    if( req$headers$server == "Highly Scalable Data Service (HSDS)"){
+        return(TRUE)
+    }
+    return(FALSE)
+}
 safeDownload <- function(url, dir, filename, ...) {
     dest <- file.path(dir, filename)
     if (file.exists(dest)) {
