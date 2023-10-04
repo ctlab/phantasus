@@ -262,7 +262,7 @@ loadAllFiles <- function(url, file_df, destdir ){
         target_file <- file.path(destdir,file)
         dir.create(dirname(target_file), recursive = TRUE, showWarnings = FALSE)
         safeDownload(
-            url = paste(url, file),
+            url = paste0(url, file),
             filename = basename(target_file),
             dir = dirname(target_file)
         )
