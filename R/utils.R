@@ -263,12 +263,12 @@ updateARCHS4meta <- function(archDir = file.path(getPhantasusConf("cache_folders
             DT_meta$sample_id[i_file] <-  "/meta/Sample_geo_accession"
             DT_meta$gene_id[i_file] <-  paste(gene_id_type, "/meta/genes", sep = ":")
             DT_meta$sample_dim[i_file] = "columns"
-            annot_str <- "Gene ID:meta/gene_entrezid"
+            annot_str <- "Gene ID:/meta/gene_entrezid"
             if (!toupper(gene_id_type) == "GENE SYMBOL") {
-              annot_str <- paste(annot_str, "Gene symbol:meta/genes", sep = ";")
+              annot_str <- paste(annot_str, "Gene symbol:/meta/genes", sep = ";")
             }
             if (!toupper(gene_id_type) == "ENSEMBLID") {
-                annot_str <- paste(annot_str, "ENSEMBLID:meta/gene_ensemblid", sep = ";")
+                annot_str <- paste(annot_str, "ENSEMBLID:/meta/gene_ensemblid", sep = ";")
             }
             DT_meta$genes_annot[i_file] = annot_str
         }
@@ -278,10 +278,10 @@ updateARCHS4meta <- function(archDir = file.path(getPhantasusConf("cache_folders
             DT_meta$sample_dim[i_file] = "rows"
             annot_str <- ""
             if (!toupper(gene_id_type) == "GENE SYMBOL") {
-                annot_str <-  "Gene symbol:meta/genes/gene_symbol"
+                annot_str <-  "Gene symbol:/meta/genes/gene_symbol"
             }
             if (!toupper(gene_id_type) == "ENSEMBLID") {
-                annot_str <- paste(annot_str, "ENSEMBLID:meta/genes/ensembl_gene_id", sep = ";")
+                annot_str <- paste(annot_str, "ENSEMBLID:/meta/genes/ensembl_gene_id", sep = ";")
             }
             DT_meta$genes_annot[i_file] = trimws(annot_str, which = "left", whitespace = ";")
         }
@@ -290,7 +290,7 @@ updateARCHS4meta <- function(archDir = file.path(getPhantasusConf("cache_folders
             DT_meta$sample_id[i_file] <- "/meta/samples/geo_accession"
             DT_meta$gene_id[i_file] <-  paste(gene_id_type, "/meta/genes/ensembl_gene_id", sep = ":")
             DT_meta$sample_dim[i_file] = "rows"
-            annot_str <- "Gene symbol:meta/genes/symbol"
+            annot_str <- "Gene symbol:/meta/genes/symbol"
             DT_meta$genes_annot[i_file] = annot_str
         }
 
