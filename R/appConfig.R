@@ -144,6 +144,7 @@ configureAnnotDB <- function(user_conf, setup_config){
     }
     dir.create(local_path, recursive = TRUE)
     actions[[menu_res]]()
+    annotationDBMeta(getPhantasusConf("cache_folders")$annot_db)
 }
 
 
@@ -180,7 +181,7 @@ configureFGSEA <- function(user_conf, setup_config){
     }
     dir.create(local_path, recursive = TRUE)
     actions[[menu_res]]()
-
+    FGSEAmeta(getPhantasusConf("cache_folders")$fgsea_pathways)
 }
 
 configureRnaseqCounts <- function(user_conf, setup_config){
@@ -217,22 +218,23 @@ configureRnaseqCounts <- function(user_conf, setup_config){
         message("phantasus-lite package is not installed. HSDS will be ignored")
         stop("Configuration failed: Install phantasusLite package to use HSDS server")
     }
-    menu_choices = c("Yes")
+    menu_choices = c("Yes, load expression matrix from remote server when the known RNA-seq dataset is requested")
     actions <- c(function() {
         options(PhantasusUseHSDS = TRUE)
         message("HSDS server will be used as source of RNA-seq counts")
         })
 
-    menu_choices <- c(menu_choices, "No")
+    menu_choices <- c(menu_choices, "No, keep all RNA-seq datasets without expression data")
     actions <- c(actions, function() {
         options(PhantasusUseHSDS = FALSE)
-        message("HSDS server will be ignored")
+        message("HSDS server will be ignored. RNA-seq datasets will be loaded without expression matrices.")
     })
     if (!interactive()){
         actions[1]
         return()
     }
-    menu_res <- utils::menu(choices = menu_choices, graphics = FALSE, title = "Would you like to use HSDS server as source of RNA-seq counts?")
+
+    menu_res <- utils::menu(choices = menu_choices, graphics = FALSE, title = "Current Phantasus configuration allows it to load count matrices from remote server when RNA-seq dataset is requested.\nWould you like to use this feature?")
     if (menu_res == 0){
         message("Canceled")
         actions[2]

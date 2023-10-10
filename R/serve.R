@@ -54,8 +54,6 @@ servePhantasus <- function(host = getPhantasusConf("host"),
             phantasusPreloadedDir = preloadedDir)
 
     selfCheck()
-    annotationDBMeta(getPhantasusConf("cache_folders")$annot_db)
-    FGSEAmeta(getPhantasusConf("cache_folders")$fgsea_pathways)
     if (is.null(getOption("PhantasusUseHSDS"))){
         updateCountsMeta(getPhantasusConf("cache_folders")$rnaseq_counts)
     }
