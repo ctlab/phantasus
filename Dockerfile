@@ -4,7 +4,7 @@ ARG TARGET_BRANCH=master
 ARG PHANTASUS_BUILD
 ARG GITHUB_PAT
 ENV OCPU_MASTER_HOME=/var/phantasus/ocpu-root
-ENV R_USER_CONFIG_DIR =/etc
+ENV R_USER_CONFIG_DIR=/etc
 
 # RUN apt install -y git && git clone -b ${TARGET_BRANCH} --recursive https://github.com/ctlab/phantasus /root/phantasus
 
@@ -42,7 +42,7 @@ RUN locale-gen en_US.UTF-8
 RUN mkdir -p /var/phantasus/cache && chown www-data /var/phantasus/cache
 RUN mkdir -p /var/phantasus/preloaded && chown www-data /var/phantasus/preloaded
 RUN mkdir -p /var/phantasus/ocpu-root && chown -R www-data /var/phantasus/ocpu-root &&\
-cp /root/phantasus/inst/configs/user.conf /etc/R/phantasus &&\
+cp /root/phantasus/inst/configs/user.conf /etc/R/phantasus/user.conf &&\
 chown -R www-data  /etc/R/phantasus
 
 RUN rm -rf /root/phantasus/inst
