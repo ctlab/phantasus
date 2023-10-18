@@ -25,7 +25,7 @@ setupPhantasus <- function(
             cache_root <- default_cache
         }
         user_conf <- create_user_conf(cache_root = cache_root, setup_config)
-        dir.create(user_conf_dir,showWarnings = FALSE, recursive = FALSE)
+        dir.create(user_conf_dir,showWarnings = FALSE, recursive = TRUE)
         message(paste("Create user configuration file:", user_conf_file))
         cat(user_conf, file = user_conf_file)
 
@@ -197,7 +197,7 @@ configureRnaseqCounts <- function(user_conf, setup_config){
         return()
     }
 
-    if(!startsWith( x = selected_path, prefix = "http")){
+    if(!grepl(pattern = "^http(s)?://", x = selected_path)){
         message("! RNA-seq count path looks like local path !")
         configured <- dir.create(selected_path, recursive = TRUE)
         if (configured){
@@ -209,17 +209,18 @@ configureRnaseqCounts <- function(user_conf, setup_config){
     }
     message("! RNA-seq counts path looks like web URL !")
     if( !isHSDS(selected_path)){
-        message("Resource doesn't espond as HSDS server")
+        message("Resource doesn't respond as HSDS server")
         stop("Configuration failed: RNA-seq count path should be local diractory or HSDS server")
     }
     message(paste(selected_path, "response as HSDS server"))
-    phantasus_lite <- system.file(package='phantasusLite')
-    if (nchar(phantasus_lite) == 0){
-        message("phantasus-lite package is not installed. HSDS will be ignored")
-        stop("Configuration failed: Install phantasusLite package to use HSDS server")
-    }
+
     menu_choices = c("Yes, load expression matrix from remote server when the known RNA-seq dataset is requested")
     actions <- c(function() {
+        phantasus_lite <- system.file(package='phantasusLite')
+        if (nchar(phantasus_lite) == 0){
+            message("phantasus-lite package is not installed. HSDS will be ignored")
+            stop("Configuration failed: Install phantasusLite package to use HSDS server")
+        }
         options(PhantasusUseHSDS = TRUE)
         message("HSDS server will be used as source of RNA-seq counts")
         })
