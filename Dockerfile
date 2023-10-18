@@ -11,7 +11,7 @@ COPY . /root/phantasus
 
 RUN R -e 'devtools::install("/root/phantasus", dependencies=TRUE, upgrade=FALSE, build_vignettes=TRUE); remove.packages("BH")'
 
-RUN printf "window.PHANTASUS_BUILD='$PHANTASUS_BUILD';" >> /root/phantasus/inst/www/phantasus.js/RELEASE.js
+RUN R -e "phantasus:::generateReleaseJS('/root/phantasus/inst/www/phantasus.js/RELEASE.js', '$PHANTASUS_BUILD')"
 RUN cp -r /root/phantasus/inst/www/phantasus.js /var/www/html/phantasus
 
 RUN cp -r /root/phantasus/inst/configs/nginx  /etc/

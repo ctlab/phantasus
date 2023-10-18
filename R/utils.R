@@ -741,3 +741,10 @@ getDesignMatrix <- function(designData){
 phantasusVersion <- function() {
   jsonlite::toJSON(as.character(utils::packageVersion("phantasus")))
 }
+
+generateReleaseJS <- function(destfile, build="none") {
+    lines <- c(sprintf("window.PHANTASUS_VERSION='%s';", as.character(utils::packageVersion("phantasus"))),
+      sprintf("window.PHANTASUS_BUILD='%s';", build))
+    writeLines(lines, destfile)
+
+}
