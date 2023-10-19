@@ -1,10 +1,3 @@
-[![Travis-CI Build Status](https://travis-ci.org/ctlab/phantasus.svg?branch=master)](https://travis-ci.org/ctlab/phantasus)
-[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/ctlab/phantasus?branch=master&svg=true)](https://ci.appveyor.com/project/assaron/phantasus)
-[![codecov](https://codecov.io/gh/ctlab/phantasus/branch/master/graph/badge.svg)](https://codecov.io/gh/ctlab/phantasus)
-![](http://jb.gg/badges/research-flat-square.svg)
-
-
-
 Phantasus is a web tool designed for visual and
 interactive gene expression analysis.
 In particular, it was designed to allow to go from a typical dataset to
