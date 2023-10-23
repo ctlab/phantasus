@@ -764,11 +764,12 @@ checkGPLs <- function(name) {
   })
 }
 
-
+#' Checks GSE to be supported
 #' @param name GSE id, with optional GPL specification
 #' @param destDir path to cache directory
 #' @param combine function on how to combine results, when multiple platforms are present
 #' @return logical vector if the dataset is supported or not
+#' @keywords internal
 checkGSEType <- function (name, destDir, combine=any) {
   spl <- unlist(strsplit(name, "-", fixed=TRUE))
   GEO <- spl[1]

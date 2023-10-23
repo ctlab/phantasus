@@ -15,7 +15,7 @@ updateARCHS4meta(
 Creates \code{meta.txt} file, which describes typical archs4 and archs4Zoo files.
 }
 \details{
-This function produces very specific "hardcoded" \code{meta.txt} file for arch4 and archs4ZOO counts colletctions.
+This function produces very specific "hardcoded" \code{meta.txt} file for arch4 and archs4ZOO counts collections.
 See \code{\link{validateCountsCollection}} for more common information and \code{meta.txt}  file structure
 }
 \seealso{

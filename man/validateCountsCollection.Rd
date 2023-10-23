@@ -2,25 +2,6 @@
 % Please edit documentation in R/utils.R
 \name{validateCountsCollection}
 \alias{validateCountsCollection}
-\alias{\alias{validateCountsCollection}}
-\alias{Function}
-\alias{checks}
-\alias{existing}
-\alias{and}
-\alias{structure}
-\alias{of}
-\alias{\code{meta.txt}}
-\alias{file}
-\alias{in}
-\alias{specified}
-\alias{counts}
-\alias{folder.Also}
-\alias{it}
-\alias{accessibility}
-\alias{datasets}
-\alias{corresponding}
-\alias{\code{.h5}}
-\alias{files.}
 \title{Check a counts collection}
 \usage{
 validateCountsCollection(collectionDir, verbose = FALSE)
@@ -31,14 +12,16 @@ validateCountsCollection(collectionDir, verbose = FALSE)
 \item{verbose}{logical value which determines a content of  the output.}
 }
 \description{
-Check a counts collection
+Function checks existing  and  structure of \code{meta.txt} file in specified counts folder.Also it checks accessibility of specified datasets in  corresponding \code{.h5} files.
 }
 \details{
 \code{collectionDir} should contain a bunch of \code{.h5} files
  and a single \code{meta.txt}.  \code{meta.txt} is \code{.tsv}-like file where for each \code{.h5} exists a row wit columns:
 \describe{ \item{file_name}{ name of \code{.h5} file in \code{collectionDir}.}
            \item{sample_id}{name of dataset in \code{file_name} which contains sample IDs (sample_geo_accession for example).}
-           \item{gene_id}{name of dataset in \code{file_name} which contains ids for genes. For correct work this dataset should contain unique values.}
-           \item{gene_id_type}{meaning of gene_id. This value determines name of gene annotation field in phantasus.}
+           \item{sample_dim}{which dimension of the expression matrix in \code{file_name} corresponds to samples. Should be one of \code{c("rows", "columns")} }
+           \item{gene_id}{name of dataset in \code{file_name} which contains ids for genes and the "meaning" for that ids( column name in result ES). For correct work this dataset should contain unique values. Example: ENSEMBLID:/meta/genes/ensembl_gene_id}
+           \item{genes_annot}{Names of datasets and their meanings to extract gene-related metadata from \code{file_name}. Can be empty or \code{gene_id}-like values separated with semicolon(;).}
            }
 }
+\keyword{internal}

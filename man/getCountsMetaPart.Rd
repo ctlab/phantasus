@@ -2,14 +2,6 @@
 % Please edit documentation in R/utils.R
 \name{getCountsMetaPart}
 \alias{getCountsMetaPart}
-\alias{\alias{getCountsMetaPart}}
-\alias{Creates}
-\alias{a}
-\alias{part}
-\alias{of}
-\alias{counts}
-\alias{collections}
-\alias{meta-data}
 \title{Create meta-data for single counts collection}
 \usage{
 \dontrun{
@@ -31,7 +23,7 @@
 \code{data.table} with meta-data or nothing if \code{destdir} does not exist or does not contain files.
 }
 \description{
-Create meta-data for single counts collection
+Creates a part of counts collections meta-data
 }
 \details{
 Function assumes that \code{collection_name} contains \code{meta.txt} which is valid (in sence of \code{\link{validateCountsCollection}}).
@@ -40,3 +32,4 @@ For each row in \code{meta.txt} function reads specified \code{sample_id} datase
 \seealso{
 {\code{\link{validateCountsCollection}},\code{\link{getCountsMetaPart}}}
 }
+\keyword{internal}

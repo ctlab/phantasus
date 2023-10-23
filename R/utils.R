@@ -487,7 +487,6 @@ parseBriefData <- function(txt) {
 
 #' Create meta-data for single counts collection
 #'
-#' @aliases \alias{getCountsMetaPart}
 #' Creates a part of counts collections meta-data
 #' @param counts_dir path to directory with count collections
 #' @param collection_name name of collection and collection's directory
@@ -508,6 +507,7 @@ parseBriefData <- function(txt) {
 #'
 #'
 #' @import data.table
+#' @keywords internal
 getCountsMetaPart <- function(counts_dir, collection_name, verbose){
     destdir <- file.path(counts_dir, collection_name)
     if (!dir.exists(destdir)) {
@@ -541,7 +541,6 @@ getCountsMetaPart <- function(counts_dir, collection_name, verbose){
 
 #' Update meta-data for counts collections
 #'
-#' @aliases \alias{updateCountsMeta}
 #' Creates \code{meta.rda} file which contain information about all samples in all collections.
 #' Also function checks \code{priority.txt} file. This file is used to manage collections with the same samples.
 #' @param counts_dir path to counts cache directory
@@ -629,7 +628,6 @@ updateCountsMeta <- function(counts_dir =  file.path(getOption("phantasusCacheDi
 
 #' Check a counts collection
 #'
-#' @aliases \alias{validateCountsCollection}
 #' Function checks existing  and  structure of \code{meta.txt} file in specified counts folder.Also it checks accessibility of specified datasets in  corresponding \code{.h5} files.
 #' @param collectionDir path to directory with collection
 #' @param verbose logical value which determines a content of  the output.
@@ -644,6 +642,7 @@ updateCountsMeta <- function(counts_dir =  file.path(getOption("phantasusCacheDi
 #'
 #' @import data.table
 #' @import rhdf5
+#' @keywords internal
 validateCountsCollection <- function(collectionDir, verbose=FALSE){
     if (!file.exists(file.path(collectionDir, "meta.txt"))) {
         if (verbose) {
