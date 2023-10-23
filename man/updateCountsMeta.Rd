@@ -2,33 +2,6 @@
 % Please edit documentation in R/utils.R
 \name{updateCountsMeta}
 \alias{updateCountsMeta}
-\alias{\alias{updateCountsMeta}}
-\alias{Creates}
-\alias{\code{meta.rda}}
-\alias{file}
-\alias{which}
-\alias{contain}
-\alias{information}
-\alias{about}
-\alias{all}
-\alias{samples}
-\alias{in}
-\alias{collections.}
-\alias{Also}
-\alias{function}
-\alias{checks}
-\alias{\code{priority.txt}}
-\alias{file.}
-\alias{This}
-\alias{is}
-\alias{used}
-\alias{to}
-\alias{manage}
-\alias{collections}
-\alias{with}
-\alias{the}
-\alias{same}
-\alias{samples.}
 \title{Update meta-data for counts collections}
 \usage{
 updateCountsMeta(
@@ -45,7 +18,8 @@ updateCountsMeta(
 \item{verbose}{logical value which determines a content of  the output.}
 }
 \description{
-Update meta-data for counts collections
+Creates \code{meta.rda} file which contain information about all samples in all collections.
+Also function checks \code{priority.txt} file. This file is used to manage collections with the same samples.
 }
 \details{
 First of all function checks validity of \code{priority.txt} file. \bold{Every} Collection should have \bold{unique} priority.

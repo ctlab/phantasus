@@ -14,6 +14,7 @@ COPY . /root/phantasus
 
 RUN R -e 'devtools::install("/root/phantasus", dependencies=TRUE, upgrade=FALSE, build_vignettes=TRUE); remove.packages("BH")'
 
+
 RUN  apt-get -y update && \  #delete after Bioconductor release
 apt-get -y install  git && \
 git clone -b main --recursive https://github.com/assaron/rhdf5client.git /root/rhdf5client && \
@@ -22,6 +23,9 @@ git clone -b meta-update --recursive https://github.com/ctlab/phantasusLite.git 
 RUN R -e 'devtools::install("/root/rhdf5client", dependencies=TRUE, upgrade=FALSE); devtools::install("/root/phantasusLite", dependencies=TRUE, upgrade=FALSE);'
 
 RUN printf "window.PHANTASUS_BUILD='$PHANTASUS_BUILD';" >> /root/phantasus/inst/www/phantasus.js/RELEASE.js
+
+RUN R -e "phantasus:::generateReleaseJS('/root/phantasus/inst/www/phantasus.js/RELEASE.js', '$PHANTASUS_BUILD')"
+
 RUN cp -r /root/phantasus/inst/www/phantasus.js /var/www/html/phantasus
 
 

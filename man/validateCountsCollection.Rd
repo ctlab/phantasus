@@ -2,25 +2,6 @@
 % Please edit documentation in R/utils.R
 \name{validateCountsCollection}
 \alias{validateCountsCollection}
-\alias{\alias{validateCountsCollection}}
-\alias{Function}
-\alias{checks}
-\alias{existing}
-\alias{and}
-\alias{structure}
-\alias{of}
-\alias{\code{meta.txt}}
-\alias{file}
-\alias{in}
-\alias{specified}
-\alias{counts}
-\alias{folder.Also}
-\alias{it}
-\alias{accessibility}
-\alias{datasets}
-\alias{corresponding}
-\alias{\code{.h5}}
-\alias{files.}
 \title{Check a counts collection}
 \usage{
 validateCountsCollection(collectionDir, verbose = FALSE)
@@ -31,7 +12,7 @@ validateCountsCollection(collectionDir, verbose = FALSE)
 \item{verbose}{logical value which determines a content of  the output.}
 }
 \description{
-Check a counts collection
+Function checks existing  and  structure of \code{meta.txt} file in specified counts folder.Also it checks accessibility of specified datasets in  corresponding \code{.h5} files.
 }
 \details{
 \code{collectionDir} should contain a bunch of \code{.h5} files
@@ -43,3 +24,4 @@ Check a counts collection
            \item{genes_annot}{Names of datasets and their meanings to extract gene-related metadata from \code{file_name}. Can be empty or \code{gene_id}-like values separated with semicolon(;).}
            }
 }
+\keyword{internal}

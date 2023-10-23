@@ -136,6 +136,9 @@ servePhantasus <- function(host = getPhantasusConf("host"),
     }
 
 
+    releaseJSfile <- file.path(tempdir(), "RELEASE.js")
+    generateReleaseJS(releaseJSfile)
+
     utils::capture.output(type = "output", {
         subPathStatic <- function (targetDirectory, subPath) {
             static <- Rook::File$new(targetDirectory)
@@ -149,6 +152,7 @@ servePhantasus <- function(host = getPhantasusConf("host"),
         app <- Rook::URLMap$new(`/phantasus/ocpu` = opencpu:::rookhandler("/phantasus/ocpu", worker_cb=run_worker),
                                 `/phantasus/geo` = subPathStatic(getPhantasusConf("cache_folders")$geo_path, '/phantasus/geo'),
                                 `/phantasus/preloaded` = subPathStatic(cacheDir, '/phantasus/'),
+                                `/phantasus/RELEASE.js` = subPathStatic(tempdir(), '/phantasus/'),
                                 `/phantasus/?` = subPathStatic(staticRoot, '/phantasus/'),
                                 `/?` = Rook::Redirect("/phantasus/index.html"))
 

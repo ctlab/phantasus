@@ -1,6 +1,6 @@
 Package: phantasus
 Title: Visual and interactive gene expression analysis
-Version: 1.21.5
+Version: 1.21.8
 Authors@R: c(person("Daria", "Zenkova", email = "daria.zenkova.cs@gmail.com", role = "aut"),
              person("Vladislav", "Kamenev", role = "aut"),        
              person("Rita", "Sablina", role = "ctb"),        
@@ -29,7 +29,7 @@ Imports: ggplot2, protolite, Biobase, GEOquery, Rook, htmltools,
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
 Suggests: testthat, BiocStyle, knitr, rmarkdown
 VignetteBuilder: knitr
 NeedsCompilation: no
