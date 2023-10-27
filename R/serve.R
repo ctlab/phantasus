@@ -42,12 +42,13 @@ servePhantasus <- function(host = getPhantasusConf("host"),
         staticRoot = system.file("www/phantasus.js", package = "phantasus")
     }
     cacheDir <- normalizePath(getPhantasusConf("cache_root"))
-    preloadedDir <- if (is.null(preloadedDir))
+    preloadedDir <- if (is.null(preloadedDir)){
         NULL
-    else
+    } else{
         normalizePath(preloadedDir)
+    }
 
-    if (!dir.exists(cacheDir) | !areCacheFoldersValid() ){
+    if (!dir.exists(cacheDir) | !areCacheFoldersValid(getPhantasusConf("cache_folders")) ){
         stopPhantasus()
     }
     options(phantasusCacheDir = cacheDir,

@@ -343,10 +343,10 @@ stopPhantasus <- function(){
     stop("Phantasus is not configured. Run phantasus::setupPhantasus() to complete setup.")
 }
 
-areCacheFoldersValid <- function(){
-    cache_folders <- getPhantasusConf("cache_folders")
+areCacheFoldersValid <- function(cache_folders){
     for (folder in cache_folders[names(cache_folders) != "rnaseq_counts"]) {
-        if (!dir.exists(folder) || rw_dir_check(folder)){
+        folder <- normalizePath(folder)
+        if (!dir.exists(folder) || !rw_dir_check(folder)){
             return(FALSE)
         }
 
