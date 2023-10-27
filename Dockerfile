@@ -18,7 +18,7 @@ RUN R -e 'devtools::install("/root/phantasus", dependencies=TRUE, upgrade=FALSE,
 RUN  apt-get -y update && \
 apt-get -y install  git && \
 git clone -b main --recursive https://github.com/assaron/rhdf5client.git /root/rhdf5client && \
-git clone -b meta-update --recursive https://github.com/ctlab/phantasusLite.git /root/phantasusLite
+git clone -b main --recursive https://github.com/ctlab/phantasusLite.git /root/phantasusLite
 
 RUN R -e 'devtools::install("/root/rhdf5client", dependencies=TRUE, upgrade=FALSE); devtools::install("/root/phantasusLite", dependencies=TRUE, upgrade=FALSE);'
 
