@@ -9,9 +9,18 @@ library(phantasus)
 cacheDir <- getPhantasusConf("cache_root")
 preloadedDir <- getPhantasusConf("preloaded_dir")
 cacheDir <- normalizePath(cacheDir)
-preloadedDir <- normalizePath(preloadedDir)
+if (!is.null(preloadedDir)){
+    preloadedDir <- normalizePath(preloadedDir)
+}
 options(phantasusCacheDir = cacheDir,
             phantasusPreloadedDir = preloadedDir)
+
+rnaseq_counts <- getPhantasusConf("cache_folders")$rnaseq_counts
+use_hsds <- phantasus:::isHSDS(rnaseq_counts)
+print(use_hsds)
+if (nchar(use_hsds) > 0){
+    options(PhantasusUseHSDS = TRUE)
+}
 phantasus:::selfCheck()
 phantasus:::annotationDBMeta(getPhantasusConf("cache_folders")$annot_db)
 phantasus:::FGSEAmeta(getPhantasusConf("cache_folders")$fgsea_pathways)
