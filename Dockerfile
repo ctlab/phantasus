@@ -15,7 +15,7 @@ COPY . /root/phantasus
 RUN R -e 'devtools::install("/root/phantasus", dependencies=TRUE, upgrade=FALSE, build_vignettes=TRUE); remove.packages("BH")'
 
 
-RUN  apt-get -y update && \  #delete after Bioconductor release
+RUN  apt-get -y update && \
 apt-get -y install  git && \
 git clone -b main --recursive https://github.com/assaron/rhdf5client.git /root/rhdf5client && \
 git clone -b meta-update --recursive https://github.com/ctlab/phantasusLite.git /root/phantasusLite
@@ -47,15 +47,20 @@ RUN echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
 RUN echo "LANG=en_US.UTF-8" > /etc/locale.conf
 RUN locale-gen en_US.UTF-8
 
-RUN mkdir -p /var/phantasus/cache && chown www-data /var/phantasus/cache
-RUN mkdir -p /var/phantasus/preloaded && chown www-data /var/phantasus/preloaded
-RUN mkdir -p /var/phantasus/ocpu-root && chown -R www-data /var/phantasus/ocpu-root
-RUN mkdir -p ${R_USER_CONFIG_DIR}/R/phantasus && cp /root/phantasus/inst/configs/user.conf ${R_USER_CONFIG_DIR}/R/phantasus/user.conf &&\
-chown -R www-data  ${R_USER_CONFIG_DIR}/R/phantasus
+ENV OCPU_USER=www-data
+
+
+RUN mkdir -p ${R_USER_CONFIG_DIR}/R && cp -r /root/phantasus/inst/configs/R/phantasus ${R_USER_CONFIG_DIR}/R/ &&\
+chown -R ${OCPU_USER} ${R_USER_CONFIG_DIR}/R/phantasus
+
+RUN mkdir -p /var/phantasus/cache && chown ${OCPU_USER} /var/phantasus/cache
+RUN mkdir -p /var/phantasus/preloaded && chown ${OCPU_USER} /var/phantasus/preloaded
+RUN mkdir -p /var/phantasus/ocpu-root && chown -R ${OCPU_USER} /var/phantasus/ocpu-root
+
 
 RUN rm -rf /root/phantasus/inst
 
 RUN rm /var/log/apache2/access.log /var/log/apache2/error.log /var/log/opencpu/apache_access.log /var/log/opencpu/apache_error.log
-ENV OCPU_USER=www-data
+
 CMD /usr/bin/docker-entrypoint.sh
 

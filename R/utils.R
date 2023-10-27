@@ -346,9 +346,10 @@ stopPhantasus <- function(){
 areCacheFoldersValid <- function(){
     cache_folders <- getPhantasusConf("cache_folders")
     for (folder in cache_folders[names(cache_folders) != "rnaseq_counts"]) {
-        if (!dir.exists(folder)){
+        if (!dir.exists(folder) || rw_dir_check(folder)){
             return(FALSE)
         }
+
     }
     counts_source <- getPhantasusConf("cache_folders")$rnaseq_counts
     useHSDS <- getOption("PhantasusUseHSDS")
@@ -359,7 +360,7 @@ areCacheFoldersValid <- function(){
         if (!dir.exists(counts_source)){
             return(FALSE)
         } else {
-            return(TRUE)
+            return(rw_dir_check(counts_source))
         }
     }
     valid_hsds <- tryCatch(expr = isHSDS(getPhantasusConf("cache_folders")$rnaseq_counts),
@@ -369,6 +370,15 @@ areCacheFoldersValid <- function(){
     } else{
         return(FALSE)
     }
+}
+rw_dir_check <- function(dir_name){
+    if (file.access(dir_name, mode = 2) != 0){
+        stop(paste("!Bad configuration:", dir_name , " is not writable"))
+    }
+    if (file.access(dir_name, mode = 4) != 0){
+        stop(paste("!Bad configuration:", dir_name , " is not readable"))
+    }
+    return(TRUE)
 }
 selfCheck <- function(verbose = FALSE) {
     cacheDir = getPhantasusConf("cache_root")
@@ -392,7 +402,7 @@ selfCheck <- function(verbose = FALSE) {
         if (nchar(system.file(package = "phantasusLite")) == 0){
             stopPhantasus()
         }
-        h5counts <- getHSDSFileList(getPhantasusConf("cache_folders")$rnaseq_counts)
+        h5counts <- phantasusLite::getHSDSFileList(getPhantasusConf("cache_folders")$rnaseq_counts)
     }
     archs4Files <- list.files(file.path(cacheDir, "archs4"),
                               pattern = '\\.h5$')
@@ -442,8 +452,9 @@ selfCheck <- function(verbose = FALSE) {
     }
 }
 
+#' check if url  responding as HSDS server
 isHSDS <- function(url){
-    if(!startsWith( x = url, prefix = "http")){
+    if(!grepl(pattern = "^http(s)?://", x = url)){
         return(FALSE)
     }
     req <- httr::GET(url)

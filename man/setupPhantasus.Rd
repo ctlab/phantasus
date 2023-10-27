@@ -3,19 +3,16 @@
 \name{setupPhantasus}
 \alias{setupPhantasus}
 \title{Setup phantasus.
-Read user config file ( or create default one) and fill \code{cache_root} using sources in \code{file}}
+Read user config file ( or create default one) and fill \code{cache_root} using sources in \code{file}.}
 \usage{
-setupPhantasus(
-  setup_name = "default",
-  file = system.file("configs/setup.yml", package = "phantasus")
-)
+setupPhantasus(setup_name = "default", file = confFile("setup.yml"))
 }
 \arguments{
 \item{setup_name}{name of config from \code{file}. If unset or not existed, "default".}
 
-\item{file}{Location of the config file}
+\item{file}{Location of the setup.yml file with setup parameters. If not existed use file from package}
 }
 \description{
 Setup phantasus.
-Read user config file ( or create default one) and fill \code{cache_root} using sources in \code{file}
+Read user config file ( or create default one) and fill \code{cache_root} using sources in \code{file}.
 }

@@ -1,36 +1,32 @@
 
 
 #' Setup phantasus.
-#' Read user config file ( or create default one) and fill \code{cache_root} using sources in \code{file}
+#' Read user config file ( or create default one) and fill \code{cache_root} using sources in \code{file}.
 #' @param setup_name  name of config from \code{file}. If unset or not existed, "default".
-#' @param file Location of the config file
+#' @param file Location of the setup.yml file with setup parameters. If not existed use file from package
 #' @export
 setupPhantasus <- function(
         setup_name = "default",
-        file = system.file("configs/setup.yml", package = "phantasus")) {
-    setup_config <-  config::get(   config = setup_name,
-                                    file = file,
-                                    use_parent = FALSE
-                                )
-    user_conf_dir <-  tools::R_user_dir(package = "phantasus", which = "config")
-    user_conf_file <- file.path(user_conf_dir, "user.conf")
-    cache_root = NULL
+        file = confFile("setup.yml")){
+    setup_config <- getSetupConf(file, setup_name)
+    user_conf_file <- confFile("user.conf")
+    cache_root = ""
     if (!file.exists(user_conf_file)){
         default_cache <- tools::R_user_dir("phantasus", which = "cache")
         if (interactive()){
             message("Specify the cache root for Phantasus. \n This folder will contain all Phantasus-related files: \n - GEO cache files \n - Annotation databases \n - FGSEA pathways \n - RNA-seq counts")
             cache_root <- readline(paste0("Enter path or leave blank for default (", default_cache, "):"))
         }
-        if (nchar(cache_root)==0){
+        if (is.null(cache_root) || is.na(cache_root) || (nchar(cache_root)==0)){
             cache_root <- default_cache
         }
-        user_conf <- create_user_conf(cache_root = cache_root, setup_config)
-        dir.create(user_conf_dir,showWarnings = FALSE, recursive = TRUE)
+        user_conf <- get_user_conf(cache_root = cache_root, setup_config)
+        dir.create(dirname(user_conf_file), showWarnings = FALSE, recursive = TRUE)
         message(paste("Create user configuration file:", user_conf_file))
         cat(user_conf, file = user_conf_file)
 
     } else{
-        message(paste("Use existed confi=guration file:", user_conf_file))
+        message(paste("Use existed configuration file:", user_conf_file))
     }
     user_conf <- getPhantasusConf()
     Sys.setenv(R_CONFIG_ACTIVE = "default")
@@ -51,6 +47,22 @@ setupPhantasus <- function(
     }
 }
 
+confFile <- function(name){
+    return(file.path(tools::R_user_dir(package = "phantasus", which = "config"), name ))
+
+}
+
+getSetupConf <- function(file, setup_name){
+    if (!file.exists(file)){
+        message("Use default setup parameters")
+        file <- system.file("configs/R/phantasus/setup.yml", package = "phantasus")
+    }
+    setup_config <-  config::get(   config = setup_name,
+                                    file = file,
+                                    use_parent = FALSE
+    )
+    return(setup_config)
+}
 
 #' Read Phantasus Config
 #'
@@ -79,11 +91,11 @@ getPhantasusConf <-  function(
 configureGEOcache <- function(user_conf){
     message("Configure GEO cache folder...")
     geoPath <- user_conf$cache_folders$geo_path
-    if (dir.exists(geoPath)){
+    if (dir.exists(geoPath) && rw_dir_check(geoPath)){
         message("! GEO cache folder exists and is treated as already configured !")
         return()
     }
-    dir.create(geoPath, showWarnings = FALSE, recursive = TRUE)
+    unsafe_dir_create(geoPath)
 }
 
 
@@ -91,12 +103,12 @@ configureAnnotDB <- function(user_conf, setup_config){
     message("Configure AnnotationDb...")
     local_path <- user_conf$cache_folders$annot_db
 
-    if (dir.exists(local_path)){
+    if (dir.exists(local_path) && rw_dir_check(local_path)){
         message("! AnnotationDB folder exists and is treated as already configured !")
         return()
     }
-    menu_choices = c("Keep empty")
-    actions <- c(function() {message("Kept empty")})
+    menu_choices = c()
+    actions <- c()
     dbFiles <- list.files(local_path, recursive = FALSE)
     mm_pkg <- system.file(package='org.Mm.eg.db')
     hs_pkg <- system.file(package='org.Hs.eg.db')
@@ -133,6 +145,8 @@ configureAnnotDB <- function(user_conf, setup_config){
                          destdir = local_path)
         } )
     }
+    menu_choices = c(menu_choices, "Keep empty")
+    actions <- c(actions, function() {message("Kept empty")})
     if ((!interactive()) | length(menu_choices) == 1){
         menu_res <- 1
     } else{
@@ -142,7 +156,7 @@ configureAnnotDB <- function(user_conf, setup_config){
             return()
         }
     }
-    dir.create(local_path, recursive = TRUE)
+    unsafe_dir_create(local_path)
     actions[[menu_res]]()
     annotationDBMeta(getPhantasusConf("cache_folders")$annot_db)
 }
@@ -151,18 +165,18 @@ configureAnnotDB <- function(user_conf, setup_config){
 configureFGSEA <- function(user_conf, setup_config){
     message("Configure FGSEA pathways...")
     local_path <- user_conf$cache_folders$fgsea_pathways
-    if (dir.exists(local_path)){
+    if (dir.exists(local_path) && rw_dir_check(local_path)){
         message("! FGSEA folder exists and is treated as already configured !")
         return()
     }
 
-    menu_choices = c("Keep empty")
-    actions <- c(function() {message("Kept empty")})
+    menu_choices = c()
+    actions <- c()
     if (length(setup_config$fgsea_pathways) != 0){
         message("External source for FGSEA pathways is scpecified.")
         file_index <- getFileIndexDF(base_url = setup_config$fgsea_pathways, pattern = "txt|rds" )
         total_size <- round(sum(as.numeric(fs::fs_bytes(file_index$size))) / 2^20, digits = 2)
-        menu_choices = c(menu_choices, paste0("Download files from the ctlab Phantasus mirror (~", total_size, "MB)"))
+        menu_choices <- c(menu_choices, paste0("Download files from the ctlab Phantasus mirror (~", total_size, "MB)"))
 
         actions <- c(actions, function(){
             loadAllFiles(url = setup_config$fgsea_pathways,
@@ -170,6 +184,8 @@ configureFGSEA <- function(user_conf, setup_config){
                          file_df = file_index)
         } )
     }
+    menu_choices = c(menu_choices,"Keep empty")
+    actions <- c(actions, function() {message("Kept empty")})
     if ((!interactive()) | length(menu_choices) == 1){
         menu_res <- 1
     } else{
@@ -179,7 +195,7 @@ configureFGSEA <- function(user_conf, setup_config){
             return()
         }
     }
-    dir.create(local_path, recursive = TRUE)
+    unsafe_dir_create(local_path)
     actions[[menu_res]]()
     FGSEAmeta(getPhantasusConf("cache_folders")$fgsea_pathways)
 }
@@ -188,23 +204,19 @@ configureRnaseqCounts <- function(user_conf, setup_config){
     message("Configure RNA-seq counts...")
     selected_path <- user_conf$cache_folders$rnaseq_counts
     options(PhantasusUseHSD = NULL)
-    if (nchar(selected_path) == 0){
+    if (is.null(selected_path) || is.na(selected_path) ||  (nchar(selected_path) == 0)){
         stop("!Configuration failed: RNA-seq counts path should be specified !")
         return()
     }
-    if (dir.exists(selected_path)){
+    if (dir.exists(selected_path) && rw_dir_check(selected_path)){
         message("! RNA-seq counts folder exists and is treated as already configured !")
         return()
     }
 
     if(!grepl(pattern = "^http(s)?://", x = selected_path)){
         message("! RNA-seq count path looks like local path !")
-        configured <- dir.create(selected_path, recursive = TRUE)
-        if (configured){
+        unsafe_dir_create(selected_path)
             message("RNA-seq counts configured")
-        } else {
-            stop("Configuration failed: Fail to create RNA-seq count directory")
-        }
         return()
     }
     message("! RNA-seq counts path looks like web URL !")
@@ -231,15 +243,13 @@ configureRnaseqCounts <- function(user_conf, setup_config){
         message("HSDS server will be ignored. RNA-seq datasets will be loaded without expression matrices.")
     })
     if (!interactive()){
-        actions[1]
-        return()
-    }
-
-    menu_res <- utils::menu(choices = menu_choices, graphics = FALSE, title = "Current Phantasus configuration allows it to load count matrices from remote server when RNA-seq dataset is requested.\nWould you like to use this feature?")
-    if (menu_res == 0){
-        message("Canceled")
-        actions[2]
-        return()
+        menu_res <- 1
+    } else {
+        menu_res <- utils::menu(choices = menu_choices, graphics = FALSE, title = "Current Phantasus configuration allows it to load count matrices from remote server when RNA-seq dataset is requested.\nWould you like to use this feature?")
+        if (menu_res == 0){
+            message("Canceled")
+            return()
+        }
     }
     actions[[menu_res]]()
 
@@ -273,7 +283,7 @@ loadAllFiles <- function(url, file_df, destdir ){
 }
 
 
-create_user_conf <- function( cache_root, setup_config){
+get_user_conf <- function( cache_root, setup_config){
 
     cache_folders = list (
         geo_path = "file.path(cache_root, 'geo/')",
@@ -330,4 +340,27 @@ create_user_conf <- function( cache_root, setup_config){
 }
 
 
+#' Creates default docker conf file
+#' Function creates default docker user configuration file based on provided \code{setup_file}
+#' or on default parameters if \code{setup_file} doesn't exist. If \code{user_conf_file} exists function does nothing.
+#' @param setup_file  name of config from \code{file}. If unset or not existed, "default".
+#' @param user_conf_file Location of the setup.yml file with setup parameters. If not existed use file from package
+createDockerConf <- function( setup_file = confFile("setup.yaml"), user_conf_file = confFile("user.conf")){
+    if (!file.exists(user_conf_file)){
+        setup_conf <-  getSetupConf(setup_file, "default")
+        user_conf <- get_user_conf("/var/phantasus/cache", setup_conf)
+        user_conf$preloaded_dir <- "/var/phantasus/preloaded"
+        dir.create(dirname(user_conf_file), showWarnings = FALSE, recursive = TRUE)
+        message(paste("Create user configuration file:", user_conf_file))
+        cat(user_conf, file = user_conf_file)
+    }
+}
+
+unsafe_dir_create <- function(dir_name,  recursive = TRUE){
+    configured <- dir.create(dir_name, recursive = recursive, showWarnings = FALSE)
+    if (!configured){
+        stop(paste("Configuration failed: can't create", dir_name))
+    }
+    rw_dir_check(dir_name)
+}
 
