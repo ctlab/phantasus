@@ -1,10 +1,18 @@
 version: "2"
 services:
     phantasus:
-        image: dzenkova/phantasus:latest
+        env_file:
+            - .env
+        image: asergushichev/phantasus
         ports:
             - "80:8000"
-        expose:
-            - 8000
-            - 8001
+        volumes:
+           - type: bind
+             source: $PHANTASUS_CONFIG_DIR
+             target: /etc/R/phantasus
+           - type: bind
+             source: $PHANTASUS_CACHE_DIR
+             target: /var/phantasus/cache
+           - "$PHANTASUS_PRELOADED_DIR:/var/phantasus/preloaded"
+
 

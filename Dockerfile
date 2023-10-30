@@ -1,4 +1,4 @@
-ARG PREIMAGE_NAME=assaron/phantasus-preimage:latest
+ARG PREIMAGE_NAME=asergushichev/phantasus-preimage:latest
 FROM $PREIMAGE_NAME
 ARG TARGET_BRANCH=master
 ARG PHANTASUS_BUILD
