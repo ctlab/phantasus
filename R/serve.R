@@ -55,9 +55,6 @@ servePhantasus <- function(host = getPhantasusConf("host"),
             phantasusPreloadedDir = preloadedDir)
 
     selfCheck()
-    if (is.null(getOption("PhantasusUseHSDS"))){
-        updateCountsMeta(getPhantasusConf("cache_folders")$rnaseq_counts)
-    }
     if (!opencpu:::win_or_mac()) {
         run_worker <- NULL
     } else {

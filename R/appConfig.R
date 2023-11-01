@@ -209,7 +209,9 @@ configureRnaseqCounts <- function(user_conf, setup_config){
         return()
     }
     if (dir.exists(selected_path) && rw_dir_check(selected_path)){
-        message("! RNA-seq counts folder exists and is treated as already configured !")
+        message("! RNA-seq counts folder exists. Update meta... !")
+        updateCountsMeta(counts_dir =  selected_path, force = FALSE, verbose = FALSE)
+        message("! RNA-seq counts configured !")
         return()
     }
 

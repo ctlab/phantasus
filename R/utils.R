@@ -396,7 +396,12 @@ selfCheck <- function(verbose = FALSE) {
     use_hsds <- getOption("PhantasusUseHSDS")
     h5counts <- list()
     if (is.null(use_hsds)){
-        h5counts <- list.files(getPhantasusConf("cache_folders")$rnaseq_counts, recursive = TRUE,
+        counts_dir <- getPhantasusConf("cache_folders")$rnaseq_counts
+        if (!isCountsPriorityValid(counts_dir) || isCountsMetaOld(counts_dir)){
+            message("!! RNA-seq counts was not installed properly.")
+            stopPhantasus()
+        }
+        h5counts <- list.files(counts_dir, recursive = TRUE,
                                pattern = '\\.h5$')
     } else if (use_hsds == TRUE) {
         if (nchar(system.file(package = "phantasusLite")) == 0){
@@ -599,6 +604,38 @@ getCountsMetaPart <- function(counts_dir, collection_name, verbose){
     return(DT_h5_meta)
 }
 
+isCountsMetaOld <- function( counts_dir = getPhantasusConf("cache_folders")$rnaseq_counts){
+    meta_name <- file.path(counts_dir, "meta.rda")
+    h5_files <- list.files(file.path(counts_dir), "\\.h5$", full.names = TRUE, recursive = TRUE)
+    meta_time <- as.numeric(file.mtime(meta_name))
+    h5_mtime <- max(unlist(lapply(h5_files, file.mtime)))
+    list_dirs <-  list.dirs(counts_dir, full.names = FALSE, recursive = TRUE)
+    dirs_mtime <- lapply(file.path(counts_dir, list_dirs[-1]), file.mtime)
+    if (length(dirs_mtime) > 0) {
+        dir_mtime <- max(unlist(dirs_mtime))
+    } else {
+        dir_mtime <- -Inf
+    }
+    if (file.exists(meta_name) && meta_time > h5_mtime && meta_time > dir_mtime) {
+        return(FALSE)
+    }
+    return(TRUE)
+}
+
+isCountsPriorityValid <- function(counts_dir =  getPhantasusConf("cache_folders")$rnaseq_counts){
+    priority_file <- file.path(counts_dir, "counts_priority.txt")
+    if (!file.exists(priority_file)){
+        return(FALSE)
+    }
+    list_dirs <-  list.dirs(counts_dir, full.names = FALSE, recursive = TRUE)
+    list_dirs <- c(".", list_dirs[-1])
+    priority <- fread(priority_file)
+    if (!(setequal(priority$directory,list_dirs) && length(unique(priority$priority)) == length(priority$priority))) {
+        return (FALSE)
+    }
+    return(TRUE)
+}
+
 #' Update meta-data for counts collections
 #'
 #' Creates \code{meta.rda} file which contain information about all samples in all collections.
@@ -623,14 +660,11 @@ updateCountsMeta <- function(counts_dir =  getPhantasusConf("cache_folders")$rna
     list_dirs <-  list.dirs(counts_dir, full.names = FALSE, recursive = TRUE)
     list_dirs <- c(".", list_dirs[-1])
     priority_file <- file.path(counts_dir, "counts_priority.txt")
-    need_create <- TRUE
-    if (file.exists(priority_file)) {
-        priority <- fread(priority_file)
-        if (!(setequal(priority$directory,list_dirs) && length(unique(priority$priority)) == length(priority$priority))) {
-            message(paste0("!!! Priority file ", priority_file , " is invalid and will be replaced"))
-        } else {
-            need_create <- FALSE
-        }
+
+    need_create <- FALSE
+    if (!isCountsPriorityValid(counts_dir)){
+        message(paste0("!!! Counts priority file is invalid or missed. Create default one."))
+        need_create <- TRUE
     }
     if (need_create) {
         priority <- data.table(directory = list_dirs, priority = seq_along(list_dirs))
@@ -639,19 +673,8 @@ updateCountsMeta <- function(counts_dir =  getPhantasusConf("cache_folders")$rna
     if (!length(h5_files)) {
       return()
     }
-    if (!force) {
-        meta_time <- as.numeric(file.mtime(meta_name))
-        h5_mtime <- max(unlist(lapply(h5_files, file.mtime)))
-        dirs_mtime <- lapply(file.path(counts_dir, list_dirs[-1]), file.mtime)
-        if (length(dirs_mtime) > 0) {
-            dir_mtime <- max(unlist(dirs_mtime))
-        } else {
-            dir_mtime <- -Inf
-        }
-
-        if (file.exists(meta_name) && meta_time > h5_mtime && meta_time > dir_mtime) {
-            return()
-        }
+    if (!force && !isCountsMetaOld(counts_dir)) {
+        return()
     }
     if (file.exists(meta_name)) {
       unlink(meta_name)
@@ -719,6 +742,9 @@ validateCountsCollection <- function(collectionDir, verbose=FALSE){
             if (verbose) {
                 message(paste0("two or more rows in meta file for ", full_path ))
             }
+            return(FALSE)
+        }
+        if (!file.exists(full_path)){
             return(FALSE)
         }
         h5f <- H5Fopen(full_path, flags = "H5F_ACC_RDONLY")
