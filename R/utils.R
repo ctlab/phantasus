@@ -619,13 +619,21 @@ isCountsMetaOld <- function( counts_dir = getPhantasusConf("cache_folders")$rnas
     if (file.exists(meta_name) && meta_time > h5_mtime && meta_time > dir_mtime) {
         return(FALSE)
     }
+    if (!file.exists(meta_name) && length(h5_files) == 0){
+        return(FALSE)
+    }
     return(TRUE)
 }
 
 isCountsPriorityValid <- function(counts_dir =  getPhantasusConf("cache_folders")$rnaseq_counts){
     priority_file <- file.path(counts_dir, "counts_priority.txt")
     if (!file.exists(priority_file)){
-        return(FALSE)
+        h5_files <- list.files(file.path(counts_dir), "\\.h5$", full.names = TRUE, recursive = TRUE)
+        if (length(h5_files) > 0){
+            return(FALSE)
+        } else {
+            return(TRUE)
+        }
     }
     list_dirs <-  list.dirs(counts_dir, full.names = FALSE, recursive = TRUE)
     list_dirs <- c(".", list_dirs[-1])

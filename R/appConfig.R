@@ -218,7 +218,7 @@ configureRnaseqCounts <- function(user_conf, setup_config){
     if(!grepl(pattern = "^http(s)?://", x = selected_path)){
         message("! RNA-seq count path looks like local path !")
         unsafe_dir_create(selected_path)
-            message("RNA-seq counts configured")
+        message("RNA-seq counts configured")
         return()
     }
     message("! RNA-seq counts path looks like web URL !")
