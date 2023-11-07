@@ -42,6 +42,7 @@ voomNormalization <- function(es, designData, filterByExp = FALSE){
     voom_counts <- voom(counts = exprs(es.copy), design = designMatrix)
 
     exprs(es.copy) <- voom_counts$E
+    assayDataElement(es.copy, "weights") <- voom_counts$weights
 
     assign("es", es.copy, envir = parent.frame())
     f <- tempfile(pattern = "voom_counts", tmpdir = getwd(), fileext = ".bin")
