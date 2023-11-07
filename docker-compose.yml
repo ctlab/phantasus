@@ -13,6 +13,8 @@ services:
            - type: bind
              source: $PHANTASUS_CACHE_DIR
              target: /var/phantasus/cache
-           - "$PHANTASUS_PRELOADED_DIR:/var/phantasus/preloaded"
+           - type: bind
+             source: $PHANTASUS_PRELOADED_DIR
+             target: /var/phantasus/preloaded
 
 
