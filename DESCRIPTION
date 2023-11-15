@@ -1,6 +1,6 @@
 Package: phantasus
 Title: Visual and interactive gene expression analysis
-Version: 1.23.0
+Version: 1.23.2
 Authors@R: c(person("Daria", "Zenkova", email = "daria.zenkova.cs@gmail.com", role = "aut"),
              person("Vladislav", "Kamenev", role = "aut"),        
              person("Rita", "Sablina", role = "ctb"),        
@@ -14,7 +14,7 @@ Description:
     Aside from basic visualization and filtering methods, R-based methods such 
     as k-means clustering, principal component analysis or differential expression analysis
     with limma package are supported.
-URL: https://genome.ifmo.ru/phantasus,
+URL: https://ctlab.itmo.ru/phantasus,
      https://artyomovlab.wustl.edu/phantasus
 BugReports: https://github.com/ctlab/phantasus/issues
 Depends: R (>= 3.5)

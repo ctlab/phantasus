@@ -4,13 +4,7 @@
 \alias{getCountsMetaPart}
 \title{Create meta-data for single counts collection}
 \usage{
-\dontrun{
-    collDir= "/path/to/my/collection")
-    valid_collection = validateCountsCollection(collectionDir = collDir, verbose = TRUE)
-    if (valid_collection){
-        metaPart = getCountsMetaPart(destdir = collDir, verbose = TRUE)
-     }
- }
+getCountsMetaPart(counts_dir, collection_name, verbose)
 }
 \arguments{
 \item{counts_dir}{path to directory with count collections}
@@ -28,6 +22,17 @@ Creates a part of counts collections meta-data
 \details{
 Function assumes that \code{collection_name} contains \code{meta.txt} which is valid (in sence of \code{\link{validateCountsCollection}}).
 For each row in \code{meta.txt} function reads specified \code{sample_id} dataset and writes every sample id to the resulting \code{data.table} with source file name and collection name.
+}
+\examples{
+\dontrun{
+    collDir <- "/path/to/my/collection"
+    valid_collection = validateCountsCollection(collectionDir = collDir, verbose = TRUE)
+    if (valid_collection){
+        metaPart = getCountsMetaPart(destdir = collDir, verbose = TRUE)
+     }
+ }
+
+
 }
 \seealso{
 {\code{\link{validateCountsCollection}},\code{\link{getCountsMetaPart}}}
