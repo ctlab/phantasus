@@ -33,7 +33,7 @@ chown -R $OCPU_USER /var/lib/nginx
 touch /run/nginx.pid
 chown $OCPU_USER /run/nginx.pid
 
-chown $OCPU_USER $R_USER_CONFIG_DIR/R/phantasus/*
+chown -R $OCPU_USER $R_USER_CONFIG_DIR/R/phantasus
 
 gosu $OCPU_USER R -e "phantasus:::createDockerConf(); phantasus::setupPhantasus()" #|| _term_config
 
