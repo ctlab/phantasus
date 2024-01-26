@@ -48,7 +48,8 @@ chown -R $OCPU_USER /var/cache/nginx
 touch /run/nginx.pid
 chown $OCPU_USER /run/nginx.pid
 
-chown -R $OCPU_USER $R_USER_CONFIG_DIR/R/phantasus
+# Let's not change user files ownership?
+# chown -R $OCPU_USER $R_USER_CONFIG_DIR/R/phantasus
 
 gosu $OCPU_USER R -e "phantasus:::createDockerConf(); phantasus::setupPhantasus()" #|| _term_config
 
