@@ -5,7 +5,7 @@ services:
             - .env
         image: asergushichev/phantasus
         ports:
-            - "80:8000"
+            - "8000:8000"
         volumes:
            - type: bind
              source: $PHANTASUS_CONFIG_DIR

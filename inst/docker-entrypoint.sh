@@ -16,6 +16,20 @@ trap _term SIGINT SIGTERM SIGWINCH
 trap _term_config ERR
 set -eE
 
+printf '%s\n' "#### ++++ ----"\
+              "#### ++++ ----"\
+              "#### ++++ ----"\
+              "====      &&&&      _____    _                       _"\
+              "====      &&&&     |  __ \  | |                     | |"\
+              "====      &&&&     | |__) | | |__     __ _   _ __   | |_    __ _   ___   _   _   ___"\
+              "&&&& #### ----     |  ___/  | '_ \   / _\` | | '_ \  | __|  / _\` | / __| | | | | / __|"\
+              "&&&& #### ----     | |      | | | | | (_| | | | | | | |_  | (_| | \__ \ | |_| | \__ \ "\
+              "&&&& #### ----     |_|      |_| |_|  \__,_| |_| |_|  \__|  \__,_| |___/  \__,_| |___/ "\
+              "----"\
+              "----"\
+              "----"
+
+
 # fixes permission error on old docker versions (workaround from https://github.com/moby/moby/issues/6047#issuecomment-68608697)
 mv /var/log/apache2 /var/log/apache2.bak && mv /var/log/apache2.bak /var/log/apache2
 
@@ -29,6 +43,7 @@ chown $OCPU_USER /run/apache2
 
 chown -R $OCPU_USER /var/log/nginx
 chown -R $OCPU_USER /var/lib/nginx
+chown -R $OCPU_USER /var/cache/nginx
 
 touch /run/nginx.pid
 chown $OCPU_USER /run/nginx.pid
@@ -40,5 +55,10 @@ gosu $OCPU_USER R -e "phantasus:::createDockerConf(); phantasus::setupPhantasus(
 gosu $OCPU_USER nginx
 
 gosu $OCPU_USER apachectl start
+
+printf '%s\n'  "■ ▦ ▥   __"\
+               "▤   ▩  |__) |_   _   _  |_  _    _      _" \
+               "▩ ■ ▥  |    | ) (_| | ) |_ (_| _) |_| _)     is up"\
+               "▥ "
 
 tail -f /var/log/nginx/access.log

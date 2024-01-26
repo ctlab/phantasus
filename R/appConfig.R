@@ -23,7 +23,7 @@ setupPhantasus <- function(
         user_conf <- get_user_conf(cache_root = cache_root, setup_config)
         dir.create(dirname(user_conf_file), showWarnings = FALSE, recursive = TRUE)
         message(paste("Create user configuration file:", user_conf_file))
-        cat(user_conf, file = user_conf_file)
+        cat(user_conf_to_yaml(user_conf), file = user_conf_file)
 
     } else{
         message(paste("Use existed configuration file:", user_conf_file))
@@ -113,7 +113,7 @@ configureAnnotDB <- function(user_conf, setup_config){
     mm_pkg <- system.file(package='org.Mm.eg.db')
     hs_pkg <- system.file(package='org.Hs.eg.db')
 
-    if (nchar(mm_pkg) | nchar(hs_pkg)){
+    if (nchar(mm_pkg) || nchar(hs_pkg)){
         message("Found local annotation databases:")
         message(paste ("\t" , mm_pkg))
         message(paste ("\t" , hs_pkg))
@@ -147,7 +147,7 @@ configureAnnotDB <- function(user_conf, setup_config){
     }
     menu_choices = c(menu_choices, "Keep empty")
     actions <- c(actions, function() {message("Kept empty")})
-    if ((!interactive()) | length(menu_choices) == 1){
+    if ((!interactive()) || length(menu_choices) == 1){
         menu_res <- 1
     } else{
         menu_res <- utils::menu(choices = menu_choices, graphics = FALSE, title = "Choose how to set up the AnnotationDB folder: ")
@@ -186,7 +186,7 @@ configureFGSEA <- function(user_conf, setup_config){
     }
     menu_choices = c(menu_choices,"Keep empty")
     actions <- c(actions, function() {message("Kept empty")})
-    if ((!interactive()) | length(menu_choices) == 1){
+    if ((!interactive()) || length(menu_choices) == 1){
         menu_res <- 1
     } else{
         menu_res <- utils::menu(choices = menu_choices, graphics = FALSE, title = "Choose how to set up the FGSEA pathways folder: ")
@@ -287,47 +287,63 @@ loadAllFiles <- function(url, file_df, destdir ){
 
 get_user_conf <- function( cache_root, setup_config){
 
-    cache_folders = list (
-        geo_path = "file.path(cache_root, 'geo/')",
-        annot_db  = "file.path(cache_root, 'annotationdb/')",
-        fgsea_pathways = "file.path(cache_root, 'fgsea/')"
-    )
-    for (i in seq_along(cache_folders)){
-        attr(cache_folders[[i]], "tag") <- "!expr"
-    }
-    if ( is.null(setup_config$rnaseq_counts) | length(setup_config$rnaseq_counts) == 0){
+    cache_folders = list ()
+    cache_folders$geo_path <- "file.path(cache_root, 'geo/')"
+    attr(cache_folders$geo_path, "R") = TRUE
+    cache_folders$annot_db <- "file.path(cache_root, 'annotationdb/')"
+    attr(cache_folders$annot_db, "R") = TRUE
+    cache_folders$fgsea_pathways <- "file.path(cache_root, 'fgsea_pathways/')"
+    attr(cache_folders$fgsea_pathways, "R") = TRUE
+
+    if ( is.null(setup_config$rnaseq_counts) || length(setup_config$rnaseq_counts) == 0){
         cache_folders$rnaseq_counts <- "file.path(cache_root, 'counts/')"
-        attr(cache_folders$rnaseq_counts, "tag") <- "!expr"
+        attr(cache_folders$rnaseq_counts, "R") <- TRUE
     } else{
         cache_folders$rnaseq_counts <- setup_config$rnaseq_counts
+        attr(cache_folders$rnaseq_counts, "R") <- FALSE
     }
-
     static_root <- "system.file('www/phantasus.js', package = 'phantasus')"
-    attr(static_root, "tag") <- "!expr"
+    attr(static_root, "R") <- TRUE
     geo_mirrors <- if (length(setup_config$geo_mirrors) == 0){
                        list(true_geo = "https://ftp.ncbi.nlm.nih.gov")
                     } else {
                         setup_config$geo_mirrors
                     }
-    for (i in seq_along(geo_mirrors)) {
-        attr(geo_mirrors[[i]], "quoted") <- TRUE
+
+    return(
+          list(
+                host = "0.0.0.0",
+                port = "8000",
+                preloaded_dir = NULL,
+                static_root = static_root,
+                cache_root = cache_root,
+                cache_folders = cache_folders,
+                geo_mirrors = geo_mirrors
+            )
+    )
+
+}
+
+
+user_conf_to_yaml = function(user_config){
+    for (i in seq_along(user_config$cache_folders)){
+        if (!is.null(attr(user_config$cache_folders[[i]], "R")) && attr(user_config$cache_folders[[i]], "R") ){
+            attr(user_config$cache_folders[[i]], "tag") <- "!expr"
+        }
     }
-    attr(geo_mirrors, "quoted") <- TRUE
-    user_conf <- list(default =
-                          list(
-                                host = "0.0.0.0",
-                                port = "8000",
-                                preloaded_dir = NULL,
-                                static_root = static_root,
-                                cache_root = cache_root,
-                                cache_folders = cache_folders,
-                                geo_mirrors = geo_mirrors
-                            )
-                    )
-    attr(user_conf$default$cache_root, "quoted") <- TRUE
-    attr(user_conf$default$host,"quoted") <- TRUE
-    class(user_conf$default$port) = 'verbatim'
-    yaml::as.yaml(user_conf, handlers = list(
+    if (!is.null(attr(user_config$static_root, "R")) && attr(user_config$static_root, "R") ){
+        attr(user_config$static_root, "tag") <- "!expr"
+    }
+
+    for (i in seq_along(user_config$geo_mirrors)) {
+        attr(user_config$geo_mirrors[[i]], "quoted") <- TRUE
+    }
+    attr(user_config$geo_mirrors, "quoted") <- TRUE
+    attr(user_config$cache_root, "quoted") <- TRUE
+    attr(user_config$host,"quoted") <- TRUE
+    class(user_config$port) = 'verbatim'
+    user_config <- list(default = user_config)
+    yaml::as.yaml(user_config, handlers = list(
         logical = function(x){
             result <- ifelse(x, "TRUE", "FALSE")
             class(result) <- "verbatim"
@@ -341,7 +357,6 @@ get_user_conf <- function( cache_root, setup_config){
     ) )
 }
 
-
 #' Creates default docker conf file
 #' Function creates default docker user configuration file based on provided \code{setup_file}
 #' or on default parameters if \code{setup_file} doesn't exist. If \code{user_conf_file} exists function does nothing.
@@ -350,11 +365,11 @@ get_user_conf <- function( cache_root, setup_config){
 createDockerConf <- function( setup_file = confFile("setup.yaml"), user_conf_file = confFile("user.conf")){
     if (!file.exists(user_conf_file)){
         setup_conf <-  getSetupConf(setup_file, "default")
-        user_conf <- get_user_conf("/var/phantasus/cache", setup_conf)
+        user_conf <- get_user_conf(cache_root = "/var/phantasus/cache", setup_config = setup_conf)
         user_conf$preloaded_dir <- "/var/phantasus/preloaded"
         dir.create(dirname(user_conf_file), showWarnings = FALSE, recursive = TRUE)
         message(paste("Create user configuration file:", user_conf_file))
-        cat(user_conf, file = user_conf_file)
+        cat(user_conf_to_yaml(user_conf), file = user_conf_file)
     }
 }
 

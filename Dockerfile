@@ -55,7 +55,7 @@ chown -R ${OCPU_USER} ${R_USER_CONFIG_DIR}/R/phantasus
 RUN mkdir -p /var/phantasus/cache && chown ${OCPU_USER} /var/phantasus/cache
 RUN mkdir -p /var/phantasus/preloaded && chown ${OCPU_USER} /var/phantasus/preloaded
 RUN mkdir -p /var/phantasus/ocpu-root && chown -R ${OCPU_USER} /var/phantasus/ocpu-root
-
+RUN mkdir -p /var/cache/nginx && chown -R ${OCPU_USER} /var/cache/nginx
 
 RUN rm -rf /root/phantasus/inst
 
