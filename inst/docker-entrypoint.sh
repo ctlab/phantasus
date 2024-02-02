@@ -16,18 +16,7 @@ trap _term SIGINT SIGTERM SIGWINCH
 trap _term_config ERR
 set -eE
 
-printf '%s\n' "#### ++++ ----"\
-              "#### ++++ ----"\
-              "#### ++++ ----"\
-              "====      &&&&      _____    _                       _"\
-              "====      &&&&     |  __ \  | |                     | |"\
-              "====      &&&&     | |__) | | |__     __ _   _ __   | |_    __ _   ___   _   _   ___"\
-              "&&&& #### ----     |  ___/  | '_ \   / _\` | | '_ \  | __|  / _\` | / __| | | | | / __|"\
-              "&&&& #### ----     | |      | | | | | (_| | | | | | | |_  | (_| | \__ \ | |_| | \__ \ "\
-              "&&&& #### ----     |_|      |_| |_|  \__,_| |_| |_|  \__|  \__,_| |___/  \__,_| |___/ "\
-              "----"\
-              "----"\
-              "----"
+
 
 
 # fixes permission error on old docker versions (workaround from https://github.com/moby/moby/issues/6047#issuecomment-68608697)
@@ -57,9 +46,57 @@ gosu $OCPU_USER nginx
 
 gosu $OCPU_USER apachectl start
 
-printf '%s\n'  "■ ▦ ▥   __"\
-               "▤   ▩  |__) |_   _   _  |_  _    _      _" \
-               "▩ ■ ▥  |    | ) (_| | ) |_ (_| _) |_| _)     is up"\
-               "▥ "
+
+color() {
+    STARTCOLOR="\e[38;5;$2";
+    ENDCOLOR="\e[0m";
+    export "$1"="$STARTCOLOR%s"
+}
+color darkred 196m
+color pinkish 211m
+color blue 27m
+color lightblue 68m
+color coral 203m
+color lessblue 26m
+color normal 0m
+
+printf $darkred "#### "
+printf $pinkish "++++ "
+printf $blue'\n' "----"
+printf $darkred "#### "
+printf $pinkish "++++ "
+printf $blue'\n' "----"
+printf $darkred "#### "
+printf $pinkish "++++ "
+printf $blue'\n' "----"
+
+printf $lightblue "====      "
+printf $coral "&&&&"
+printf "\e[0m%b"'\n' "      _____    _                       _                                   _                         "
+printf $lightblue "====      "
+printf $coral "&&&&"
+printf "\e[0m%s\n" "     |  __ \  | |                     | |                                 (_)                        "
+printf $lightblue   "====      "
+printf $coral"&&&&     "
+printf "\e[0m%s\n" "| |__) | | |__     __ _   _ __   | |_    __ _   ___   _   _   ___     _   ___     _   _   _ __  "
+printf $coral "&&&& "
+printf $darkred "#### "
+printf $lessblue "----     "
+printf "\e[0m%s\n" "|  ___/  | '_ \   / _\` | | '_ \  | __|  / _\` | / __| | | | | / __|   | | / __|   | | | | | '_ \ "
+printf $coral "&&&& "
+printf $darkred "#### "
+printf $lessblue "----     "
+printf "\e[0m%s\n" "| |      | | | | | (_| | | | | | | |_  | (_| | \__ \ | |_| | \__ \   | | \__ \   | |_| | | |_) |"
+printf $coral "&&&& "
+printf $darkred "#### "
+printf $lessblue "----     "
+printf "\e[0m%s\n" "|_|      |_| |_|  \__,_| |_| |_|  \__|  \__,_| |___/  \__,_| |___/   |_| |___/    \__,_| | .__/ "
+printf $blue "----"
+printf "\e[0m%s\n" "                                                                                                        | |    "
+printf $blue "----"
+printf "\e[0m%s\n" "                                                                                                        |_|    "
+printf $blue "----"
+printf "\e[0m%s\n" ""
+
 
 tail -f /var/log/nginx/access.log
