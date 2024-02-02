@@ -214,8 +214,8 @@ configureRnaseqCounts <- function(user_conf, setup_config){
         message("! RNA-seq counts configured !")
         return()
     }
-
-    if(!grepl(pattern = "^http(s)?://", x = selected_path)){
+    hsds <- isHSDS(selected_path)
+    if (is.null(hsds)){
         message("! RNA-seq count path looks like local path !")
         unsafe_dir_create(selected_path)
         message("RNA-seq counts configured")
@@ -227,34 +227,13 @@ configureRnaseqCounts <- function(user_conf, setup_config){
         stop("Configuration failed: RNA-seq count path should be local diractory or HSDS server")
     }
     message(paste(selected_path, "response as HSDS server"))
-
-    menu_choices = c("Yes, load expression matrix from remote server when the known RNA-seq dataset is requested")
-    actions <- c(function() {
-        phantasus_lite <- system.file(package='phantasusLite')
-        if (nchar(phantasus_lite) == 0){
-            message("phantasus-lite package is not installed. HSDS will be ignored")
-            stop("Configuration failed: Install phantasusLite package to use HSDS server")
-        }
-        options(PhantasusUseHSDS = TRUE)
-        message("HSDS server will be used as source of RNA-seq counts")
-        })
-
-    menu_choices <- c(menu_choices, "No, keep all RNA-seq datasets without expression data")
-    actions <- c(actions, function() {
-        options(PhantasusUseHSDS = FALSE)
-        message("HSDS server will be ignored. RNA-seq datasets will be loaded without expression matrices.")
-    })
-    if (!interactive()){
-        menu_res <- 1
-    } else {
-        menu_res <- utils::menu(choices = menu_choices, graphics = FALSE, title = "Current Phantasus configuration allows it to load count matrices from remote server when RNA-seq dataset is requested.\nWould you like to use this feature?")
-        if (menu_res == 0){
-            message("Canceled")
-            return()
-        }
+    phantasus_lite <- system.file(package='phantasusLite')
+    if (nchar(phantasus_lite) == 0){
+        message("phantasus-lite package is not installed. HSDS will be ignored")
+        stop("Configuration failed: Install phantasusLite package to use HSDS server")
     }
-    actions[[menu_res]]()
-
+    options(PhantasusUseHSDS = TRUE)
+    message("HSDS server will be used as source of RNA-seq counts")
 }
 
 getFileIndexDF <- function(base_url, pattern, location = "/"){
@@ -374,6 +353,7 @@ createDockerConf <- function( setup_file = confFile("setup.yaml"), user_conf_fil
 }
 
 unsafe_dir_create <- function(dir_name,  recursive = TRUE){
+    message(paste("try to create:", dir_name))
     configured <- dir.create(dir_name, recursive = recursive, showWarnings = FALSE)
     if (!configured){
         stop(paste("Configuration failed: can't create", dir_name))

@@ -352,24 +352,22 @@ areCacheFoldersValid <- function(cache_folders){
 
     }
     counts_source <- getPhantasusConf("cache_folders")$rnaseq_counts
-    useHSDS <- getOption("PhantasusUseHSDS")
+
     if (nchar(counts_source) == 0){
         return(FALSE)
     }
-    if ( is.null(useHSDS)){
+    valid_hsds <- tryCatch(expr = isHSDS(getPhantasusConf("cache_folders")$rnaseq_counts),
+                           error = function(e) {FALSE})
+    options(PhantasusUseHSDS = valid_hsds)
+    if (is.null(valid_hsds)){
+
         if (!dir.exists(counts_source)){
             return(FALSE)
         } else {
             return(rw_dir_check(counts_source))
         }
     }
-    valid_hsds <- tryCatch(expr = isHSDS(getPhantasusConf("cache_folders")$rnaseq_counts),
-                           error = FALSE)
-    if(valid_hsds){
-        return(TRUE)
-    } else{
-        return(FALSE)
-    }
+    return(valid_hsds)
 }
 rw_dir_check <- function(dir_name){
     if (file.access(dir_name, mode = 2) != 0){
@@ -458,9 +456,12 @@ selfCheck <- function(verbose = FALSE) {
 }
 
 #' check if url  responding as HSDS server
+#' TRUE - hsds
+#' FALSE - web link but not working
+#' NULL - not web link
 isHSDS <- function(url){
     if(!grepl(pattern = "^http(s)?://", x = url)){
-        return(FALSE)
+        return(NULL)
     }
     req <- httr::GET(url)
     if( req$headers$server == "Highly Scalable Data Service (HSDS)"){
