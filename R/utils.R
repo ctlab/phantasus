@@ -54,7 +54,14 @@ read.gct <- function(gct, ...) {
                 col.names = colNames,
                 row.names = NULL, header = FALSE,  ...)
 
-    rownames(t) <- t[,1]
+    rnms <- as.character(t[, 1])
+    if (anyDuplicated(rnms)){
+        warning("Row names in gct file were not unique. I will make them unique for you.")
+        rnms <- make.unique(rnms)
+    }
+
+    # rownames(t) <- t[,1]
+    rownames(t) <- rnms
 
     exp <- as.matrix(t[, (ann.row + 2):ncol(t)])
 
