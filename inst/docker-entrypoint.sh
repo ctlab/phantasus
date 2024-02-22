@@ -1,6 +1,7 @@
 #!/bin/bash
 
 _term() {
+  trap ERR
   echo "Caught signal!"
   nginx -s stop
   apachectl -k graceful-stop
