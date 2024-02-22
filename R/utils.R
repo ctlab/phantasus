@@ -469,6 +469,7 @@ isHSDS <- function(url){
     }
     return(FALSE)
 }
+
 safeDownload <- function(url, dir, filename, ...) {
     dest <- file.path(dir, filename)
     if (file.exists(dest)) {
@@ -476,7 +477,7 @@ safeDownload <- function(url, dir, filename, ...) {
     }
 
     tempDest <- tempfile(paste0(filename, ".load"), tmpdir = dir)
-    utils::download.file(url, destfile = tempDest, ...)
+    curl::curl_download(url, destfile = tempDest, ...)
     file.rename(tempDest, dest)
 }
 

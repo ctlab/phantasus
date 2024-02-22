@@ -258,7 +258,8 @@ loadAllFiles <- function(url, file_df, destdir ){
         safeDownload(
             url = paste0(url, file),
             filename = basename(target_file),
-            dir = dirname(target_file)
+            dir = dirname(target_file),
+            quiet = FALSE
         )
     }
 }
