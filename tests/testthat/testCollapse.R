@@ -1,5 +1,5 @@
 context('Collapse dataset')
-
+Sys.setenv(R_USER_CONFIG_DIR = system.file("/testdata/config", package = "phantasus"))
 test_that("Collapse dataset selectOne works correctly", {
     es <- read.gct(system.file("testdata/collapse_dataset_one.gct", package="phantasus"))
     newEs <- collapseDatasetImpl(es, selectOne = TRUE, fn = median, fields = c('Gene ID'), removeEmpty = FALSE)
@@ -61,8 +61,11 @@ test_that("Collapse dataset by columns", {
 })
 
 test_that("Collapse strip unannotated rows", {
+    old_conf <- Sys.getenv("R_CONFIG_ACTIVE")
+    Sys.setenv(R_CONFIG_ACTIVE = "test_real_geo")
     ess <- getGSE('GSE53986')[[1]]
     unstripped <- collapseDatasetImpl(ess, selectOne = TRUE, fn = median, fields = c('Gene ID'), removeEmpty = FALSE)
     stripped <- collapseDatasetImpl(ess, selectOne = TRUE, fn = median, fields = c('Gene ID'), removeEmpty = TRUE)
     expect_equal(nrow(stripped) + 1, nrow(unstripped))
+    Sys.setenv(R_CONFIG_ACTIVE = old_conf)
 })

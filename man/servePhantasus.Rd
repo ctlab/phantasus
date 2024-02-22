@@ -5,11 +5,10 @@
 \title{Serve phantasus.}
 \usage{
 servePhantasus(
-  host = "0.0.0.0",
-  port = 8000,
-  staticRoot = system.file("www/phantasus.js", package = "phantasus"),
-  cacheDir = tempdir(),
-  preloadedDir = NULL,
+  host = getPhantasusConf("host"),
+  port = getPhantasusConf("port"),
+  staticRoot = getPhantasusConf("static_root"),
+  preloadedDir = getPhantasusConf("preloaded_dir"),
   openInBrowser = TRUE,
   quiet = TRUE
 )
@@ -21,8 +20,6 @@ servePhantasus(
 
 \item{staticRoot}{Path to static files with phantasus.js
 (on local file system).}
-
-\item{cacheDir}{Full path to cache directory.}
 
 \item{preloadedDir}{Full path to directory with preloaded files.}
 

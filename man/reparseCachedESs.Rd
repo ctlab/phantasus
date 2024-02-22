@@ -4,7 +4,7 @@
 \alias{reparseCachedESs}
 \title{Reparse cached expression sets from GEO.}
 \usage{
-reparseCachedESs(destdir, mirrorPath = "https://ftp.ncbi.nlm.nih.gov")
+reparseCachedESs(destdir, mirrorPath = getPhantasusConf("geo_mirrors"))
 }
 \arguments{
 \item{destdir}{Directory used for caching loaded Series files from GEO database.}
@@ -21,6 +21,6 @@ that were cached and runs `getES` for them again. The function
 uses cached Series and other files from GEO.
 }
 \examples{
-reparseCachedESs(destdir=tempdir())
+reparseCachedESs(destdir=tempdir(), "https://ftp.ncbi.nlm.nih.gov")
 
 }

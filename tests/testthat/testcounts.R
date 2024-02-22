@@ -1,7 +1,8 @@
 context('counts files')
 library(rhdf5)
-
-
+Sys.setenv(R_USER_CONFIG_DIR = system.file("/testdata/config", package = "phantasus"))
+old_conf <- Sys.getenv("R_CONFIG_ACTIVE")
+Sys.setenv(R_CONFIG_ACTIVE = "default")
 test_that("getCountsMetaPart provides correct part of meta.rda", {
     counts_dir <- system.file("testdata/counts", package = "phantasus")
     if (counts_dir == "") {
@@ -37,7 +38,7 @@ test_that("updateCountsMeta works with priorities", {
         stop("test directory for counts does not exist")
     }
     destdir <- file.path(tempdir(), "test_counts")
-    dir.create(destdir)
+    dir.create(destdir, recursive = TRUE)
     tmp_path <- file.path(destdir, "archs4")
     dir.create(tmp_path)
     files <- list.files(real_path, pattern = "(.+\\.h5)|(meta.txt)", full.names = TRUE)
@@ -73,10 +74,10 @@ test_that("loadCounts returns result", {
     if (counts_dir == "") {
         stop("test directory for counts does not exist")
     }
-    tmp_dir <- file.path(tempdir(), "test_counts")
-    dir.create(tmp_dir)
-    tmp_counts <- file.path(tmp_dir, "counts")
-    dir.create(tmp_counts)
+    tmp_counts <- getPhantasusConf("cache_folders")$rnaseq_counts
+    if (!dir.exists(tmp_counts)){
+        dir.create(tmp_counts)
+    }
     dir.create(file.path(tmp_counts, "archs4"))
     count_files <- list.files(counts_dir, recursive = TRUE, full.names = FALSE)
     tmp_count_files <- file.path(tmp_counts, count_files )
@@ -84,11 +85,11 @@ test_that("loadCounts returns result", {
     real_wd <- getwd()
     setwd(system.file(".", package = "phantasus"))
     test_gse <- "GSE107746"
-    ess <- getGSE(test_gse, destdir = tmp_dir )
+    ess <- getGSE(test_gse, mirrorPath = "https://ftp.ncbi.nlm.nih.gov")
     expect_gt(nrow(ess[[1]]), 0)
     expect_gt(ncol(ess[[1]]), 0)
     setwd(real_wd)
-    unlink(tmp_dir, recursive = TRUE)
+    unlink(tmp_counts, recursive = TRUE)
 
 })
 
@@ -98,10 +99,10 @@ test_that("updateCountsMeta create good meta files for archs4", {
     if (counts_dir == "") {
         stop("test directory for counts does not exist")
     }
-    tmp_dir <- file.path(tempdir(), "test_counts")
-    dir.create(tmp_dir)
-    tmp_counts <- file.path(tmp_dir, "counts")
-    dir.create(tmp_counts)
+    tmp_counts <- getPhantasusConf("cache_folders")$rnaseq_counts
+    if (!dir.exists(tmp_counts)){
+        dir.create(tmp_counts, recursive = TRUE )
+    }
     dir.create(file.path(tmp_counts, "archs4"))
     count_files <- list.files(counts_dir, recursive = TRUE,  pattern = ".h5$")
     tmp_count_files <- file.path(tmp_counts, count_files )
@@ -116,5 +117,6 @@ test_that("updateCountsMeta create good meta files for archs4", {
     arch_meta <- fread(arch_meta_file)
     expect_equal(nrow(arch_meta), length(count_files))
     expect_true(validateCountsCollection(file.path(tmp_counts, "archs4")))
-    unlink(tmp_dir, recursive = TRUE)
+    unlink(tmp_counts, recursive = TRUE)
 })
+Sys.setenv(R_CONFIG_ACTIVE = old_conf)

@@ -3,14 +3,17 @@ R -e "devtools::install('.', upgrade=FALSE)"
 
 mkdir -p inst/www/phantasus.js/jasmine/cache
 cp "./inst/testdata/GSE27112-GPL6103.rda" inst/www/phantasus.js/jasmine/cache
+cp -r ./inst/testdata/config inst/www/phantasus.js/jasmine/cache/
 cd inst/www/phantasus.js/
 npm install karma --save-dev
 npm install
+export R_USER_CONFIG_DIR=jasmine/cache/config
+export R_CONFIG_ACTIVE=test_js
 
-R -e "phantasus::getES('GSE53986', destdir = 'jasmine/cache')"
+R -e "phantasus::getES('GSE53986')"
 
 touch server.log
-R -e "phantasus::servePhantasus('0.0.0.0', 8000, cacheDir = 'jasmine/cache', preloadedDir = 'jasmine/cache', openInBrowser=FALSE)" 2>&1 | tee server.log &
+R -e "phantasus::servePhantasus()" 2>&1 | tee server.log &
 PH_PID=$!
 
 

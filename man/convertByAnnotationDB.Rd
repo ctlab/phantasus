@@ -30,8 +30,7 @@ convertByAnnotationDB(
 JSON object with a vector of converted IDs
 }
 \description{
-\code{createES} function creates an rds file containing meta information of
-provided sqlite files for AnnotationDB
+\code{convertByAnnotationDB} function returns \code{keyType} ids from \code{dbName} mapped to \code{columnName} in \code{es}.
 }
 \examples{
 \dontrun{

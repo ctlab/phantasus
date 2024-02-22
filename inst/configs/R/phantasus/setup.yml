@@ -1,0 +1,13 @@
+default:
+    geo_mirrors:
+        true_geo: "https://ftp.ncbi.nlm.nih.gov"
+        minimal_cache: "https://ctlab.itmo.ru/files/software/phantasus/minimal-cache/"
+    rnaseq_counts: "https://ctlab.itmo.ru/hsds/?domain=/counts" # hsds url / absolute path to folder / NULL
+    fgsea_pathways: "https://ctlab.itmo.ru/files/software/phantasus/minimal-cache/fgsea/"
+    annot_db: "https://ctlab.itmo.ru/files/software/phantasus/minimal-cache/annotationdb/"
+
+blank:
+    geo_mirrors: "https://ftp.ncbi.nlm.nih.gov"
+    rnaseq_counts: NULL
+    fgsea_pathways: NULL
+    annot_db: NULL

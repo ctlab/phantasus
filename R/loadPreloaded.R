@@ -13,8 +13,8 @@
 #'
 #' @import Biobase
 loadPreloaded <- function(name) {
-    preloadedDir <- getOption("phantasusPreloadedDir")
-    cacheDir <- getOption("phantasusCacheDir")
+    preloadedDir <- getOption("phantasusPreloadedDir", default = getPhantasusConf("preloaded_dir"))
+    cacheDir <- getPhantasusConf("cache_root")
     if (is.null(preloadedDir)) {
         stop("Specify the directory with presaved files")
     } else if (!dir.exists(preloadedDir)) {

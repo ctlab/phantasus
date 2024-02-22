@@ -4,17 +4,17 @@
 \alias{annotationDBMeta}
 \title{Create meta file for AnnotationDB}
 \usage{
-annotationDBMeta(cacheDir)
+annotationDBMeta(annotDir)
 }
 \arguments{
-\item{cacheDir}{cacheDir for phantasus}
+\item{annotDir}{path to folder with annotationDB sqlite files}
 }
 \value{
 nothing
 }
 \description{
-\code{createES} function creates an rds file containing meta information of
-provided sqlite files for AnnotationDB
+\code{annotationDBMeta} function creates txt files containing meta information of
+provided sqlite files for AnnotationDB.
 }
 \examples{
 \dontrun{

@@ -10,8 +10,8 @@ queryAnnotationDBMeta()
 meta info in JSON
 }
 \description{
-\code{createES} Function reads an rds file containing meta information of provded
-sqlite files for AnnotationDB
+\code{queryAnnotationDBMeta} Function reads txt meta files for provided
+sqlite annotation databases.
 }
 \examples{
 \dontrun{

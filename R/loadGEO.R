@@ -26,18 +26,13 @@
 #' @import Biobase
 #' @import GEOquery
 loadGEO <- function(name, type = NA) {
-    cacheDir <- getOption("phantasusCacheDir")
+    cacheDir <- getPhantasusConf("cache_folders")$geo_path
 
-    if (is.null(cacheDir)) {
-        cacheDir <- tempdir()
-    } else if (!dir.exists(cacheDir)) {
+    if (!dir.exists(cacheDir)) {
         dir.create(cacheDir)
     }
 
-    mirrorPath <- getOption('phantasusMirrorPath')
-    if (is.null(mirrorPath)) {
-        mirrorPath <- "https://ftp.ncbi.nlm.nih.gov"
-    }
+    mirrorPath <- getPhantasusConf("geo_mirrors")
 
 
     geoDir <- getGEODir(name, cacheDir)
@@ -66,7 +61,7 @@ loadGEO <- function(name, type = NA) {
     }
 
 
-    urls <- c(urls, unlist(strsplit(filePath, cacheDir, fixed = TRUE))[2])
+    urls <- c(urls, paste0("/geo/",unlist(strsplit(filePath, cacheDir, fixed = TRUE))[2]))
     jsonlite::toJSON(urls)
 }
 
@@ -88,11 +83,12 @@ loadGEO <- function(name, type = NA) {
 #'     in \code{name} variable GEO identifier.
 #'
 #' @examples
-#' getGDS('GDS4922')
-#'
+#' \dontrun{
+#'    getGDS('GDS4922', destdir = tempdir(), mirrorPath = "https://ftp.ncbi.nlm.nih.gov")
+#' }
 #' @export
-getGDS <- function(name, destdir = tempdir(),
-                   mirrorPath = "https://ftp.ncbi.nlm.nih.gov") {
+getGDS <- function(name, destdir = getPhantasusConf("cache_folders")$geo_path,
+                   mirrorPath = getPhantasusConf("geo_mirrors")) {
     stub <- gsub("\\d{1,3}$", "nnn", name, perl = TRUE)
     filename <- sprintf("%s.soft.gz", name)
     gdsurl <- "%s/geo/datasets/%s/%s/soft/%s"
@@ -102,22 +98,31 @@ getGDS <- function(name, destdir = tempdir(),
 
     infile <- file.exists(destfile)
 
+    # Several GEO mirrors supported, but use only one for now.
+    mirrorPath <- head(mirrorPath,1)
+
     if (!infile) {
         tempDestFile <- tempfile(paste0(filename, ".load"), tmpdir=fullGEODirPath)
-        tryCatch({
-            utils::download.file(sprintf(gdsurl, mirrorPath,
-                                         stub, name, filename),
-                            destfile = tempDestFile,
-                            method="libcurl")
-            file.rename(tempDestFile, destfile)
-            infile <- TRUE
-        },
-        error = function(e) {
-            file.remove(tempDestFile)
-        },
-        warning = function(w) {
-            file.remove(tempDestFile)
-        })
+        for (url in sprintf(gdsurl, mirrorPath,
+                            stub, name, filename)){
+            tryCatch({
+                utils::download.file(url,
+                                     destfile = tempDestFile,
+                                     method="libcurl")
+                file.rename(tempDestFile, destfile)
+                infile <- TRUE
+            },
+            error = function(e) {
+                file.remove(tempDestFile)
+            },
+            warning = function(w) {
+                file.remove(tempDestFile)
+            })
+            if (file.exists(destfile)){
+                break
+            }
+        }
+
     } else {
         message(paste("Loading from locally found file", destfile))
     }
@@ -308,7 +313,9 @@ filterFeatureAnnotations <- function(es) {
 
     if ("Gene ID" %in% fvarLabels(es)) {
         fvarsToKeep <- c(fvarsToKeep, "Gene ID")
-    } else if ("ID" %in% fvarLabels(es)) {
+    } else if ("ENTREZ_GENE_ID" %in%  fvarLabels(es)){
+        fvarsToKeep <- c(fvarsToKeep, "ENTREZ_GENE_ID")
+    }else if ("ID" %in% fvarLabels(es)) {
         fvarsToKeep <- c(fvarsToKeep, "ID")
     } else {
         fvarsToKeep <- c(fvarsToKeep, grep("entrez",
@@ -411,13 +418,13 @@ filterPhenoAnnotations <- function(es) {
 #' \dontrun{
 #'     getGSE('GSE14308', destdir = 'cache')
 #'     getGSE('GSE27112')
+#'     getGSE('GSE53986')
 #' }
-#' getGSE('GSE53986')
 #'
 #' @export
 #' @import rhdf5
-getGSE <- function(name, destdir = tempdir(),
-                   mirrorPath = "https://ftp.ncbi.nlm.nih.gov") {
+getGSE <- function(name, destdir = getPhantasusConf("cache_folders")$geo_path,
+                   mirrorPath = getPhantasusConf("geo_mirrors")) {
     if (!isValidExperimentID(name)) {
       stop(name, " does not look like a valid GEO Series ID")
     }
@@ -436,28 +443,36 @@ getGSE <- function(name, destdir = tempdir(),
 
     infile <- file.exists(destfile)
 
+    # Several GEO mirrors supported, but use only one for now.
+    mirrorPath <- head(mirrorPath,1)
     if (!infile) {
         tempDestFile <- tempfile(paste0(filename, ".load"), tmpdir=fullGEODirPath)
-        tryCatch({
-            utils::download.file(sprintf(gseurl, mirrorPath,
-                                         stub, GEO, filename),
-                                    destfile = tempDestFile,
-                                 method="libcurl")
-            file.rename(tempDestFile, destfile)
-            infile <- TRUE
-        },
-        error = function(e) {
-            file.remove(tempDestFile)
-        },
-        warning = function(w) {
-            file.remove(tempDestFile)
-        })
+        for (url in  sprintf(gseurl, mirrorPath,
+                             stub, GEO, filename)){
+            tryCatch({
+                utils::download.file(url,
+                                     destfile = tempDestFile,
+                                     method="libcurl")
+                file.rename(tempDestFile, destfile)
+                infile <- TRUE
+            },
+            error = function(e) {
+               file.remove(tempDestFile)
+            },
+            warning = function(w) {
+               file.remove(tempDestFile)
+            })
+            if(file.exists(destfile)){
+                break
+            }
+        }
+
     } else {
         message(paste("Loading from locally found file", destfile))
     }
 
     if (infile && file.size(destfile) > 0) {
-        ess <- list(suppressWarnings(getGEO(filename = destfile,destdir = fullGEODirPath, getGPL = FALSE, AnnotGPL = FALSE)))
+        ess <- list(suppressWarnings(getGEO(filename = destfile, destdir = fullGEODirPath, getGPL = FALSE, AnnotGPL = FALSE)))
         for (i in seq_len(length(ess))) {
             ess[[i]] <- annotateFeatureData(ess[[i]], destdir)
         }
@@ -479,8 +494,16 @@ getGSE <- function(name, destdir = tempdir(),
 
     ess <- lapply(ess, filterFeatureAnnotations)
     archs4_files <- getArchs4Files(destdir)
-    if (dir.exists(file.path(destdir,"counts"))){
-      ess <- lapply(ess, loadCounts,counts_dir=file.path(destdir,"counts"))
+    useHSDS <- getOption("PhantasusUseHSDS")
+    counts_path <- getPhantasusConf("cache_folders")$rnaseq_counts
+    if (is.null(useHSDS)){
+        if (dir.exists(counts_path)){
+            ess <- lapply(ess, loadCounts, counts_dir = counts_path)
+        }
+    } else{
+        if (useHSDS == TRUE){
+            ess <- lapply(ess, phantasusLite::loadCountsFromHSDS, url = counts_path)
+        }
     }
     if (length(archs4_files) > 0)  {
         ess <- lapply(ess, loadFromARCHS4, archs4_files=archs4_files)
@@ -519,12 +542,12 @@ getGSE <- function(name, destdir = tempdir(),
 #' \dontrun{
 #'     getES('GSE14308', type = 'GSE', destdir = 'cache')
 #'     getES('GSE27112')
+#'     getES('GDS4922')
 #' }
-#' getES('GDS4922')
 #'
 #' @export
-getES <- function(name, type = NA, destdir = tempdir(),
-                  mirrorPath = "https://ftp.ncbi.nlm.nih.gov") {
+getES <- function(name, type = NA, destdir = getPhantasusConf("cache_folders")$geo_path,
+                  mirrorPath = getPhantasusConf("geo_mirrors")) {
     if (is.na(type)) {
         type <- substr(name, 1, 3)
     }
@@ -586,11 +609,11 @@ listCachedESs <- function(destdir) {
 #' @return vector of previously cached GSE IDs
 #'
 #' @examples
-#' reparseCachedESs(destdir=tempdir())
+#' reparseCachedESs(destdir=tempdir(), "https://ftp.ncbi.nlm.nih.gov")
 #'
 #' @export
 reparseCachedESs <- function(destdir,
-                                mirrorPath = "https://ftp.ncbi.nlm.nih.gov") {
+                                mirrorPath = getPhantasusConf("geo_mirrors")) {
     toReparse <- listCachedESs(destdir)
 
     for (path in toReparse) {
@@ -641,18 +664,10 @@ checkGPLsFallback <- function(name) {
         return(jsonlite::toJSON(gpls))
     }
 
-    mirrorPath <- getOption('phantasusMirrorPath')
-    if (is.null(mirrorPath)) {
-      mirrorPath <- "https://ftp.ncbi.nlm.nih.gov"
-    }
+    mirrorPath <-  getPhantasusConf("geo_mirrors")
 
-    cacheDir <- getOption("phantasusCacheDir")
+    cacheDir <- getPhantasusConf("cache_folders")$geo_path
 
-    if (is.null(cacheDir)) {
-      cacheDir <- tempdir()
-    } else if (!dir.exists(cacheDir)) {
-      dir.create(cacheDir)
-    }
 
     type <- substr(name, 1, 3)
     assertthat::assert_that( (type == "GDS" || type == "GSE")
@@ -664,8 +679,11 @@ checkGPLsFallback <- function(name) {
     url <- sprintf(gdsurl, mirrorPath,
                    if (type == "GDS") "datasets" else "series", stub, name)
 
-    cachePath <- paste0(sprintf(gdsurl, cacheDir,
-                        if (type == "GDS") "datasets" else "series", stub, name), "gpls")
+    cachePath <- paste0(cacheDir,
+                        if (type == "GDS") "datasets" else "series",
+                        stub,
+                        name,
+                        "gpls")
 
     dir.create(dirname(cachePath), recursive = TRUE, showWarnings = FALSE)
 
@@ -683,7 +701,12 @@ checkGPLsFallback <- function(name) {
     gpls <- c()
 
     tryCatch({
-        resp <- httr::GET(url)
+        for (mirror in url){
+            resp <- httr::GET(mirror)
+            if (httr::status_code(resp) != 404) {
+                break
+            }
+        }
         if (httr::status_code(resp) == 404) {
             warning("No such dataset")
             return(jsonlite::toJSON(c()))
@@ -726,10 +749,8 @@ checkGPLs <- function(name) {
     return(jsonlite::toJSON(gpls))
   }
 
-  cacheDir <- getOption("phantasusCacheDir")
-  if (is.null(cacheDir)) {
-    cacheDir <- tempdir()
-  }
+  cacheDir <- getPhantasusConf("cache_folders")$geo_path
+
   GEOdir <- dirname(getGEODir(GEO, cacheDir))
   GPLCacheFile <- file.path(GEOdir, 'gpls')
   if (file.exists(GPLCacheFile)) {
@@ -866,10 +887,10 @@ inferCondition <- function(es) {
 }
 
 
-downloadGPL <- function (GPL, destdir = tempdir()) {
+downloadGPL <- function (GPL, destdir = getPhantasusConf("cache_folders")$geo_path) {
   GPL <- toupper(GPL)
   stub = gsub('\\d{1,3}$','nnn',GPL,perl=TRUE)
-  GPLDirPath <- '%s/geo/platforms/%s/%s/annot'
+  GPLDirPath <- '%s/platforms/%s/%s/annot'
   fullGPLDirPath <- file.path(sprintf(GPLDirPath, destdir, stub, GPL))
 
   cachedFile <- file.path(fullGPLDirPath, paste0(GPL, ".annot.gz"))
@@ -898,27 +919,34 @@ downloadGPL <- function (GPL, destdir = tempdir()) {
     }
   }
 
-
-  annotPath <- 'https://ftp.ncbi.nlm.nih.gov/geo/platforms/%s/%s/annot/%s'
+  mirrorPath <- getPhantasusConf("geo_mirrors")
+  annotPath <- paste0(mirrorPath,  '/geo/platforms/%s/%s/annot/%s')
   annotURL <- sprintf(annotPath,stub,GPL,paste0(GPL,'.annot.gz'))
   dir.create(fullGPLDirPath, showWarnings = FALSE, recursive = TRUE)
   targetFile <- ''
 
-  req <- httr::HEAD(annotURL)
-  if (httr::status_code(req) != 404) {
-    # annot available
-    tmp <- tempfile(pattern=paste0(GPL, ".annot.gz"), tmpdir=fullGPLDirPath)
-    tryCatch({
-      download.file(annotURL, tmp)
-    }, error=function (e) {
-      unlink(tmp)
-      stop('Could not download GPL ', GPL, e)
-    })
+  for (url in annotURL){
+      req <- httr::HEAD(url)
+      if (httr::status_code(req) != 404) {
+          # annot available
+          tmp <- tempfile(pattern=paste0(GPL, ".annot.gz"), tmpdir=fullGPLDirPath)
+          tryCatch({
+              download.file(url, tmp)
+          }, error=function (e) {
+              unlink(tmp)
+              stop('Could not download GPL ', GPL, e)
+          })
 
-    file.copy(tmp, cachedFile)
-    unlink(tmp)
-    targetFile <- cachedFile
-  } else {
+          file.copy(tmp, cachedFile)
+          unlink(tmp)
+          targetFile <- cachedFile
+      }
+      if (targetFile != ''){
+          break
+      }
+  }
+
+  if (targetFile == ''){
     # need submitter
     tmp <- tempfile(pattern=paste0(GPL, ".soft"), tmpdir=fullGPLDirPath)
     apiURL <- "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi"
@@ -952,7 +980,7 @@ downloadGPL <- function (GPL, destdir = tempdir()) {
   return(targetFile)
 }
 
-getGPLAnnotation <- function (GPL, destdir = tempdir()) {
+getGPLAnnotation <- function (GPL, destdir = getPhantasusConf("cache_folders")$geo_path) {
     filename <- downloadGPL(GPL, destdir)
     # ret <- parseGEO(filename)
 
@@ -966,7 +994,7 @@ getGPLAnnotation <- function (GPL, destdir = tempdir()) {
     return(ret)
 }
 
-annotateFeatureData <- function (es, destdir = tempdir()) {
+annotateFeatureData <- function (es, destdir = getPhantasusConf("cache_folders")$geo_path) {
     platform <- as.character(es$platform_id)[1]
     platformParsed <- getGPLAnnotation(platform, destdir)
 

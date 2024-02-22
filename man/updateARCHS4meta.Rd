@@ -5,7 +5,7 @@
 \title{Update ARCHS4 meta files}
 \usage{
 updateARCHS4meta(
-  archDir = file.path(getOption("phantasusCacheDir"), "counts/archs4")
+  archDir = file.path(getPhantasusConf("cache_folders")$rnaseq_counts, "archs4")
 )
 }
 \arguments{

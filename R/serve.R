@@ -10,7 +10,6 @@
 #' @param staticRoot Path to static files with phantasus.js
 #'     (on local file system).
 #'
-#' @param cacheDir Full path to cache directory.
 #'
 #' @param preloadedDir Full path to directory with preloaded files.
 #'
@@ -33,27 +32,29 @@
 #' \dontrun{
 #' servePhantasus()
 #' }
-servePhantasus <- function(host = '0.0.0.0',
-                           port = 8000,
-                           staticRoot = system.file("www/phantasus.js",
-                                                    package = "phantasus"),
-                           cacheDir = tempdir(),
-                           preloadedDir = NULL,
+servePhantasus <- function(host = getPhantasusConf("host"),
+                           port = getPhantasusConf("port"),
+                           staticRoot = getPhantasusConf("static_root"),
+                           preloadedDir = getPhantasusConf("preloaded_dir"),
                            openInBrowser = TRUE,
                            quiet=TRUE) {
-    cacheDir <- normalizePath(cacheDir)
-    preloadedDir <- if (is.null(preloadedDir))
+    if (nchar(staticRoot) == 0){
+        staticRoot = system.file("www/phantasus.js", package = "phantasus")
+    }
+    cacheDir <- normalizePath(getPhantasusConf("cache_root"))
+    preloadedDir <- if (is.null(preloadedDir)){
         NULL
-    else
+    } else{
         normalizePath(preloadedDir)
+    }
 
+    if (!dir.exists(cacheDir) | !areCacheFoldersValid(getPhantasusConf("cache_folders")) ){
+        stopPhantasus()
+    }
     options(phantasusCacheDir = cacheDir,
             phantasusPreloadedDir = preloadedDir)
 
     selfCheck()
-    annotationDBMeta(cacheDir)
-    FGSEAmeta(cacheDir)
-    updateCountsMeta(file.path(cacheDir, "counts"))
     if (!opencpu:::win_or_mac()) {
         run_worker <- NULL
     } else {
@@ -147,7 +148,7 @@ servePhantasus <- function(host = '0.0.0.0',
         }
 
         app <- Rook::URLMap$new(`/phantasus/ocpu` = opencpu:::rookhandler("/phantasus/ocpu", worker_cb=run_worker),
-                                `/phantasus/geo` = subPathStatic(cacheDir, '/phantasus/'),
+                                `/phantasus/geo` = subPathStatic(getPhantasusConf("cache_folders")$geo_path, '/phantasus/geo'),
                                 `/phantasus/preloaded` = subPathStatic(cacheDir, '/phantasus/'),
                                 `/phantasus/RELEASE.js` = subPathStatic(tempdir(), '/phantasus/'),
                                 `/phantasus/?` = subPathStatic(staticRoot, '/phantasus/'),

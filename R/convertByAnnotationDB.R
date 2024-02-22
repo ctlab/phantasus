@@ -1,7 +1,6 @@
 #' Map indexes using Annotation DB
 #'
-#' \code{createES} function creates an rds file containing meta information of
-#' provided sqlite files for AnnotationDB
+#' \code{convertByAnnotationDB} function returns \code{keyType} ids from \code{dbName} mapped to \code{columnName} in \code{es}.
 #'
 #' @param es source ExpressionSet
 #'
@@ -24,8 +23,7 @@
 #'
 #'
 convertByAnnotationDB <- function (es, dbName, columnName, columnType, keyType, otherOptions) {
-    cacheDir <- getOption("phantasusCacheDir")
-    annotDir <- paste(cacheDir, "annotationdb", sep = .Platform$file.sep)
+    annotDir <- getPhantasusConf("cache_folders")$annot_db
     dbPath <- file.path(annotDir, dbName)
     if (!file.exists(dbPath)) {
         stop('Invalid database specified')
@@ -54,8 +52,8 @@ convertByAnnotationDB <- function (es, dbName, columnName, columnType, keyType, 
 
 #' Get meta list for annotationDB files
 #'
-#' \code{createES} Function reads an rds file containing meta information of provded
-#' sqlite files for AnnotationDB
+#' \code{queryAnnotationDBMeta} Function reads txt meta files for provided
+#' sqlite annotation databases.
 #'
 #' @return meta info in JSON
 #' @importFrom utils read.table
@@ -65,9 +63,18 @@ convertByAnnotationDB <- function (es, dbName, columnName, columnType, keyType, 
 #' }
 #'
 queryAnnotationDBMeta <- function () {
-    cacheDir <- getOption("phantasusCacheDir")
-    annotDir <- paste(cacheDir, "annotationdb", sep = .Platform$file.sep)
+    annotDir <- getPhantasusConf("cache_folders")$annot_db
+    if (is.null(annotDir)){
+        stop("Current Phantasus configuration doesn't support annotation databases. 'annot_db' setting for cache folders is missed.")
+    }
+    if (!dir.exists(annotDir)){
+        stop("Current Phantasus configuration doesn't support annotation databases. AnnotationDB folder does not exist.")
+    }
     columnFiles <- list.files(annotDir, '.selected_fields.txt', full.names = TRUE)
+    dbFiles <- list.files(annotDir, '*.sqlite$', full.names = TRUE)
+    if (length(dbFiles) != length(columnFiles)){
+        stop("AnnotationDB folder was not properly configured. Some meta files are missed.")
+    }
     metaList <- list()
     for(columnFile in columnFiles) {
         columnsTSV <- read.table(file = columnFile, sep = '\t', header = TRUE, skip = 1)
@@ -83,10 +90,10 @@ queryAnnotationDBMeta <- function () {
 
 #' Create meta file for AnnotationDB
 #'
-#' \code{createES} function creates an rds file containing meta information of
-#' provided sqlite files for AnnotationDB
+#' \code{annotationDBMeta} function creates txt files containing meta information of
+#' provided sqlite files for AnnotationDB.
 #'
-#' @param cacheDir cacheDir for phantasus
+#' @param annotDir path to folder with annotationDB sqlite files
 #'
 #' @return nothing
 #'
@@ -97,8 +104,7 @@ queryAnnotationDBMeta <- function () {
 #' annotationDBMeta('/var/phantasus/cache')
 #' }
 #'
-annotationDBMeta <- function (cacheDir) {
-    annotDir <- file.path(cacheDir, "annotationdb")
+annotationDBMeta <- function (annotDir) {
     if (!dir.exists(annotDir)) {
         return()
     }
