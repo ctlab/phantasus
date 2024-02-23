@@ -17,7 +17,7 @@ options(phantasusCacheDir = cacheDir,
 
 rnaseq_counts <- getPhantasusConf("cache_folders")$rnaseq_counts
 use_hsds <- phantasus:::isHSDS(rnaseq_counts)
-if (use_hsds){
+if (!is.null(use_hsds) && use_hsds){
     options(PhantasusUseHSDS = TRUE)
 }
 phantasus:::selfCheck()
