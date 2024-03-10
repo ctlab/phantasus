@@ -15,14 +15,49 @@ Main features:
 
 <img src="https://ctlab.github.io/phantasus-doc/images/screenshot.png" width="600px" />
 
-Links:
+## Quick start
+
+Phantasus can be accessed online via one of the official mirrors: <https://ctlab.itmo.ru/phantasus> 
+    and <https://artyomovlab.wustl.edu/phantasus>.
+
+Alternatively, phantasus can be set up locally as an R package. The latest version of Phantasus 
+can be installed from GitHub using `devtools` package.
+
+```r
+devtools::install_github("ctlab/phantasus")
+```
+
+There are several system packages that have to be installed on the system. The
+names of these packages will be displayed during installation. On Ubuntu one can
+install them beforehand and all together using the command:
+
+```bash
+sudo apt-get install libapparmor-dev libfontconfig1-dev libcairo2-dev libcurl4-openssl-dev pandoc libtiff5-dev libfribidi-dev libharfbuzz-dev libssl-dev libxml2-dev libprotobuf-dev protobuf-compiler
+```
+
+Before the first run of Phantasus you need to do an initial setup. To perform interactive setup run the following commands. We recommend to use the first option for each of the questions:
+
+```r
+library(phantasus)
+setupPhantasus()
+```
+
+After the setup is finished, the following command will start the application at  <http://0.0.0.0:8000>
+and open it in the default browser:
+
+```r
+servePhantasus()
+```
+
+Please refer to the [documentation](https://ctlab.github.io/phantasus-doc/installation.html#using-docker) for comprehensive installation and configuration instructions. 
+
+## Links:
 * Official mirrors: <https://ctlab.itmo.ru/phantasus> 
     and <https://artyomovlab.wustl.edu/phantasus>.
 * Documentation: <https://ctlab.github.io/phantasus-doc>.
-* Source code at GitHub: <https://github.com/ctlab/phantasus>. 
 * Bioconductor package: <https://bioconductor.org/packages/phantasus>.
 * Docker image: <https://hub.docker.com/r/asergushichev/phantasus>.
 
-Citation:
+## Citation:
 * Kleverov M, Zenkova D, Kamenev V, Sablina R, Artyomov M, Sergushichev A (2022). Phantasus: web-application for visual and interactive gene expression analysis. doi:10.1101/2022.12.10.519861, https://www.biorxiv.org/content/10.1101/2022.12.10.519861. 
 
