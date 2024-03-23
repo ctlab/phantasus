@@ -342,7 +342,7 @@ user_conf_to_yaml = function(user_config){
 #' or on default parameters if \code{setup_file} doesn't exist. If \code{user_conf_file} exists function does nothing.
 #' @param setup_file  name of config from \code{file}. If unset or not existed, "default".
 #' @param user_conf_file Location of the setup.yml file with setup parameters. If not existed use file from package
-createDockerConf <- function( setup_file = confFile("setup.yaml"), user_conf_file = confFile("user.conf")){
+createDockerConf <- function( setup_file = confFile("setup.yml"), user_conf_file = confFile("user.conf")){
     if (!file.exists(user_conf_file)){
         setup_conf <-  getSetupConf(setup_file, "default")
         user_conf <- get_user_conf(cache_root = "/var/phantasus/cache", setup_config = setup_conf)
