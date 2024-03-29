@@ -15,7 +15,7 @@ ENV R_USER_CONFIG_DIR=/etc
 
 COPY . /root/phantasus
 
-RUN R -e 'devtools::install("/root/phantasus", dependencies=TRUE, upgrade=FALSE, build_vignettes=TRUE); remove.packages("BH")'
+RUN R -e 'devtools::install_local("/root/phantasus", dependencies=TRUE, upgrade=FALSE, build_vignettes=TRUE); remove.packages("BH")'
 
 
 RUN printf "window.PHANTASUS_BUILD='$PHANTASUS_BUILD';" >> /root/phantasus/inst/www/phantasus.js/RELEASE.js

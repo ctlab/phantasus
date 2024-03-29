@@ -8,11 +8,12 @@ job("build and test in latest preimage") {
     startOn {
         //push in phantasus repo
         gitPush {
-           branchFilter {
-                +"refs/heads/master"
+           anyBranchMatching {
+                +"master"
            }
         }
     }
+
     container(displayName = "Build R package and copy to share", image = "ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus-preimage") {
     	shellScript {
         	content = """
@@ -22,6 +23,7 @@ job("build and test in latest preimage") {
             """
         }
     }
+
     parallel{
     	sequential{
             container(displayName = "Check builded package", image = "ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus-preimage") {
@@ -49,10 +51,8 @@ Pin-Priority: 1001
     	}
     }
 
-    
-    
 
-    docker {
+    kaniko {
     	beforeBuildScript {
             // Create an env variable BRANCH,
             // use env var to get full branch name,
@@ -60,7 +60,6 @@ Pin-Priority: 1001
             content = """
                 export BRANCH=${'$'}(echo ${'$'}JB_SPACE_GIT_BRANCH | cut -d'/' -f 3)
                 export DOCKER_TAG=${'$'}BRANCH-${'$'}JB_SPACE_EXECUTION_NUMBER
-                export GITHUB_PAT=${'$'}JB_SPACE_API_URL/${'$'}JB_SPACE_PROJECT_KEY
                 case ${'$'}BRANCH in 
                   "master") export LATEST="latest" ;;
                   *)  export LATEST="test" ;;
@@ -69,11 +68,10 @@ Pin-Priority: 1001
         }  
         build {
         	context = "."
-            file = "Dockerfile"
+            dockerfile = "Dockerfile"
             args["PREIMAGE_NAME"] = "ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus-preimage"
             args["TARGET_BRANCH"] = "\$BRANCH"
             args["PHANTASUS_BUILD"] = "\$DOCKER_TAG"
-            args["GITHUB_PAT"] = "\$GITHUB_PAT"
             labels["vendor"] = "ctlab"
         }
          push("ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus") {
