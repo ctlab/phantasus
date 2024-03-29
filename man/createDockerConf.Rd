@@ -7,7 +7,7 @@ Function creates default docker user configuration file based on provided \code{
 or on default parameters if \code{setup_file} doesn't exist. If \code{user_conf_file} exists function does nothing.}
 \usage{
 createDockerConf(
-  setup_file = confFile("setup.yaml"),
+  setup_file = confFile("setup.yml"),
   user_conf_file = confFile("user.conf")
 )
 }

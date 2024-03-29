@@ -2,10 +2,16 @@
 % Please edit documentation in R/utils.R
 \name{isHSDS}
 \alias{isHSDS}
-\title{check if url  responding as HSDS server}
+\title{check if url  responding as HSDS server
+TRUE - hsds
+FALSE - web link but not working
+NULL - not web link}
 \usage{
 isHSDS(url)
 }
 \description{
 check if url  responding as HSDS server
+TRUE - hsds
+FALSE - web link but not working
+NULL - not web link
 }
