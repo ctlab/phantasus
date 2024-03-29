@@ -755,7 +755,8 @@ validateCountsCollection <- function(collectionDir, verbose=FALSE){
             return(FALSE)
         }
         if (!file.exists(full_path)){
-            return(FALSE)
+            message("Skipping absent file ", full_path)
+            next
         }
         h5f <- H5Fopen(full_path, flags = "H5F_ACC_RDONLY")
 
