@@ -11,7 +11,7 @@ ENV R_USER_CONFIG_DIR=/etc
 # RUN R -e 'BiocManager::install(c("rhdf5client", "phantasusLite"))'
 
 # install the most recent rhdf5client to support ARCHS4 v2.3 count files
-RUN R -e 'BiocManager::install(c("vjcitn/rhdf5client", "ctlab/phantasusLite"))'
+# RUN R -e 'BiocManager::install(c("vjcitn/rhdf5client", "ctlab/phantasusLite"))'
 
 COPY . /root/phantasus
 
