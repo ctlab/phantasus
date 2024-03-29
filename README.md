@@ -17,8 +17,7 @@ Main features:
 
 ## Quick start
 
-Phantasus can be accessed online via one of the official mirrors: <https://ctlab.itmo.ru/phantasus> 
-    and <https://artyomovlab.wustl.edu/phantasus>.
+Phantasus can be accessed online via its official mirror: <https://alserglab.wustl.edu/phantasus>.
 
 Alternatively, phantasus can be set up locally as an R package. The latest version of Phantasus 
 can be installed from GitHub using `devtools` package.
@@ -33,6 +32,12 @@ install them beforehand and all together using the command:
 
 ```bash
 sudo apt-get install libapparmor-dev libfontconfig1-dev libcairo2-dev libcurl4-openssl-dev pandoc libtiff5-dev libfribidi-dev libharfbuzz-dev libssl-dev libxml2-dev libprotobuf-dev protobuf-compiler
+```
+
+Further, the latest version of `phantasus` depends on `rhdf5client (>= 1.25.1)` from Bioconductor 3.19, which on older systems can be more convenient to install from GitHub:
+
+```r
+devtools::install_github("vjcitn/rhdf5client")
 ```
 
 Before the first run of Phantasus you need to do an initial setup. To perform interactive setup run the following commands. We recommend to use the first option for each of the questions:
@@ -52,8 +57,7 @@ servePhantasus()
 Please refer to the [documentation](https://ctlab.github.io/phantasus-doc/installation.html#using-docker) for comprehensive installation and configuration instructions. 
 
 ## Links:
-* Official mirrors: <https://ctlab.itmo.ru/phantasus> 
-    and <https://artyomovlab.wustl.edu/phantasus>.
+* Official mirror: <https://alserglab.wustl.edu/phantasus>.
 * Documentation: <https://ctlab.github.io/phantasus-doc>.
 * Bioconductor package: <https://bioconductor.org/packages/phantasus>.
 * Docker image: <https://hub.docker.com/r/asergushichev/phantasus>.
