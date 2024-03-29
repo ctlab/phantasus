@@ -60,7 +60,7 @@ Please refer to the [documentation](https://ctlab.github.io/phantasus-doc/instal
 * Official mirror: <https://alserglab.wustl.edu/phantasus>.
 * Documentation: <https://ctlab.github.io/phantasus-doc>.
 * Bioconductor package: <https://bioconductor.org/packages/phantasus>.
-* Docker image: <https://hub.docker.com/r/asergushichev/phantasus>.
+* Docker image: <https://hub.docker.com/r/alserglab/phantasus>.
 
 ## Citation:
 * Kleverov M, Zenkova D, Kamenev V, Sablina R, Artyomov M, Sergushichev A (2022). Phantasus: web-application for visual and interactive gene expression analysis. doi:10.1101/2022.12.10.519861, https://www.biorxiv.org/content/10.1101/2022.12.10.519861. 

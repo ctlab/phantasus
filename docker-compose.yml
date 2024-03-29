@@ -3,7 +3,7 @@ services:
     phantasus:
         env_file:
             - .env
-        image: asergushichev/phantasus
+        image: alserglab/phantasus
         ports:
             - "8000:8000"
         volumes:
