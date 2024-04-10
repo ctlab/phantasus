@@ -41,7 +41,7 @@ FGSEAmeta <- function (dbDir) {
 }
 
 performFGSEA <- function (dbName, ranks) {
-    dbDir <- getPhantasusConf("local_cache")$fgsea_pathways
+    dbDir <- getPhantasusConf("cache_folders")$fgsea_pathways
     dbFile <- file.path(dbDir, dbName)
     if (!file.exists(dbFile)) {
         stop('Invalid DB name supplied')
@@ -66,7 +66,7 @@ performFGSEA <- function (dbName, ranks) {
 }
 
 queryPathway <- function (dbName, pathwayName) {
-    dbDir <- getPhantasusConf("local_cache")$fgsea_pathways
+    dbDir <- getPhantasusConf("cache_folders")$fgsea_pathways
     dbFile <- file.path(dbDir, dbName)
     if (!file.exists(dbFile)) {
         stop('Invalid DB name supplied')
