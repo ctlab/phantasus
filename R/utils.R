@@ -586,6 +586,7 @@ getCountsMetaPart <- function(counts_dir, collection_name, verbose){
         return()
     }
     h5_meta <- fread(file.path(destdir, "meta.txt"), index = "file_name")
+    subparts <- list()
     for (input_file in h5_files) {
         if (input_file %in% h5_meta$file_name) {
             full_name <- file.path(destdir, input_file)
@@ -595,14 +596,18 @@ getCountsMetaPart <- function(counts_dir, collection_name, verbose){
                                  file = relative_path,
                                  collection_type = collection_name)
             H5Fclose(h5f)
-            DT_h5_meta <- rbindlist(l = list(DT_h5_meta, h5_part))
+            subparts <- c(subparts, list(h5_part))
+            if (verbose) {
+                message("added ", nrow(h5_part), " samples from ", file.path(destdir, input_file))
+            }
         } else {
             if (verbose) {
-                message(paste0("!! ", file.path(destdir, input_file), " is ignored"))
+                message("!! ", file.path(destdir, input_file), " is ignored")
             }
         }
 
     }
+    DT_h5_meta <- rbindlist(subparts)
     return(DT_h5_meta)
 }
 
@@ -706,7 +711,7 @@ updateCountsMeta <- function(counts_dir =  getPhantasusConf("cache_folders")$rna
         }
         message(paste0('Populating ', cur_dir , ' counts meta' ))
         if (!validateCountsCollection(collectionDir = dir_path, verbose = verbose)) {
-            message(paste0("!! files in ", cur_dir , " are inored because there is not correct meta file in this directory."))
+            message(paste0("!! files in ", cur_dir , " are ignored because there is not correct meta file in this directory."))
             next
         }
         DT_part <- getCountsMetaPart(counts_dir = counts_dir, collection_name = cur_dir, verbose = verbose)
