@@ -459,6 +459,8 @@ selfCheck <- function(verbose = FALSE) {
 #' TRUE - hsds
 #' FALSE - web link but not working
 #' NULL - not web link
+#' @param url URL to check
+#' @keywords internal
 isHSDS <- function(url){
     if(!grepl(pattern = "^http(s)?://", x = url)){
         return(NULL)

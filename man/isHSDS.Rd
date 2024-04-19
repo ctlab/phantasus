@@ -9,9 +9,13 @@ NULL - not web link}
 \usage{
 isHSDS(url)
 }
+\arguments{
+\item{url}{URL to check}
+}
 \description{
 check if url  responding as HSDS server
 TRUE - hsds
 FALSE - web link but not working
 NULL - not web link
 }
+\keyword{internal}
