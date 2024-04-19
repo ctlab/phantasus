@@ -120,17 +120,15 @@ configureAnnotDB <- function(user_conf, setup_config){
         menu_choices = c(menu_choices, "Use local databases listed above")
         actions = c(actions, function(){
             if (nchar(mm_pkg)){
-                library(org.Mm.eg.db)
-                mm_res <- file.copy(org.Mm.eg_dbfile(), file.path(local_path, "org.Mm.eg.sqlite"))
+                mm_res <- file.copy(org.Mm.eg.db::org.Mm.eg_dbfile(), file.path(local_path, "org.Mm.eg.sqlite"))
                 if (mm_res) {
-                    message(paste("! Use copy of :", org.Mm.eg_dbfile()))
+                    message(paste("! Use copy of :", org.Mm.eg.db::org.Mm.eg_dbfile()))
                 }
             }
             if (nchar(hs_pkg)){
-                library(org.Hs.eg.db)
-                hs_res <- file.copy(org.Hs.eg_dbfile(), file.path(local_path, "org.Hs.eg.sqlite"))
+                hs_res <- file.copy(org.Hs.eg.db::org.Hs.eg_dbfile(), file.path(local_path, "org.Hs.eg.sqlite"))
                 if (hs_res) {
-                    message(paste("! Use copy of :",org.Hs.eg_dbfile()))
+                    message(paste("! Use copy of :", org.Hs.eg.db::org.Hs.eg_dbfile()))
                 }
             }
         })
