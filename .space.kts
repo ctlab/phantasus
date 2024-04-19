@@ -29,8 +29,9 @@ job("build and test in latest preimage") {
             container(displayName = "Check builded package", image = "ctlab.registry.jetbrains.space/p/phantasus/phantasus-containers/phantasus-preimage") {
                 shellScript {
                     content = """
-                			FILE=${'$'}(ls -1t $mountDir/share/*.tar.gz | head -n 1)
-                			R CMD check "${'$'}FILE" --no-manual
+                        FILE=${'$'}(ls -1t $mountDir/share/*.tar.gz | head -n 1)
+                        export _R_CHECK_FORCE_SUGGESTS_=FALSE
+                        R CMD check "${'$'}FILE" --no-manual
                     """
                 }
             }
