@@ -40,6 +40,12 @@ setupPhantasus <- function(
     configureAnnotDB(user_conf = user_conf, setup_config = setup_config )
     configureFGSEA(user_conf = user_conf, setup_config = setup_config )
     configureRnaseqCounts(user_conf = user_conf, setup_config = setup_config )
+    if (!opencpu:::win_or_mac() && ! "unix" %in% utils::installed.packages()) {
+        if (menu(c("Yes", "No"),
+                 title= paste("Couldn't find the required `unix` package, do you want to install it?")) == "1") {
+            install.packages("unix")
+        }
+    }
 
     options(timeout =  default_timeout)
     if (file.exists(user_conf_file)){

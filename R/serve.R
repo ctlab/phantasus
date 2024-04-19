@@ -56,6 +56,14 @@ servePhantasus <- function(host = getPhantasusConf("host"),
 
     selfCheck()
     if (!opencpu:::win_or_mac()) {
+        if (! "unix" %in% utils::installed.packages()) {
+            if (interactive() && menu(c("Yes", "No"),
+                     title= paste("Couldn't find the required `unix` package, do you want to install it?")) == "1") {
+                install.packages("unix")
+            } else { 
+                stop("Phantasus can't work without `unix` package, please install it")
+            }
+        }
         run_worker <- NULL
     } else {
         #### this fragment is adopted from opencpu::ocpu_start_server function
