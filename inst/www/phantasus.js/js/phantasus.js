@@ -13557,7 +13557,7 @@ phantasus.SampleDatasets = function (options) {
     };
     e.preventDefault();
   })
-    fetch('https://genome.ifmo.ru/files/software/phantasus/tcga/tcga_index.txt')
+    fetch('https://alserglab.wustl.edu/files/phantasus/tcga/tcga_index.txt')
       .then(function (response) {
         if (response.ok) {
           return response.text();
@@ -13682,7 +13682,7 @@ phantasus.SampleDatasets = function (options) {
 };
 
 phantasus.SampleDatasets.getTcgaDataset = function (options) {
-  var baseUrl = 'https://genome.ifmo.ru/files/software/phantasus/tcga/'
+  var baseUrl = 'https://alserglab.wustl.edu/files/phantasus/tcga/'
     + options.type + '/';
   var datasetOptions = {};
   if (options.mrna) {
