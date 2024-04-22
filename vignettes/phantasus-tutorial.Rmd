@@ -38,7 +38,7 @@ treated with three stimuli: LPS, IFNg and combined LPS+INFg.
 ## Starting application
 
 The simplest way to try Phantasus application is to go to web-site
-https://genome.ifmo.ru/phantasus or its mirror https://artyomovlab.wustl.edu/phantasus
+https://alserglab.wustl.edu/phantasus
 where the latest version is deployed.
 
 Alternatively, Phantaus can be start locally using the corresponding R package:
@@ -498,6 +498,7 @@ The authors are very thankful to Joshua Gould for developing Morpheus.
 
 Please cite us as: 
 
-Zenkova D., Kamenev V., Sablina R., Artyomov M., Sergushichev A.
-Phantasus: visual and interactive gene expression analysis.
-https://genome.ifmo.ru/phantasus doi: 10.18129/B9.bioc.phantasus
+Kleverov M., Zenkova D., Kamenev V., Sablina R., Artyomov M., Sergushichev A. Phantasus:
+web-application for visual and interactive gene expression analysis.
+https://https://www.biorxiv.org/content/10.1101/2022.12.10.519861 doi:
+10.1101/2022.12.10.519861
