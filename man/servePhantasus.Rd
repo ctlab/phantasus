@@ -37,8 +37,10 @@ A handle to the server as returned by `httpuv::startServer`
     and opencpu server.
 }
 \examples{
+\dontrun{
 s <- servePhantasus()
 s$stop()
+}
 
 httpuv::stopAllServers() # can be used if handle is lost
 }

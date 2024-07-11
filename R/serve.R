@@ -29,8 +29,10 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' s <- servePhantasus()
 #' s$stop()
+#' }
 #'
 #' httpuv::stopAllServers() # can be used if handle is lost
 servePhantasus <- function(host = getPhantasusConf("host"),
