@@ -1,5 +1,5 @@
-commit 8c5f47375d87e8bf3a683222e2347929ed907b5e
+commit 5136f9a425f8c6c00192ea070694024543f8cb6a
 Author: Alexey Sergushichev <alsergbox@gmail.com>
-Date:   Wed Jul 10 20:57:54 2024 -0500
+Date:   Thu Jul 11 11:20:50 2024 -0500
 
-    automatic detection of libraryPrefix
+    getFilePath uses window.libraryPrefix
