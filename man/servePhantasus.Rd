@@ -10,7 +10,8 @@ servePhantasus(
   staticRoot = getPhantasusConf("static_root"),
   preloadedDir = getPhantasusConf("preloaded_dir"),
   openInBrowser = TRUE,
-  quiet = TRUE
+  quiet = TRUE,
+  background = FALSE
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ automatically loaded in default browser.}
 
 \item{quiet}{Boolean value which states whether the connection log should
 be hidden (default: TRUE)}
+
+\item{background}{Boolean value which states whether the server should be started in background (default: FALSE)}
 }
 \value{
 A handle to the server as returned by `httpuv::startServer`
@@ -38,7 +41,7 @@ A handle to the server as returned by `httpuv::startServer`
 }
 \examples{
 \dontrun{
-s <- servePhantasus()
+s <- servePhantasus(background=FALSE)
 s$stop()
 }
 

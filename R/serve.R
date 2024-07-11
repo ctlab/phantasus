@@ -19,6 +19,8 @@
 #' @param quiet Boolean value which states whether the connection log should
 #'     be hidden (default: TRUE)
 #'
+#' @param background Boolean value which states whether the server should be started in background (default: FALSE)
+#'
 #' @return A handle to the server as returned by `httpuv::startServer`
 #'
 #' @import opencpu
@@ -30,7 +32,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' s <- servePhantasus()
+#' s <- servePhantasus(background=FALSE)
 #' s$stop()
 #' }
 #'
@@ -40,7 +42,8 @@ servePhantasus <- function(host = getPhantasusConf("host"),
                            staticRoot = getPhantasusConf("static_root"),
                            preloadedDir = getPhantasusConf("preloaded_dir"),
                            openInBrowser = TRUE,
-                           quiet=TRUE) {
+                           quiet=TRUE,
+                           background=FALSE) {
     if (nchar(staticRoot) == 0){
         staticRoot = system.file("www/phantasus.js", package = "phantasus")
     }
@@ -187,6 +190,13 @@ servePhantasus <- function(host = getPhantasusConf("host"),
                           "option with getOption('browser')",
                           "or open the address manually."))
         }
+
+        if (background) {
+            return(server)
+        }
+
+        on.exit(stopServer(server))
+        service(0)
 
     }, split=!quiet)
 
