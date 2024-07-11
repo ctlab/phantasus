@@ -30,14 +30,15 @@ automatically loaded in default browser.}
 be hidden (default: TRUE)}
 }
 \value{
-Running instance of phantasus application.
+A handle to the server as returned by `httpuv::startServer`
 }
 \description{
 \code{servePhantasus} starts http server handling phantasus static files
     and opencpu server.
 }
 \examples{
-\dontrun{
-servePhantasus()
-}
+s <- servePhantasus()
+s$stop()
+
+httpuv::stopAllServers() # can be used if handle is lost
 }

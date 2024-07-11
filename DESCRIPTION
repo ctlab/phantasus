@@ -1,12 +1,13 @@
 Package: phantasus
 Title: Visual and interactive gene expression analysis
-Version: 1.25.0
-Authors@R: c(person("Daria", "Zenkova", email = "daria.zenkova.cs@gmail.com", role = "aut"),
-             person("Vladislav", "Kamenev", role = "aut"),        
-             person("Rita", "Sablina", role = "ctb"),        
-             person("Maxim", "Kleverov", role = "ctb"),        
-             person("Maxim", "Artyomov", role = "aut"),
-             person("Alexey", "Sergushichev", email = "alsergbox@gmail.com", role = c("aut", "cre")))
+Version: 1.25.1
+Authors@R: c(
+    person("Maxim", "Kleverov", role = "aut"),        
+    person("Daria", "Zenkova", role = "aut"),
+    person("Vladislav", "Kamenev", role = "aut"),        
+    person("Margarita", "Sablina", role = "ctb"),        
+    person("Maxim", "Artyomov", role = "aut"),
+    person("Alexey", "Sergushichev", email = "alsergbox@gmail.com", role = c("aut", "cre")))
 Description: 
     Phantasus is a web-application for visual and interactive gene expression analysis.
     Phantasus is based on Morpheus – a web-based software for heatmap visualisation 
@@ -33,7 +34,7 @@ Imports: ggplot2, protolite, Biobase, GEOquery, Rook, htmltools,
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
 Suggests: testthat, BiocStyle, knitr, rmarkdown,
     org.Hs.eg.db, org.Mm.eg.db
 VignetteBuilder: knitr

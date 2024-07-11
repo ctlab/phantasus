@@ -19,7 +19,7 @@
 #' @param quiet Boolean value which states whether the connection log should
 #'     be hidden (default: TRUE)
 #'
-#' @return Running instance of phantasus application.
+#' @return A handle to the server as returned by `httpuv::startServer`
 #'
 #' @import opencpu
 #' @import httpuv
@@ -29,9 +29,10 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' servePhantasus()
-#' }
+#' s <- servePhantasus()
+#' s$stop()
+#'
+#' httpuv::stopAllServers() # can be used if handle is lost
 servePhantasus <- function(host = getPhantasusConf("host"),
                            port = getPhantasusConf("port"),
                            staticRoot = getPhantasusConf("static_root"),
@@ -60,7 +61,7 @@ servePhantasus <- function(host = getPhantasusConf("host"),
             if (interactive() && menu(c("Yes", "No"),
                      title= paste("Couldn't find the required `unix` package, do you want to install it?")) == "1") {
                 install.packages("unix")
-            } else { 
+            } else {
                 stop("Phantasus can't work without `unix` package, please install it")
             }
         }
@@ -175,6 +176,7 @@ servePhantasus <- function(host = getPhantasusConf("host"),
                        "is occupied with some other application"))
         })
 
+
         if (openInBrowser) {
             url <- sprintf("http://%s:%s", host, port)
             utils::browseURL(url)
@@ -183,12 +185,8 @@ servePhantasus <- function(host = getPhantasusConf("host"),
                           "option with getOption('browser')",
                           "or open the address manually."))
         }
-        on.exit(stopServer(server))
 
-        while(TRUE) {
-            service()
-            Sys.sleep(0.001)
-        }
     }, split=!quiet)
 
+    return(server)
 }
