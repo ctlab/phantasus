@@ -1,7 +1,6 @@
 #https://support.bioconductor.org/p/67600/#67612
 #https://github.com/ctlab/sysbio-training/blob/master/masters-2019/rnaseq/mnt/scripts/do_deseq2.R
-
-
+#' @import apeglm
 deseqAnalysis <- function (es, fieldValues, version = "One-factor design", contrast =  list('Comparison', 'Target', 'Reference'), designFields = NULL, designData = NULL) {
     fieldValues <- replace(fieldValues, fieldValues == "", NA)
     de <- NULL
