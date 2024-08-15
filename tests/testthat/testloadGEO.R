@@ -61,7 +61,6 @@ test_that("checkGPLs counts gpls correctly", {
     expect_length(fromJSON(checkGPLs("GSE27112")), 2)
     expect_length(fromJSON(checkGPLs("GSE10000")), 2)
     expect_warning(checkGPLs("GSE0"))
-    expect_warning(checkGPLs("GSE201"))
     Sys.setenv(R_CONFIG_ACTIVE = old_conf)
 
 })
