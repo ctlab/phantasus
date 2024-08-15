@@ -365,7 +365,8 @@ filterPhenoAnnotations <- function(es) {
         for (i in seq_len(ncol(old.pdata))) {
             splitted <- strsplit(as.vector(old.pdata[[i]]), ':')
             lengths <- sapply(splitted, length)
-            if (any(lengths != 2 & lengths != 0)) {
+            keys <- na.omit(unique(lapply(splitted, function(x) x[1])))
+            if (any(lengths != 2 & lengths != 0) | (length(keys) > 1)) {
                 new.pdata[[labels[i]]] <- old.pdata[[i]]
             } else {
                 zeros <- which(lengths == 0)
@@ -679,7 +680,7 @@ checkGPLsFallback <- function(name) {
     url <- sprintf(gdsurl, mirrorPath,
                    if (type == "GDS") "datasets" else "series", stub, name)
 
-    cachePath <- paste0(cacheDir,
+    cachePath <- file.path(cacheDir,
                         if (type == "GDS") "datasets" else "series",
                         stub,
                         name,
@@ -773,9 +774,9 @@ checkGPLs <- function(name) {
     }
 
     if (length(platforms) >= 2) {
-      gpls <- lapply(platforms, function (platform) {
+      gpls <- unlist(lapply(platforms, function (platform) {
         paste(spl[1], platform, sep='-')
-      })
+      }))
     }
 
     writeLines(gpls, GPLCacheFile)
