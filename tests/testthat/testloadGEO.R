@@ -139,3 +139,24 @@ test_that("getGSEType works", {
                      c(GPL570=TRUE, GPL6801=FALSE))
     expect_false(checkGSEType('GSE33356-GPL6801', tempdir()))
 })
+
+test_that("filterPhenoAnnotations does not split title", {
+    old_conf <- Sys.getenv("R_CONFIG_ACTIVE")
+    Sys.setenv(R_CONFIG_ACTIVE = "test_real_geo")
+    ess <- getGSE("GSE120978")
+    expect_true("title" %in% varLabels(ess[[1]]))
+    Sys.setenv(R_CONFIG_ACTIVE = old_conf)
+})
+
+test_that("filterPhenoAnnotations parses characteristics", {
+    load(file = system.file("testdata/GSE120978_unfiltered_pData.rda", package="phantasus"))
+    es <- ess[[1]]
+    empty_strings <- sample(1:ncol(es), 3, replace=FALSE)
+    pData(es)[empty_strings,"characteristics_ch1" ] <- ""
+    old_values <-  pData(es)$"characteristics_ch1"[-empty_strings]
+    es <- filterPhenoAnnotations(es)
+    expect_true(all(c("gender", "strain", "tissue") %in% varLabels(es)))
+    expect_true(all(is.na(pData(es)$gender[empty_strings])))
+    new_values <- pData(es)$gender[-empty_strings]
+    expect_true(all(old_values == paste0("gender: ", new_values)))
+})

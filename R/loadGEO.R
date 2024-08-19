@@ -340,7 +340,7 @@ filterFeatureAnnotations <- function(es) {
 
     es
 }
-
+#' @importFrom tidyr spread
 filterPhenoAnnotations <- function(es) {
     phenoData(es) <- phenoData(es)[,
                                    grepl("characteristics",
@@ -361,37 +361,33 @@ filterPhenoAnnotations <- function(es) {
 
         new.pdata <- as.data.frame(matrix(NA, nrow = nrow(old.pdata), ncol = 0))
 
-
+        sample_key_value = as.data.frame(matrix(NA, nrow = 0, ncol =3))
+        colnames(sample_key_value) <-c("sample","key","value")
         for (i in seq_len(ncol(old.pdata))) {
             splitted <- strsplit(as.vector(old.pdata[[i]]), ':')
             lengths <- sapply(splitted, length)
-            keys <- na.omit(unique(lapply(splitted, function(x) x[1])))
-            if (any(lengths != 2 & lengths != 0) | (length(keys) > 1)) {
+            if (any(lengths != 2 & lengths != 0)) {
                 new.pdata[[labels[i]]] <- old.pdata[[i]]
             } else {
-                zeros <- which(lengths == 0)
-
-                splitted[zeros] <- replicate(length(zeros), list(c(NA, NA)))
-
-                newnames <- unique(trimws(take(splitted, 1)))
-                newnames <- newnames[which(!is.na(newnames))]
-
-                for (j in seq_along(newnames)) {
-                    name <- newnames[j]
-                    if (!(name %in% names(new.pdata))) {
-                        new.pdata[[name]] <- replicate(nrow(new.pdata), NA)
-                    }
-                    indices <- which(name == trimws(take(splitted, 1)))
-                    new.pdata[[name]][indices] <- trimws(take(splitted, 2)[indices])
-                }
+                zeros <- lengths == 0
+                keys <- trimws(take(splitted[!zeros], 1))
+                values <- trimws(take(splitted[!zeros], 2))
+                samples <- rownames(old.pdata)[!zeros]
+                sample_key_value <- rbind(sample_key_value, data.frame(sample = samples, key = keys, value = values))
             }
         }
+        chr_df <- spread(sample_key_value, key, value, fill= NA)
+        rownames(chr_df) <- chr_df$sample
+        chr_df$sample <- NULL
+        new.pdata <- rbind(new.pdata, chr_df)
         rownames(new.pdata) <- rownames(old.pdata)
-        AnnotatedDataFrame(new.pdata)
+        new.pdata
     }
 
     if (ncol(es) > 0) {
-        phenoData(es) <- parsePData(phenoData(es))
+        new.pdata <-  parsePData(phenoData(es)[, chr])
+        pData(es)[, chr] <-NULL
+        pData(es)[,colnames(new.pdata)] <- new.pdata
     }
 
     es
