@@ -42572,7 +42572,7 @@ phantasus.VectorTrack.vectorToString = function (vector) {
       }
       vector.getProperties().set(phantasus.VectorKeys.FORMATTER, formatter);
     }
-  } else if (dataType === 'number') {
+  } else if (dataType === 'number' | dataType === 'real' | dataType === 'integer') {
     formatter = phantasus.Util.nf;
   } else if (dataType === '[number]') {
     formatter = function (v) {
@@ -43465,7 +43465,7 @@ phantasus.VectorTrack.prototype = {
     var arrayFields = this.getFullVector().getProperties().get(
       phantasus.VectorKeys.FIELDS);
     var isArray = arrayFields !== undefined;
-    var isNumber = dataType === 'number' || dataType === '[number]';
+    var isNumber = phantasus.VectorUtil.isNumber(this.getFullVector())
     if (isNumber || isArray) {
       sectionToItems.Display.push({
         name: NUMBER_FORMAT

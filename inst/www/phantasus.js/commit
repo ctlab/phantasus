@@ -1,5 +1,9 @@
-commit 5136f9a425f8c6c00192ea070694024543f8cb6a
-Author: Alexey Sergushichev <alsergbox@gmail.com>
-Date:   Thu Jul 11 11:20:50 2024 -0500
+commit e1045600564e94cdd9e58a0036e48310924ae44c
+Author: Maksim Kleverov <klevermx@gmail.com>
+Date:   Fri Aug 2 16:20:11 2024 +0000
 
-    getFilePath uses window.libraryPrefix
+    formatted real/number display, fix #PHANTASUS-T-68
+    
+    
+    Merge-request: PHANTASUS-MR-45
+    Merged-by: Alexey Sergushichev <alsergbox@gmail.com>
