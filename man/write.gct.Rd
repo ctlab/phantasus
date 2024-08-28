@@ -2,9 +2,10 @@
 % Please edit documentation in R/utils.R
 \name{write.gct}
 \alias{write.gct}
-\title{Saves ExpressionSet to a GCT file (version 1.3).}
+\title{Saves ExpressionSet to a GCT file (version 1.3).
+Function is deprecated, please use phantasusLite:::writeGct() instead}
 \usage{
-write.gct(es, file, gzip = FALSE)
+write.gct(...)
 }
 \arguments{
 \item{es}{ExpresionSet obeject to save}
@@ -18,6 +19,7 @@ Result of the closing file (as in `close()` function`)
 }
 \description{
 Saves ExpressionSet to a GCT file (version 1.3).
+Function is deprecated, please use phantasusLite:::writeGct() instead
 }
 \examples{
 es <- read.gct(system.file("extdata", "centers.gct", package = "phantasus"))

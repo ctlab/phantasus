@@ -2,14 +2,15 @@
 % Please edit documentation in R/utils.R
 \name{read.gct}
 \alias{read.gct}
-\title{Reads ExpressionSet from a GCT file.}
+\title{Reads ExpressionSet from a GCT file.
+Function is deprecated, please use phantasusLite:::readGct() instead}
 \usage{
-read.gct(gct, ...)
+read.gct(...)
 }
 \arguments{
-\item{gct}{Path to gct file}
-
 \item{...}{additional options for read.csv}
+
+\item{gct}{Path to gct file}
 }
 \value{
 ExpressionSet object

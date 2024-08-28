@@ -9,6 +9,7 @@ getIndicesVector <- function(current, neededLength) {
 
 
 #' Reads ExpressionSet from a GCT file.
+#' Function is deprecated, please use phantasusLite:::readGct() instead
 #'
 #' Only versions 1.2 and 1.3 are supported.
 #'
@@ -21,62 +22,9 @@ getIndicesVector <- function(current, neededLength) {
 #' @examples
 #' read.gct(system.file("extdata", "centers.gct", package = "phantasus"))
 #' @export
-read.gct <- function(gct, ...) {
-    meta <- readLines(gct, n = 3)
-    version <- meta[1]
-    size <- as.numeric(unlist(strsplit(meta[2], "\t")))
-
-    if (grepl("^#1.3", version)) {
-        # number of column annotations = number of additional rows
-        ann.col <- size[4]
-
-        # number of row annotations = number of additional columns
-        ann.row <- size[3]
-    } else if (grepl("^#1.2", version)) {
-        ann.col <- 0
-        ann.row <- 1
-    } else {
-        stop("Unsupported version of gct: use 1.2 or 1.3")
-    }
-
-    colNames <- unlist(strsplit(meta[3], "\t"))
-    if (grepl("/", colNames[1])) {
-        rowIdField <- sub("(.*)/(.*)", "\\1", colNames[1])
-        colIdField <- sub("(.*)/(.*)", "\\2", colNames[1])
-    } else {
-        rowIdField <- "id"
-        colIdField <- "id"
-    }
-
-    colNames[1] <- rowIdField
-
-    t <- read.tsv(gct, skip = 2 + 1 + ann.col, nrows = size[1],
-                col.names = colNames,
-                row.names = NULL, header = FALSE,  ...)
-
-    rownames(t) <- t[,1]
-
-    exp <- as.matrix(t[, (ann.row + 2):ncol(t)])
-
-    fdata <- makeAnnotated(t[, seq_len(ann.row + 1), drop = FALSE])
-
-
-    if (ann.col > 0) {
-        pdata.raw <- t(read.tsv(gct, skip = 2, nrows = ann.col + 1,
-                                header = FALSE, row.names=NULL))
-        pdata <- data.frame(pdata.raw[seq_len(ncol(exp)) + 1 + ann.row, ,
-                                drop = FALSE])
-        colnames(pdata) <- pdata.raw[1, ]
-        colnames(pdata)[1] <- colIdField
-        rownames(pdata) <- colnames(exp)
-        pdata <- makeAnnotated(pdata)
-
-        res <- ExpressionSet(exp, featureData = fdata, phenoData = pdata)
-    } else {
-        res <- ExpressionSet(exp, featureData = fdata)
-    }
-
-    res
+read.gct <- function(...) {
+    warning("phantasus::read.gct() function is deprecated, please use phantasusLite:::readGct() instead")
+    phantasusLite::readGct(...)
 }
 
 read.tsv <- function(file, header = TRUE, sep = "\t", quote = "",
@@ -95,6 +43,7 @@ read.tsv <- function(file, header = TRUE, sep = "\t", quote = "",
 }
 
 #' Saves ExpressionSet to a GCT file (version 1.3).
+#' Function is deprecated, please use phantasusLite:::writeGct() instead
 #'
 #' @param es ExpresionSet obeject to save
 #' @param file Path to output gct file
@@ -106,24 +55,9 @@ read.tsv <- function(file, header = TRUE, sep = "\t", quote = "",
 #' write.gct(es, out, gzip=TRUE)
 #' @import Biobase
 #' @export
-write.gct <- function(es, file, gzip=FALSE) {
-    if (gzip) {
-        con <- gzfile(file)
-    } else {
-        con <- file(file)
-    }
-    open(con, open="w")
-    writeLines("#1.3", con)
-    ann.col <- ncol(pData(es))
-    ann.row <- ncol(fData(es))
-    writeLines(sprintf("%s\t%s\t%s\t%s", nrow(es), ncol(es), ann.row, ann.col), con)
-    writeLines(paste0(c("ID", colnames(fData(es)), colnames(es)), collapse="\t"), con)
-
-    ann.col.table <- t(as.matrix(pData(es)))
-    ann.col.table <- cbind(matrix(rep(NA, ann.row*ann.col), nrow=ann.col), ann.col.table)
-    write.table(ann.col.table, file=con, quote=FALSE, sep="\t", row.names=TRUE, col.names=FALSE)
-    write.table(cbind(fData(es), exprs(es)), file=con, quote=FALSE, sep="\t", row.names=TRUE, col.names=FALSE)
-    close(con)
+write.gct <- function(...) {
+    warning("phantasus::write.gct() function is deprecated, please use phantasusLite:::writeGct() instead")
+    writeGct(...)
 }
 
 

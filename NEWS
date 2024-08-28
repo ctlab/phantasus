@@ -1,3 +1,6 @@
+CHANGES IN VERSION 1.23.4
+* read.gct/write.gct functions are moved to phantasusLite package
+
 CHANGES IN VERSION 1.23.3
 * Changed a configuration scheme
 * setupPhantasus() now can be used to generate a config
