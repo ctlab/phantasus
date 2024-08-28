@@ -25,6 +25,7 @@
 #' @importFrom utils tail
 #' @import Biobase
 #' @import GEOquery
+#' @keywords internal
 loadGEO <- function(name, type = NA) {
     cacheDir <- getPhantasusConf("cache_folders")$geo_path
 
@@ -168,6 +169,7 @@ getGDS <- function(name, destdir = getPhantasusConf("cache_folders")$geo_path,
 #' Returns list of ARCHS4 hdf5 files with expression data
 #' @param cacheDir base directory for cache
 #' @return list of .h5 files
+#' @keywords internal
 getArchs4Files <- function(cacheDir) {
     list.files(paste(file.path(cacheDir), 'archs4', sep = .Platform$file.sep), '\\.h5$', full.names = TRUE)
 }
@@ -179,6 +181,7 @@ getArchs4Files <- function(cacheDir) {
 #' @param es ExpressionSet from GEO to check for expression in ARCHS4
 #' @param archs4_files list of available .h5 files from ARCHS4 project
 #' @return either original es or an ExpressionSet with loaded count data from ARCHS4
+#' @keywords internal
 loadFromARCHS4 <- function(es, archs4_files) {
 
     if (nrow(es) > 0 ) {
@@ -237,6 +240,7 @@ loadFromARCHS4 <- function(es, archs4_files) {
 #' Also \code{counts_dir} must contain \code{counts_priority.txt} file.
 #' @return either original es or an ExpressionSet with loaded count data from ARCHS4
 #' @import data.table
+#' @keywords internal
 loadCounts <- function(es, counts_dir) {
     if (!file.exists(file.path(counts_dir, "counts_priority.txt"))) {
       return(es)
@@ -653,6 +657,7 @@ reparseCachedESs <- function(destdir,
 #' checkGPLs('GSE27112')
 #' checkGPLs('GSE14308')
 #' }
+#' @keywords internal
 checkGPLsFallback <- function(name) {
     spl <- unlist(strsplit(name, "-", fixed=TRUE))
     if (length(spl) == 2) {

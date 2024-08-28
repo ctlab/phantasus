@@ -22,3 +22,4 @@ Also can be a genus. Possible genus: \enumerate{ \item drosophila \item gallus \
 \description{
 Download archs4 or archs4zoo counts in \code{cacheDir}. If directory does not exists function makes nothing and produce corresponding warnings.
 }
+\keyword{internal}

@@ -30,7 +30,7 @@
 #' eData <- list(name="", lab="", contact="", title="", url="", other=list(), pubMedIds="")
 #' createES(data, pData, varLabels, fData, fvarLabels, eData)
 #' }
-#'
+#' @keywords internal
 createES <- function(data, pData, varLabels, fData, fvarLabels, eData) {
     phenoData <- AnnotatedDataFrame(data.frame(pData, stringsAsFactors = FALSE))
     varLabels(phenoData) <- varLabels

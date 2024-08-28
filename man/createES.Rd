@@ -36,5 +36,5 @@ fvarLabels <- "id"
 eData <- list(name="", lab="", contact="", title="", url="", other=list(), pubMedIds="")
 createES(data, pData, varLabels, fData, fvarLabels, eData)
 }
-
 }
+\keyword{internal}

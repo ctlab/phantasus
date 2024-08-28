@@ -19,3 +19,4 @@ new expression set `es`
 \description{
 Subsets es, if rows or columns are not specified, all are retained
 }
+\keyword{internal}

@@ -48,5 +48,5 @@ Adjust dataset
 es <- gseGSE('GSE53986')[[1]]
 adjustDataset(es, log2 = T, quantileNormalize = T)
 }
-
 }
+\keyword{internal}

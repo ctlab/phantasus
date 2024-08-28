@@ -39,3 +39,4 @@ data(es)
 limmaAnalysis(es, fieldValues = c("A", "A", "A", "B", "B"))
 }
 }
+\keyword{internal}

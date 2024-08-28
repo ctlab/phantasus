@@ -70,6 +70,7 @@ limmaAnalysisAdvancedImpl <- function(es, designData, contrast){
 #' data(es)
 #' limmaAnalysis(es, fieldValues = c("A", "A", "A", "B", "B"))
 #' }
+#' @keywords internal
 limmaAnalysis <- function (es, fieldValues, version = "One-factor design", contrast =  list('Comparison', 'Target', 'Reference'), designData = NULL) {
     fieldValues <- replace(fieldValues, fieldValues == "", NA)
     de <- NULL

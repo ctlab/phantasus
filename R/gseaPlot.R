@@ -3,6 +3,7 @@
 #' @param m matrix n x m
 #' @param groups vector of size n of numbers from 1 to k
 #' @return matrix k*m of column averages  by groups
+#' @keywords internal
 colMeansByGroups <- function(m, groups) {
     x <- Matrix::sparseMatrix(j=seq_along(groups),
                  i=groups,
@@ -55,6 +56,7 @@ rasterizeHeatmap <- function(m, palette=palette, maxDimensions=c(2500, 1000)) {
 #' @import gtable
 #' @import svglite
 #' @import stats
+#' @keywords internal
 gseaPlot <- function(es, rankBy, selectedGenes, width, height,
                      vertical=FALSE,
                      addHeatmap=FALSE,

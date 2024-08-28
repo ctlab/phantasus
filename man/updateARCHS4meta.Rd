@@ -21,3 +21,4 @@ See \code{\link{validateCountsCollection}} for more common information and \code
 \seealso{
 \code{\link{validateCountsCollection}}
 }
+\keyword{internal}

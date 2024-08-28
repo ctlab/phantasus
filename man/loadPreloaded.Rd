@@ -19,3 +19,4 @@ File with ProtoBuf-serialized ExpressionSet-s
 \code{loadPreloaded} returns the file with serialized ExpressionSets using
     ProtoBuf, that were preloaded on server.
 }
+\keyword{internal}

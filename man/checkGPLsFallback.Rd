@@ -24,3 +24,4 @@ checkGPLs('GSE27112')
 checkGPLs('GSE14308')
 }
 }
+\keyword{internal}

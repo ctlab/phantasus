@@ -20,5 +20,5 @@ provided sqlite files for AnnotationDB.
 \dontrun{
 annotationDBMeta('/var/phantasus/cache')
 }
-
 }
+\keyword{internal}

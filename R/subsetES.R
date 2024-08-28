@@ -4,7 +4,7 @@
 #' @param rows List of specified rows' indices (optional), indices start from 0
 #' @return new expression set `es`
 #'
-#'
+#' @keywords internal
 subsetES <- function(es, columns = c(), rows=c()) {
     rows <- getIndicesVector(rows, nrow(exprs(es)))
     columns <- getIndicesVector(columns, ncol(exprs(es)))

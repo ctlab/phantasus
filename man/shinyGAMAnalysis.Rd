@@ -15,3 +15,4 @@ URL for Shiny GAM
 \description{
 Constructs data frame with gene annotations and submits it into Shiny GAM web-server
 }
+\keyword{internal}

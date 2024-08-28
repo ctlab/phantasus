@@ -44,3 +44,4 @@ path to an svg file
 \description{
 Returns path to an svg file with enrichment plot
 }
+\keyword{internal}

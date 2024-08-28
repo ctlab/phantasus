@@ -24,3 +24,4 @@ data(es)
 calcPCA(es)
 }
 }
+\keyword{internal}

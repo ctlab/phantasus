@@ -17,5 +17,5 @@ sqlite annotation databases.
 \dontrun{
 queryAnnotationDBMeta()
 }
-
 }
+\keyword{internal}

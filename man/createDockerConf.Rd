@@ -21,3 +21,4 @@ Creates default docker conf file
 Function creates default docker user configuration file based on provided \code{setup_file}
 or on default parameters if \code{setup_file} doesn't exist. If \code{user_conf_file} exists function does nothing.
 }
+\keyword{internal}

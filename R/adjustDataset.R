@@ -29,7 +29,7 @@
 #' es <- gseGSE('GSE53986')[[1]]
 #' adjustDataset(es, log2 = T, quantileNormalize = T)
 #' }
-#'
+#' @keywords internal
 
 adjustDataset <- function (es, scaleColumnSum = NULL,
                            log2 = FALSE, onePlusLog2 = FALSE,

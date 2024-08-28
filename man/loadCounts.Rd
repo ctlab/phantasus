@@ -23,3 +23,4 @@ Loads expression data from .h5 count files.
 Only samples with counted expression are kept.
 If es already containts expression data it is returned as is.
 }
+\keyword{internal}

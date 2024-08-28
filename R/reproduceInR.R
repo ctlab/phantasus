@@ -15,6 +15,7 @@ complexArgumentLimitBytes <- 400
 #'   setwd(tempdir())
 #'   reproduceInR('x039f1672026678');
 #' }
+#' @keywords internal
 reproduceInR <- function (sessionName, leaf = T, step = 0, savedEnv = new.env()) {
     ocpuRoot <- strsplit(getwd(), 'ocpu-temp')[[1]][1]
     sessionPath <- paste(ocpuRoot, 'ocpu-store', sessionName, sep=.Platform$file.sep)

@@ -30,5 +30,5 @@ Function updates \code{meta.rda} if this file is older than at least one \code{.
 }
 \seealso{
 {\code{\link{validateCountsCollection}},\code{\link{updateCountsMeta}}}
- @import data.table
 }
+\keyword{internal}

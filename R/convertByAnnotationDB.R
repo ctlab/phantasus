@@ -21,7 +21,7 @@
 #' \dontrun{
 #' }
 #'
-#'
+#' @keywords internal
 convertByAnnotationDB <- function (es, dbName, columnName, columnType, keyType, otherOptions) {
     annotDir <- getPhantasusConf("cache_folders")$annot_db
     dbPath <- file.path(annotDir, dbName)
@@ -61,7 +61,7 @@ convertByAnnotationDB <- function (es, dbName, columnName, columnType, keyType, 
 #' \dontrun{
 #' queryAnnotationDBMeta()
 #' }
-#'
+#' @keywords internal
 queryAnnotationDBMeta <- function () {
     annotDir <- getPhantasusConf("cache_folders")$annot_db
     if (is.null(annotDir)){
@@ -103,7 +103,7 @@ queryAnnotationDBMeta <- function () {
 #' \dontrun{
 #' annotationDBMeta('/var/phantasus/cache')
 #' }
-#'
+#' @keywords internal
 annotationDBMeta <- function (annotDir) {
     if (!dir.exists(annotDir)) {
         return()

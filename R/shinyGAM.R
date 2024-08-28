@@ -2,6 +2,7 @@
 #' @param es Expression set object
 #' @return URL for Shiny GAM
 #' @importFrom utils write.table
+#' @keywords internal
 shinyGAMAnalysis <- function(es) {
     de <- fData(es)
 

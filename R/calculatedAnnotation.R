@@ -18,8 +18,7 @@
 #' @return Nothing. Annotated dataset will be assigned to es in environment
 #'
 #' @import Biobase
-#'
-
+#' @keywords internal
 calculatedAnnotation <- function (es, operation, rows = c(),
                                   columns = c(), isColumns = FALSE, name = NULL) {
     rows <- getIndicesVector(rows, nrow(exprs(es)))

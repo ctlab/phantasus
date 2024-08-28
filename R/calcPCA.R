@@ -18,7 +18,7 @@
 #' data(es)
 #' calcPCA(es)
 #' }
-
+#' @keywords internal
 calcPCA <- function(es, replacena = "mean") {
 
     scaledExprs <- unname(exprs(es))

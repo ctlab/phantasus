@@ -12,6 +12,7 @@
 #'     that were loaded from specified file.
 #'
 #' @import Biobase
+#' @keywords internal
 loadPreloaded <- function(name) {
     preloadedDir <- getOption("phantasusPreloadedDir", default = getPhantasusConf("preloaded_dir"))
     cacheDir <- getPhantasusConf("cache_root")

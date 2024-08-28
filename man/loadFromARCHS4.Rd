@@ -21,3 +21,4 @@ Loads expression data from ARCHS4 count files.
 Only sapmles with counted expression are kept.
 If es already containts expression data it is returned as is.
 }
+\keyword{internal}

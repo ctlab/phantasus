@@ -27,3 +27,4 @@ data(es)
 performKmeans(es, k = 2)
 }
 }
+\keyword{internal}

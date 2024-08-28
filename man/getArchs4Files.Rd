@@ -15,3 +15,4 @@ list of .h5 files
 \description{
 Returns list of ARCHS4 hdf5 files with expression data
 }
+\keyword{internal}

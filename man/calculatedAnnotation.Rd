@@ -33,3 +33,4 @@ Nothing. Annotated dataset will be assigned to es in environment
 \description{
 \code{calculatedAnnotation} adds a column calculated by operation
 }
+\keyword{internal}

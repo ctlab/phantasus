@@ -19,6 +19,7 @@
 #' data(es)
 #' performKmeans(es, k = 2)
 #' }
+#' @keywords internal
 performKmeans <- function(es, k,replacena = "mean") {
     assertthat::assert_that(k > 0)
 

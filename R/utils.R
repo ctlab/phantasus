@@ -178,6 +178,7 @@ writeToList <- function(es) {
 #' Also can be a genus. Possible genus: \enumerate{ \item drosophila \item gallus \item bos \item caenorhabditis
 #' \item danio \item rattus \item saccharomyces \item arabidopsis}
 #' @param force logical value which let function replace current files
+#' @keywords internal
 updateARCHS4 <- function (cacheDir = file.path(getPhantasusConf("cache_folders")$rnaseq_counts, "archs4"), organism = c("all"), force = FALSE){
     zoo_dict <- c("drosophila" = "Drosophila_melanogaster",
                  "bos" = "Bos_taurus",
@@ -220,6 +221,7 @@ updateARCHS4 <- function (cacheDir = file.path(getPhantasusConf("cache_folders")
 #' See \code{\link{validateCountsCollection}} for more common information and \code{meta.txt}  file structure
 #' @seealso \code{\link{validateCountsCollection}}
 #' @import data.table
+#' @keywords internal
 updateARCHS4meta <- function(archDir = file.path(getPhantasusConf("cache_folders")$rnaseq_counts, "archs4")){
     archs4files <- list.files(archDir, pattern = '\\.h5$')
     DT_meta <- data.frame(matrix(ncol = 5, nrow = length(archs4files), dimnames = list(NULL, c("file_name", "sample_id", "sample_dim",	"gene_id", "genes_annot"))))
@@ -311,6 +313,7 @@ updateARCHS4meta <- function(archDir = file.path(getPhantasusConf("cache_folders
 #' See \code{\link{validateCountsCollection}} for more common information and \code{meta.txt}  file structure
 #' @seealso \code{\link{validateCountsCollection}}
 #' @import data.table
+#' @keywords internal
 updateDEE2meta <- function(destDir = file.path(getPhantasusConf("cache_folders")$rnaseq_counts, "dee2")){
     dee2files <- list.files(destDir, pattern = '\\.h5$')
     DT_meta <- data.frame(matrix(ncol = 5, nrow = length(dee2files), dimnames = list(NULL, c("file_name", "sample_id", "sample_dim",	"gene_id", "genes_annot"))))
@@ -663,10 +666,11 @@ isCountsPriorityValid <- function(counts_dir =  getPhantasusConf("cache_folders"
 #' @details  First of all function checks validity of \code{priority.txt} file. \bold{Every} Collection should have \bold{unique} priority.
 #' If \code{priority.txt} is not valid function creates new one, setting priorities for each subdirectory(=collection) equal to order in \code{list.dir} output.
 #'
-#'Function updates \code{meta.rda} if this file is older than at least one \code{.h5} file in counts files.
+#' Function updates \code{meta.rda} if this file is older than at least one \code{.h5} file in counts files.
 #' \code{meta.rda} is \code{data.table} which is a result of union \code{data.table}s produced by \code{\link{getCountsMetaPart}} for each collection
 #' @seealso {\code{\link{validateCountsCollection}},\code{\link{updateCountsMeta}}}
-#'  @import data.table
+#' @import data.table
+#' @keywords internal
 updateCountsMeta <- function(counts_dir =  getPhantasusConf("cache_folders")$rnaseq_counts, force = FALSE, verbose = FALSE){
     if (!dir.exists(counts_dir)) {
         message(paste0('Counts directory ', counts_dir, " does not extist" ))

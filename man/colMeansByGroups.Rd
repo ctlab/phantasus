@@ -17,3 +17,4 @@ matrix k*m of column averages  by groups
 \description{
 Calculate column averages in row groups
 }
+\keyword{internal}

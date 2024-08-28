@@ -19,7 +19,7 @@
 #' collapseDataset(es, isRows = TRUE, selectOne = TRUE,
 #' fn = mean, fields = c('Gene ID', 'Gene symbol'))
 #' }
-#'
+#' @keywords internal
 collapseDataset <- function (es, isRows = TRUE, selectOne = FALSE, fn, fields, removeEmpty = TRUE) {
     es <- collapseDatasetImpl(es, isRows, selectOne, fn, fields, removeEmpty)
 
