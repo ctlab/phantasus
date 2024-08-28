@@ -8,16 +8,12 @@ Function is deprecated, please use phantasusLite:::readGct() instead}
 read.gct(...)
 }
 \arguments{
-\item{...}{additional options for read.csv}
-
-\item{gct}{Path to gct file}
+\item{...}{parameters for phantasusLite:::readGct() call}
 }
 \value{
 ExpressionSet object
 }
 \description{
-Only versions 1.2 and 1.3 are supported.
-}
-\examples{
-read.gct(system.file("extdata", "centers.gct", package = "phantasus"))
+Reads ExpressionSet from a GCT file.
+Function is deprecated, please use phantasusLite:::readGct() instead
 }

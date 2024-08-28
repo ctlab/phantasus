@@ -8,11 +8,7 @@ Function is deprecated, please use phantasusLite:::writeGct() instead}
 write.gct(...)
 }
 \arguments{
-\item{es}{ExpresionSet obeject to save}
-
-\item{file}{Path to output gct file}
-
-\item{gzip}{Whether to gzip apply gzip-compression for the output file#'}
+\item{...}{parameters for phantasusLite:::writeGct() call}
 }
 \value{
 Result of the closing file (as in `close()` function`)
@@ -20,9 +16,4 @@ Result of the closing file (as in `close()` function`)
 \description{
 Saves ExpressionSet to a GCT file (version 1.3).
 Function is deprecated, please use phantasusLite:::writeGct() instead
-}
-\examples{
-es <- read.gct(system.file("extdata", "centers.gct", package = "phantasus"))
-out <- tempfile(fileext = ".gct.gz")
-write.gct(es, out, gzip=TRUE)
 }

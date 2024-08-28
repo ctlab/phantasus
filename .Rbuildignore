@@ -45,3 +45,5 @@ vignettes/phantasus-tutorial_cache
 docker-compose.yml
 Dockerfile
 .space.kts
+.git
+ocpu

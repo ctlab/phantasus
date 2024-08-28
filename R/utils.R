@@ -11,16 +11,9 @@ getIndicesVector <- function(current, neededLength) {
 #' Reads ExpressionSet from a GCT file.
 #' Function is deprecated, please use phantasusLite:::readGct() instead
 #'
-#' Only versions 1.2 and 1.3 are supported.
-#'
-#' @param gct Path to gct file
-#'
-#' @param ... additional options for read.csv
+#' @param ... parameters for phantasusLite:::readGct() call
 #'
 #' @return ExpressionSet object
-#'
-#' @examples
-#' read.gct(system.file("extdata", "centers.gct", package = "phantasus"))
 #' @export
 read.gct <- function(...) {
     warning("phantasus::read.gct() function is deprecated, please use phantasusLite:::readGct() instead")
@@ -44,15 +37,8 @@ read.tsv <- function(file, header = TRUE, sep = "\t", quote = "",
 
 #' Saves ExpressionSet to a GCT file (version 1.3).
 #' Function is deprecated, please use phantasusLite:::writeGct() instead
-#'
-#' @param es ExpresionSet obeject to save
-#' @param file Path to output gct file
-#' @param gzip Whether to gzip apply gzip-compression for the output file#'
+#' @param ... parameters for phantasusLite:::writeGct() call
 #' @return Result of the closing file (as in `close()` function`)
-#' @examples
-#' es <- read.gct(system.file("extdata", "centers.gct", package = "phantasus"))
-#' out <- tempfile(fileext = ".gct.gz")
-#' write.gct(es, out, gzip=TRUE)
 #' @import Biobase
 #' @export
 write.gct <- function(...) {

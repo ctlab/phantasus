@@ -39,3 +39,4 @@ Suggests: testthat, BiocStyle, knitr, rmarkdown,
     org.Hs.eg.db, org.Mm.eg.db
 VignetteBuilder: knitr
 NeedsCompilation: no
+Config/build/copy-method: link

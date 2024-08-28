@@ -17,10 +17,6 @@
 #' @return JSON object with a vector of converted IDs
 #' @importFrom AnnotationDbi loadDb mapIds
 #'
-#' @examples
-#' \dontrun{
-#' }
-#'
 #' @keywords internal
 convertByAnnotationDB <- function (es, dbName, columnName, columnType, keyType, otherOptions) {
     annotDir <- getPhantasusConf("cache_folders")$annot_db
