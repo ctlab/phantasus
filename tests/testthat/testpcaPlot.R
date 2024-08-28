@@ -12,7 +12,7 @@ test_that("pcaPlot results in columnsXcolumns matrix", {
 })
 
 test_that("pcaPlot drops NA rows", {
-    es <- read.gct(system.file("testdata/centers.gct", package="phantasus"))
+    es <- readGct(system.file("testdata/centers.gct", package="phantasus"))
     pca <- jsonlite::fromJSON(calcPCA(es))
     expect_equal(nrow(exprs(es)), 6)
     expect_equal(nrow(pca$pca), 5)

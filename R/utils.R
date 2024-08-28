@@ -57,7 +57,7 @@ read.tsv <- function(file, header = TRUE, sep = "\t", quote = "",
 #' @export
 write.gct <- function(...) {
     warning("phantasus::write.gct() function is deprecated, please use phantasusLite:::writeGct() instead")
-    writeGct(...)
+    phantasusLite::writeGct(...)
 }
 
 

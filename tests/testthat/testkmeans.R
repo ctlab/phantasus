@@ -1,5 +1,6 @@
 context("Kmeans")
 library(jsonlite)
+library(phantasusLite)
 
 test_that("kmeans finishes with result", {
   load(file = system.file("testdata/GSE27112-GPL6103.rda", package="phantasus"))
@@ -7,7 +8,7 @@ test_that("kmeans finishes with result", {
 })
 
 test_that("kmeans works with datasets with lots of NAs", {
-  es <- read.gct(system.file("testdata/centers.gct", package="phantasus"))
+  es <- readGct(system.file("testdata/centers.gct", package="phantasus"))
   clusters = fromJSON(performKmeans(es, k=2))
   expect_length(clusters, nrow(es))
   expect_equal(clusters[4], "")

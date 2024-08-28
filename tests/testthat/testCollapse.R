@@ -1,7 +1,8 @@
 context('Collapse dataset')
+library(phantasusLite)
 Sys.setenv(R_USER_CONFIG_DIR = system.file("/testdata/config", package = "phantasus"))
 test_that("Collapse dataset selectOne works correctly", {
-    es <- read.gct(system.file("testdata/collapse_dataset_one.gct", package="phantasus"))
+    es <- readGct(system.file("testdata/collapse_dataset_one.gct", package="phantasus"))
     newEs <- collapseDatasetImpl(es, selectOne = TRUE, fn = median, fields = c('Gene ID'), removeEmpty = FALSE)
     expect_equal(dim(exprs(newEs)), c(3,7))
     expect_equal(unname(dim(newEs)), dim(exprs(newEs)))
@@ -14,7 +15,7 @@ test_that("Collapse dataset selectOne works correctly", {
 
 
 test_that("Collapse dataset selectOne all unique", {
-    es <- read.gct(system.file("testdata/collapse_dataset_one.gct", package="phantasus"))
+    es <- readGct(system.file("testdata/collapse_dataset_one.gct", package="phantasus"))
     newEs <- collapseDatasetImpl(es, selectOne = TRUE, fn = median, fields = c('id','Gene ID', 'Gene symbol'), removeEmpty = FALSE)
     expect_equal(dim(exprs(newEs)), c(5,7))
     expect_equal(unname(dim(newEs)), dim(exprs(newEs)))
@@ -22,7 +23,7 @@ test_that("Collapse dataset selectOne all unique", {
 })
 
 test_that("Collapse dataset by rows", {
-    es <- read.gct(system.file("testdata/collapse_dataset_one.gct", package="phantasus"))
+    es <- readGct(system.file("testdata/collapse_dataset_one.gct", package="phantasus"))
     newEs <- collapseDatasetImpl(es, fn = median, fields = c('Gene ID'), removeEmpty = FALSE)
     expect_equal(ncol(fData(newEs)), 1)
     expect_equal(nrow(fData(newEs)), 3)
@@ -40,7 +41,7 @@ test_that("Collapse dataset by rows", {
 })
 
 test_that("Collapse dataset colnames doesn't reoder", {
-    es <- read.gct(system.file("testdata/collapse_dataset_one.gct", package="phantasus"))
+    es <- readGct(system.file("testdata/collapse_dataset_one.gct", package="phantasus"))
     newEs <- collapseDatasetImpl(es, fn = median, fields = c('Gene ID', 'id', 'Gene symbol'), removeEmpty = FALSE)
     expect_equal(colnames(fData(newEs)), colnames(fData(es)))
 
@@ -50,7 +51,7 @@ test_that("Collapse dataset colnames doesn't reoder", {
 
 
 test_that("Collapse dataset by columns", {
-    es <- read.gct(system.file("testdata/collapse_dataset_one.gct", package="phantasus"))
+    es <- readGct(system.file("testdata/collapse_dataset_one.gct", package="phantasus"))
     newEs <- collapseDatasetImpl(es, isRows = FALSE, fn = median, fields = c('condition'), removeEmpty = FALSE)
     expect_equal(ncol(pData(newEs)), 1)
     expect_equal(nrow(pData(newEs)), 2)

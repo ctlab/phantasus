@@ -451,6 +451,8 @@ getGSE <- function(name, destdir = getPhantasusConf("cache_folders")$geo_path,
         for (url in  sprintf(gseurl, mirrorPath,
                              stub, GEO, filename)){
             tryCatch({
+                # TODO: should safeDownload() be used here?
+                # it doesn't include deletion of temp dest file though, and doesn't suppress errors/warnings
                 utils::download.file(url,
                                      destfile = tempDestFile,
                                      method="libcurl")
@@ -458,10 +460,15 @@ getGSE <- function(name, destdir = getPhantasusConf("cache_folders")$geo_path,
                 infile <- TRUE
             },
             error = function(e) {
-               file.remove(tempDestFile)
+                if (file.exists(tempDestFile)) {
+                    file.remove(tempDestFile)
+                }
+
             },
             warning = function(w) {
-               file.remove(tempDestFile)
+                if (file.exists(tempDestFile)) {
+                    file.remove(tempDestFile)
+                }
             })
             if(file.exists(destfile)){
                 break
@@ -587,8 +594,6 @@ getES <- function(name, type = NA, destdir = getPhantasusConf("cache_folders")$g
 
 
 listCachedESs <- function(destdir) {
-    correctFileName <-
-
     res <- list.files(destdir, pattern=".*\\.rda$", recursive = TRUE)
     res <- grep("\\.gz\\.rda$", res, invert = TRUE, value = TRUE)
     res <- res[grep("^(GSE|GDS)", basename(res), value = FALSE)]
@@ -629,9 +634,15 @@ reparseCachedESs <- function(destdir,
         }
 
         tryCatch({
-            file.rename(destfile, bakfile)
+            if (file.exists(destfile)) {
+                file.rename(destfile, bakfile)
+            }
+
             getES(name, destdir = destdir, mirrorPath = mirrorPath)
-            file.remove(bakfile)
+            if (file.exists(bakfile)) {
+                file.remove(bakfile)
+            }
+
         }, error = function(e) {
             message(paste0("Error occured while reparsing, old file stored as ",
                            bakfile))

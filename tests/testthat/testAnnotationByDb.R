@@ -1,13 +1,14 @@
 context("Convert by AnnotationDb")
 library(Biobase)
 library(data.table)
+library(phantasusLite)
 Sys.setenv(R_USER_CONFIG_DIR = system.file("/testdata/config", package = "phantasus"))
 test_that("AnnotationbyDb works with delete version", {
     test_file <- system.file("testdata/counts_versioned_ids.gct", package="phantasus")
     if (test_file == ""){
         stop("test counts file doesn't exists")
     }
-    es <- read.gct(test_file)
+    es <- readGct(test_file)
     dbName <-"sample_mouse_db.sqlite"
     columnName <- "id"
     columnType <- "ENSEMBL"
