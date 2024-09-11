@@ -364,10 +364,11 @@ filterPhenoAnnotations <- function(es) {
         labels <- varLabels(old.phenodata)
 
         new.pdata <- as.data.frame(matrix(NA, nrow = nrow(old.pdata), ncol = 0))
-
-        sample_key_value = as.data.frame(matrix(NA, nrow = 0, ncol =3))
-        colnames(sample_key_value) <-c("sample","key","value")
+        rownames(new.pdata) <- rownames(old.pdata)
+        sample_key_value = as.data.table(matrix(NA, nrow = 0, ncol =4))
+        colnames(sample_key_value) <-c("sample","key","value", "channel")
         for (i in seq_len(ncol(old.pdata))) {
+            channel <- sub(pattern = "characteristics_([^.]+)(\\..+)?",replacement = "\\1",x =  names(old.pdata)[i])
             splitted <- strsplit(as.vector(old.pdata[[i]]), ':')
             lengths <- sapply(splitted, length)
             if (any(lengths != 2 & lengths != 0)) {
@@ -377,18 +378,22 @@ filterPhenoAnnotations <- function(es) {
                 keys <- trimws(take(splitted[!zeros], 1))
                 values <- trimws(take(splitted[!zeros], 2))
                 samples <- rownames(old.pdata)[!zeros]
-                sample_key_value <- rbind(sample_key_value, data.frame(sample = samples, key = keys, value = values))
+                sample_key_value <- rbind(sample_key_value, data.frame(sample = samples, key = keys, value = values, channel = channel))
             }
         }
-        chr_df <- spread(sample_key_value, key, value, fill= NA)
+        if (length(unique(sample_key_value$channel)) >1){
+            sample_key_value$key <- paste(sample_key_value$key, sample_key_value$channel, sep = "_")
+
+        }
+        sample_key_value$channel <- NULL
+        chr_df <- spread(unique(sample_key_value), key, value, fill= NA)
         rownames(chr_df) <- chr_df$sample
         chr_df$sample <- NULL
-        new.pdata <- rbind(new.pdata, chr_df)
-        rownames(new.pdata) <- rownames(old.pdata)
+        new.pdata <- cbind(new.pdata, chr_df)
         new.pdata
     }
 
-    if (ncol(es) > 0) {
+    if (ncol(es) > 0 && length(chr)>0) {
         new.pdata <-  parsePData(phenoData(es)[, chr])
         pData(es)[, chr] <-NULL
         pData(es)[,colnames(new.pdata)] <- new.pdata
