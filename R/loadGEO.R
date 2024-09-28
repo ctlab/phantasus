@@ -389,7 +389,9 @@ filterPhenoAnnotations <- function(es) {
         chr_df <- spread(unique(sample_key_value), key, value, fill= NA)
         rownames(chr_df) <- chr_df$sample
         chr_df$sample <- NULL
-        new.pdata <- cbind(new.pdata, chr_df)
+        if (nrow(chr_df)>0) {
+            new.pdata <- cbind(new.pdata, chr_df)
+        }
         new.pdata
     }
 
