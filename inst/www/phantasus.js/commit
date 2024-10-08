@@ -1,9 +1,5 @@
-commit e1045600564e94cdd9e58a0036e48310924ae44c
+commit e51698c0ca2ddb2be3610399afa9212b43870412
 Author: Maksim Kleverov <klevermx@gmail.com>
-Date:   Fri Aug 2 16:20:11 2024 +0000
+Date:   Mon Sep 16 13:56:45 2024 -0500
 
-    formatted real/number display, fix #PHANTASUS-T-68
-    
-    
-    Merge-request: PHANTASUS-MR-45
-    Merged-by: Alexey Sergushichev <alsergbox@gmail.com>
+    add proper meta for gct
