@@ -3664,7 +3664,7 @@ phantasus.GctWriter.prototype = {
         var vector = columnMetadata.get(columnMetadataIndex);
         var value = vector.getValue(j);
         if (value != null) {
-          toString = phantasus.VectorTrack.vectorToString(columnMetadata.get(j));
+          toString = phantasus.VectorTrack.vectorToString(columnMetadata.get(columnMetadataIndex));
           pw.push(toString(value));
         }
       }

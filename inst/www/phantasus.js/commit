@@ -1,5 +1,10 @@
-commit e51698c0ca2ddb2be3610399afa9212b43870412
+commit 9be33914a300605613661b2625e1e788d8af61e7
+Merge: e51698c 1f42527
 Author: Maksim Kleverov <klevermx@gmail.com>
-Date:   Mon Sep 16 13:56:45 2024 -0500
+Date:   Fri Feb 7 20:23:02 2025 +0000
 
-    add proper meta for gct
+    Merge branch 'gct_writter_fix' into 'master'
+    
+    use vector index, not index inside vector
+    
+    See merge request alserglab/pr/phantasus/phantasus.js!1
